@@ -15,7 +15,7 @@ const bool true  = 1;
 #endif
 
 /* The actual declarations */
-int fast_atoi(char *c, bool *error);
+long fast_atoi(char *c, bool *error);
 double fast_atof (char *p, bool *error);
 
 #ifdef __cplusplus
