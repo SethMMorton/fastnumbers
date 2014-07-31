@@ -20,8 +20,7 @@
 #define PyFloat_FromString_2_3(x) PyFloat_FromString(x)
 #else
 /* The PyFloat_FromString API changed between Python2 and Python3. */
-char *junk;
-#define PyFloat_FromString_2_3(x) PyFloat_FromString(x, &junk)
+#define PyFloat_FromString_2_3(x) PyFloat_FromString((x), NULL)
 #endif
 
 
@@ -30,7 +29,9 @@ const char asfloat_docstring[] =
 "Convert a string to a *float* if possible.\n"
 "\n"
 "Convert a string to a *float* if possible, return input unchanged if not\n"
-"possible; no exceptions will be raised for invalid input.\n"
+"possible; no ValueError will be raised for invalid input., although\n"
+"a TypeError error will be raised for types the *float* function also does\n"
+"not accept, like a *list*.\n"
 "\n"
 "It is roughly equivalent to\n"
 "\n"
@@ -41,25 +42,88 @@ const char asfloat_docstring[] =
 "    ...      return input\n"
 "    ...\n"
 "\n"
-"There are two differences from the above that should be noted:\n"
-"\n"
-"    - For performance purposes, this function assumes all non-*str* input\n"
-"      should be passed directly to output, so an *int* object (for example)\n"
-"      will not be converted to a *float* but will remain an *int*.\n"
-"    - Much of python's exception mechanism is bypassed\n"
-"      so that the attempted conversion is more efficient for large lists.\n"
+"The main difference is that much of Python's exception mechanism is\n"
+"bypassed so that this will be more efficient for attempted conversions\n"
+"on large sets of data.\n"
 "\n";
 static PyObject *
 fastnumbers_asfloat(PyObject *self, PyObject *args)
 {
-    PyObject *input = NULL, *result = NULL;
-    /* Read the function argument. */
-    if (!PyArg_ParseTuple(args, "O", &input)) return NULL;
+    PyObject *result = NULL;
+    char *strinput = NULL;
+    double dinput;
+
+    /* Read the function argument as a string. */
+    if (!PyArg_ParseTuple(args, "s", &strinput)) {
+
+        /* If cannot be read as a string, clear error stack
+           and read it as a float, then write as a float. */
+        PyErr_Clear();  /*  */
+        if (!PyArg_ParseTuple(args, "d", &dinput))
+            return NULL;  /* Raise TypeError for invalid input. */
+        return Py_BuildValue("d", dinput);
+
+    }
+
     /* Attempt the conversion to a float. */
-    result = PyFloat_FromString_2_3(input);
+    result = PyFloat_FromString_2_3(PyString_FromString(strinput));
+
     /* If unsuccessful, clear error stack and return input as-is */
-    if (result == NULL) { PyErr_Clear(); return Py_BuildValue("O", input); }
+    if (result == NULL) { PyErr_Clear(); return Py_BuildValue("s", strinput); }
+
     /* Otherwise, return the float object */
+    return Py_BuildValue("O", result);
+}
+
+
+/* Function to convert string to int. */
+const char asint_docstring[] = 
+"Convert a string to a *int* if possible.\n"
+"\n"
+"Convert a string to a *int* if possible, return input unchanged if not\n"
+"possible; no ValueError will be raised for invalid string input, although\n"
+"a TypeError error will be raised for types the *int* function also does\n"
+"not accept, like a *list*.\n"
+"\n"
+"It is roughly equivalent to\n"
+"\n"
+"    >>> def asint(input):\n"
+"    ...   try:\n"
+"    ...      return int(input)\n"
+"    ...   except ValueError:\n"
+"    ...      return input\n"
+"    ...\n"
+"\n"
+"The main difference is that much of Python's exception mechanism is\n"
+"bypassed so that this will be more efficient for attempted conversions\n"
+"on large sets of data.\n"
+"\n";
+static PyObject *
+fastnumbers_asint(PyObject *self, PyObject *args)
+{
+    PyObject *result = NULL;
+    char *strinput = NULL;
+    double dinput;
+
+    /* Read the function argument as a string. */
+    if (!PyArg_ParseTuple(args, "s", &strinput)) {
+
+        /* If cannot be read as a string, clear error stack
+           and read it as a float, then write as an int. */
+        PyErr_Clear();  /*  */
+        if (!PyArg_ParseTuple(args, "d", &dinput))
+            return NULL;  /* Raise TypeError for invalid input. */
+        return Py_BuildValue("l", (long) dinput);
+
+    }
+
+    /* Attempt the conversion to a int. */
+    result = PyLong_FromString(strinput, NULL, 10);
+
+    /* If unsuccessful, clear error stack and return input as-is */
+    if (result == NULL) { PyErr_Clear(); return Py_BuildValue("s", strinput); }
+
+    /* Otherwise, return the int object */
     return Py_BuildValue("O", result);
 }
 
@@ -67,6 +131,7 @@ fastnumbers_asfloat(PyObject *self, PyObject *args)
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
     {"asfloat", fastnumbers_asfloat, METH_VARARGS, asfloat_docstring},
+    {"asint", fastnumbers_asint, METH_VARARGS, asint_docstring},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -80,7 +145,9 @@ initfastnumbers(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("fastnumbers", FastnumbersMethods);
+    m = Py_InitModule3("fastnumbers",
+                       FastnumbersMethods,
+                       "Quickly convert strings to numbers.");
     if (m == NULL)
         return;
 
