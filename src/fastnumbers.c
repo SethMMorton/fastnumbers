@@ -24,9 +24,8 @@
 #endif
 
 
-/* Function to convert string to float. */
-const char asfloat_docstring[] = 
-"Convert a string to a *float* if possible.\n"
+const char safe_float_docstring[] = 
+"Convert a string to a *float* if possible, return the string otherwise.\n"
 "\n"
 "Convert a string to a *float* if possible, return input unchanged if not\n"
 "possible; no ValueError will be raised for invalid input., although\n"
@@ -47,7 +46,7 @@ const char asfloat_docstring[] =
 "on large sets of data.\n"
 "\n";
 static PyObject *
-fastnumbers_asfloat(PyObject *self, PyObject *args)
+fastnumbers_safe_float(PyObject *self, PyObject *args)
 {
     PyObject *result = NULL;
     char *strinput = NULL;
@@ -76,9 +75,8 @@ fastnumbers_asfloat(PyObject *self, PyObject *args)
 }
 
 
-/* Function to convert string to int. */
-const char asint_docstring[] = 
-"Convert a string to a *int* if possible.\n"
+const char safe_int_docstring[] = 
+"Convert a string to a *int* if possible, return the string otherwise.\n"
 "\n"
 "Convert a string to a *int* if possible, return input unchanged if not\n"
 "possible; no ValueError will be raised for invalid string input, although\n"
@@ -99,7 +97,7 @@ const char asint_docstring[] =
 "on large sets of data.\n"
 "\n";
 static PyObject *
-fastnumbers_asint(PyObject *self, PyObject *args)
+fastnumbers_safe_int(PyObject *self, PyObject *args)
 {
     PyObject *result = NULL;
     char *strinput = NULL;
@@ -130,8 +128,8 @@ fastnumbers_asint(PyObject *self, PyObject *args)
 
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
-    {"asfloat", fastnumbers_asfloat, METH_VARARGS, asfloat_docstring},
-    {"asint", fastnumbers_asint, METH_VARARGS, asint_docstring},
+    {"safe_float", fastnumbers_safe_float, METH_VARARGS, safe_float_docstring},
+    {"safe_int", fastnumbers_safe_int, METH_VARARGS, safe_int_docstring},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
