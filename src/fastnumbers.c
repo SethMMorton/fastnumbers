@@ -8,15 +8,10 @@
 #include "fast_conversions.h"
 #include "version.h"
 
-/* Compatibility macros for Python 3.
- * Taken from SWIG wrapper output.
- */
+/* Compatibility macros for Python 3. */
 #if PY_VERSION_HEX >= 0x03000000
-#define PyInt_AsLong(x) PyLong_AsLong(x)
-#define PyInt_FromLong(x) PyLong_FromLong(x)
 #define PyString_FromString(x) PyUnicode_FromString(x)
 #define PyString_AsString(str) PyBytes_AsString(str)
-#define PyString_AS_STRING(x) PyUnicode_AS_STRING(x)
 #define PyFloat_FromString_2_3(x) PyFloat_FromString(x)
 #else
 /* The PyFloat_FromString API changed between Python2 and Python3. */
@@ -153,7 +148,7 @@ const char fast_float_docstring[] =
 "    - *int* input will be passed through as an *int* and **will not** be\n"
 "      converted to type *float*.\n"
 "    - No type checking is done on input.\n"
-"    - Strings with leading numbers followed by a space or will be\n"
+"    - Strings with leading numbers followed by a space will be\n"
 "      considered valid, so a string like '23.6 lb' would get converted\n"
 "      into the float '23.6'.\n"
 "\n";
@@ -208,7 +203,7 @@ const char fast_int_docstring[] =
 "    - *float* input will be passed through as an *float* and **will not** be\n"
 "      converted to type *int*.\n"
 "    - No type checking is done on input.\n"
-"    - Strings with leading numbers followed by a space or will be\n"
+"    - Strings with leading numbers followed by a space will be\n"
 "      considered valid, so a string like '23 lb' would get converted\n"
 "      into the int '23'.\n"
 "\n";

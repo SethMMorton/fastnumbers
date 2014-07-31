@@ -46,6 +46,7 @@ def test_fast_float():
     assert isinstance(fastnumbers.fast_float(64), int)
     assert isinstance(fastnumbers.fast_float(64.42), float)
     assert fastnumbers.fast_float(['hey']) == ['hey']
+    assert fastnumbers.fast_float('23.7 lb') == 23.7
 
 
 def test_fast_int():
@@ -58,3 +59,4 @@ def test_fast_int():
     assert isinstance(fastnumbers.fast_int(64.5), float)
     assert isinstance(fastnumbers.fast_int(64), int)
     assert fastnumbers.fast_int(['hey']) == ['hey']
+    assert fastnumbers.fast_float('23 lb') == 23
