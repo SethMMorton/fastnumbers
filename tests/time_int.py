@@ -30,7 +30,7 @@ def int_try(x):
     """Function to simulate safe_int but with try/except."""
     try:
         return int(x)
-    except:
+    except ValueError:
         return x
 '''
 

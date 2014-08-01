@@ -35,6 +35,39 @@ def test_version():
 # 12. Invalid input string
 # 13. Invalid input string with numbers
 
+def test_safe_real():
+    # 1. float number
+    assert fastnumbers.safe_real(-367.3268) == -367.3268
+    # 2. signed float string
+    assert fastnumbers.safe_real("+367.3268") == +367.3268
+    # 3. float string with exponents
+    assert fastnumbers.safe_real("-367.3268e207") == -367.3268e207
+    # 4. float string with padded whitespace
+    assert fastnumbers.safe_real("   -367.04   ") == -367.04
+    # 5. int number
+    assert fastnumbers.safe_real(499) == 499
+    # 6. signed int string
+    assert fastnumbers.safe_real('-499') == -499
+    # 7. int string with padded whitespace
+    assert fastnumbers.safe_real('   +3001   ') == 3001
+    # 8. long number
+    assert fastnumbers.safe_real(35892482945872302493) == 35892482945872302493
+    # 9. long string
+    assert fastnumbers.safe_real("35892482945872302493") == 35892482945872302493
+    # 10. return type
+    assert isinstance(fastnumbers.safe_real(4029), int)
+    assert isinstance(fastnumbers.safe_real(4029.0), float)
+    assert isinstance(fastnumbers.safe_real("4029"), int)
+    assert isinstance(fastnumbers.safe_real("4029.0"), int)
+    # 11. TypeError for invalid input
+    with raises(TypeError):
+        fastnumbers.safe_real(['hey'])
+    # 12. Invalid input string
+    assert fastnumbers.safe_real('not_a_number') == 'not_a_number'
+    # 13. Invalid input string with numbers
+    assert fastnumbers.safe_real('26.8 lb') == '26.8 lb'
+
+
 def test_safe_float():
     # 1. float number
     assert fastnumbers.safe_float(-367.3268) == -367.3268
@@ -49,13 +82,14 @@ def test_safe_float():
     # 6. signed int string
     assert fastnumbers.safe_float('-499') == -499.0
     # 7. int string with padded whitespace
-    assert fastnumbers.safe_float('   +3001   ') == 3001
+    assert fastnumbers.safe_float('   +3001   ') == 3001.0
     # 8. long number
     assert fastnumbers.safe_float(35892482945872302493) == 35892482945872302493.0
     # 9. long string
     assert fastnumbers.safe_float("35892482945872302493") == 35892482945872302493.0
     # 10. return type
     assert isinstance(fastnumbers.safe_float(4029), float)
+    assert isinstance(fastnumbers.safe_float("4029"), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.safe_float(['hey'])
@@ -63,7 +97,6 @@ def test_safe_float():
     assert fastnumbers.safe_float('not_a_number') == 'not_a_number'
     # 13. Invalid input string with numbers
     assert fastnumbers.safe_float('26.8 lb') == '26.8 lb'
-
 
 
 def test_safe_int():
@@ -96,6 +129,44 @@ def test_safe_int():
     assert fastnumbers.safe_int('26.8 lb') == '26.8 lb'
 
 
+def test_fast_real():
+    # 1. float number
+    assert fastnumbers.fast_real(-367.3268) == -367.3268
+    # 2. signed float string
+    assert fastnumbers.fast_real("+367.3268") == +367.3268
+    # 3. float string with exponents
+    #    The fast_real function is not always as accurate for large numbers
+    #    so the results are *almost* equal (12 digits isn't bad!).
+    assert fastnumbers.fast_real("-367.3268e207") != -367.3268e207
+    assert abs(fastnumbers.fast_real("-367.3268e207") - -367.3268e207) < 1e195
+    # 4. float string with padded whitespace
+    assert fastnumbers.fast_real("   -367.04   ") == -367.04
+    # 5. int number
+    assert fastnumbers.fast_real(499) == 499
+    # 6. signed int string
+    assert fastnumbers.fast_real('-499') == -499
+    # 7. int string with padded whitespace
+    assert fastnumbers.fast_real('   +3001   ') == 3001
+    # 8. long number
+    assert fastnumbers.fast_real(35892482945872302493) == 35892482945872302493
+    # 9. long string
+    assert fastnumbers.fast_real("35892482945872302493") != 35892482945872302493
+    assert abs(fastnumbers.fast_real("35892482945872302493") - 35892482945872302493) < 1e4
+    assert fastnumbers.fast_real("10007199254740992") == 10007199254740992
+    # 10. return type
+    assert isinstance(fastnumbers.fast_real(4029), int)
+    assert isinstance(fastnumbers.fast_real(4029.0), float)
+    assert isinstance(fastnumbers.fast_real("4029"), int)
+    assert isinstance(fastnumbers.fast_real("4029.0"), int)
+    # 11. TypeError for invalid input
+    with raises(TypeError):
+        fastnumbers.fast_real(['hey'])
+    # 12. Invalid input string
+    assert fastnumbers.fast_real('not_a_number') == 'not_a_number'
+    # 13. Invalid input string with numbers
+    assert fastnumbers.fast_real('26.8 lb') == '26.8 lb'
+
+
 def test_fast_float():
     # 1. float number
     assert fastnumbers.fast_float(-367.3268) == -367.3268
@@ -119,8 +190,10 @@ def test_fast_float():
     # 9. long string
     assert fastnumbers.fast_float("35892482945872302493") != 35892482945872302493.0
     assert abs(fastnumbers.fast_float("35892482945872302493") - 35892482945872302493.0) < 1e4
+    assert fastnumbers.fast_float("10007199254740992") == 10007199254740992.0
     # 10. return type
     assert isinstance(fastnumbers.fast_float(4029), float)
+    assert isinstance(fastnumbers.fast_float("4029"), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_float(['hey'])
@@ -150,6 +223,7 @@ def test_fast_int():
     # 9. long string
     #    overflow is not checked in the fast_int method
     assert fastnumbers.fast_int("35892482945872302493") == -1001005201546800739
+    assert fastnumbers.fast_int("10007199254740992") == 10007199254740992
     # 10. return type
     assert isinstance(fastnumbers.fast_int(4029.00), int)
     # 11. TypeError for invalid input

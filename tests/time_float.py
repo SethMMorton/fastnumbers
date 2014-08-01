@@ -30,7 +30,7 @@ def float_try(x):
     """Function to simulate safe_float but with try/except."""
     try:
         return float(x)
-    except:
+    except ValueError:
         return x
 '''
 
