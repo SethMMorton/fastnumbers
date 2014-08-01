@@ -8,16 +8,40 @@
 #include "fast_conversions.h"
 #include "version.h"
 
-/* Compatibility macros for Python 3. */
-#if PY_MAJOR_VERSION >= 3
-#define PyString_FromString(x) PyUnicode_FromString(x)
-#define PyString_AsString(str) PyBytes_AsString(str)
-#define PyFloat_FromString_2_3(x) PyFloat_FromString(x)
-#define PyInt_FromString(x, y, z) PyLong_FromString((x), (y), (z))
-#else
-/* The PyFloat_FromString API changed between Python2 and Python3. */
-#define PyFloat_FromString_2_3(x) PyFloat_FromString((x), NULL)
-#endif
+/* 
+ * Convenience function to convert a string to a character array.
+ * If unsuccessful, raise a TypeError.
+ * A return value of NULL means an error occurred.
+ */
+inline char* convert_string(PyObject *input) {
+    PyObject *temp_bytes;
+    char* str;
+    /* Try Bytes (Python2 str). */
+    if (PyBytes_Check(input)) {
+        str = PyBytes_AS_STRING(input);        
+    /* Try Unicode. */
+    } else if (PyUnicode_Check(input)) {
+        temp_bytes = PyUnicode_AsASCIIString(input);
+        if (temp_bytes != NULL) {
+            str = PyBytes_AS_STRING(temp_bytes);
+            Py_DECREF(temp_bytes);
+        }
+        else
+            return NULL;
+    /* If none of the above, not a string type. */
+    } else {
+        PyErr_SetString(PyExc_TypeError,
+                        "expected str(), float(), or int() argument");
+        return NULL;
+    }
+    /* There was an error with conversion. */
+    if (str == NULL) {
+        PyErr_SetString(PyExc_ValueError,
+                        "expected str(), float(), or int() argument");
+        return NULL;
+    }
+    return str;
+}
 
 
 const char safe_float_docstring[] = 
@@ -45,29 +69,39 @@ const char safe_float_docstring[] =
 static PyObject *
 fastnumbers_safe_float(PyObject *self, PyObject *args)
 {
-    PyObject *result = NULL;
-    char *strinput = NULL;
-    double dinput;
+    PyObject *input = NULL, *result = NULL;
 
-    /* Read the function argument as a string. */
-    if (!PyArg_ParseTuple(args, "s", &strinput)) {
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, "O", &input))
+        return NULL;
 
-        /* If cannot be read as a string, clear error stack
-           and read it as a float, then write as a float. */
-        PyErr_Clear();
-        if (!PyArg_ParseTuple(args, "d", &dinput))
-            return NULL;  /* Raise TypeError for invalid input. */
-        return Py_BuildValue("d", dinput);
+    /* If the input is already a number, return now. */
+    #if PY_MAJOR_VERSION >= 3
+    if (PyLong_Check(input) || PyFloat_Check(input))
+    #else
+    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
+    #endif
+        return PyNumber_Float(input);
 
+    /* Attempt conversion of the (string) object to a float. */
+    #if PY_MAJOR_VERSION >= 3
+    result = PyFloat_FromString(input);
+    #else
+    result = PyFloat_FromString(input, NULL);
+    #endif
+
+    /* If unsuccessful, check to make sure input is a string. */
+    /* If so, return that string.  If not, raise the error. */
+    if (result == NULL) {
+        if (PyUnicode_Check(input) || PyBytes_Check(input)) { 
+            PyErr_Clear();
+            return Py_BuildValue("O", input);
+        }
+        else
+            return NULL;
     }
 
-    /* Attempt the conversion to a float. */
-    result = PyFloat_FromString_2_3(PyString_FromString(strinput));
-
-    /* If unsuccessful, clear error stack and return input as-is */
-    if (result == NULL) { PyErr_Clear(); return Py_BuildValue("s", strinput); }
-
-    /* Otherwise, return the float object */
+    /* If successful, return this float object. */
     return Py_BuildValue("O", result);
 }
 
@@ -104,28 +138,25 @@ fastnumbers_safe_int(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &input))
         return NULL;
 
-    /* If the input is already an integer, return now. */
+    /* If the input is already a number, return now. */
     #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input)) return Py_BuildValue("O", input);
+    if (PyLong_Check(input) || PyFloat_Check(input))
+        return PyNumber_Long(input);
     #else
-    if (PyInt_Check(input) || PyLong_Check(input)) return Py_BuildValue("O", input);
+    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
+        return PyNumber_Int(input);
     #endif
 
-    /* If the input is a float, convert to int and return */
-    if (PyFloat_Check(input))
-        return Py_BuildValue("l", (long) PyFloat_AS_DOUBLE(input));
-
-    /* Attempt conversion of the object to a string */
-    /* If unsuccessful, raise a TypeError. */
-    str = PyString_AsString(input);
-    if (str == NULL) {
-        PyErr_SetString(PyExc_TypeError,
-                        "expected str(), float(), or int() argument");
-        return NULL;
-    }
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+    if (str == NULL) return NULL;
 
     /* Attempt the conversion to a int. */
+    #if PY_MAJOR_VERSION >= 3
+    result = PyLong_FromString(str, NULL, 10);
+    #else
     result = PyInt_FromString(str, NULL, 10);
+    #endif
 
     /* If unsuccessful, clear error stack and return input as-is */
     if (result == NULL) { PyErr_Clear(); return Py_BuildValue("O", input); }
@@ -170,34 +201,23 @@ fastnumbers_fast_float(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &input))
         return NULL;
 
-    /* If the input is already a float, return now. */
-    if (PyFloat_Check(input)) return Py_BuildValue("O", input);
-
-    /* If the input is an integer, convert to float and return */
+    /* If the input is already a number, return now. */
     #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input))
-        return Py_BuildValue("d", PyLong_AsDouble(input));
+    if (PyLong_Check(input) || PyFloat_Check(input))
     #else
-    if (PyInt_Check(input))
-        return Py_BuildValue("d", (double) PyInt_AS_LONG(input));
-    if (PyLong_Check(input))
-        return Py_BuildValue("d", PyLong_AsDouble(input));
+    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
     #endif
+        return PyNumber_Float(input);
 
-    /* Attempt conversion of the object to a string. */
-    /* If unsuccessful, raise a TypeError. */
-    str = PyString_AsString(input);
-    if (str == NULL) {
-        PyErr_SetString(PyExc_TypeError,
-                        "expected str(), float(), or int() argument");
-        return NULL;
-    }
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+    if (str == NULL) return NULL;
 
     /* Attempt to convert to a float */
     result = fast_atof(str, &error);
 
     /* If there was an error, return input as-is. Otherwise, return the float object */
-    if (error) { PyErr_Clear(); return Py_BuildValue("O", input); }
+    if (error) return Py_BuildValue("O", input);
     return Py_BuildValue("d", result);
 }
 
@@ -237,31 +257,24 @@ fastnumbers_fast_int(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &input))
         return NULL;
 
-    /* If the input is already an integer, return now. */
+    /* If the input is already a number, return now. */
     #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input)) return Py_BuildValue("O", input);
+    if (PyLong_Check(input) || PyFloat_Check(input))
+        return PyNumber_Long(input);
     #else
-    if (PyInt_Check(input) || PyLong_Check(input)) return Py_BuildValue("O", input);
+    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
+        return PyNumber_Int(input);
     #endif
 
-    /* If the input is a float, convert to int and return. */
-    if (PyFloat_Check(input))
-        return Py_BuildValue("l", (long) PyFloat_AS_DOUBLE(input));
-
-    /* Attempt conversion of the object to a string. */
-    /* If unsuccessful, raise a TypeError. */
-    str = PyString_AsString(input);
-    if (str == NULL) {
-        PyErr_SetString(PyExc_TypeError,
-                        "expected str(), float(), or int() argument");
-        return NULL;
-    }
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+    if (str == NULL) return NULL;
 
     /* Attempt to convert to a int */
     result = fast_atoi(str, &error);
 
     /* If there was an error, return input as-is. Otherwise, return the int object */
-    if (error) { PyErr_Clear(); return Py_BuildValue("O", input); }
+    if (error) return Py_BuildValue("O", input);
     return Py_BuildValue("l", result);
 }
 
@@ -275,23 +288,56 @@ static PyMethodDef FastnumbersMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+/* Define how modules are returned. */
+#if PY_MAJOR_VERSION >= 3
+#define INITERROR return NULL
+#else
+#define INITERROR return
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+/* Module properties are given in a separate variable in Python3. */
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "fastnumbers",
+        "Quickly convert strings to numbers.",
+        -1,
+        FastnumbersMethods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+#endif
 
 /* We want a module-level variable that is the version. */
 static PyObject *fastnumbers_version;
 
 /* This is the module initialization step. */ 
+#if PY_MAJOR_VERSION >= 3
+PyObject *
+PyInit_fastnumbers(void)
+#else
 PyMODINIT_FUNC
 initfastnumbers(void)
+#endif
 {
-    PyObject *m;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *m = PyModule_Create(&moduledef);
+#else
+    PyObject *m = Py_InitModule3("fastnumbers",
+                                 FastnumbersMethods,
+                                 "Quickly convert strings to numbers.");
+#endif
 
-    m = Py_InitModule3("fastnumbers",
-                       FastnumbersMethods,
-                       "Quickly convert strings to numbers.");
     if (m == NULL)
-        return;
+        INITERROR;
 
-    fastnumbers_version = PyString_FromString(FASTNUMBERS_VERSION);
+    fastnumbers_version = PyUnicode_FromString(FASTNUMBERS_VERSION);
     Py_INCREF(fastnumbers_version);
     PyModule_AddObject(m, "__version__", fastnumbers_version);
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }

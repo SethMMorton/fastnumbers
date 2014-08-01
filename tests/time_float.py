@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 # Std lib imports
-from timeit import timeit
+from timeit import repeat
 
 # Find the build location and add that to the path
 import sys
@@ -34,31 +34,35 @@ def float_try(x):
         return x
 '''
 
-print('Non-number String,', 're:', timeit('float_re("not_a_number")', float_re))
-print('Non-number String,', 'try:', timeit('float_try("not_a_number")', float_try))
-print('Non-number String,', 'safe:', timeit('safe_float("not_a_number")', 'from fastnumbers import safe_float'))
-print('Non-number String,', 'fast:', timeit('fast_float("not_a_number")', 'from fastnumbers import fast_float'))
+def mean(x):
+    return sum(x) / len(x)
+
+
+print('Non-number String,', 're:', mean(repeat('float_re("not_a_number")', float_re)))
+print('Non-number String,', 'try:', mean(repeat('float_try("not_a_number")', float_try)))
+print('Non-number String,', 'safe:', mean(repeat('safe_float("not_a_number")', 'from fastnumbers import safe_float')))
+print('Non-number String,', 'fast:', mean(repeat('fast_float("not_a_number")', 'from fastnumbers import fast_float')))
 print()
-print('Int String,', 're:', timeit('float_re("-41053")', float_re))
-print('Int String,', 'try:', timeit('float_try("-41053")', float_try))
-print('Int String,', 'safe:', timeit('safe_float("-41053")', 'from fastnumbers import safe_float'))
-print('Int String,', 'fast:', timeit('fast_float("-41053")', 'from fastnumbers import fast_float'))
+print('Int String,', 're:', mean(repeat('float_re("-41053")', float_re)))
+print('Int String,', 'try:', mean(repeat('float_try("-41053")', float_try)))
+print('Int String,', 'safe:', mean(repeat('safe_float("-41053")', 'from fastnumbers import safe_float')))
+print('Int String,', 'fast:', mean(repeat('fast_float("-41053")', 'from fastnumbers import fast_float')))
 print()
-print('Float String,', 're:', timeit('float_re("-41053.543028758302")', float_re))
-print('Float String,', 'try:', timeit('float_try("-41053.543028758302")', float_try))
-print('Float String,', 'safe:', timeit('safe_float("-41053.543028758302")', 'from fastnumbers import safe_float'))
-print('Float String,', 'fast:', timeit('fast_float("-41053.543028758302")', 'from fastnumbers import fast_float'))
+print('Float String,', 're:', mean(repeat('float_re("-41053.543028758302")', float_re)))
+print('Float String,', 'try:', mean(repeat('float_try("-41053.543028758302")', float_try)))
+print('Float String,', 'safe:', mean(repeat('safe_float("-41053.543028758302")', 'from fastnumbers import safe_float')))
+print('Float String,', 'fast:', mean(repeat('fast_float("-41053.543028758302")', 'from fastnumbers import fast_float')))
 print()
-print('Float String with Exp,', 're:', timeit('float_re("-41053.543028758302e100")', float_re))
-print('Float String with Exp,', 'try:', timeit('float_try("-41053.543028758302e100")', float_try))
-print('Float String with Exp,', 'safe:', timeit('safe_float("-41053.543028758302e100")', 'from fastnumbers import safe_float'))
-print('Float String with Exp,', 'fast:', timeit('fast_float("-41053.543028758302e100")', 'from fastnumbers import fast_float'))
+print('Float String with Exp,', 're:', mean(repeat('float_re("-41053.543028758302e100")', float_re)))
+print('Float String with Exp,', 'try:', mean(repeat('float_try("-41053.543028758302e100")', float_try)))
+print('Float String with Exp,', 'safe:', mean(repeat('safe_float("-41053.543028758302e100")', 'from fastnumbers import safe_float')))
+print('Float String with Exp,', 'fast:', mean(repeat('fast_float("-41053.543028758302e100")', 'from fastnumbers import fast_float')))
 print()
-print('Float,', 'try:', timeit('float_try(-41053.543028758302e100)', float_try))
-print('Float,', 'safe:', timeit('safe_float(-41053.543028758302e100)', 'from fastnumbers import safe_float'))
-print('Float,', 'fast:', timeit('fast_float(-41053.543028758302e100)', 'from fastnumbers import fast_float'))
+print('Float,', 'try:', mean(repeat('float_try(-41053.543028758302e100)', float_try)))
+print('Float,', 'safe:', mean(repeat('safe_float(-41053.543028758302e100)', 'from fastnumbers import safe_float')))
+print('Float,', 'fast:', mean(repeat('fast_float(-41053.543028758302e100)', 'from fastnumbers import fast_float')))
 print()
-print('Int,', 'try:', timeit('float_try(-41053)', float_try))
-print('Int,', 'safe:', timeit('safe_float(-41053)', 'from fastnumbers import safe_float'))
-print('Int,', 'fast:', timeit('fast_float(-41053)', 'from fastnumbers import fast_float'))
+print('Int,', 'try:', mean(repeat('float_try(-41053)', float_try)))
+print('Int,', 'safe:', mean(repeat('safe_float(-41053)', 'from fastnumbers import safe_float')))
+print('Int,', 'fast:', mean(repeat('fast_float(-41053)', 'from fastnumbers import fast_float')))
 
