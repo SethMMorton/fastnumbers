@@ -43,6 +43,12 @@ inline char* convert_string(PyObject *input) {
     return str;
 }
 
+/* Convenience to check for numeric types. */
+#if PY_MAJOR_VERSION >= 3
+#define ANYNUM(x) PyLong_Check(x) || PyFloat_Check(x)
+#else
+#define ANYNUM(x) PyInt_Check(x) || PyLong_Check(x) || PyFloat_Check(x)
+#endif
 
 const char safe_float_docstring[] = 
 "Convert input to a *float* if possible, return the input otherwise.\n"
@@ -76,11 +82,7 @@ fastnumbers_safe_float(PyObject *self, PyObject *args)
         return NULL;
 
     /* If the input is already a number, return now. */
-    #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input) || PyFloat_Check(input))
-    #else
-    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
-    #endif
+    if (ANYNUM(input))
         return PyNumber_Float(input);
 
     /* Attempt conversion of the (string) object to a float. */
@@ -139,11 +141,10 @@ fastnumbers_safe_int(PyObject *self, PyObject *args)
         return NULL;
 
     /* If the input is already a number, return now. */
+    if (ANYNUM(input))
     #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input) || PyFloat_Check(input))
         return PyNumber_Long(input);
     #else
-    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
         return PyNumber_Int(input);
     #endif
 
@@ -202,11 +203,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args)
         return NULL;
 
     /* If the input is already a number, return now. */
-    #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input) || PyFloat_Check(input))
-    #else
-    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
-    #endif
+    if (ANYNUM(input))
         return PyNumber_Float(input);
 
     /* Attempt to convert to char*. */
@@ -258,11 +255,10 @@ fastnumbers_fast_int(PyObject *self, PyObject *args)
         return NULL;
 
     /* If the input is already a number, return now. */
+    if (ANYNUM(input))
     #if PY_MAJOR_VERSION >= 3
-    if (PyLong_Check(input) || PyFloat_Check(input))
         return PyNumber_Long(input);
     #else
-    if (PyInt_Check(input) || PyLong_Check(input) || PyFloat_Check(input))
         return PyNumber_Int(input);
     #endif
 
@@ -281,11 +277,22 @@ fastnumbers_fast_int(PyObject *self, PyObject *args)
 
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
+    // {"safe_real", fastnumbers_safe_real, METH_VARARGS, safe_real_docstring},
     {"safe_float", fastnumbers_safe_float, METH_VARARGS, safe_float_docstring},
     {"safe_int", fastnumbers_safe_int, METH_VARARGS, safe_int_docstring},
+    // {"safe_forceint", fastnumbers_safe_forceint, METH_VARARGS, safe_forceint_docstring},
+    // {"fast_real", fastnumbers_fast_real, METH_VARARGS, fast_real_docstring},
     {"fast_float", fastnumbers_fast_float, METH_VARARGS, fast_float_docstring},
     {"fast_int", fastnumbers_fast_int, METH_VARARGS, fast_int_docstring},
-    {NULL, NULL, 0, NULL}        /* Sentinel */
+    // {"fast_forceint", fastnumbers_fast_forceint, METH_VARARGS, fast_forceint_docstring},
+    // {"str_isreal", fastnumbers_str_isreal, METH_VARARGS, str_isreal_docstring},
+    // {"str_isfloat", fastnumbers_str_isfloat, METH_VARARGS, str_isfloat_docstring},
+    // {"str_isint", fastnumbers_str_isint, METH_VARARGS, str_isint_docstring},
+    // {"fast_isreal", fastnumbers_fast_isreal, METH_VARARGS, fast_isreal_docstring},
+    // {"fast_isfloat", fastnumbers_fast_isfloat, METH_VARARGS, fast_isfloat_docstring},
+    // {"fast_isint", fastnumbers_fast_isint, METH_VARARGS, fast_isint_docstring},
+    // {"fast_isintlike", fastnumbers_fast_isintlike, METH_VARARGS, fast_isintlike_docstring},}
+    {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 /* Define how modules are returned. */
