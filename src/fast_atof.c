@@ -84,8 +84,13 @@ double fast_atof (char *p, bool *error)
         while (expon >   0) { scale *= 10.0; expon -=  1; }
     }
  
-    /* If the next character is not whitespace or null character, it is an error. */
-    *error = (!white_space(*p) && *p != '\0' && *p != '\n') ? true : false;
+    /* Skip trailing white space, if any. */
+ 
+    while (white_space(*p)) { p += 1; }
+
+    /* If the next character is not the null character, it is an error. */
+
+    *error = *p != '\0' ? true : false;
 
     /* Return signed and scaled floating point result. */
  

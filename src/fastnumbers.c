@@ -9,10 +9,11 @@
 #include "version.h"
 
 /* Compatibility macros for Python 3. */
-#if PY_VERSION_HEX >= 0x03000000
+#if PY_MAJOR_VERSION >= 3
 #define PyString_FromString(x) PyUnicode_FromString(x)
 #define PyString_AsString(str) PyBytes_AsString(str)
 #define PyFloat_FromString_2_3(x) PyFloat_FromString(x)
+#define PyInt_FromString(x, y, z) PyLong_FromString((x), (y), (z))
 #else
 /* The PyFloat_FromString API changed between Python2 and Python3. */
 #define PyFloat_FromString_2_3(x) PyFloat_FromString((x), NULL)
@@ -78,7 +79,7 @@ const char safe_int_docstring[] =
 "possible; no ValueError will be raised for invalid string input, although\n"
 "a TypeError error will be raised for types the *int* function also does\n"
 "not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str* or *int*."
+"type *str* or *int* (or *long* on Python2 if the input was *long*)."
 "\n"
 "It is roughly equivalent to\n"
 "\n"
@@ -96,27 +97,38 @@ const char safe_int_docstring[] =
 static PyObject *
 fastnumbers_safe_int(PyObject *self, PyObject *args)
 {
-    PyObject *result = NULL;
-    char *strinput = NULL;
-    double dinput;
+    PyObject *input = NULL, *result = NULL;
+    char *str;
 
-    /* Read the function argument as a string. */
-    if (!PyArg_ParseTuple(args, "s", &strinput)) {
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, "O", &input))
+        return NULL;
 
-        /* If cannot be read as a string, clear error stack
-           and read it as a float, then write as an int. */
-        PyErr_Clear();
-        if (!PyArg_ParseTuple(args, "d", &dinput))
-            return NULL;  /* Raise TypeError for invalid input. */
-        return Py_BuildValue("l", (long) dinput);
+    /* If the input is already an integer, return now. */
+    #if PY_MAJOR_VERSION >= 3
+    if (PyLong_Check(input)) return Py_BuildValue("O", input);
+    #else
+    if (PyInt_Check(input) || PyLong_Check(input)) return Py_BuildValue("O", input);
+    #endif
 
+    /* If the input is a float, convert to int and return */
+    if (PyFloat_Check(input))
+        return Py_BuildValue("l", (long) PyFloat_AS_DOUBLE(input));
+
+    /* Attempt conversion of the object to a string */
+    /* If unsuccessful, raise a TypeError. */
+    str = PyString_AsString(input);
+    if (str == NULL) {
+        PyErr_SetString(PyExc_TypeError,
+                        "expected str(), float(), or int() argument");
+        return NULL;
     }
 
     /* Attempt the conversion to a int. */
-    result = PyLong_FromString(strinput, NULL, 10);
+    result = PyInt_FromString(str, NULL, 10);
 
     /* If unsuccessful, clear error stack and return input as-is */
-    if (result == NULL) { PyErr_Clear(); return Py_BuildValue("s", strinput); }
+    if (result == NULL) { PyErr_Clear(); return Py_BuildValue("O", input); }
 
     /* Otherwise, return the int object */
     return Py_BuildValue("O", result);
@@ -126,31 +138,25 @@ fastnumbers_safe_int(PyObject *self, PyObject *args)
 const char fast_float_docstring[] = 
 "Convert a string to a *float* if possible, return the input otherwise.\n"
 "\n"
-"Convert a string to a *float* if possible, return input unchanged if not\n"
-"possible. No type checking will be done beyond if the input is a string\n"
-"so if your input is not well behaved (i.e. is a *list*) then this function\n"
-"will silently pass through this value."
+"Convert input to a *float* if possible, return unchanged if not\n"
+"possible; no ValueError will be raised for invalid input, although\n"
+"a TypeError error will be raised for types the *float* function also does\n"
+"not accept, like a *list*.  The return value is guaranteed to be of\n"
+"type *str* or *float*."
 "\n"
 "It is roughly equivalent to\n"
 "\n"
 "    >>> def fast_float(input):\n"
 "    ...   try:\n"
 "    ...      return float(input)\n"
-"    ...   except:\n"
+"    ...   except ValueError:\n"
 "    ...      return input\n"
 "    ...\n"
 "\n"
-"This function has several differences from *safe_float* because it is\n"
-"optimized for speed. These are the following:\n"
-"\n"
-"    - A fast implementation of *atof* is used to convert string input to\n"
-"      *float*, and as a result no checking is done for overflow/underflow.\n"
-"    - *int* input will be passed through as an *int* and **will not** be\n"
-"      converted to type *float*.\n"
-"    - No type checking is done on input.\n"
-"    - Strings with leading numbers followed by a space will be\n"
-"      considered valid, so a string like '23.6 lb' would get converted\n"
-"      into the float '23.6'.\n"
+"The main differences are that much of Python's exception mechanism is\n"
+"bypassed so that this will be more efficient for attempted conversions\n"
+"on large sets of data, and overflow/underflow is not checked so the\n"
+"conversion to a *float* from a string is very fast.\n"
 "\n";
 static PyObject *
 fastnumbers_fast_float(PyObject *self, PyObject *args)
@@ -162,12 +168,30 @@ fastnumbers_fast_float(PyObject *self, PyObject *args)
 
     /* Read the function argument. */
     if (!PyArg_ParseTuple(args, "O", &input))
-            return NULL;
+        return NULL;
 
-    /* Attempt conversion of the object to a string */
-    /* If unsuccessful, clear error stack and return input as-is */
+    /* If the input is already a float, return now. */
+    if (PyFloat_Check(input)) return Py_BuildValue("O", input);
+
+    /* If the input is an integer, convert to float and return */
+    #if PY_MAJOR_VERSION >= 3
+    if (PyLong_Check(input))
+        return Py_BuildValue("d", PyLong_AsDouble(input));
+    #else
+    if (PyInt_Check(input))
+        return Py_BuildValue("d", (double) PyInt_AS_LONG(input));
+    if (PyLong_Check(input))
+        return Py_BuildValue("d", PyLong_AsDouble(input));
+    #endif
+
+    /* Attempt conversion of the object to a string. */
+    /* If unsuccessful, raise a TypeError. */
     str = PyString_AsString(input);
-    if (str == NULL) { PyErr_Clear(); return Py_BuildValue("O", input); }
+    if (str == NULL) {
+        PyErr_SetString(PyExc_TypeError,
+                        "expected str(), float(), or int() argument");
+        return NULL;
+    }
 
     /* Attempt to convert to a float */
     result = fast_atof(str, &error);
@@ -181,31 +205,25 @@ fastnumbers_fast_float(PyObject *self, PyObject *args)
 const char fast_int_docstring[] = 
 "Convert a string to a *int* if possible, return the input otherwise.\n"
 "\n"
-"Convert a string to a *int* if possible, return input unchanged if not\n"
-"possible. No type checking will be done beyond if the input is a string\n"
-"so if your input is not well behaved (i.e. is a *list*) then this function\n"
-"will silently pass through this value."
+"Convert input to a *int* if possible, return unchanged if not\n"
+"possible; no ValueError will be raised for invalid string input, although\n"
+"a TypeError error will be raised for types the *int* function also does\n"
+"not accept, like a *list*.  The return value is guaranteed to be of\n"
+"type *str*, or *int* (or *long* on Python2 if the input was *long*)."
 "\n"
 "It is roughly equivalent to\n"
 "\n"
 "    >>> def fast_int(input):\n"
 "    ...   try:\n"
 "    ...      return int(input)\n"
-"    ...   except:\n"
+"    ...   except ValueError:\n"
 "    ...      return input\n"
 "    ...\n"
 "\n"
-"This function has several differences from *safe_int* because it is\n"
-"optimized for speed. These are the following:\n"
-"\n"
-"    - A fast implementation of *atoi* is used to convert string input to\n"
-"      *int*, and as a result no checking is done for overflow/underflow.\n"
-"    - *float* input will be passed through as an *float* and **will not** be\n"
-"      converted to type *int*.\n"
-"    - No type checking is done on input.\n"
-"    - Strings with leading numbers followed by a space will be\n"
-"      considered valid, so a string like '23 lb' would get converted\n"
-"      into the int '23'.\n"
+"The main differences are that much of Python's exception mechanism is\n"
+"bypassed so that this will be more efficient for attempted conversions\n"
+"on large sets of data, and overflow/underflow is not checked so the\n"
+"conversion to a *int* from a string is very fast.\n"
 "\n";
 static PyObject *
 fastnumbers_fast_int(PyObject *self, PyObject *args)
@@ -217,12 +235,27 @@ fastnumbers_fast_int(PyObject *self, PyObject *args)
 
     /* Read the function argument. */
     if (!PyArg_ParseTuple(args, "O", &input))
-            return NULL;
+        return NULL;
 
-    /* Attempt conversion of the object to a string */
-    /* If unsuccessful, clear error stack and return input as-is */
+    /* If the input is already an integer, return now. */
+    #if PY_MAJOR_VERSION >= 3
+    if (PyLong_Check(input)) return Py_BuildValue("O", input);
+    #else
+    if (PyInt_Check(input) || PyLong_Check(input)) return Py_BuildValue("O", input);
+    #endif
+
+    /* If the input is a float, convert to int and return. */
+    if (PyFloat_Check(input))
+        return Py_BuildValue("l", (long) PyFloat_AS_DOUBLE(input));
+
+    /* Attempt conversion of the object to a string. */
+    /* If unsuccessful, raise a TypeError. */
     str = PyString_AsString(input);
-    if (str == NULL) { PyErr_Clear(); return Py_BuildValue("O", input); }
+    if (str == NULL) {
+        PyErr_SetString(PyExc_TypeError,
+                        "expected str(), float(), or int() argument");
+        return NULL;
+    }
 
     /* Attempt to convert to a int */
     result = fast_atoi(str, &error);
