@@ -15,7 +15,7 @@ sys.path.append(fastnumberspath)
 
 float_re = '''\
 import re
-float_regex = re.compile(r'([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)$')
+float_regex = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$')
 float_match = float_regex.match
 def float_re(x):
     """Function to simulate safe_float but with regular expressions."""

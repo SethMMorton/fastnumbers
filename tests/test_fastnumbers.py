@@ -54,11 +54,13 @@ def test_safe_real():
     assert fastnumbers.safe_real(35892482945872302493) == 35892482945872302493
     # 9. long string
     assert fastnumbers.safe_real("35892482945872302493") == 35892482945872302493
+    assert fastnumbers.safe_real("35892482945872302E3") == 3.5892482945872302e+19
     # 10. return type
     assert isinstance(fastnumbers.safe_real(4029), int)
     assert isinstance(fastnumbers.safe_real(4029.0), float)
     assert isinstance(fastnumbers.safe_real("4029"), int)
     assert isinstance(fastnumbers.safe_real("4029.0"), int)
+    assert isinstance(fastnumbers.safe_real("4029.5"), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.safe_real(['hey'])
@@ -129,6 +131,38 @@ def test_safe_int():
     assert fastnumbers.safe_int('26.8 lb') == '26.8 lb'
 
 
+def test_safe_forceint():
+    # 1. float number
+    assert fastnumbers.safe_forceint(-367.3268) == -367
+    # 2. signed float string
+    assert fastnumbers.safe_forceint("+367.3268") == 367
+    # 3. float string with exponents
+    assert fastnumbers.safe_forceint("-367.3268e207") == long(-367.3268e207)
+    assert fastnumbers.safe_forceint("-367.3268e-2") == -3
+    # 4. float string with padded whitespace
+    assert fastnumbers.safe_forceint("   -367.04   ") == -367
+    # 5. int number
+    assert fastnumbers.safe_forceint(499) == 499
+    # 6. signed int string
+    assert fastnumbers.safe_forceint('-499') == -499
+    # 7. int string with padded whitespace
+    assert fastnumbers.safe_forceint('   +3001   ') == 3001
+    # 8. long number
+    assert fastnumbers.safe_forceint(35892482945872302493) == 35892482945872302493
+    # 9. long string
+    assert fastnumbers.safe_forceint("35892482945872302493") == 35892482945872302493
+    # 10. return type
+    assert isinstance(fastnumbers.safe_forceint(4029.00), int)
+    assert isinstance(fastnumbers.safe_forceint("4029.00"), int)
+    # 11. TypeError for invalid input
+    with raises(TypeError):
+        fastnumbers.safe_forceint(['hey'])
+    # 12. Invalid input string
+    assert fastnumbers.safe_forceint('not_a_number') == 'not_a_number'
+    # 13. Invalid input string with numbers
+    assert fastnumbers.safe_forceint('26.8 lb') == '26.8 lb'
+
+
 def test_fast_real():
     # 1. float number
     assert fastnumbers.fast_real(-367.3268) == -367.3268
@@ -152,6 +186,7 @@ def test_fast_real():
     # 9. long string
     assert fastnumbers.fast_real("35892482945872302493") != 35892482945872302493
     assert abs(fastnumbers.fast_real("35892482945872302493") - 35892482945872302493) < 1e4
+    assert fastnumbers.fast_real("35892482945872302E3") == 3.5892482945872302e+19
     assert fastnumbers.fast_real("10007199254740992") == 10007199254740992
     # 10. return type
     assert isinstance(fastnumbers.fast_real(4029), int)
@@ -233,3 +268,40 @@ def test_fast_int():
     assert fastnumbers.fast_int('not_a_number') == 'not_a_number'
     # 13. Invalid input string with numbers
     assert fastnumbers.fast_int('26.8 lb') == '26.8 lb'
+
+
+def test_fast_forceint():
+    # 1. float number
+    assert fastnumbers.fast_forceint(-367.3268) == -367
+    # 2. signed float string
+    assert fastnumbers.fast_forceint("+367.3268") == 367
+    # 3. float string with exponents
+    #    watch out for overflow!
+    assert fastnumbers.fast_forceint("-367.3268e207") == -9223372036854775808
+    assert fastnumbers.fast_forceint("-367.3268e12") == long(-367.3268e12)
+    assert fastnumbers.safe_forceint("-367.3268e-2") == -3
+    # 4. float string with padded whitespace
+    assert fastnumbers.fast_forceint("   -367.04   ") == -367
+    # 5. int number
+    assert fastnumbers.fast_forceint(499) == 499
+    # 6. signed int string
+    assert fastnumbers.fast_forceint('-499') == -499
+    # 7. int string with padded whitespace
+    assert fastnumbers.fast_forceint('   +3001   ') == 3001
+    # 8. long number
+    assert fastnumbers.fast_forceint(35892482945872302493) == 35892482945872302493
+    # 9. long string
+    #    overflow is not checked in the fast_forceint method
+    #    the overflow value can come be different from fast_int
+    assert fastnumbers.fast_forceint("35892482945872302493") == -9223372036854775808
+    assert fastnumbers.fast_forceint("10007199254740992") == 10007199254740992
+    # 10. return type
+    assert isinstance(fastnumbers.safe_forceint(4029.00), int)
+    assert isinstance(fastnumbers.safe_forceint("4029.00"), int)
+    # 11. TypeError for invalid input
+    with raises(TypeError):
+        fastnumbers.fast_forceint(['hey'])
+    # 12. Invalid input string
+    assert fastnumbers.fast_forceint('not_a_number') == 'not_a_number'
+    # 13. Invalid input string with numbers
+    assert fastnumbers.fast_forceint('26.8 lb') == '26.8 lb'

@@ -15,11 +15,15 @@ sys.path.append(fastnumberspath)
 
 real_re = '''\
 import re
-real_regex = re.compile(r'([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)$')
-float_match = real_regex.match
+real_regex = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$')
+real_match = real_regex.match
+int_regex = re.compile(r'[-+]\d+$')
+int_match = int_regex.match
 def real_re(x):
-    """Function to simulate safe_float but with regular expressions."""
-    if float_match(x):
+    """Function to simulate safe_real but with regular expressions."""
+    if int_match(x):
+        return int(x)
+    elif real_match(x):
         return float(x)
     else:
         return x
@@ -27,7 +31,7 @@ def real_re(x):
 
 real_try = '''\
 def real_try(x):
-    """Function to simulate safe_float but with try/except."""
+    """Function to simulate safe_real but with try/except."""
     try:
         a = float(x)
     except ValueError:

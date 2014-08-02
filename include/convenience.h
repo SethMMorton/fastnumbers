@@ -58,6 +58,10 @@
 #define IF_TRUE_RETURN_INPUT_AS_IS(condition, x) \
     if (condition) { PyErr_Clear(); return Py_BuildValue("O", (x)); }
 
+/* Check a condition, and if true clear error cache and return value. */
+#define IF_TRUE_RETURN_VALUE(condition, x) \
+    if (condition) { PyErr_Clear(); return (x); }
+
 /*************
  * Functions *
  *************/
