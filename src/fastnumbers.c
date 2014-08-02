@@ -7,6 +7,7 @@
 #include <Python.h>
 #include "fast_conversions.h"
 #include "version.h"
+#include "docstrings.h"
 
 /* 
  * Convenience function to convert a string to a character array.
@@ -59,31 +60,7 @@ inline char* convert_string(PyObject *input) {
 #endif
 
 
-const char safe_real_docstring[] = 
-"Convert input to an *int* or *float* if possible, return the input otherwise.\n"
-"\n"
-"Convert input to an *int* or *float* if possible, return unchanged if not\n"
-"possible; no ValueError will be raised for invalid input, although\n"
-"a TypeError error will be raised for types the *float* function also does\n"
-"not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str*, *int*, or *float*."
-"\n"
-"It is roughly equivalent to\n"
-"\n"
-"    >>> def safe_real(input):\n"
-"    ...     try:\n"
-"    ...         a = float(x)\n"
-"    ...     except ValueError:\n"
-"    ...         return x\n"
-"    ...     else:\n"
-"    ...         b = int(a)\n"
-"    ...         return b if a == b else b\n"
-"    ...\n"
-"\n"
-"The main difference is that much of Python's exception mechanism is\n"
-"bypassed so that this will be more efficient for attempted conversions\n"
-"on large sets of data.\n"
-"\n";
+/* Safely convert to an int or float, depending on value. */
 static PyObject *
 fastnumbers_safe_real(PyObject *self, PyObject *args)
 {
@@ -148,28 +125,7 @@ fastnumbers_safe_real(PyObject *self, PyObject *args)
 }
 
 
-const char safe_float_docstring[] = 
-"Convert input to a *float* if possible, return the input otherwise.\n"
-"\n"
-"Convert input to a *float* if possible, return unchanged if not\n"
-"possible; no ValueError will be raised for invalid input, although\n"
-"a TypeError error will be raised for types the *float* function also does\n"
-"not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str* or *float*."
-"\n"
-"It is roughly equivalent to\n"
-"\n"
-"    >>> def safe_float(input):\n"
-"    ...    try:\n"
-"    ...        return float(input)\n"
-"    ...    except ValueError:\n"
-"    ...        return input\n"
-"    ...\n"
-"\n"
-"The main difference is that much of Python's exception mechanism is\n"
-"bypassed so that this will be more efficient for attempted conversions\n"
-"on large sets of data.\n"
-"\n";
+/* Safely convert to a float, depending on value. */
 static PyObject *
 fastnumbers_safe_float(PyObject *self, PyObject *args)
 {
@@ -206,28 +162,7 @@ fastnumbers_safe_float(PyObject *self, PyObject *args)
 }
 
 
-const char safe_int_docstring[] = 
-"Convert input to a *int* if possible, return the input otherwise.\n"
-"\n"
-"Convert input to a *int* if possible, return unchanged if not\n"
-"possible; no ValueError will be raised for invalid string input, although\n"
-"a TypeError error will be raised for types the *int* function also does\n"
-"not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str* or *int* (or *long* on Python2 if the input was *long*)."
-"\n"
-"It is roughly equivalent to\n"
-"\n"
-"    >>> def safe_int(input):\n"
-"    ...    try:\n"
-"    ...        return int(input)\n"
-"    ...    except ValueError:\n"
-"    ...        return input\n"
-"    ...\n"
-"\n"
-"The main difference is that much of Python's exception mechanism is\n"
-"bypassed so that this will be more efficient for attempted conversions\n"
-"on large sets of data.\n"
-"\n";
+/* Safely convert to an int, depending on value. */
 static PyObject *
 fastnumbers_safe_int(PyObject *self, PyObject *args)
 {
@@ -265,35 +200,7 @@ fastnumbers_safe_int(PyObject *self, PyObject *args)
 }
 
 
-const char fast_real_docstring[] = 
-"Convert input to an *int* or *float* if possible, return the input otherwise.\n"
-"\n"
-"Convert input to an *int* or *float* if possible, return unchanged if not\n"
-"possible; no ValueError will be raised for invalid input, although\n"
-"a TypeError error will be raised for types the *float* function also does\n"
-"not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str*, *int*, or *float*."
-"\n"
-"It is roughly equivalent to\n"
-"\n"
-"    >>> def safe_real(input):\n"
-"    ...     try:\n"
-"    ...         a = float(x)\n"
-"    ...     except ValueError:\n"
-"    ...         return x\n"
-"    ...     else:\n"
-"    ...         b = int(a)\n"
-"    ...         return b if a == b else b\n"
-"    ...\n"
-"\n"
-"The main differences are that much of Python's exception mechanism is\n"
-"bypassed so that this will be more efficient for attempted conversions\n"
-"on large sets of data, and a fast implementation of *atof* is used to\n"
-"convert strings to a *float* which for large exponents may be inaccurate\n"
-"in the 12th decimal place (you should be mindful of this when converting\n"
-"very large or small numbers, especially if a given string integer is\n"
-"larger than can be contained in the C-type 'long'.)"
-"\n";
+/* Quickly convert to an int or float, depending on value. */
 static PyObject *
 fastnumbers_fast_real(PyObject *self, PyObject *args)
 {
@@ -340,31 +247,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args)
 }
 
 
-const char fast_float_docstring[] = 
-"Convert a string to a *float* if possible, return the input otherwise.\n"
-"\n"
-"Convert input to a *float* if possible, return unchanged if not\n"
-"possible; no ValueError will be raised for invalid input, although\n"
-"a TypeError error will be raised for types the *float* function also does\n"
-"not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str* or *float*."
-"\n"
-"It is roughly equivalent to\n"
-"\n"
-"    >>> def fast_float(input):\n"
-"    ...    try:\n"
-"    ...        return float(input)\n"
-"    ...    except ValueError:\n"
-"    ...        return input\n"
-"    ...\n"
-"\n"
-"The main differences are that much of Python's exception mechanism is\n"
-"bypassed so that this will be more efficient for attempted conversions\n"
-"on large sets of data, and a fast implementation of *atof* is used to\n"
-"convert strings to a *float* which for large exponents may be inaccurate\n"
-"in the 12th decimal place (you should be mindful of this when converting\n"
-"very large or small numbers).\n"
-"\n";
+/* Quickly convert to a float, depending on value. */
 static PyObject *
 fastnumbers_fast_float(PyObject *self, PyObject *args)
 {
@@ -394,31 +277,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args)
 }
 
 
-const char fast_int_docstring[] = 
-"Convert a string to a *int* if possible, return the input otherwise.\n"
-"\n"
-"Convert input to a *int* if possible, return unchanged if not\n"
-"possible; no ValueError will be raised for invalid string input, although\n"
-"a TypeError error will be raised for types the *int* function also does\n"
-"not accept, like a *list*.  The return value is guaranteed to be of\n"
-"type *str*, or *int* (or *long* on Python2 if the input was *long*)."
-"\n"
-"It is roughly equivalent to\n"
-"\n"
-"    >>> def fast_int(input):\n"
-"    ...    try:\n"
-"    ...        return int(input)\n"
-"    ...    except ValueError:\n"
-"    ...        return input\n"
-"    ...\n"
-"\n"
-"The main differences are that much of Python's exception mechanism is\n"
-"bypassed so that this will be more efficient for attempted conversions\n"
-"on large sets of data, and a fast implementation of *atoi* is used to\n"
-"convert strings to an *int* which does not check for overflow/underflow\n"
-"(you should be mindful of this when converting very large or small\n"
-"numbers).\n"
-"\n";
+/* Quickly convert to an int, depending on value. */
 static PyObject *
 fastnumbers_fast_int(PyObject *self, PyObject *args)
 {
@@ -484,7 +343,7 @@ static PyMethodDef FastnumbersMethods[] = {
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         "fastnumbers",
-        "Quickly convert strings to numbers.",
+        module_docstring,
         -1,
         FastnumbersMethods,
         NULL,
@@ -511,7 +370,7 @@ initfastnumbers(void)
 #else
     PyObject *m = Py_InitModule3("fastnumbers",
                                  FastnumbersMethods,
-                                 "Quickly convert strings to numbers.");
+                                 module_docstring);
 #endif
 
     if (m == NULL)
