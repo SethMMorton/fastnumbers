@@ -17,6 +17,8 @@ const bool true  = 1;
 /* The actual declarations */
 long fast_atoi(char *c, bool *error);
 double fast_atof (char *p, bool *error);
+bool fast_atof_test (char *p);
+bool fast_atoi_test (char *p);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -37,14 +37,16 @@ char* convert_string(PyObject *input) {
 #endif
     /* If none of the above, not a string type. */
     } else {
-        PyErr_SetString(PyExc_TypeError,
-                        "expected str(), float(), or int() argument");
+        PyErr_Format(PyExc_TypeError,
+                     "expected str, float, or int argument, got %.200s",
+                     input->ob_type->tp_name);
         return NULL;
     }
     /* There was an error with conversion. */
     if (str == NULL) {
-        PyErr_SetString(PyExc_ValueError,
-                        "expected str(), float(), or int() argument");
+        PyErr_Format(PyExc_TypeError,
+                     "expected str, float, or int argument, got %.200s",
+                     input->ob_type->tp_name);
         return NULL;
     }
     return str;

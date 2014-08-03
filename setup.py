@@ -46,7 +46,9 @@ class PyTest(TestCommand):
 
 
 # Create a list of all the source files
-sourcefiles = ['fast_atoi.c', 'fast_atof.c', 'convenience.c', 'fastnumbers.c']
+sourcefiles = ['fast_atoi.c', 'fast_atof.c',
+               'fast_atoi_test.c', 'fast_atof_test.c', 
+               'convenience.c', 'fastnumbers.c']
 sourcefiles = [join('src', sf) for sf in sourcefiles]
 
 

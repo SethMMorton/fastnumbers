@@ -300,6 +300,128 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args)
 }
 
 
+/* Quickly determine if the input is a real. */
+static PyObject *
+fastnumbers_isreal(PyObject *self, PyObject *args)
+{
+    PyObject *input = NULL;
+    char *str;
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, "O", &input)) return NULL;
+
+    /* If the input is a number, return true now. */
+    if (ANYNUM(input)) Py_RETURN_TRUE;
+
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+
+    /* If it cannot be converted to a string, return false. */
+    if (str == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+
+    /* If the string can be a float, return true, false otherwise. */
+    if (fast_atof_test(str)) Py_RETURN_TRUE;
+    else Py_RETURN_FALSE;
+}
+
+
+/* Quickly determine if the input is a float. */
+static PyObject *
+fastnumbers_isfloat(PyObject *self, PyObject *args)
+{
+    PyObject *input = NULL;
+    char *str;
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, "O", &input)) return NULL;
+
+    /* If the input is a float, return true now. */
+    if (PyFloat_Check(input)) Py_RETURN_TRUE;
+    /* If the input is an int, return false now. */
+    if (PYINT_CHECK(input)) Py_RETURN_FALSE;
+
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+
+    /* If it cannot be converted to a string, return false. */
+    if (str == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+
+    /* If the string can be a float, return true, false otherwise. */
+    if (fast_atof_test(str)) Py_RETURN_TRUE;
+    else Py_RETURN_FALSE;
+}
+
+
+/* Quickly determine if the input is an int. */
+static PyObject *
+fastnumbers_isint(PyObject *self, PyObject *args)
+{
+    PyObject *input = NULL;
+    char *str;
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, "O", &input)) return NULL;
+
+    /* If the input is an int, return true now. */
+    if (PYINT_CHECK(input)) Py_RETURN_TRUE;
+    /* If the input is a float, return false now. */
+    if (PyFloat_Check(input)) Py_RETURN_FALSE;
+
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+
+    /* If it cannot be converted to a string, return false. */
+    if (str == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+
+    /* If the string can be an int, return true, false otherwise. */
+    if (fast_atoi_test(str)) Py_RETURN_TRUE;
+    else Py_RETURN_FALSE;
+}
+
+
+/* Quickly determine if the input is int-like. */
+static PyObject *
+fastnumbers_isintlike(PyObject *self, PyObject *args)
+{
+    PyObject *input = NULL, *intlike = NULL, *pyresult = NULL;
+    char *str;
+    double result;
+    bool error;
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, "O", &input)) return NULL;
+
+    /* If the input is an int, return true now. */
+    if (PYINT_CHECK(input))
+        Py_RETURN_TRUE;
+    /* If the input is a float, return the result of "is_integer". */
+    else if (PyFloat_Check(input))
+        return PyObject_CallMethod(input, "is_integer", NULL);
+
+    /* Attempt to convert to char*. */
+    str = convert_string(input);
+
+    /* If it cannot be converted to a string, return false. */
+    if (str == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+
+    /* If the string can be an int, return true now. */
+    if (fast_atoi_test(str)) Py_RETURN_TRUE;
+
+    /* Try converting the string to a float, */
+    /* and then running is_integer on that. */
+    result = fast_atof(str, &error);
+
+    /* If there was an error, return false now. */
+    if (error) Py_RETURN_FALSE;
+
+    /* Convert to float type and return the result if "is_integer". */
+    pyresult = PyFloat_FromDouble(result);
+    intlike = PyObject_CallMethod(pyresult, "is_integer", NULL);
+    Py_DECREF(pyresult);
+    return intlike;
+}
+
+
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
     {"safe_real", fastnumbers_safe_real, METH_VARARGS, safe_real_docstring},
@@ -310,13 +432,10 @@ static PyMethodDef FastnumbersMethods[] = {
     {"fast_float", fastnumbers_fast_float, METH_VARARGS, fast_float_docstring},
     {"fast_int", fastnumbers_fast_int, METH_VARARGS, fast_int_docstring},
     {"fast_forceint", fastnumbers_fast_forceint, METH_VARARGS, fast_forceint_docstring},
-    // {"str_isreal", fastnumbers_str_isreal, METH_VARARGS, str_isreal_docstring},
-    // {"str_isfloat", fastnumbers_str_isfloat, METH_VARARGS, str_isfloat_docstring},
-    // {"str_isint", fastnumbers_str_isint, METH_VARARGS, str_isint_docstring},
-    // {"fast_isreal", fastnumbers_fast_isreal, METH_VARARGS, fast_isreal_docstring},
-    // {"fast_isfloat", fastnumbers_fast_isfloat, METH_VARARGS, fast_isfloat_docstring},
-    // {"fast_isint", fastnumbers_fast_isint, METH_VARARGS, fast_isint_docstring},
-    // {"fast_isintlike", fastnumbers_fast_isintlike, METH_VARARGS, fast_isintlike_docstring},}
+    {"isreal", fastnumbers_isreal, METH_VARARGS, ""},
+    {"isfloat", fastnumbers_isfloat, METH_VARARGS, ""},
+    {"isint", fastnumbers_isint, METH_VARARGS, ""},
+    {"isintlike", fastnumbers_isintlike, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

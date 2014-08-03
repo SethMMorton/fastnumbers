@@ -305,3 +305,130 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint('not_a_number') == 'not_a_number'
     # 13. Invalid input string with numbers
     assert fastnumbers.fast_forceint('26.8 lb') == '26.8 lb'
+
+
+def test_isreal():
+    # 1. float number
+    assert fastnumbers.isreal(-367.3268)
+    # 2. signed float string
+    assert fastnumbers.isreal("+367.3268")
+    # 3. float string with exponents
+    assert fastnumbers.isreal("-367.3268e207")
+    # 4. float string with padded whitespace
+    assert fastnumbers.isreal("   -367.04   ")
+    # 5. int number
+    assert fastnumbers.isreal(499)
+    # 6. signed int string
+    assert fastnumbers.isreal('-499')
+    # 7. int string with padded whitespace
+    assert fastnumbers.isreal('   +3001   ')
+    # 8. long number
+    assert fastnumbers.isreal(35892482945872302493)
+    # 9. long string
+    assert fastnumbers.isreal("35892482945872302493")
+    # 10. return type
+    assert fastnumbers.isreal(4029) is True
+    assert fastnumbers.isreal("4029") is True
+    assert fastnumbers.isreal("hey") is False
+    # 11. TypeError for invalid input
+    assert not fastnumbers.isreal(['hey'])
+    # 12. Invalid input string
+    assert not fastnumbers.isreal('not_a_number')
+    # 13. Invalid input string with numbers
+    assert not fastnumbers.isreal('26.8 lb')
+
+
+def test_isfloat():
+    # 1. float number
+    assert fastnumbers.isfloat(-367.3268)
+    # 2. signed float string
+    assert fastnumbers.isfloat("+367.3268")
+    # 3. float string with exponents
+    assert fastnumbers.isfloat("-367.3268e207")
+    # 4. float string with padded whitespace
+    assert fastnumbers.isfloat("   -367.04   ")
+    # 5. int number
+    assert not fastnumbers.isfloat(499)
+    # 6. signed int string
+    assert fastnumbers.isfloat('-499')
+    # 7. int string with padded whitespace
+    assert fastnumbers.isfloat('   +3001   ')
+    # 8. long number
+    assert not fastnumbers.isfloat(35892482945872302493)
+    # 9. long string
+    assert fastnumbers.isfloat("35892482945872302493")
+    # 10. return type
+    assert fastnumbers.isfloat(4029) is False
+    assert fastnumbers.isfloat("4029") is True
+    # 11. TypeError for invalid input
+    assert not fastnumbers.isfloat(['hey'])
+    # 12. Invalid input string
+    assert not fastnumbers.isfloat('not_a_number')
+    # 13. Invalid input string with numbers
+    assert not fastnumbers.isfloat('26.8 lb')
+
+
+def test_isint():
+    # 1. float number
+    assert not fastnumbers.isint(-367.3268)
+    # 2. signed float string
+    assert not fastnumbers.isint("+367.3268")
+    # 3. float string with exponents
+    assert not fastnumbers.isint("-367.3268e207")
+    # 4. float string with padded whitespace
+    assert not fastnumbers.isint("   -367.04   ")
+    # 5. int number
+    assert fastnumbers.isint(499)
+    # 6. signed int string
+    assert fastnumbers.isint('-499')
+    # 7. int string with padded whitespace
+    assert fastnumbers.isint('   +3001   ')
+    # 8. long number
+    assert fastnumbers.isint(35892482945872302493)
+    # 9. long string
+    assert fastnumbers.isint("35892482945872302493")
+    # 10. return type
+    assert fastnumbers.isint(4029) is True
+    assert fastnumbers.isint("4029") is True
+    assert fastnumbers.isint("4029.50") is False
+    assert fastnumbers.isint(4029.50) is False
+    # 11. TypeError for invalid input
+    assert not fastnumbers.isint(['hey'])
+    # 12. Invalid input string
+    assert not fastnumbers.isint('not_a_number')
+    # 13. Invalid input string with numbers
+    assert not fastnumbers.isint('26.8 lb')
+
+
+def test_isintlike():
+    # 1. float number
+    assert not fastnumbers.isintlike(-367.3268)
+    assert fastnumbers.isintlike(-367.0)
+    # 2. signed float string
+    assert not fastnumbers.isintlike("+367.3268")
+    assert fastnumbers.isintlike("+367.0")
+    # 3. float string with exponents
+    assert fastnumbers.isintlike("-367.3268e207")
+    # 4. float string with padded whitespace
+    assert not fastnumbers.isintlike("   -367.04   ")
+    # 5. int number
+    assert fastnumbers.isintlike(499)
+    # 6. signed int string
+    assert fastnumbers.isintlike('-499')
+    # 7. int string with padded whitespace
+    assert fastnumbers.isintlike('   +3001   ')
+    # 8. long number
+    assert fastnumbers.isintlike(35892482945872302493)
+    # 9. long string
+    assert fastnumbers.isintlike("35892482945872302493")
+    # 10. return type
+    assert fastnumbers.isintlike(4029) is True
+    assert fastnumbers.isintlike("4029") is True
+    assert fastnumbers.isintlike("4029.50") is False
+    assert fastnumbers.isintlike(4029.50) is False
+    # 11. TypeError for invalid input
+    assert not fastnumbers.isintlike(['hey'])
+    # 12. Invalid input string
+    assert not fastnumbers.isintlike('not_a_number')
+    # 13. Invalid input string with numbers
+    assert not fastnumbers.isintlike('26.8 lb')

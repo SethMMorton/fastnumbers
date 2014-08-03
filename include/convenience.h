@@ -5,12 +5,15 @@
  * MACROS *
  **********/
 
-/* Check for numeric types. */
+/* Check if a number is an int */
 #if PY_MAJOR_VERSION >= 3
-#define ANYNUM(x) PyLong_Check(x) || PyFloat_Check(x)
+#define PYINT_CHECK(x) PyLong_Check(x)
 #else
-#define ANYNUM(x) PyInt_Check(x) || PyLong_Check(x) || PyFloat_Check(x)
+#define PYINT_CHECK(x) PyInt_Check(x) || PyLong_Check(x)
 #endif
+
+/* Check for numeric types. */
+#define ANYNUM(x) PYINT_CHECK(x) || PyFloat_Check(x)
 
 /* Turn a number to an int */
 #if PY_MAJOR_VERSION >= 3
