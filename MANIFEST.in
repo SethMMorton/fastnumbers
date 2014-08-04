@@ -1,0 +1,17 @@
+include README.rst
+include LICENSE
+graft src
+graft include
+include tests/test_fastnumbers.py
+include tests/time_real.py
+include tests/time_float.py
+include tests/time_int.py
+include tests/time_forceint.py
+include tests/time_isreal.py
+include tests/time_isfloat.py
+include tests/time_isint.py
+include tests/time_isintlike.py
+include setup.py
+include setup.cfg
+prune tests/__pycache__
+graft docs/source

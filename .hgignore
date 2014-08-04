@@ -1,0 +1,33 @@
+syntax: glob
+
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+
+# We are using MANIFEST.in instead
+MANIFEST
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+.cache
+
+#Translations
+*.mo
+
+#Mr Developer
+.mr.developer.cfg
