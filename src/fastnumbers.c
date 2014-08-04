@@ -432,10 +432,10 @@ static PyMethodDef FastnumbersMethods[] = {
     {"fast_float", fastnumbers_fast_float, METH_VARARGS, fast_float_docstring},
     {"fast_int", fastnumbers_fast_int, METH_VARARGS, fast_int_docstring},
     {"fast_forceint", fastnumbers_fast_forceint, METH_VARARGS, fast_forceint_docstring},
-    {"isreal", fastnumbers_isreal, METH_VARARGS, ""},
-    {"isfloat", fastnumbers_isfloat, METH_VARARGS, ""},
-    {"isint", fastnumbers_isint, METH_VARARGS, ""},
-    {"isintlike", fastnumbers_isintlike, METH_VARARGS, ""},
+    {"isreal", fastnumbers_isreal, METH_VARARGS, isreal_docstring},
+    {"isfloat", fastnumbers_isfloat, METH_VARARGS, isfloat_docstring},
+    {"isint", fastnumbers_isint, METH_VARARGS, isint_docstring},
+    {"isintlike", fastnumbers_isintlike, METH_VARARGS, isintlike_docstring},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
