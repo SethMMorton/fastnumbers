@@ -5,7 +5,6 @@
  * - An attractive alternative if the number of calls is in the millions.
  * - Assumes input is a proper integer, fraction, or scientific format.
  * - Matches library atof() to 15 digits (except at extreme exponents).
- * - Follows atof() precedent of essentially no error checking.
  *
  * 09-May-2009 Tom Van Baak (tvb) www.LeapSecond.com
  * Error checking added by Seth M. Morton, July 30, 2014 

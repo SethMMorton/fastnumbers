@@ -53,7 +53,8 @@ sourcefiles = [join('src', sf) for sf in sourcefiles]
 
 
 # Extension definition
-ext = Extension('fastnumbers', sourcefiles, include_dirs=[abspath(join('include'))])
+ext = Extension('fastnumbers', sourcefiles,
+                include_dirs=[abspath(join('include'))])
 
 
 # Define the build

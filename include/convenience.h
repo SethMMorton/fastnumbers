@@ -1,6 +1,10 @@
 #ifndef CONVENIENCE
 #define CONVENIENCE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**********
  * MACROS *
  **********/
@@ -70,5 +74,9 @@
  *************/
 
 char* convert_string(PyObject *input);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* CONVENIENCE */
