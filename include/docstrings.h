@@ -8,10 +8,10 @@
  */
 
 
-const char module_docstring[] = "Quickly convert strings to numbers.";
+static char module_docstring[] = "Quickly convert strings to numbers.\n";
 
 
-const char safe_real_docstring[] = 
+static char safe_real_docstring[] = 
 "Convert input to an `int` or `float` if possible or return input as-is.\n"
 "\n"
 "Convert input to an `int` or `float` if possible, return unchanged if not\n"
@@ -74,7 +74,7 @@ const char safe_real_docstring[] =
 "\n";
 
 
-const char safe_float_docstring[] = 
+static char safe_float_docstring[] = 
 "Convert input to a `float` if possible or return input as-is.\n"
 "\n"
 "Convert input to a `float` if possible, return unchanged if not\n"
@@ -130,7 +130,7 @@ const char safe_float_docstring[] =
 "\n";
 
 
-const char safe_int_docstring[] = 
+static char safe_int_docstring[] = 
 "Convert input to an `int` if possible or return input as-is.\n"
 "\n"
 "Convert input to an `int` if possible, return unchanged if not\n"
@@ -185,7 +185,7 @@ const char safe_int_docstring[] =
 "\n";
 
 
-const char safe_forceint_docstring[] = 
+static char safe_forceint_docstring[] = 
 "Convert input to an `int` if possible (including float strings)"
 "or return input as-is.\n"
 "\n"
@@ -250,7 +250,7 @@ const char safe_forceint_docstring[] =
 "\n";
 
 
-const char fast_real_docstring[] = 
+static char fast_real_docstring[] = 
 "Convert input to an `int` or `float` if possible or return input as-is.\n"
 "\n"
 "Convert input to an `int` or `float` if possible, return unchanged if not\n"
@@ -319,7 +319,7 @@ const char fast_real_docstring[] =
 "\n";
 
 
-const char fast_float_docstring[] = 
+static char fast_float_docstring[] = 
 "Convert input to a `float` if possible or return input as-is.\n"
 "\n"
 "Convert input to a `float` if possible, return unchanged if not\n"
@@ -381,7 +381,7 @@ const char fast_float_docstring[] =
 "\n";
 
 
-const char fast_int_docstring[] = 
+static char fast_int_docstring[] = 
 "Convert input to an `int` if possible or return input as-is.\n"
 "\n"
 "Convert input to an `int` if possible, return unchanged if not\n"
@@ -440,7 +440,7 @@ const char fast_int_docstring[] =
 "\n";
 
 
-const char fast_forceint_docstring[] = 
+static char fast_forceint_docstring[] = 
 "Convert input to an `int` if possible (including float strings) "
 "or return input as-is.\n"
 "\n"
@@ -511,7 +511,7 @@ const char fast_forceint_docstring[] =
 "\n";
 
 
-const char isreal_docstring[] = 
+static char isreal_docstring[] = 
 "Quickly determine if a string (or object) is a real number.\n"
 "\n"
 "Quickly determine if a string (or object) is a real number. No value\n"
@@ -558,7 +558,7 @@ const char isreal_docstring[] =
 "\n";
 
 
-const char isfloat_docstring[] = 
+static char isfloat_docstring[] = 
 "Quickly determine if a string (or object) is a `float`.\n"
 "\n"
 "Quickly determine if a string (or object) is a `float`. No value\n"
@@ -605,7 +605,7 @@ const char isfloat_docstring[] =
 "\n";
 
 
-const char isint_docstring[] = 
+static char isint_docstring[] = 
 "Quickly determine if a string (or object) is an `int`.\n"
 "\n"
 "Quickly determine if a string (or object) is an `int`. No value\n"
@@ -650,7 +650,7 @@ const char isint_docstring[] =
 "\n";
 
 
-const char isintlike_docstring[] = 
+static char isintlike_docstring[] = 
 "Quickly determine if a string (or object) is an `int` or can be one.\n"
 "\n"
 "Quickly determine if a string (or object) is an `int`. No value\n"
