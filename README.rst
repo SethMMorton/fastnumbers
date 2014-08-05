@@ -25,9 +25,9 @@ describe it::
     ...     except ValueError:
     ...         return input
     ... 
-    >>> safe_float('56.04')
-    56.04
-    >>> float_no_raise('56.04') == safe_float('56.04')
+    >>> safe_float('56.07')
+    56.07
+    >>> float_no_raise('56.07') == safe_float('56.07')
     True
     >>> safe_float('bad input')
     'bad input'
@@ -42,9 +42,9 @@ If you really need speed, there are fast versions of the conversion
 functions::
 
     >>> from fastnumbers import fast_float
-    >>> fast_float('56.04')
-    56.04
-    >>> safe_float('56.04') == fast_float('56.04')
+    >>> fast_float('56.07')
+    56.07
+    >>> safe_float('56.07') == fast_float('56.07')
     True
 
 The difference between ``safe_float`` and ``fast_float`` is that the fast
@@ -93,10 +93,10 @@ Timing Documentation for details into all timing results.
     print(timeit('fast_float("invalid"), 'from fastnumbers import fast_float'))
     print()
     print('Valid input:')
-    print(timeit('float_try("56.04")', float_try))
-    print(timeit('float_re("56.04")', float_re))
-    print(timeit('safe_float("56.04"), 'from fastnumbers import safe_float'))
-    print(timeit('fast_float("56.04"), 'from fastnumbers import fast_float'))
+    print(timeit('float_try("56.07")', float_try))
+    print(timeit('float_re("56.07")', float_re))
+    print(timeit('safe_float("56.07"), 'from fastnumbers import safe_float'))
+    print(timeit('fast_float("56.07"), 'from fastnumbers import fast_float'))
 
 The results will be similar to the below, by vary on the system you are on::
 

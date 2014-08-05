@@ -14,7 +14,7 @@
  */
 char* convert_string(PyObject *input) {
     char* str;
-#if PY_MAJOR_VERSION < 3
+#if PY_MAJOR_VERSION < 3 || (PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION < 3)
     PyObject *temp_bytes = NULL;
 #endif
     /* Try Bytes (Python2 str). */
