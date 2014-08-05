@@ -3,6 +3,7 @@
 # Packages
 *.egg
 *.egg-info
+*.so
 dist
 build
 eggs
