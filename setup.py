@@ -42,7 +42,8 @@ class PyTest(TestCommand):
     def run_tests(self):
         #import here, cause outside the eggs aren't loaded
         import pytest
-        sys.exit(pytest.main([]))
+        retcode = pytest.main(['--doctest-glob', '"*.so"'])
+        sys.exit(retcode | pytest.main(['README.rst']))
 
 
 # Create a list of all the source files
@@ -65,7 +66,6 @@ setup(name='fastnumbers',
       url='https://github.com/SethMMorton/fastnumbers',
       license='MIT',
       ext_modules=[ext],
-      ext_package='fastnumbers',
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       tests_require=['pytest'],
@@ -73,12 +73,13 @@ setup(name='fastnumbers',
       classifiers=('Development Status :: 4 - Beta',
                    #'Development Status :: 5 - Production/Stable',
                    'Intended Audience :: Science/Research',
+                   'Intended Audience :: Developers',
                    'Operating System :: OS Independent',
                    'License :: OSI Approved :: MIT License',
                    'Natural Language :: English',
                    'Programming Language :: Python :: 2.6',
                    'Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 3',
-                   'Topic :: Scientific/Engineering',
+                   'Topic :: Utilities',
                    )
 )

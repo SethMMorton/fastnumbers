@@ -8,15 +8,6 @@ from timeit import repeat
 # Local import
 from time_base import time_conv
 
-# Find the build location and add that to the path
-from sysconfig import get_platform, get_python_version
-distutilsname = 'lib.' + '-'.join([get_platform(),
-                                   get_python_version()
-                                   ])
-fastnumberspath = os.path.join('build', distutilsname, 'fastnumbers')
-sys.path.append(fastnumberspath)
-
-
 real_re = '''\
 import re
 real_regex = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$')

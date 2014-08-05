@@ -3,14 +3,8 @@ from __future__ import print_function, division
 import sys
 import os
 from platform import python_version_tuple
-from sysconfig import get_platform, get_python_version
-distutilsname = 'lib.' + '-'.join([get_platform(),
-                                   get_python_version()
-                                   ])
-fastnumberspath = os.path.join('build', distutilsname, 'fastnumbers')
-sys.path.append(fastnumberspath)
-import fastnumbers
 from pytest import raises
+import fastnumbers
 
 if python_version_tuple()[0] == '3':
     long = int

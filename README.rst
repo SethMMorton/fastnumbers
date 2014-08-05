@@ -26,11 +26,11 @@ describe it::
     ...         return input
     ... 
     >>> safe_float('56.04')
-    54.04
+    56.04
     >>> float_no_raise('56.04') == safe_float('56.04')
     True
     >>> safe_float('bad input')
-    'bad_input'
+    'bad input'
     >>> float_no_raise('bad input') == safe_float('bad input')
     True
     >>> safe_float(54)
