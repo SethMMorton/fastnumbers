@@ -4,6 +4,7 @@ and modifies it so that
 
   a) It will load "*.so" files as modules just like a "*.py" file
   b) It recognizes functions defined in "*.so" files
+  c) Remove the configuration extension from the "*.so" files
 
 With these enhancements, doctest can be run on a C python extension module.
 """
@@ -23,7 +24,8 @@ with open(dt_location) as fl:
 # so that extension modules will be loaded properly.
 doctest_str = doctest_str.replace(
     'if filename.endswith(".py"):',
-    'if filename.endswith(".py") or filename.endswith(".so"):'
+    'if filename.endswith(".py") or filename.endswith(".so"):\n'
+    '            from sysconfig import get_config_var'
 )
 
 # inspect.isfunction does not work for functions written in C,
@@ -32,6 +34,12 @@ doctest_str = doctest_str.replace(
 doctest_str = doctest_str.replace(
     'if ((inspect.isfunction(val) or inspect.isclass(val)) and',
     'if ((inspect.isbuiltin(val) or inspect.isclass(val)) and'
+)
+
+# Replace the configuration extension with nothing
+doctest_str = doctest_str.replace(
+    'm = __import__(filename[:-3])',
+    'm = __import__(filename[:-3] if filename.endswith(".py") else filename.replace(get_config_var("EXT_SUFFIX"), ""))'
 )
 
 # Open up the new output file and write the modified input to it.
