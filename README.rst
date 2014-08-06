@@ -1,6 +1,9 @@
 fastnumbers
 ===========
 
+.. image:: https://travis-ci.org/SethMMorton/fastnumbers.svg?branch=develop
+    :target: https://travis-ci.org/SethMMorton/fastnumbers
+
 Convert strings to numbers quickly.
 
 This module is a Python C extension that will convert strings to
