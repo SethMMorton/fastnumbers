@@ -10,6 +10,8 @@ python:
 - 3.4
 install:
 - pip install -e .
+before_script:
+- python patch_doctest.py
 script:
-- python -m pytest --doctest-glob="*.so"
-- python -m pytest README.rst
+- python -m doctest fastnumbers*.so
+- python -m pytest --doctest-glob=README.rst
