@@ -71,7 +71,7 @@ extern "C" {
 
 /* Check a condition, and if true return NULL, first setting an exception by formatting. */
 #define IF_TRUE_RAISE_ERR_FMT(condition, err, fmt, val) \
-    if (condition) { PyErr_Format(err, fmt, val); return NULL; }
+    if (condition) { return PyErr_Format(err, fmt, val); }
 
 /* Check a condition, and if true, clear error cache and return input as-is. */
 #define IF_TRUE_RETURN_INPUT_AS_IS(condition, x) \

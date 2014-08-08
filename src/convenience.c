@@ -27,13 +27,12 @@ char* convert_string(PyObject *input) {
             Py_DECREF(temp_bytes);
         }
         else
-            return NULL;
+            return NULL; // UnicodeEncodeError
     /* If none of the above, not a string type. */
     } else {
-        PyErr_Format(PyExc_TypeError,
-                     "expected str, float, or int argument, got %.200s",
-                     input->ob_type->tp_name);
-        return NULL;
+        return PyErr_Format(PyExc_TypeError,
+                            "expected str, float, or int argument, got %.200s",
+                            input->ob_type->tp_name);
     }
     /* There was an error with conversion. */
     if (str == NULL) return NULL;
