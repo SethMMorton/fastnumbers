@@ -10,8 +10,23 @@ python:
 - 3.4
 install:
 - pip install -e .
+- pip install wheel
 before_script:
 - python patch_doctest.py
 script:
 - python -m doctest fastnumbers*.so
 - python -m pytest --doctest-glob=README.rst
+before_deploy:
+- pip install Sphinx numpydoc
+- python setup.py build_sphinx
+deploy:
+  provider: pypi
+  user: SethMMorton
+  password:
+    secure: OaYQtVh4mGT0ozN7Ar2lSm2IEVMKIyvOESGPGLwVyVxPqp6oC101MovJ7041bZdjMzirMs54EJwtEGQpKFmDBGcKgbjPiYId5Nqb/yDhLC/ojgarbLoFJvUKV6dWJePyY7EOycrqcMdiDabdG80Bw4zziQExbmIOdUiscsAVVmA=
+  on:
+    tags: true
+    all_branches: true
+    repo: SethMMorton/natsort
+  distributions: "sdist bdist_wheel"
+  docs_dir: build/sphinx/html
