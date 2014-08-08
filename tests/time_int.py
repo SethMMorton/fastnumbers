@@ -10,7 +10,7 @@ from time_base import time_conv
 
 int_re = '''\
 import re
-int_regex = re.compile(r'[-+]\d+$')
+int_regex = re.compile(r'[-+]?\d+$')
 int_match = int_regex.match
 def int_re(x):
     """Function to simulate safe_int but with regular expressions."""

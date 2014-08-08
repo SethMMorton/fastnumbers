@@ -12,7 +12,7 @@ real_re = '''\
 import re
 real_regex = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$')
 real_match = real_regex.match
-int_regex = re.compile(r'[-+]\d+$')
+int_regex = re.compile(r'[-+]?\d+$')
 int_match = int_regex.match
 def real_re(x):
     """Function to simulate safe_real but with regular expressions."""

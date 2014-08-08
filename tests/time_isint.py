@@ -10,7 +10,7 @@ from time_base import time_test
 
 isint_re = '''\
 import re
-int_regex = re.compile(r'[-+]\d+$')
+int_regex = re.compile(r'[-+]?\d+$')
 int_match = int_regex.match
 nums = set([float, int])
 def isint_re(x):

@@ -12,7 +12,7 @@ isintlike_re = '''\
 import re
 float_regex = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$')
 float_match = float_regex.match
-int_regex = re.compile(r'[-+]\d+$')
+int_regex = re.compile(r'[-+]?\d+$')
 int_match = int_regex.match
 def isintlike_re(x):
     """Function to simulate isintlike but with regular expressions."""
