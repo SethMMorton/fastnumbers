@@ -13,11 +13,11 @@ extern "C" {
 #if PY_MAJOR_VERSION >= 3
 #define PYINT_CHECK(x) PyLong_Check(x)
 #else
-#define PYINT_CHECK(x) PyInt_Check(x) || PyLong_Check(x)
+#define PYINT_CHECK(x) (PyInt_Check(x) || PyLong_Check(x))
 #endif
 
 /* Check for numeric types. */
-#define ANYNUM(x) PYINT_CHECK(x) || PyFloat_Check(x)
+#define ANYNUM(x) (PYINT_CHECK(x) || PyFloat_Check(x))
 
 /* Turn a number to an int */
 #if PY_MAJOR_VERSION >= 3
@@ -53,7 +53,7 @@ extern "C" {
 #define RETURN_IF_STRING_OR_RAISE(x) \
     if (PyUnicode_Check(x) || PyBytes_Check(x)) { \
         PyErr_Clear(); \
-        return Py_BuildValue("O", (x)); \
+        return Py_INCREF(x), (x); \
     } \
     else return NULL;
 
@@ -61,9 +61,21 @@ extern "C" {
 #define IF_TRUE_RETURN_IF_STRING_OR_RAISE(condition, x) \
     if (condition) { RETURN_IF_STRING_OR_RAISE(x) }
 
+/* Check a condition, and if true return NULL (i.e. raise error). */
+#define IF_TRUE_RAISE(condition) \
+    if (condition) { return NULL; }
+
+/* Check a condition, and if true return NULL, first setting an exception. */
+#define IF_TRUE_RAISE_ERR_STR(condition, err, str) \
+    if (condition) { PyErr_SetString(err, str); return NULL; }
+
+/* Check a condition, and if true return NULL, first setting an exception by formatting. */
+#define IF_TRUE_RAISE_ERR_FMT(condition, err, fmt, val) \
+    if (condition) { PyErr_Format(err, fmt, val); return NULL; }
+
 /* Check a condition, and if true, clear error cache and return input as-is. */
 #define IF_TRUE_RETURN_INPUT_AS_IS(condition, x) \
-    if (condition) { PyErr_Clear(); return Py_BuildValue("O", (x)); }
+    if (condition) { PyErr_Clear(); return Py_INCREF(x), (x); }
 
 /* Check a condition, and if true clear error cache and return value. */
 #define IF_TRUE_RETURN_VALUE(condition, x) \
