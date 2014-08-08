@@ -30,9 +30,9 @@ char* convert_string(PyObject *input) {
             return NULL; // UnicodeEncodeError
     /* If none of the above, not a string type. */
     } else {
-        return PyErr_Format(PyExc_TypeError,
-                            "expected str, float, or int argument, got %.200s",
-                            input->ob_type->tp_name);
+        return (char*) PyErr_Format(PyExc_TypeError,
+                                    "expected str, float, or int argument, got %.200s",
+                                    input->ob_type->tp_name);
     }
     /* There was an error with conversion. */
     if (str == NULL) return NULL;
