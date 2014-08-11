@@ -6,6 +6,10 @@ fastnumbers
 
 Convert strings to numbers quickly.
 
+    - Source Code: https://github.com/SethMMorton/fastnumbers
+    - Downloads: https://pypi.python.org/pypi/fastnumbers
+    - Documentation: http://pythonhosted.org//fastnumbers/
+
 This module is a Python C extension that will convert strings to
 numbers *much* faster than can be done using pure Python.  Additionally,
 if the string cannot be converted, the string is returned as-is instead
@@ -61,7 +65,8 @@ Timing
 
 Just how much faster is ``fastnumbers`` than a pure python implementation?
 Below are the timing results for the ``*_float`` functions; please see the
-Timing Documentation for details into all timing results.
+`Timing Documentation <http://pythonhosted.org//fastnumbers/timing.html>`_
+for details into all timing results.
 
 ::
 
@@ -135,7 +140,8 @@ also
     - isint
     - isintlike
 
-Please see the API Documentation for full details.
+Please see the `API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
+for full details.
 
 Author
 ------
@@ -145,7 +151,7 @@ Seth M. Morton
 History
 -------
 
-08-6-2014 v. 0.1.0
-''''''''''''''''''
+08-10-2014 v. 0.1.0
+'''''''''''''''''''
 
     - Initial release of 'fastnumbers'.

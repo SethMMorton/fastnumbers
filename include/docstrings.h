@@ -12,7 +12,7 @@ static char module_docstring[] = "Quickly convert strings to numbers.\n";
 
 
 static char safe_real_docstring[] = 
-"safe_real(`x`, `raise_on_invalid` = *False*)\n"
+"safe_real(x, raise_on_invalid=False)\n"
 "Quickly convert input to an `int` or `float` depending on value.\n"
 "\n"
 "Convert input to an `int` if the input is `int`-like, or to a `float`\n"
@@ -100,7 +100,7 @@ static char safe_real_docstring[] =
 
 
 static char safe_float_docstring[] = 
-"safe_float(`x`, `raise_on_invalid` = *False*)\n"
+"safe_float(x, raise_on_invalid=False)\n"
 "Quickly convert input to a `float`.\n"
 "\n"
 "Quickly convert input to a `float`. If the input cannot be converted\n"
@@ -181,7 +181,7 @@ static char safe_float_docstring[] =
 
 
 static char safe_int_docstring[] = 
-"safe_int(`x`, `raise_on_invalid` = *False*)\n"
+"safe_int(x, raise_on_invalid=False)\n"
 "Quickly convert input to an `int`.\n"
 "\n"
 "Quickly convert input to an `int`. If the input cannot be converted\n"
@@ -261,7 +261,7 @@ static char safe_int_docstring[] =
 
 
 static char safe_forceint_docstring[] = 
-"safe_forceint(`x`, `raise_on_invalid` = *False*)\n"
+"safe_forceint(x, raise_on_invalid=False)\n"
 "Quickly convert input to an `int` (by converting to `float` first).\n"
 "\n"
 "Quickly convert input to an `int`. If the input is a string of a `float`\n"
@@ -348,7 +348,7 @@ static char safe_forceint_docstring[] =
 
 
 static char fast_real_docstring[] = 
-"fast_real(`x`, `raise_on_invalid` = *False*)\n"
+"fast_real(x, raise_on_invalid=False)\n"
 "Quickly convert input to an `int` or `float` depending on value.\n"
 "\n"
 "Convert input to an `int` if the input is `int`-like, or to a `float`\n"
@@ -442,7 +442,7 @@ static char fast_real_docstring[] =
 
 
 static char fast_float_docstring[] = 
-"fast_float(`x`, `raise_on_invalid` = *False*)\n"
+"fast_float(x, raise_on_invalid=False)\n"
 "Quickly convert input to a `float`.\n"
 "\n"
 "Quickly convert input to a `float`. If the input cannot be converted\n"
@@ -529,7 +529,7 @@ static char fast_float_docstring[] =
 
 
 static char fast_int_docstring[] = 
-"fast_int(`x`, `raise_on_invalid` = *False*)\n"
+"fast_int(x, raise_on_invalid=False)\n"
 "Quickly convert input to an `int`.\n"
 "\n"
 "Quickly convert input to an `int`. If the input cannot be converted\n"
@@ -613,7 +613,7 @@ static char fast_int_docstring[] =
 
 
 static char fast_forceint_docstring[] = 
-"fast_forceint(`x`, `raise_on_invalid` = *False*)\n"
+"fast_forceint(x, raise_on_invalid=False)\n"
 "Quickly convert input to an `int` (by converting to `float` first).\n"
 "\n"
 "Quickly convert input to an `int`. If the input is a string of a `float`\n"
@@ -706,7 +706,7 @@ static char fast_forceint_docstring[] =
 
 
 static char isreal_docstring[] = 
-"isreal(`x`, `str_only` = *False*)\n"
+"isreal(x, str_only=False)\n"
 "Quickly determine if a string is a real number.\n"
 "\n"
 "Quickly determine if a string is a real number. No value\n"
@@ -768,7 +768,7 @@ static char isreal_docstring[] =
 
 
 static char isfloat_docstring[] = 
-"isfloat(`x`, `str_only` = *False*)\n"
+"isfloat(x, str_only=False)\n"
 "Quickly determine if a string is a `float`.\n"
 "\n"
 "Quickly determine if a string is a `float`. No value\n"
@@ -831,7 +831,7 @@ static char isfloat_docstring[] =
 
 
 static char isint_docstring[] = 
-"isint(`x`, `str_only` = *False*)\n"
+"isint(x, str_only=False)\n"
 "Quickly determine if a string is an `int`.\n"
 "\n"
 "Quickly determine if a string is an `int`. No value\n"
@@ -896,7 +896,7 @@ static char isint_docstring[] =
 
 
 static char isintlike_docstring[] = 
-"isintlike(`x`, `str_only` = *False*)\n"
+"isintlike(x, str_only=False)\n"
 "Quickly determine if a string (or object) is an `int` or `int`-like.\n"
 "\n"
 "Quickly determine if a string (or object) is an `int` or `int`-like. \n"

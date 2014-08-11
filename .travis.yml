@@ -1,7 +1,6 @@
 language: python
 os:
 - linux
-- osx
 python:
 - 2.6
 - 2.7
@@ -10,7 +9,6 @@ python:
 - 3.4
 install:
 - pip install -e .
-- pip install wheel
 before_script:
 - python patch_doctest.py
 script:
@@ -28,5 +26,6 @@ deploy:
     tags: true
     all_branches: true
     repo: SethMMorton/natsort
-  distributions: "sdist bdist_wheel"
+    python: 3.3
+  distributions: sdist
   docs_dir: build/sphinx/html
