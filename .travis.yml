@@ -25,7 +25,7 @@ deploy:
   on:
     tags: true
     all_branches: true
-    repo: SethMMorton/natsort
+    repo: SethMMorton/fastnumbers
     python: 3.3
   distributions: sdist
   docs_dir: build/sphinx/html

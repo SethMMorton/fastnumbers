@@ -10,7 +10,7 @@
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
 
-long fast_atoi (char *p, bool *error)
+long fast_atoi (const char *p, bool *error)
 {
     int sign;
     long value;
