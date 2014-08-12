@@ -174,7 +174,7 @@ fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     /* Check if this float can be represented as an integer. */
-    /* If so, return as an int object, otherwise as a float object. */
+    /* If so, return as an int object making sure we don't lose accuracy. */
     isint = PyObject_CallMethod(result, "is_integer", NULL);
     if (PyObject_IsTrue(isint)) {
         /* If the float is over 2^53, re-read */
@@ -192,8 +192,18 @@ fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
             intresult = PYNUM_ASINT(result);
         }
     }
-    else
-        intresult = PYNUM_ASINT(result);
+    /* Otherwise it as a float object, convert directly to int (truncating). */
+    /* Be careful about infinity. For infinity return sys.maxsize. */ 
+    else {
+        dresult = PyFloat_AsDouble(result);
+        if (Py_IS_INFINITY(dresult)) {
+            intresult = dresult > 0 ? PYNUM_ASINT_FROM_SIZET(PY_SSIZE_T_MAX)
+                                    : PYNUM_ASINT_FROM_SIZET(-PY_SSIZE_T_MAX-1);
+            Py_INCREF(intresult);
+        }
+        else
+            intresult = PYNUM_ASINT(result);
+    }
     
     Py_DECREF(isint);
     Py_DECREF(result);
@@ -357,8 +367,11 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Attempt to convert to a float */
     result = fast_atof(str, &error);
 
+    /* Let's call NaN an error. */
+    error = Py_IS_NAN(result) || error;
+
     /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Otherwise, return input as-is. */
+    /* Otherwise, return input as-is.*/
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to float: '%.200s'", str);
@@ -367,9 +380,14 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     /* Make the integer version of the input. */
+    /* If the input is infinity, return sys.maxsize. */
+    if (Py_IS_INFINITY(result)) {
+        intresult = result > 0 ? PY_SSIZE_T_MAX : -PY_SSIZE_T_MAX-1;
+        result = intresult;  /* To make sure we return this as-is. */
+    }
     /* If the value is greater than 2^53, */
     /* re-read because some precision may have been lost. */
-    if (result > maxsize) {
+    else if (result > maxsize) {
         intresult = fast_atoi(str, &error);
         if (error) intresult = 0;  /* Set to 0 on error. */
     }
@@ -390,12 +408,14 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
+    PyObject *allow_inf = Py_False;
+    PyObject *allow_nan = Py_False;
     char *str;
-    static char *keywords[] = { "x", "str_only", NULL };
+    static char *keywords[] = { "x", "str_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:isreal", keywords,
-                                     &input, &str_only))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOO:isreal", keywords,
+                                     &input, &str_only, &allow_inf, &allow_nan))
         return NULL;
 
     /* If the input is a number, return True now unless */
@@ -411,8 +431,10 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
 
     /* If the string can be a float, return True, False otherwise. */
-    if (fast_atof_test(str)) Py_RETURN_TRUE;
-    else Py_RETURN_FALSE;
+    if (fast_atof_test(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan)))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 
@@ -422,12 +444,14 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
+    PyObject *allow_inf = Py_False;
+    PyObject *allow_nan = Py_False;
     char *str;
-    static char *keywords[] = { "x", "str_only", NULL };
+    static char *keywords[] = { "x", "str_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:isfloat", keywords,
-                                     &input, &str_only))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOO:isfloat", keywords,
+                                     &input, &str_only, &allow_inf, &allow_nan))
         return NULL;
 
     /* If str_only is True and this is a number, return False now. */
@@ -444,8 +468,10 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
 
     /* If the string can be a float, return True, False otherwise. */
-    if (fast_atof_test(str)) Py_RETURN_TRUE;
-    else Py_RETURN_FALSE;
+    if (fast_atof_test(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan)))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 

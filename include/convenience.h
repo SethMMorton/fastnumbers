@@ -1,6 +1,9 @@
 #ifndef CONVENIENCE
 #define CONVENIENCE
 
+#include "Python.h"
+#include "fn_bool.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,6 +27,13 @@ extern "C" {
 #define PYNUM_ASINT(x) PyNumber_Long(x)
 #else
 #define PYNUM_ASINT(x) PyNumber_Int(x)
+#endif
+
+/* Turn a size type into an int */
+#if PY_MAJOR_VERSION >= 3
+#define PYNUM_ASINT_FROM_SIZET(x) PyLong_FromSsize_t(x)
+#else
+#define PYNUM_ASINT_FROM_SIZET(x) PyInt_FromSsize_t(x)
 #endif
 
 /* Different return conditions for numeric types. */
@@ -86,6 +96,7 @@ extern "C" {
  *************/
 
 char* convert_string(PyObject *input);
+bool case_insensitive_match(const char *s, const char *t);
 
 #ifdef __cplusplus
 } /* extern "C" */

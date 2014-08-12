@@ -38,3 +38,15 @@ char* convert_string(PyObject *input) {
     if (str == NULL) return NULL;
     return str;
 }
+
+/* Case-insensitive string match used for nan and inf detection; t should be
+   lower-case.  Returns 1 for a successful match, 0 otherwise.
+   Taken from the Python pystrtod.c source code. */
+bool case_insensitive_match(const char *s, const char *t)
+{
+    while(*t && Py_TOLOWER(*s) == *t) {
+        s++;
+        t++;
+    }
+    return *t ? 0 : 1;
+}

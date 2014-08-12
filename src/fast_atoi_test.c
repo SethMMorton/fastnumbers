@@ -10,7 +10,7 @@
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
  
-bool fast_atoi_test (char *p)
+bool fast_atoi_test (const char *p)
 {
  
     /* Skip leading white space, if any. */

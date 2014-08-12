@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 import sys
 import os
+import math
 from platform import python_version_tuple
 from pytest import raises
 import fastnumbers
@@ -28,6 +29,8 @@ def test_version():
 # 11. TypeError for invalid input
 # 12. Invalid input string
 # 13. Invalid input string with numbers
+# 14. Infinity
+# 15. NaN
 
 def test_safe_real():
     # 1. float number
@@ -68,6 +71,12 @@ def test_safe_real():
     assert fastnumbers.safe_real('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.safe_real('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.safe_real('inf') == float('inf')
+    assert fastnumbers.safe_real('-iNFinity') == float('-inf')
+    # 15. NaN
+    assert math.isnan(fastnumbers.safe_real('nan'))
+    assert math.isnan(fastnumbers.safe_real('-NaN'))
 
 
 def test_safe_float():
@@ -105,6 +114,12 @@ def test_safe_float():
     assert fastnumbers.safe_float('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.safe_float('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.safe_float('inf') == float('inf')
+    assert fastnumbers.safe_float('-iNFinity') == float('-inf')
+    # 15. NaN
+    assert math.isnan(fastnumbers.safe_float('nan'))
+    assert math.isnan(fastnumbers.safe_float('-NaN'))
 
 
 def test_safe_int():
@@ -142,6 +157,10 @@ def test_safe_int():
     assert fastnumbers.safe_int('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.safe_int('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.safe_int('inf') == 'inf'
+    # 15. NaN
+    assert fastnumbers.safe_int('nan') == 'nan'
 
 
 def test_safe_forceint():
@@ -180,6 +199,11 @@ def test_safe_forceint():
     assert fastnumbers.safe_forceint('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.safe_forceint('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.safe_forceint('inf') == sys.maxsize
+    assert fastnumbers.safe_forceint('-iNFinity') == -sys.maxsize - 1
+    # 15. NaN
+    assert fastnumbers.safe_int('nan') == 'nan'
 
 
 def test_fast_real():
@@ -225,6 +249,12 @@ def test_fast_real():
     assert fastnumbers.fast_real('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.fast_real('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.fast_real('inf') == float('inf')
+    assert fastnumbers.fast_real('-iNFinity') == float('-inf')
+    # 15. NaN
+    assert math.isnan(fastnumbers.fast_real('nan'))
+    assert math.isnan(fastnumbers.fast_real('-NaN'))
 
 
 def test_fast_float():
@@ -267,6 +297,12 @@ def test_fast_float():
     assert fastnumbers.fast_float('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.fast_float('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.fast_float('inf') == float('inf')
+    assert fastnumbers.fast_float('-iNFinity') == float('-inf')
+    # 15. NaN
+    assert math.isnan(fastnumbers.fast_float('nan'))
+    assert math.isnan(fastnumbers.fast_float('-NaN'))
 
 
 def test_fast_int():
@@ -306,6 +342,10 @@ def test_fast_int():
     assert fastnumbers.fast_int('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.fast_int('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.fast_int('inf') == 'inf'
+    # 15. NaN
+    assert fastnumbers.fast_int('nan') == 'nan'
 
 
 def test_fast_forceint():
@@ -349,6 +389,11 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint('26.8 lb') == '26.8 lb'
     with raises(ValueError):
         assert fastnumbers.fast_forceint('26.8 lb', True)
+    # 14. Infinity
+    assert fastnumbers.fast_forceint('inf') == sys.maxsize
+    assert fastnumbers.fast_forceint('-iNFinity') == -sys.maxsize - 1
+    # 15. NaN
+    assert fastnumbers.fast_forceint('nan') == 'nan'
 
 
 def test_isreal():
@@ -384,6 +429,14 @@ def test_isreal():
     assert not fastnumbers.isreal('not_a_number')
     # 13. Invalid input string with numbers
     assert not fastnumbers.isreal('26.8 lb')
+    # 14. Infinity
+    assert not fastnumbers.isreal('inf')
+    assert fastnumbers.isreal('inf', allow_inf=True)
+    assert fastnumbers.isreal('-iNFinity', allow_inf=True)
+    # 15. NaN
+    assert not fastnumbers.isreal('nan')
+    assert fastnumbers.isreal('nan', allow_nan=True)
+    assert fastnumbers.isreal('-NaN', allow_nan=True)
 
 
 def test_isfloat():
@@ -419,6 +472,14 @@ def test_isfloat():
     assert not fastnumbers.isfloat('not_a_number')
     # 13. Invalid input string with numbers
     assert not fastnumbers.isfloat('26.8 lb')
+    # 14. Infinity
+    assert not fastnumbers.isfloat('inf')
+    assert fastnumbers.isfloat('inf', allow_inf=True)
+    assert fastnumbers.isfloat('-iNFinity', allow_inf=True)
+    # 15. NaN
+    assert not fastnumbers.isfloat('nan')
+    assert fastnumbers.isfloat('nan', allow_nan=True)
+    assert fastnumbers.isfloat('-NaN', allow_nan=True)
 
 
 def test_isint():
@@ -455,6 +516,10 @@ def test_isint():
     assert not fastnumbers.isint('not_a_number')
     # 13. Invalid input string with numbers
     assert not fastnumbers.isint('26.8 lb')
+    # 14. Infinity
+    assert not fastnumbers.isint('inf')
+    # 15. NaN
+    assert not fastnumbers.isint('nan')
 
 
 def test_isintlike():
@@ -493,3 +558,7 @@ def test_isintlike():
     assert not fastnumbers.isintlike('not_a_number')
     # 13. Invalid input string with numbers
     assert not fastnumbers.isintlike('26.8 lb')
+    # 14. Infinity
+    assert not fastnumbers.isintlike('inf')
+    # 15. NaN
+    assert not fastnumbers.isintlike('nan')
