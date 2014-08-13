@@ -94,14 +94,16 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
  
     while (white_space(*p)) { p += 1; }
 
+    /* Make sure that only '+' or '-' are flagged as an error. */
     /* If the next character is the null character, it is a float. */
+
     if (allow_inf && allow_nan)
-        return *p == '\0' ? true : false;
+        return *p == '\0' ? !(*(p-1) == '+' || *(p-1) == '-') : false;
     else if (allow_inf)
-        return *p == '\0' ? !is_nan : false;
+        return *p == '\0' ? !is_nan && !(*(p-1) == '+' || *(p-1) == '-') : false;
     else if (allow_nan)
-        return *p == '\0' ? !is_inf : false;
+        return *p == '\0' ? !is_inf && !(*(p-1) == '+' || *(p-1) == '-') : false;
     else
-        return *p == '\0' ? !is_inf && !is_nan : false;
+        return *p == '\0' ? !is_inf && !is_nan && !(*(p-1) == '+' || *(p-1) == '-') : false;
 
 }

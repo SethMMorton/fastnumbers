@@ -32,7 +32,8 @@ bool fast_atoi_test (const char *p)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is the null character, it is an int. */
+    /* Make sure that only '+' or '-' are flagged as an error. */
 
-    return *p == '\0' ? true : false;
+    return *p == '\0' ? !(*(p-1) == '+' || *(p-1) == '-') : false;
 
 }

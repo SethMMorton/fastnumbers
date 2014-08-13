@@ -40,8 +40,9 @@ long fast_atoi (const char *p, bool *error)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is not the null character, it is an error. */
+    /* Make sure that only '+' or '-' are flagged as an error. */
 
-    *error = *p != '\0' ? true : false;
+    *error = *p != '\0' ? true : *(p-1) == '+' || *(p-1) == '-';
 
     /* Return signed result. */
  
