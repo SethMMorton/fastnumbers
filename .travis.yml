@@ -26,6 +26,6 @@ deploy:
     tags: true
     all_branches: true
     repo: SethMMorton/fastnumbers
-    python: 3.3
+    python: 2.7
   distributions: sdist
   docs_dir: build/sphinx/html

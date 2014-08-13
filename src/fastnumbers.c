@@ -176,10 +176,10 @@ fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Check if this float can be represented as an integer. */
     /* If so, return as an int object making sure we don't lose accuracy. */
     isint = PyObject_CallMethod(result, "is_integer", NULL);
+    dresult = PyFloat_AsDouble(result);
     if (PyObject_IsTrue(isint)) {
         /* If the float is over 2^53, re-read */
         /* the input string because we may have lost some precision. */
-        dresult = PyFloat_AsDouble(result);
         if (dresult > maxsize) {
             CONVERT_TO_STRING_OR_RAISE(input, str);
             intresult = PYINT_FROM_STRING(str);
@@ -193,20 +193,28 @@ fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         }
     }
     /* Otherwise it as a float object, convert directly to int (truncating). */
-    /* Be careful about infinity. For infinity return sys.maxsize. */ 
+    /* Be careful about infinity. For infinity return sys.maxsize. */
     else {
-        dresult = PyFloat_AsDouble(result);
         if (Py_IS_INFINITY(dresult)) {
             intresult = dresult > 0 ? PYNUM_ASINT_FROM_SIZET(PY_SSIZE_T_MAX)
                                     : PYNUM_ASINT_FROM_SIZET(-PY_SSIZE_T_MAX-1);
             Py_INCREF(intresult);
         }
-        else
+        else 
             intresult = PYNUM_ASINT(result);
     }
-    
+
     Py_DECREF(isint);
     Py_DECREF(result);
+    /* For nan return as-is or raise the value error. */
+    if (Py_IS_NAN(dresult)) {
+        if (PyObject_IsTrue(raise_on_invalid))
+            return NULL;
+        else {
+            PyErr_Clear();
+            return Py_INCREF(input), input;
+        }
+    }
     return intresult;
 }
 

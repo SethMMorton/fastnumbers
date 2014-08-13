@@ -151,7 +151,15 @@ Seth M. Morton
 History
 -------
 
-08-11-2014 v, 0.1.1
+08-12-2014 v. 0.1.2
+'''''''''''''''''''
+
+    - Fixed bug where '+' and '-' were incorrectly identified as a valid
+      float/int and converted to 0.  This bug only applied to the ``fast_*``
+      and ``is*`` functions.
+    - Fixed bug where 'safe_forceint' did not handle 'nan' correctly.
+
+08-11-2014 v. 0.1.1
 '''''''''''''''''''
 
     - 'fastnumbers' now understands 'inf' and 'nan'.

@@ -124,10 +124,12 @@ double fast_atof (const char *p, bool *error)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is not the null character, it is an error. */
+    /* If the next character is the null character, it is a float. */
 
-    *error = *p != '\0' ? true : false;
+    *error = *p != '\0' ? true : *(p-1) == '+' || *(p-1) == '-';
 
     /* Return signed and scaled floating point result. */
+    /* If the next character is the null character, it is a float. */
  
     return sign * (frac ? (value / scale) : (value * scale));
 }
