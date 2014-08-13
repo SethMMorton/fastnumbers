@@ -9,12 +9,12 @@
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
-#define invalid_char(c) (*(c) == '+' || *(c) == '-' || *(c) == 'e' || *(c) == 'E')
 
 long fast_atoi (const char *p, bool *error)
 {
     int sign;
     long value;
+    bool valid = false;
  
     /* Skip leading white space, if any. */
  
@@ -34,6 +34,7 @@ long fast_atoi (const char *p, bool *error)
  
     for (value = 0; valid_digit(*p); p += 1) {
         value = value * 10 + (*p - '0');
+        valid = true;
     }
  
     /* Skip trailing white space, if any. */
@@ -41,9 +42,9 @@ long fast_atoi (const char *p, bool *error)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is not the null character, it is an error. */
-    /* Make sure that only '+' or '-' are flagged as an error. */
+    /* Make sure we have at least seen one valid character. */
 
-    *error = *p != '\0' ? true : invalid_char(p-1);
+    *error = *p != '\0' ? true : !valid;
 
     /* Return signed result. */
  

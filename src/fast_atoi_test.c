@@ -9,11 +9,11 @@
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
-#define invalid_char(c) (*(c) == '+' || *(c) == '-' || *(c) == 'e' || *(c) == 'E')
 
 bool fast_atoi_test (const char *p)
 {
- 
+    bool valid = false;
+
     /* Skip leading white space, if any. */
  
     while (white_space(*p)) { p += 1; }
@@ -25,7 +25,7 @@ bool fast_atoi_test (const char *p)
  
     /* Get digits if any. */
  
-    while (valid_digit(*p)) { p += 1; }
+    while (valid_digit(*p)) { p += 1; valid = true; }
 
  
     /* Skip trailing white space, if any. */
@@ -33,8 +33,8 @@ bool fast_atoi_test (const char *p)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is the null character, it is an int. */
-    /* Make sure that only '+' or '-' are flagged as an error. */
+    /* Make sure we have at least seen one valid character. */
 
-    return *p == '\0' ? !invalid_char(p-1) : false;
+    return *p == '\0' ? valid : false;
 
 }

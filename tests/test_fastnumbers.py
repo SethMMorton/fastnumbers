@@ -31,7 +31,7 @@ def test_version():
 # 13. Invalid input string with numbers
 # 14. Infinity
 # 15. NaN
-# 16. Sign/'e' only
+# 16. Sign/'e'/'.' only
 
 def test_safe_real():
     # 1. float number
@@ -78,10 +78,11 @@ def test_safe_real():
     # 15. NaN
     assert math.isnan(fastnumbers.safe_real('nan'))
     assert math.isnan(fastnumbers.safe_real('-NaN'))
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.safe_real('+') == '+'
     assert fastnumbers.safe_real('-') == '-'
     assert fastnumbers.safe_real('e') == 'e'
+    assert fastnumbers.safe_real('.') == '.'
 
 
 def test_safe_float():
@@ -125,10 +126,11 @@ def test_safe_float():
     # 15. NaN
     assert math.isnan(fastnumbers.safe_float('nan'))
     assert math.isnan(fastnumbers.safe_float('-NaN'))
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.safe_float('+') == '+'
     assert fastnumbers.safe_float('-') == '-'
     assert fastnumbers.safe_float('e') == 'e'
+    assert fastnumbers.safe_float('.') == '.'
 
 
 def test_safe_int():
@@ -170,10 +172,11 @@ def test_safe_int():
     assert fastnumbers.safe_int('inf') == 'inf'
     # 15. NaN
     assert fastnumbers.safe_int('nan') == 'nan'
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.safe_int('+') == '+'
     assert fastnumbers.safe_int('-') == '-'
     assert fastnumbers.safe_int('e') == 'e'
+    assert fastnumbers.safe_int('.') == '.'
 
 
 def test_safe_forceint():
@@ -217,10 +220,11 @@ def test_safe_forceint():
     assert fastnumbers.safe_forceint('-iNFinity') == -sys.maxsize - 1
     # 15. NaN
     assert fastnumbers.safe_forceint('nan') == 'nan'
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.safe_forceint('+') == '+'
     assert fastnumbers.safe_forceint('-') == '-'
     assert fastnumbers.safe_forceint('e') == 'e'
+    assert fastnumbers.safe_forceint('.') == '.'
 
 
 def test_fast_real():
@@ -272,10 +276,11 @@ def test_fast_real():
     # 15. NaN
     assert math.isnan(fastnumbers.fast_real('nan'))
     assert math.isnan(fastnumbers.fast_real('-NaN'))
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_real('+') == '+'
     assert fastnumbers.fast_real('-') == '-'
     assert fastnumbers.fast_real('e') == 'e'
+    assert fastnumbers.fast_real('.') == '.'
 
 
 def test_fast_float():
@@ -324,10 +329,11 @@ def test_fast_float():
     # 15. NaN
     assert math.isnan(fastnumbers.fast_float('nan'))
     assert math.isnan(fastnumbers.fast_float('-NaN'))
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_float('+') == '+'
     assert fastnumbers.fast_float('-') == '-'
     assert fastnumbers.fast_float('e') == 'e'
+    assert fastnumbers.fast_float('.') == '.'
 
 
 def test_fast_int():
@@ -371,10 +377,11 @@ def test_fast_int():
     assert fastnumbers.fast_int('inf') == 'inf'
     # 15. NaN
     assert fastnumbers.fast_int('nan') == 'nan'
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_int('+') == '+'
     assert fastnumbers.fast_int('-') == '-'
     assert fastnumbers.fast_int('e') == 'e'
+    assert fastnumbers.fast_int('.') == '.'
 
 
 def test_fast_forceint():
@@ -423,10 +430,11 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint('-iNFinity') == -sys.maxsize - 1
     # 15. NaN
     assert fastnumbers.fast_forceint('nan') == 'nan'
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_forceint('+') == '+'
     assert fastnumbers.fast_forceint('-') == '-'
     assert fastnumbers.fast_forceint('e') == 'e'
+    assert fastnumbers.fast_forceint('.') == '.'
 
 
 def test_isreal():
@@ -470,10 +478,11 @@ def test_isreal():
     assert not fastnumbers.isreal('nan')
     assert fastnumbers.isreal('nan', allow_nan=True)
     assert fastnumbers.isreal('-NaN', allow_nan=True)
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert not fastnumbers.isreal('+')
     assert not fastnumbers.isreal('-')
     assert not fastnumbers.isreal('e')
+    assert not fastnumbers.isreal('.')
 
 
 def test_isfloat():
@@ -517,10 +526,11 @@ def test_isfloat():
     assert not fastnumbers.isfloat('nan')
     assert fastnumbers.isfloat('nan', allow_nan=True)
     assert fastnumbers.isfloat('-NaN', allow_nan=True)
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert not fastnumbers.isfloat('+')
     assert not fastnumbers.isfloat('-')
     assert not fastnumbers.isfloat('e')
+    assert not fastnumbers.isfloat('.')
 
 
 def test_isint():
@@ -561,10 +571,11 @@ def test_isint():
     assert not fastnumbers.isint('inf')
     # 15. NaN
     assert not fastnumbers.isint('nan')
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert not fastnumbers.isint('+')
     assert not fastnumbers.isint('-')
     assert not fastnumbers.isint('e')
+    assert not fastnumbers.isint('.')
 
 
 def test_isintlike():
@@ -607,7 +618,8 @@ def test_isintlike():
     assert not fastnumbers.isintlike('inf')
     # 15. NaN
     assert not fastnumbers.isintlike('nan')
-    # 16. Sign/'e' only
+    # 16. Sign/'e'/'.' only
     assert not fastnumbers.isintlike('+')
     assert not fastnumbers.isintlike('-')
     assert not fastnumbers.isintlike('e')
+    assert not fastnumbers.isintlike('.')
