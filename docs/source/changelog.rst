@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+08-12-2014 v. 0.1.3
+'''''''''''''''''''
+
+    - Fixed bug where 'e' and 'E' were incorrectly identified as a valid
+      float/int and converted to 0.  This bug only applied to the ``fast_*``
+      and ``is*`` functions.
+
 08-12-2014 v. 0.1.2
 '''''''''''''''''''
 

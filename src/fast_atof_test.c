@@ -11,7 +11,8 @@
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
- 
+#define invalid_char(c) (*(c) == '+' || *(c) == '-' || *(c) == 'e' || *(c) == 'E')
+
 bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
 {
     const char *s;
@@ -94,16 +95,16 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
  
     while (white_space(*p)) { p += 1; }
 
-    /* Make sure that only '+' or '-' are flagged as an error. */
     /* If the next character is the null character, it is a float. */
+    /* Make sure that only '+' or '-' are flagged as an error. */
 
     if (allow_inf && allow_nan)
-        return *p == '\0' ? !(*(p-1) == '+' || *(p-1) == '-') : false;
+        return *p == '\0' ? !invalid_char(p-1) : false;
     else if (allow_inf)
-        return *p == '\0' ? !is_nan && !(*(p-1) == '+' || *(p-1) == '-') : false;
+        return *p == '\0' ? !is_nan && !invalid_char(p-1) : false;
     else if (allow_nan)
-        return *p == '\0' ? !is_inf && !(*(p-1) == '+' || *(p-1) == '-') : false;
+        return *p == '\0' ? !is_inf && !invalid_char(p-1) : false;
     else
-        return *p == '\0' ? !is_inf && !is_nan && !(*(p-1) == '+' || *(p-1) == '-') : false;
+        return *p == '\0' ? !is_inf && !is_nan && !invalid_char(p-1) : false;
 
 }
