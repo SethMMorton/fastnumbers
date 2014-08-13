@@ -9,7 +9,8 @@
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
- 
+#define invalid_char(c) (*(c) == '+' || *(c) == '-' || *(c) == 'e' || *(c) == 'E')
+
 bool fast_atoi_test (const char *p)
 {
  
@@ -34,6 +35,6 @@ bool fast_atoi_test (const char *p)
     /* If the next character is the null character, it is an int. */
     /* Make sure that only '+' or '-' are flagged as an error. */
 
-    return *p == '\0' ? !(*(p-1) == '+' || *(p-1) == '-') : false;
+    return *p == '\0' ? !invalid_char(p-1) : false;
 
 }
