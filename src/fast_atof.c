@@ -16,7 +16,6 @@
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
-#define invalid_char(c) (*(c) == '+' || *(c) == '-' || *(c) == 'e' || *(c) == 'E')
 
 double fast_atof (const char *p, bool *error)
 {
@@ -24,6 +23,7 @@ double fast_atof (const char *p, bool *error)
     unsigned int expon = 0;
     double sign = 1.0, value = 0.0, scale = 1.0;
     double pow10 = 10.0;
+    bool valid = false;
     const char *s;
 
     /* Skip leading white space, if any. */
@@ -54,6 +54,7 @@ double fast_atof (const char *p, bool *error)
             if (case_insensitive_match(s, "inity")) 
                 s += 5;
             value = Py_HUGE_VAL;
+            valid = true;
         }
 
         /* Are we NaN? */
@@ -61,6 +62,7 @@ double fast_atof (const char *p, bool *error)
         else if (case_insensitive_match(s, "nan")) {
             s += 3;
             value = Py_NAN;
+            valid = true;
         }
 
         /* Reset pointer. */
@@ -77,6 +79,7 @@ double fast_atof (const char *p, bool *error)
      
         for (value = 0.0; valid_digit(*p); p += 1) {
             value = value * 10.0 + (*p - '0');
+            valid = true;
         }
      
         /* Get digits after decimal point, if any. */
@@ -87,6 +90,7 @@ double fast_atof (const char *p, bool *error)
                 value += (*p - '0') / pow10;
                 pow10 *= 10.0;
                 p += 1;
+                valid = true;
             }
         }
      
@@ -108,6 +112,7 @@ double fast_atof (const char *p, bool *error)
      
             for (expon = 0; valid_digit(*p); p += 1) {
                 expon = expon * 10 + (*p - '0');
+                valid = true;
             }
             if (expon > 308) expon = 308;
      
@@ -125,9 +130,9 @@ double fast_atof (const char *p, bool *error)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is not the null character, it is an error. */
-    /* Make sure that only '+' or '-' are flagged as an error. */
+    /* Make sure we have at least seen one valid character. */
 
-    *error = *p != '\0' ? true : invalid_char(p-1);
+    *error = *p != '\0' ? true : !valid;
 
     /* Return signed and scaled floating point result. */
  

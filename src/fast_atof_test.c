@@ -11,11 +11,11 @@
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
-#define invalid_char(c) (*(c) == '+' || *(c) == '-' || *(c) == 'e' || *(c) == 'E')
 
 bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
 {
     const char *s;
+    bool valid = false;
     bool is_nan = false;
     bool is_inf = false;
 
@@ -43,6 +43,7 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
             if (case_insensitive_match(s, "inity"))
                 s += 5;
             is_inf = true;
+            valid = true;
         }
 
         /* Are we NaN? */
@@ -50,6 +51,7 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
         else if (case_insensitive_match(s, "nan")) {
             s += 3;
             is_nan = true;
+            valid = true;
         }
 
         /* Reset pointer. */
@@ -64,13 +66,13 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
 
         /* Get digits before decimal point or exponent, if any. */
      
-        while (valid_digit(*p)) { p += 1; }
+        while (valid_digit(*p)) { p += 1; valid = true; }
      
         /* Get digits after decimal point, if any. */
      
         if (*p == '.') {
             p += 1;
-            while (valid_digit(*p)) { p += 1; }
+            while (valid_digit(*p)) { p += 1; valid = true; }
         }
      
         /* Handle exponent, if any. */
@@ -85,7 +87,7 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
      
             /* Get digits of exponent, if any. */
      
-            while (valid_digit(*p)) { p += 1; }
+            while (valid_digit(*p)) { p += 1; valid = true; }
      
         }
  
@@ -96,15 +98,15 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
     while (white_space(*p)) { p += 1; }
 
     /* If the next character is the null character, it is a float. */
-    /* Make sure that only '+' or '-' are flagged as an error. */
+    /* Make sure we have at least seen one valid character. */
 
     if (allow_inf && allow_nan)
-        return *p == '\0' ? !invalid_char(p-1) : false;
+        return *p == '\0' ? valid : false;
     else if (allow_inf)
-        return *p == '\0' ? !is_nan && !invalid_char(p-1) : false;
+        return *p == '\0' ? !is_nan && valid : false;
     else if (allow_nan)
-        return *p == '\0' ? !is_inf && !invalid_char(p-1) : false;
+        return *p == '\0' ? !is_inf && valid : false;
     else
-        return *p == '\0' ? !is_inf && !is_nan && !invalid_char(p-1) : false;
+        return *p == '\0' ? !is_inf && !is_nan && valid : false;
 
 }
