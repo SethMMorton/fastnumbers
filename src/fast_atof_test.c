@@ -94,8 +94,8 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
  
     while (white_space(*p)) { p += 1; }
 
-    /* Make sure that only '+' or '-' are flagged as an error. */
     /* If the next character is the null character, it is a float. */
+    /* Make sure that only '+' or '-' are flagged as an error. */
 
     if (allow_inf && allow_nan)
         return *p == '\0' ? !(*(p-1) == '+' || *(p-1) == '-') : false;
