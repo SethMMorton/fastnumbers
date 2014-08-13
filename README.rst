@@ -151,6 +151,16 @@ Seth M. Morton
 History
 -------
 
+08-12-2014 v. 0.1.4
+'''''''''''''''''''
+
+    - Fixed bug where '.' was incorrectly identified as a valid
+      float/int and converted to 0.  This bug only applied to the ``fast_*``
+      and ``is*`` functions.
+    - The method to catch corner-cases like '.', '+', 'e', etc. has been
+      reworked to be more general... case-by-case patches should no longer
+      be needed.
+
 08-12-2014 v. 0.1.3
 '''''''''''''''''''
 
