@@ -60,6 +60,15 @@ that does not do overflow or underflow checking, and also can lose precision
 around the 12th decimal place for extreme exponents; for the majority of
 cases, the results will be identical.
 
+**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
+function of your choice to ``locale.atof``.
+
+::
+
+    import locale
+    locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+    print(atof('468,5', func=fast_float))  # Prints 468.5
+
 Timing
 ------
 
