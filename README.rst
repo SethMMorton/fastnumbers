@@ -60,6 +60,15 @@ that does not do overflow or underflow checking, and also can lose precision
 around the 12th decimal place for extreme exponents; for the majority of
 cases, the results will be identical.
 
+**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
+function of your choice to ``locale.atof``.
+
+::
+
+    import locale
+    locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+    print(atof('468,5', func=fast_float))  # Prints 468.5
+
 Timing
 ------
 
@@ -151,6 +160,14 @@ Seth M. Morton
 History
 -------
 
+These are the last three entries of the changelog.  See the package documentation
+for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
+
+09-03-2014 v. 0.2.0
+'''''''''''''''''''
+
+    - Added a 'default' option to the conversion functions.
+
 08-12-2014 v. 0.1.4
 '''''''''''''''''''
 
@@ -167,21 +184,3 @@ History
     - Fixed bug where 'e' and 'E' were incorrectly identified as a valid
       float/int and converted to 0.  This bug only applied to the ``fast_*``
       and ``is*`` functions.
-
-08-12-2014 v. 0.1.2
-'''''''''''''''''''
-
-    - Fixed bug where '+' and '-' were incorrectly identified as a valid
-      float/int and converted to 0.  This bug only applied to the ``fast_*``
-      and ``is*`` functions.
-    - Fixed bug where 'safe_forceint' did not handle 'nan' correctly.
-
-08-11-2014 v. 0.1.1
-'''''''''''''''''''
-
-    - 'fastnumbers' now understands 'inf' and 'nan'.
-
-08-10-2014 v. 0.1.0
-'''''''''''''''''''
-
-    - Initial release of 'fastnumbers'.

@@ -3,6 +3,11 @@
 Changelog
 ---------
 
+09-03-2014 v. 0.2.0
+'''''''''''''''''''
+
+    - Added a 'default' option to the conversion functions.
+
 08-12-2014 v. 0.1.4
 '''''''''''''''''''
 

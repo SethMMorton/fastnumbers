@@ -44,6 +44,15 @@ To achieve this, the module makes some assumptions about the input type
 (input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
 and otherwise a ``TypeError`` is raised.
 
+**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
+function of your choice to ``locale.atof``.
+
+::
+
+    import locale
+    locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+    print(atof('468,5', func=fast_float))  # Prints 468.5
+
 Installation
 ------------
 

@@ -32,6 +32,7 @@ def test_version():
 # 14. Infinity
 # 15. NaN
 # 16. Sign/'e'/'.' only
+# 17. Default value.
 
 def test_safe_real():
     # 1. float number
@@ -83,6 +84,10 @@ def test_safe_real():
     assert fastnumbers.safe_real('-') == '-'
     assert fastnumbers.safe_real('e') == 'e'
     assert fastnumbers.safe_real('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.safe_real('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.safe_real('invalid', default=90, raise_on_invalid=True)
 
 
 def test_safe_float():
@@ -131,6 +136,10 @@ def test_safe_float():
     assert fastnumbers.safe_float('-') == '-'
     assert fastnumbers.safe_float('e') == 'e'
     assert fastnumbers.safe_float('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.safe_float('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.safe_float('invalid', default=90, raise_on_invalid=True)
 
 
 def test_safe_int():
@@ -177,6 +186,10 @@ def test_safe_int():
     assert fastnumbers.safe_int('-') == '-'
     assert fastnumbers.safe_int('e') == 'e'
     assert fastnumbers.safe_int('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.safe_int('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.safe_int('invalid', default=90, raise_on_invalid=True)
 
 
 def test_safe_forceint():
@@ -225,6 +238,10 @@ def test_safe_forceint():
     assert fastnumbers.safe_forceint('-') == '-'
     assert fastnumbers.safe_forceint('e') == 'e'
     assert fastnumbers.safe_forceint('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.safe_forceint('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.safe_forceint('invalid', default=90, raise_on_invalid=True)
 
 
 def test_fast_real():
@@ -281,6 +298,10 @@ def test_fast_real():
     assert fastnumbers.fast_real('-') == '-'
     assert fastnumbers.fast_real('e') == 'e'
     assert fastnumbers.fast_real('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.fast_real('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.fast_real('invalid', default=90, raise_on_invalid=True)
 
 
 def test_fast_float():
@@ -334,6 +355,10 @@ def test_fast_float():
     assert fastnumbers.fast_float('-') == '-'
     assert fastnumbers.fast_float('e') == 'e'
     assert fastnumbers.fast_float('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.fast_float('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.fast_float('invalid', default=90, raise_on_invalid=True)
 
 
 def test_fast_int():
@@ -382,6 +407,10 @@ def test_fast_int():
     assert fastnumbers.fast_int('-') == '-'
     assert fastnumbers.fast_int('e') == 'e'
     assert fastnumbers.fast_int('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.fast_int('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.fast_int('invalid', default=90, raise_on_invalid=True)
 
 
 def test_fast_forceint():
@@ -435,6 +464,10 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint('-') == '-'
     assert fastnumbers.fast_forceint('e') == 'e'
     assert fastnumbers.fast_forceint('.') == '.'
+    # 17. Default on invalid... 'raise_on_invalid' supersedes
+    assert fastnumbers.fast_forceint('invalid', default=90) == 90
+    with raises(ValueError):
+        assert fastnumbers.fast_forceint('invalid', default=90, raise_on_invalid=True)
 
 
 def test_isreal():
