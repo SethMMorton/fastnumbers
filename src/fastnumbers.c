@@ -21,13 +21,14 @@ fastnumbers_safe_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL, *result = NULL;
     PyObject *intresult = NULL, *isint = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
     double dresult;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:safe_real", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_real", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now as-is. */
@@ -37,14 +38,16 @@ fastnumbers_safe_real(PyObject *self, PyObject *args, PyObject *kwargs)
     result = PYFLOAT_FROM_PYSTRING(input);
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, check to make sure input is a string. */
     /* If so, clear error stack and return that string.  */
     /* If not, raise the TypeError. */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE(result == NULL);
-    } else {
-        IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
     /* Check if this float can be represented as an integer. */
     /* If so, return as an int object. */
     isint = PyObject_CallMethod(result, "is_integer", NULL);
@@ -77,11 +80,12 @@ fastnumbers_safe_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL, *result = NULL;
     PyObject *raise_on_invalid = Py_False;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    PyObject *default_value = Py_None;
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:safe_float", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_float", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -91,14 +95,16 @@ fastnumbers_safe_float(PyObject *self, PyObject *args, PyObject *kwargs)
     result = PYFLOAT_FROM_PYSTRING(input);
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, check to make sure input is a string. */
     /* If so, clear error stack and return that string.  */
     /* If not, raise the TypeError. */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE(result == NULL);
-    } else {
-        IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
 
     /* If successful, return this float object. */
     return result;
@@ -111,12 +117,13 @@ fastnumbers_safe_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL, *result = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:safe_int", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_int", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -129,12 +136,14 @@ fastnumbers_safe_int(PyObject *self, PyObject *args, PyObject *kwargs)
     result = PYINT_FROM_STRING(str);
 
     /* If unsuccessful, clear error stack and return input as-is */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, clear error stack and return the input string.  */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE(result == NULL);
-    } else {
-        IF_TRUE_RETURN_INPUT_AS_IS(result == NULL, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL, input);
 
     /* Otherwise, return the int object */
     return result;
@@ -148,13 +157,14 @@ fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL, *result = NULL;
     PyObject *intresult = NULL, *isint = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
     double dresult;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:safe_forceint", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_forceint", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now as an int. */
@@ -164,14 +174,16 @@ fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     result = PYFLOAT_FROM_PYSTRING(input);
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, check to make sure input is a string. */
     /* If so, clear error stack and return that string.  */
     /* If not, raise the TypeError. */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE(result == NULL);
-    } else {
-        IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
 
     /* Check if this float can be represented as an integer. */
     /* If so, return as an int object making sure we don't lose accuracy. */
@@ -224,15 +236,16 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
     double result;
     long intresult;
     bool error;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:fast_real", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_real", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -245,13 +258,15 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     result = fast_atof(str, &error);
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, return input as-is. */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to float: '%.200s'", str);
-    } else {
-        IF_TRUE_RETURN_INPUT_AS_IS(error, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
     /* Make the integer version of the input. */
     /* If the value is greater than 2^53, */
@@ -277,14 +292,15 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
     double result;
     bool error;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:fast_float", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_float", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -297,13 +313,15 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     result = fast_atof(str, &error);
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, return input as-is. */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to float: '%.200s'", str);
-    } else {
-        IF_TRUE_RETURN_INPUT_AS_IS(error, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
     /* Otherwise, return the float object */
     return Py_BuildValue("d", result);
@@ -316,14 +334,15 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
     long result;
     bool error;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:fast_int", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_int", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -336,13 +355,15 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     result = fast_atoi(str, &error);
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, return input as-is. */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to int: '%.200s'", str);
-    } else {
-        IF_TRUE_RETURN_INPUT_AS_IS(error, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
     /* If there was an error, return input as-is. */
     return Py_BuildValue("l", result);
@@ -355,15 +376,16 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
+    PyObject *default_value = Py_None;
     char *str;
     double result;
     long intresult;
     bool error;
-    static char *keywords[] = { "x", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:fast_forceint", keywords,
-                                     &input, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_forceint", keywords,
+                                     &input, &raise_on_invalid, &default_value))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -379,13 +401,15 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     error = Py_IS_NAN(result) || error;
 
     /* If unsuccessful, raise the ValueError if the user wants that. */
+    /* Or, return a default value if the user wants that. */
     /* Otherwise, return input as-is.*/
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to float: '%.200s'", str);
-    } else {
-        IF_TRUE_RETURN_INPUT_AS_IS(error, input);
     }
+    IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
+                               default_value);
+    IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
     /* Make the integer version of the input. */
     /* If the input is infinity, return sys.maxsize. */
