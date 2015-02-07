@@ -13,7 +13,7 @@ Convert strings to numbers quickly.
 This module is a Python C extension that will convert strings to
 numbers *much* faster than can be done using pure Python.  Additionally,
 if the string cannot be converted, the string is returned as-is instead
-of returning a ``ValueError``.
+of returning a ``ValueError`` (although this behavior is customizable).
 
 To achieve this, the module makes some assumptions about the input type
 (input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
@@ -63,6 +63,19 @@ version uses an extremely fast implementation of ``atof`` under the hood
 that does not do overflow or underflow checking, and also can lose precision
 around the 12th decimal place for extreme exponents; for the majority of
 cases, the results will be identical.
+
+If you don't want to return the input as-is for invalid input, you can
+either set ``raise_on_invalid`` or ``default`` to some value:
+
+.. code-block:: python
+
+    >>> from fastnumbers import safe_float
+    >>> safe_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid literal for float(): bad input
+    >>> safe_float('bad input', default=0.0)
+    0.0
 
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
 function of your choice to ``locale.atof``.
