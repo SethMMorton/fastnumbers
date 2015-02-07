@@ -23,7 +23,9 @@ Examples
 --------
 
 It is probably easiest to illustrate ``fastnumbers`` in use rather than
-describe it::
+describe it:
+
+.. code-block:: python
 
     >>> from fastnumbers import safe_float
     >>> def float_no_raise(input):
@@ -46,7 +48,9 @@ describe it::
     True
 
 If you really need speed, there are fast versions of the conversion
-functions::
+functions:
+
+.. code-block:: python
 
     >>> from fastnumbers import fast_float
     >>> fast_float('56.07')
@@ -63,7 +67,7 @@ cases, the results will be identical.
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
 function of your choice to ``locale.atof``.
 
-::
+.. code-block:: python
 
     import locale
     locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
@@ -77,7 +81,7 @@ Below are the timing results for the ``*_float`` functions; please see the
 `Timing Documentation <http://pythonhosted.org//fastnumbers/timing.html>`_
 for details into all timing results.
 
-::
+.. code-block:: python
 
     import re
     from timeit import timeit
