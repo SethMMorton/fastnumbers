@@ -7,6 +7,9 @@
 #include <Python.h>
 #include "convenience.h"
 
+/* Used to determine if a float is so large it lost precision. */
+const double maxsize = 9007199254740992;  /* 2^53 */
+
 /* 
  * Convert a string to a character array.
  * If unsuccessful, raise a TypeError.
@@ -50,3 +53,23 @@ bool case_insensitive_match(const char *s, const char *t)
     }
     return *t ? 0 : 1;
 }
+
+#if PY_MAJOR_VERSION == 2
+/* Convert a PyString to a PyFloat, possibly removing trailing 'L' because */
+/* of a long literal. Should only be used on Python 2. */
+/* Assume input has been checked for legality prior to use. */
+PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s)
+{
+    PyObject *result = NULL, *stripped1 = NULL, *stripped2 = NULL;
+    result = PyFloat_FromString(s, NULL);
+    if (result == NULL) {
+        PyErr_Clear();
+        stripped1 = PyObject_CallMethod(s, "rstrip", NULL);
+        stripped2 = PyObject_CallMethod(stripped1, "rstrip", "s", "lL");
+        result = PyFloat_FromString(stripped2, NULL);
+        Py_DECREF(stripped1);
+        Py_DECREF(stripped2);
+    }
+    return result;
+}
+#endif

@@ -4,16 +4,18 @@
  * Based on fast_atof.
  * 09-May-2009 Tom Van Baak (tvb) www.LeapSecond.com
  * Error checking added by Seth M. Morton, July 30, 2014 
+ * Overflow checking added by Seth M. Morton, April 19, 2015
  */
+#include <Python.h>
 #include "fast_conversions.h"
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
 
-long fast_atoi (const char *p, bool *error)
+long fast_atoi (const char *p, bool *error, bool *overflow)
 {
-    int sign;
-    long value;
+    long sign = 1;
+    long value = 0, tracker = 0;
     bool valid = false;
  
     /* Skip leading white space, if any. */
@@ -22,7 +24,6 @@ long fast_atoi (const char *p, bool *error)
  
     /* Get sign, if any. */
 
-    sign = 1;
     if (*p == '-') {
         sign = -1;
         p += 1;
@@ -31,12 +32,21 @@ long fast_atoi (const char *p, bool *error)
     }
  
     /* Get digits, if any. */
+    /* If at any point the value is less than 0, an overflow has occurred. */
  
+    *overflow = false;
     for (value = 0; valid_digit(*p); p += 1) {
         value = value * 10 + (*p - '0');
         valid = true;
+        *overflow = *overflow || (value < tracker);
+        tracker = value;
     }
  
+#if PY_MAJOR_VERSION == 2
+    /* On Python 2, long literals are allowed and end in 'l'. */
+    if (*p == 'l' || *p == 'L') { p += 1; }
+#endif
+
     /* Skip trailing white space, if any. */
  
     while (white_space(*p)) { p += 1; }
