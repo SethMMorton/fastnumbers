@@ -35,15 +35,18 @@ long fast_atoi (const char *p, bool *error, bool *overflow)
     /* If at any point the value is less than 0, an overflow has occurred. */
  
     *overflow = false;
-    for (value = 0; valid_digit(*p); p += 1) {
+    value = 0;
+    while (valid_digit(*p)) {
         value = value * 10 + (*p - '0');
-        valid = true;
         *overflow = *overflow || (value < tracker);
         tracker = value;
+        valid = true;
+        p += 1;
     }
  
 #if PY_MAJOR_VERSION == 2
     /* On Python 2, long literals are allowed and end in 'l'. */
+
     if (*p == 'l' || *p == 'L') { p += 1; }
 #endif
 

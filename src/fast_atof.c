@@ -85,12 +85,14 @@ double fast_atof (const char *p, bool *error, bool *overflow)
         /* If at any point the value is less than 0, an overflow has occurred. */
         /* Use an long integer here to retain as much precision as possible. */
      
-        for (intvalue = 0; valid_digit(*p); p += 1) {
+        intvalue = 0;
+        while (valid_digit(*p)) {
             intvalue = intvalue * 10L + (long) (*p - '0');
             ndigits += 1;
             *overflow = *overflow || (intvalue < tracker);
             tracker = intvalue;
             valid = true;
+            p += 1;
         }
 
         /* Convert the long integer to a double now. */
@@ -100,9 +102,7 @@ double fast_atof (const char *p, bool *error, bool *overflow)
 #if PY_MAJOR_VERSION == 2
         /* On Python 2, long literals are allowed and end in 'l'. */
 
-        if (*p == 'l' || *p == 'L') {
-            p += 1;
-        }
+        if (*p == 'l' || *p == 'L') { p += 1; }
 
         /* The following code is for floats, and can only be */
         /* valid if not a long literal, hence the else. */
@@ -117,13 +117,16 @@ double fast_atof (const char *p, bool *error, bool *overflow)
                 /* Store the digit component in a long. */
 
                 p += 1;
-                for (expon = 0, tracker = 0L; valid_digit(*p); p += 1) {
+                expon = 0;
+                tracker = 0L;
+                while (valid_digit(*p)) {
                     decimal = decimal * 10L + (long) (*p - '0');
                     expon += 1;
                     ndigits += 1;
                     *overflow = *overflow || (decimal < tracker);
                     tracker = decimal;
                     valid = true;
+                    p += 1;
                 }
 
                 /* Convert to decimal component and add to the value. */
@@ -155,10 +158,11 @@ double fast_atof (const char *p, bool *error, bool *overflow)
                 }
          
                 /* Get digits of exponent, if any. */
-         
-                for (expon = 0; valid_digit(*p); p += 1) {
+                expon = 0;
+                while (valid_digit(*p)) {
                     expon = expon * 10 + (*p - '0');
                     valid = true;
+                    p += 1;
                 }
 
                 /* Scale the value. */

@@ -210,6 +210,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = Py_None;
+    PyObject *pytemp = NULL, *pyreturn = NULL;
     char *str;
     double result;
     long intresult;
@@ -267,12 +268,18 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* We already know this string parses as a float, */
     /* so no error checking is needed and we can return directly. */
     if (overflow) {
-        return PYNUM_ASINT(PYFLOAT_FROM_PYSTRING(input));
+        pytemp = PYFLOAT_FROM_PYSTRING(input);
+        pyreturn = PYNUM_ASINT(pytemp);
+        Py_DECREF(pytemp);
+        return pyreturn;
     }
 
     /* Otherwise, return the float as an int using Python's conversion. */
     else {
-        return PYNUM_ASINT(PyFloat_FromDouble(result));
+        pytemp = PyFloat_FromDouble(result);
+        pyreturn = PYNUM_ASINT(pytemp);
+        Py_DECREF(pytemp);
+        return pyreturn;
     }
 }
 
