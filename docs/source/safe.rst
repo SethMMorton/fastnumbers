@@ -1,12 +1,13 @@
 .. default-domain:: py
 .. currentmodule:: fastnumbers
 
-The "Safe" Functions
-====================
+The Old "Safe" Functions
+========================
 
-Each of these functions will quickly convert strings to numbers
-(and also numbers to numbers) faster than a pure Python implementation,
-but still does some bounds and overflow checking on the conversion.
+These functions are deprecated as of :mod:`fastnumbers` version 0.3.0.
+They are kept for backwards compatibility, but internally are now
+identical to the "fast" functions. These "safe" functions will be
+removed at some point in a future release.
 
 :func:`~fastnumbers.safe_real`
 ------------------------------

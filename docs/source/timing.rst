@@ -14,14 +14,18 @@ to download the source code to run all timing tests.
 Timing Runner
 -------------
 
-The timing tests presented below use the following function to run the timings::
+The timing tests presented below use the following function to run the timings:
+
+.. code-block:: python
 
     from timeit import repeat
+
 
     def mean(x):
         return sum(x) / len(x)
 
-    def time_conv(regex, try_, safe, fast):
+
+    def time_conv(regex, try_, fast):
         """\
         Run timing tests on multiple types of input,
         for multiple types of functions.
@@ -29,26 +33,27 @@ The timing tests presented below use the following function to run the timings::
 
         print('All timing results are the average of 10 runs.')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
             print('Non-number String,', x, mean(repeat('{}("not_a_number")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
             print('Int String,', x, mean(repeat('{}("-41053")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
-            print('Large Int String,', x, mean(repeat('{}("35892482945872302493")'.format(y[0]), y[1], repeat=10)), 'seconds')
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
+            print('Large Int String,', x, mean(repeat('{}("35892482945872302493947939485729")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
-            print('Float String,', x, mean(repeat('{}("-41053.543028758302")'.format(y[0]), y[1], repeat=10)), 'seconds')
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
+            print('Float String,', x, mean(repeat('{}("-41053.543034e34")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
-            print('Float String with Exp,', x, mean(repeat('{}("-41053.543028758302e100")'.format(y[0]), y[1], repeat=10)), 'seconds')
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
+            print('Large Float String,', x, mean(repeat('{}("-41053.543028758302e256")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
             print('Float,', x, mean(repeat('{}(-41053.543028758302e100)'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
-        for x, y in zip(('re:', 'try:', 'safe:', 'fast:'), (regex, try_, safe, fast)):
+        for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
             print('Int,', x, mean(repeat('{}(-41053)'.format(y[0]), y[1], repeat=10)), 'seconds')
+
 
     def time_test(regex, try_, fast):
         """\
@@ -65,13 +70,13 @@ The timing tests presented below use the following function to run the timings::
             print('Int String,', x, mean(repeat('{}("-41053")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
         for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
-            print('Large Int String,', x, mean(repeat('{}("35892482945872302493")'.format(y[0]), y[1], repeat=10)), 'seconds')
+            print('Large Int String,', x, mean(repeat('{}("35892482945872302493947939485729")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
         for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
-            print('Float String,', x, mean(repeat('{}("-41053.543028758302")'.format(y[0]), y[1], repeat=10)), 'seconds')
+            print('Float String,', x, mean(repeat('{}("-41053.543034e34")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
         for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
-            print('Float String with Exp,', x, mean(repeat('{}("-41053.543028758302e100")'.format(y[0]), y[1], repeat=10)), 'seconds')
+            print('Large Float String,', x, mean(repeat('{}("-41053.543028758302e256")'.format(y[0]), y[1], repeat=10)), 'seconds')
         print()
         for x, y in zip(('re:', 'try:', 'fast:'), (regex, try_, fast)):
             print('Float,', x, mean(repeat('{}(-41053.543028758302e100)'.format(y[0]), y[1], repeat=10)), 'seconds')
@@ -82,7 +87,9 @@ The timing tests presented below use the following function to run the timings::
 Converting Floats
 -----------------
 
-The code to perform the `float` conversion timings is given below::
+The code to perform the `float` conversion timings is given below:
+
+.. code-block:: python
 
     float_re = '''\
     import re
@@ -110,52 +117,46 @@ The code to perform the `float` conversion timings is given below::
 
     time_conv(['float_re', float_re],
               ['float_try', float_try],
-              ['safe_float', 'from fastnumbers import safe_float'],
               ['fast_float', 'from fastnumbers import fast_float'])
 
 The following are the results::
 
     All timing results are the average of 10 runs.
 
-    Non-number String, re: 0.616039919853 seconds
-    Non-number String, try: 2.36470468044 seconds
-    Non-number String, safe: 0.541815161705 seconds
-    Non-number String, fast: 0.166932344437 seconds
+    Non-number String, re: 0.573668313026 seconds
+    Non-number String, try: 2.18123717308 seconds
+    Non-number String, fast: 0.169103908539 seconds
 
-    Int String, re: 1.41083431244 seconds
-    Int String, try: 0.40917494297 seconds
-    Int String, safe: 0.221786832809 seconds
-    Int String, fast: 0.215631604195 seconds
+    Int String, re: 1.14506702423 seconds
+    Int String, try: 0.376295471191 seconds
+    Int String, fast: 0.198381090164 seconds
 
-    Large Int String, re: 1.98383982182 seconds
-    Large Int String, try: 0.734673571587 seconds
-    Large Int String, safe: 0.53988802433 seconds
-    Large Int String, fast: 0.249987316132 seconds
+    Large Int String, re: 1.92678444386 seconds
+    Large Int String, try: 0.756599807739 seconds
+    Large Int String, fast: 0.650611639023 seconds
 
-    Float String, re: 1.82425656319 seconds
-    Float String, try: 0.73917388916 seconds
-    Float String, safe: 0.54944832325 seconds
-    Float String, fast: 0.278426790237 seconds
+    Float String, re: 1.82797636986 seconds
+    Float String, try: 0.687785792351 seconds
+    Float String, fast: 0.242390632629 seconds
 
-    Float String with Exp, re: 2.08345327377 seconds
-    Float String with Exp, try: 0.813772559166 seconds
-    Float String with Exp, safe: 0.625898575783 seconds
-    Float String with Exp, fast: 0.284848928452 seconds
+    Large Float String, re: 2.31674897671 seconds
+    Large Float String, try: 1.07994887829 seconds
+    Large Float String, fast: 0.970883083344 seconds
 
-    Float, re: 2.13188829422 seconds
-    Float, try: 0.343280601501 seconds
-    Float, safe: 0.14397521019 seconds
-    Float, fast: 0.141120290756 seconds
+    Float, re: 1.93790380955 seconds
+    Float, try: 0.333303022385 seconds
+    Float, fast: 0.133689498901 seconds
 
-    Int, re: 2.15410194397 seconds
-    Int, try: 0.330206418037 seconds
-    Int, safe: 0.150358200073 seconds
-    Int, fast: 0.145005345345 seconds
+    Int, re: 2.0137783289 seconds
+    Int, try: 0.326768898964 seconds
+    Int, fast: 0.140902447701 seconds
 
 Converting Ints
 ---------------
 
-The code to perform the `int` conversion timings is given below::
+The code to perform the `int` conversion timings is given below:
+
+.. code-block:: python
 
     int_re = '''\
     import re
@@ -183,52 +184,46 @@ The code to perform the `int` conversion timings is given below::
 
     time_conv(['int_re', int_re],
               ['int_try', int_try],
-              ['safe_int', 'from fastnumbers import safe_int'],
               ['fast_int', 'from fastnumbers import fast_int'])
 
 The following are the results::
-
+    
     All timing results are the average of 10 runs.
 
-    Non-number String, re: 0.583729720116 seconds
-    Non-number String, try: 3.65640561581 seconds
-    Non-number String, safe: 1.07036044598 seconds
-    Non-number String, fast: 0.164116621017 seconds
+    Non-number String, re: 0.513276076317 seconds
+    Non-number String, try: 3.59187278748 seconds
+    Non-number String, fast: 0.154757094383 seconds
 
-    Int String, re: 1.76469781399 seconds
-    Int String, try: 0.917023706436 seconds
-    Int String, safe: 0.264699578285 seconds
-    Int String, fast: 0.199232268333 seconds
+    Int String, re: 1.62476005554 seconds
+    Int String, try: 0.857665300369 seconds
+    Int String, fast: 0.188158082962 seconds
 
-    Large Int String, re: 2.11528892517 seconds
-    Large Int String, try: 1.0588845253 seconds
-    Large Int String, safe: 0.409788441658 seconds
-    Large Int String, fast: 0.211229872704 seconds
+    Large Int String, re: 2.24101734161 seconds
+    Large Int String, try: 1.12569539547 seconds
+    Large Int String, fast: 0.643681025505 seconds
 
-    Float String, re: 0.763830590248 seconds
-    Float String, try: 3.63326253891 seconds
-    Float String, safe: 1.07677755356 seconds
-    Float String, fast: 0.169603705406 seconds
+    Float String, re: 0.732820224762 seconds
+    Float String, try: 3.60975520611 seconds
+    Float String, fast: 0.163253188133 seconds
 
-    Float String with Exp, re: 0.758796548843 seconds
-    Float String with Exp, try: 3.66965932846 seconds
-    Float String with Exp, safe: 1.1057393074 seconds
-    Float String with Exp, fast: 0.166244912148 seconds
+    Large Float String, re: 0.729602479935 seconds
+    Large Float String, try: 3.65623159409 seconds
+    Large Float String, fast: 0.163104772568 seconds
 
-    Float, re: 2.19709262848 seconds
-    Float, try: 0.483218431473 seconds
-    Float, safe: 0.299236702919 seconds
-    Float, fast: 0.296409606934 seconds
+    Float, re: 2.32226393223 seconds
+    Float, try: 0.539329576492 seconds
+    Float, fast: 0.290531635284 seconds
 
-    Int, re: 1.99162778854 seconds
-    Int, try: 0.328531575203 seconds
-    Int, safe: 0.138215708733 seconds
-    Int, fast: 0.13524055481 seconds
+    Int, re: 2.01958138943 seconds
+    Int, try: 0.326728582382 seconds
+    Int, fast: 0.130790877342 seconds
 
 Checking Floats
 ---------------
 
-The code to perform the `float` checking timings is given below::
+The code to perform the `float` checking timings is given below:
+
+.. code-block:: python
 
     isfloat_re = '''\
     import re
@@ -260,38 +255,40 @@ The following are the results::
 
     All timing results are the average of 10 runs.
 
-    Non-number String, re: 1.09915692806 seconds
-    Non-number String, try: 2.4588334322 seconds
-    Non-number String, fast: 0.168157553673 seconds
+    Non-number String, re: 1.00798327923 seconds
+    Non-number String, try: 2.1671749115 seconds
+    Non-number String, fast: 0.161317801476 seconds
 
-    Int String, re: 1.43935678005 seconds
-    Int String, try: 0.684446048737 seconds
-    Int String, fast: 0.177501416206 seconds
+    Int String, re: 1.25955090523 seconds
+    Int String, try: 0.568465399742 seconds
+    Int String, fast: 0.174383997917 seconds
 
-    Large Int String, re: 1.64392886162 seconds
-    Large Int String, try: 0.969433355331 seconds
-    Large Int String, fast: 0.185720419884 seconds
+    Large Int String, re: 1.58316028118 seconds
+    Large Int String, try: 0.962632489204 seconds
+    Large Int String, fast: 0.204193854332 seconds
 
-    Float String, re: 1.5123660326 seconds
-    Float String, try: 0.983824372292 seconds
-    Float String, fast: 0.178205919266 seconds
+    Float String, re: 1.43826227188 seconds
+    Float String, try: 0.947708177567 seconds
+    Float String, fast: 0.176113319397 seconds
 
-    Float String with Exp, re: 1.61418132782 seconds
-    Float String with Exp, try: 1.04610798359 seconds
-    Float String with Exp, fast: 0.182296299934 seconds
+    Large Float String, re: 1.50998635292 seconds
+    Large Float String, try: 1.2951467514 seconds
+    Large Float String, fast: 0.182495999336 seconds
 
-    Float, re: 0.382601308823 seconds
-    Float, try: 0.546687793732 seconds
-    Float, fast: 0.151167201996 seconds
+    Float, re: 0.384200811386 seconds
+    Float, try: 0.526714110374 seconds
+    Float, fast: 0.132399153709 seconds
 
-    Int, re: 0.394346261024 seconds
-    Int, try: 0.569098591805 seconds
-    Int, fast: 0.156042075157 seconds
+    Int, re: 0.385046958923 seconds
+    Int, try: 0.525576925278 seconds
+    Int, fast: 0.138587331772 seconds
 
 Checking Ints
 -------------
 
-The code to perform the `int` checking timings is given below::
+The code to perform the `int` checking timings is given below:
+
+.. code-block:: python
 
     isint_re = '''\
     import re
@@ -323,30 +320,30 @@ The following are the results::
 
     All timing results are the average of 10 runs.
 
-    Non-number String, re: 0.968136119843 seconds
-    Non-number String, try: 3.47836313248 seconds
-    Non-number String, fast: 0.153612947464 seconds
+    Non-number String, re: 0.967393517494 seconds
+    Non-number String, try: 3.5071721077 seconds
+    Non-number String, fast: 0.142234826088 seconds
 
-    Int String, re: 1.14891810417 seconds
-    Int String, try: 1.10013346672 seconds
-    Int String, fast: 0.154205584526 seconds
+    Int String, re: 1.07628540993 seconds
+    Int String, try: 1.07323606014 seconds
+    Int String, fast: 0.146803045273 seconds
 
-    Large Int String, re: 1.32925269604 seconds
-    Large Int String, try: 1.29976191521 seconds
-    Large Int String, fast: 0.169347310066 seconds
+    Large Int String, re: 1.39286680222 seconds
+    Large Int String, try: 1.29413485527 seconds
+    Large Int String, fast: 0.190896821022 seconds
 
-    Float String, re: 1.16640629768 seconds
-    Float String, try: 3.48899214268 seconds
-    Float String, fast: 0.155058121681 seconds
+    Float String, re: 1.15165970325 seconds
+    Float String, try: 3.55873417854 seconds
+    Float String, fast: 0.148036885262 seconds
 
-    Float String with Exp, re: 1.18829126358 seconds
-    Float String with Exp, try: 3.52492365837 seconds
-    Float String with Exp, fast: 0.157090616226 seconds
+    Large Float String, re: 1.15159604549 seconds
+    Large Float String, try: 3.60109534264 seconds
+    Large Float String, fast: 0.145488548279 seconds
 
-    Float, re: 0.39362449646 seconds
-    Float, try: 0.649575018883 seconds
-    Float, fast: 0.134729671478 seconds
+    Float, re: 0.400713467598 seconds
+    Float, try: 0.685648226738 seconds
+    Float, fast: 0.129911446571 seconds
 
-    Int, re: 0.405252981186 seconds
-    Int, try: 0.49396905899 seconds
-    Int, fast: 0.133502268791 seconds
+    Int, re: 0.405667829514 seconds
+    Int, try: 0.530900597572 seconds
+    Int, fast: 0.127823591232 seconds

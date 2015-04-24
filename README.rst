@@ -12,70 +12,60 @@ Convert strings to numbers quickly.
 
 This module is a Python C extension that will convert strings to
 numbers *much* faster than can be done using pure Python.  Additionally,
-if the string cannot be converted, the string is returned as-is instead
-of returning a ``ValueError`` (although this behavior is customizable).
+if the string cannot be converted, instead of a ``ValueError`` the return
+value can be either the input as-is or a default value.
 
 To achieve this, the module makes some assumptions about the input type
 (input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
 and otherwise a ``TypeError`` is raised.
 
+**NOTE:** The ``safe_real``, ``safe_float``, ``safe_int``, and
+``safe_forceint`` functions are deprecated as of ``fastnumbers`` version
+>= 0.3.0; ``fast_real``, ``fast_float``, ``fast_int``, and ``fast_forceint``
+have each been reimplemented to fall back on the "safe" algorithm if
+overflow or loss of precision is detect and so the separate "safe" functions
+are no longer needed.
+
 Examples
 --------
 
-It is probably easiest to illustrate ``fastnumbers`` in use rather than
-describe it:
+``fastnumbers`` is essentially a fast C implementation of the following
+Pure Python function:
 
 .. code-block:: python
 
-    >>> from fastnumbers import safe_float
-    >>> def float_no_raise(input):
-    ...     try:
-    ...         return float(input)
-    ...     except ValueError:
-    ...         return input
-    ... 
-    >>> safe_float('56.07')
-    56.07
-    >>> float_no_raise('56.07') == safe_float('56.07')
-    True
-    >>> safe_float('bad input')
-    'bad input'
-    >>> float_no_raise('bad input') == safe_float('bad input')
-    True
-    >>> safe_float(54)
-    54.0
-    >>> float_no_raise(54) == safe_float(54)
-    True
+    def fast_float(input, raise_on_invalid=False, default=None):
+        try:
+            return float(input)
+        except ValueError:
+            if raise_on_invalid:
+                raise
+            return default if default is not None else input
+    
 
-If you really need speed, there are fast versions of the conversion
-functions:
+Some example usage:
 
 .. code-block:: python
 
     >>> from fastnumbers import fast_float
+    >>> # Convert string to a float
     >>> fast_float('56.07')
     56.07
-    >>> safe_float('56.07') == fast_float('56.07')
-    True
-
-The difference between ``safe_float`` and ``fast_float`` is that the fast
-version uses an extremely fast implementation of ``atof`` under the hood
-that does not do overflow or underflow checking, and also can lose precision
-around the 12th decimal place for extreme exponents; for the majority of
-cases, the results will be identical.
-
-If you don't want to return the input as-is for invalid input, you can
-either set ``raise_on_invalid`` or ``default`` to some value:
-
-.. code-block:: python
-
-    >>> from fastnumbers import safe_float
-    >>> safe_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> # Unconvertable string returned as-is by default
+    >>> fast_float('bad input')
+    'bad input'
+    >>> # Unconvertable strings can trigger a default value
+    >>> fast_float('bad input', default=0)
+    0
+    >>> # Integers are converted to floats
+    >>> fast_float(54)
+    54.0
+    >>> # The default built-in float behavior can be triggered with
+    >>> # "raise_on_invalid" set to True. 
+    >>> fast_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
-    >>> safe_float('bad input', default=0.0)
-    0.0
 
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
 function of your choice to ``locale.atof``.
@@ -96,9 +86,7 @@ for details into all timing results.
 
 .. code-block:: python
 
-    import re
     from timeit import timeit
-    float_match = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$').match
     float_try = '''\
     def float_try(input):
         """Typical approach to this problem."""
@@ -107,44 +95,42 @@ for details into all timing results.
         except ValueError:
             return input
     '''
-    
+
     float_re = '''\
+    import re
+    float_match = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$').match
     def float_re(input):
         """Alternate approach to this problem."""
         try:
-            if float_match(x):
-                return float(x)
+            if float_match(input):
+                return float(input)
             else:
-                return x
+                return input
         except TypeError:
-            return float(x)
+            return float(input)
     '''
-    
+
     print('Invalid input:')
-    print(timeit('float_try("invalid")', float_try))
-    print(timeit('float_re("invalid")', float_re))
-    print(timeit('safe_float("invalid"), 'from fastnumbers import safe_float'))
-    print(timeit('fast_float("invalid"), 'from fastnumbers import fast_float'))
+    print("Try:", timeit('float_try("invalid")', float_try))
+    print("re:", timeit('float_re("invalid")', float_re))
+    print("fast", timeit('fast_float("invalid")', 'from fastnumbers import fast_float'))
     print()
     print('Valid input:')
-    print(timeit('float_try("56.07")', float_try))
-    print(timeit('float_re("56.07")', float_re))
-    print(timeit('safe_float("56.07"), 'from fastnumbers import safe_float'))
-    print(timeit('fast_float("56.07"), 'from fastnumbers import fast_float'))
+    print("try:", timeit('float_try("56.07")', float_try))
+    print("re:", timeit('float_re("56.07")', float_re))
+    print("fast", timeit('fast_float("56.07")', 'from fastnumbers import fast_float'))
 
 The results will be similar to the below, by vary on the system you are on::
 
     Invalid input:
-    2.28478188515
-    0.601616001129
-    0.543533372879
-    0.185416555405
+    Try: 2.27156710625
+    re: 0.570491075516
+    fast 0.173984050751
 
     Valid input:
-    0.774985694885
-    1.7571870327
-    0.584108567238
-    0.275424480438
+    try: 0.378665924072
+    re: 1.08740401268
+    fast 0.204708099365
 
 As you can see, in all cases ``fastnumbers`` beats the pure python
 implementations.
@@ -152,12 +138,8 @@ implementations.
 Full Suite of Functions
 -----------------------
 
-In addition to ``safe_float`` and ``fast_float`` mentioned above, there are
-also
+In addition to ``fast_float`` mentioned above, there are also
 
-    - safe_real
-    - safe_int
-    - safe_forceint
     - fast_real
     - fast_int
     - fast_forceint

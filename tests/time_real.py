@@ -24,7 +24,7 @@ def real_re(x):
         else:
             return x
     except TypeError:
-        if x in set([float, int]):
+        if type(x) in set([float, int]):
             return x
         else:
             raise TypeError
@@ -44,5 +44,4 @@ def real_try(x):
 
 time_conv(['real_re', real_re],
           ['real_try', real_try],
-          ['safe_real', 'from fastnumbers import safe_real'],
           ['fast_real', 'from fastnumbers import fast_real'])

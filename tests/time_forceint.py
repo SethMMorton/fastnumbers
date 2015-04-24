@@ -41,5 +41,4 @@ def forceint_try(x):
 
 time_conv(['forceint_re', forceint_re],
           ['forceint_try', forceint_try],
-          ['safe_forceint', 'from fastnumbers import safe_forceint'],
           ['fast_forceint', 'from fastnumbers import fast_forceint'])
