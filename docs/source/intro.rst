@@ -106,4 +106,4 @@ If you want to build this documentation, enter::
     python setup.py build_sphinx
 
 :mod:`fastnumbers` requires python version 2.6 or greater
-(this includes python 3.x). 
+(this includes python 3.x). Unit tests are only run on 2.7 and >= 3.3.

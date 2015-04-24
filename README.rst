@@ -41,7 +41,6 @@ Pure Python function:
             if raise_on_invalid:
                 raise
             return default if default is not None else input
-    
 
 Some example usage:
 
@@ -162,6 +161,18 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+04-23-2015 v. 0.3.0
+'''''''''''''''''''
+
+    - Updated the ``fast_*`` functions to check if an overflow
+      loss of precision has occurred, and if so fall back on the
+      more accurate number conversion method.
+    - In response to the above change, the ``safe_*`` functions
+      are now deprecated, and internally now use the same code as
+      the ``fast_*`` functions.
+    - Updated all unit testing to use the ``hypothesis`` module,
+      which results in better test coverage.
+
 09-03-2014 v. 0.2.0
 '''''''''''''''''''
 
@@ -176,10 +187,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
     - The method to catch corner-cases like '.', '+', 'e', etc. has been
       reworked to be more general... case-by-case patches should no longer
       be needed.
-
-08-12-2014 v. 0.1.3
-'''''''''''''''''''
-
-    - Fixed bug where 'e' and 'E' were incorrectly identified as a valid
-      float/int and converted to 0.  This bug only applied to the ``fast_*``
-      and ``is*`` functions.
