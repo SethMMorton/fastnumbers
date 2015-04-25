@@ -14,9 +14,10 @@
 
 long fast_atoi (const char *p, bool *error, bool *overflow)
 {
-    long sign = 1;
-    long value = 0, tracker = 0;
+    long sign = 1L;
+    long value = 0L, tmpval = 0L;
     bool valid = false;
+    *overflow = false;
  
     /* Skip leading white space, if any. */
  
@@ -25,21 +26,19 @@ long fast_atoi (const char *p, bool *error, bool *overflow)
     /* Get sign, if any. */
 
     if (*p == '-') {
-        sign = -1;
+        sign = -1L;
         p += 1;
     } else if (*p == '+') {
         p += 1;
     }
  
-    /* Get digits, if any. */
-    /* If at any point the value is less than 0, an overflow has occurred. */
+    /* Get digits, if any. Check for overflow. */
  
-    *overflow = false;
-    value = 0;
+    value = 0L;
     while (valid_digit(*p)) {
-        value = value * 10 + (*p - '0');
-        *overflow = *overflow || (value < tracker);
-        tracker = value;
+        tmpval = (long) (*p - '0');
+        *overflow = *overflow || ( value > ( LONG_MAX - tmpval ) / 10L );
+        value = value * 10L + tmpval;
         valid = true;
         p += 1;
     }
@@ -62,4 +61,5 @@ long fast_atoi (const char *p, bool *error, bool *overflow)
     /* Return signed result. */
  
     return sign * value;
+
 }

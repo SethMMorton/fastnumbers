@@ -26,7 +26,7 @@ double fast_atof (const char *p, bool *error, bool *overflow)
 {
     int frac = 1, sign = 1, ndigits = 0;
     unsigned int expon = 0;
-    long intvalue = 0L, decimal = 0L, tracker = 0L;
+    unsigned long intvalue = 0L, decimal = 0L, tmpval = 0L;
     long double value = 0.0L, pow10 = 10.0L, scale = 1.0L;
     bool valid = false;
     const char *s;
@@ -82,15 +82,16 @@ double fast_atof (const char *p, bool *error, bool *overflow)
     else {
 
         /* Get digits before decimal point or exponent, if any. */
-        /* If at any point the value is less than 0, an overflow has occurred. */
+        /* Check for overflow. */
         /* Use an long integer here to retain as much precision as possible. */
      
         intvalue = 0;
         while (valid_digit(*p)) {
-            intvalue = intvalue * 10L + (long) (*p - '0');
             ndigits += 1;
-            *overflow = *overflow || (intvalue < tracker);
-            tracker = intvalue;
+            tmpval = (unsigned long) (*p - '0');
+            *overflow = *overflow
+                     || ( intvalue > ( ULONG_MAX - tmpval ) / 10L );
+            intvalue = intvalue * 10L + tmpval;
             valid = true;
             p += 1;
         }
@@ -118,13 +119,13 @@ double fast_atof (const char *p, bool *error, bool *overflow)
 
                 p += 1;
                 expon = 0;
-                tracker = 0L;
                 while (valid_digit(*p)) {
-                    decimal = decimal * 10L + (long) (*p - '0');
                     expon += 1;
                     ndigits += 1;
-                    *overflow = *overflow || (decimal < tracker);
-                    tracker = decimal;
+                    tmpval = (unsigned long) (*p - '0');
+                    *overflow = *overflow
+                             || ( decimal > ( ULONG_MAX - tmpval ) / 10L );
+                    decimal = decimal * 10L + tmpval;
                     valid = true;
                     p += 1;
                 }

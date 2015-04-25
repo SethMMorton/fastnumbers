@@ -22,7 +22,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     char *str;
     double result;
     long intresult;
-    bool error, overflow, isintbool;
+    bool error = false, overflow = false, isintbool;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -108,7 +108,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = Py_None;
     char *str;
     double result;
-    bool error, overflow;
+    bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -160,7 +160,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = Py_None;
     char *str;
     long result;
-    bool error, overflow;
+    bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -214,7 +214,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     char *str;
     double result;
     long intresult;
-    bool error, overflow;
+    bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
