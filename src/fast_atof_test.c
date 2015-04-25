@@ -6,6 +6,7 @@
  * Modified by Seth M. Morton, Aug 3, 2014 
  */
 
+#include <Python.h>
 #include "fast_conversions.h"
 #include "convenience.h"
 
@@ -68,28 +69,44 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
      
         while (valid_digit(*p)) { p += 1; valid = true; }
      
-        /* Get digits after decimal point, if any. */
-     
-        if (*p == '.') {
-            p += 1;
-            while (valid_digit(*p)) { p += 1; valid = true; }
+#if PY_MAJOR_VERSION == 2
+        /* On Python 2, long literals are allowed and end in 'l'. */
+
+        if (*p == 'l' || *p == 'L') { p += 1; }
+
+        /* The following code is for floats, and can only be */
+        /* valid if not a long literal, hence the else. */
+
+        else {
+#endif
+
+            /* Get digits after decimal point, if any. */
+         
+            if (*p == '.') {
+                p += 1;
+                while (valid_digit(*p)) { p += 1; valid = true; }
+            }
+         
+            /* Handle exponent, if any. */
+         
+            if (((*p == 'e') || (*p == 'E')) && valid) {
+                valid = false;
+         
+                /* Get sign of exponent, if any. */
+         
+                p += 1;
+                if (*p == '-') { p += 1; }
+                else if (*p == '+') { p += 1; }
+         
+                /* Get digits of exponent, if any. */
+         
+                while (valid_digit(*p)) { p += 1; valid = true; }
+         
+            }
+
+#if PY_MAJOR_VERSION == 2
         }
-     
-        /* Handle exponent, if any. */
-     
-        if ((*p == 'e') || (*p == 'E')) {
-     
-            /* Get sign of exponent, if any. */
-     
-            p += 1;
-            if (*p == '-') { p += 1; }
-            else if (*p == '+') { p += 1; }
-     
-            /* Get digits of exponent, if any. */
-     
-            while (valid_digit(*p)) { p += 1; valid = true; }
-     
-        }
+#endif
  
     }
 

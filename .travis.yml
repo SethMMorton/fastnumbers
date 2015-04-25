@@ -2,30 +2,14 @@ language: python
 os:
 - linux
 python:
-- 2.6
 - 2.7
-- 3.2
 - 3.3
 - 3.4
 install:
+- pip install hypothesis hypothesis-pytest
 - pip install -e .
 before_script:
 - python patch_doctest.py
 script:
 - python -m doctest fastnumbers*.so
 - python -m pytest --doctest-glob=README.rst
-before_deploy:
-- pip install Sphinx numpydoc
-- python setup.py build_sphinx
-# deploy:
-#   provider: pypi
-#   user: SethMMorton
-#   password:
-#     secure: OaYQtVh4mGT0ozN7Ar2lSm2IEVMKIyvOESGPGLwVyVxPqp6oC101MovJ7041bZdjMzirMs54EJwtEGQpKFmDBGcKgbjPiYId5Nqb/yDhLC/ojgarbLoFJvUKV6dWJePyY7EOycrqcMdiDabdG80Bw4zziQExbmIOdUiscsAVVmA=
-#   on:
-#     tags: true
-#     all_branches: true
-#     repo: SethMMorton/fastnumbers
-#     python: 2.7
-#   distributions: sdist
-#   docs_dir: build/sphinx/html

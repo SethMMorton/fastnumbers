@@ -34,6 +34,5 @@ def float_try(x):
 
 time_conv(['float_re', float_re],
           ['float_try', float_try],
-          ['safe_float', 'from fastnumbers import safe_float'],
           ['fast_float', 'from fastnumbers import fast_float'])
 

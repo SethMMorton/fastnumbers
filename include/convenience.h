@@ -1,12 +1,16 @@
 #ifndef CONVENIENCE
 #define CONVENIENCE
 
-#include "Python.h"
+#include <Python.h>
+#include <string.h>
 #include "fn_bool.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Used to determine if a float is so large it lost precision. */
+extern const double maxsize;
 
 /**********
  * MACROS *
@@ -52,14 +56,16 @@ extern const unsigned char _Py_ctype_tolower[256];
 #if PY_MAJOR_VERSION >= 3
 #define PYFLOAT_FROM_PYSTRING(x) PyFloat_FromString(x)
 #else
-#define PYFLOAT_FROM_PYSTRING(x) PyFloat_FromString((x), NULL)
+#define PYFLOAT_FROM_PYSTRING(x) convert_PyString_to_PyFloat_possible_long_literal(x)
 #endif
 
 /* Turn a character string into an int. */
 #if PY_MAJOR_VERSION >= 3
 #define PYINT_FROM_STRING(x) PyLong_FromString((x), NULL, 10)
 #else
-#define PYINT_FROM_STRING(x) PyInt_FromString((x), NULL, 10)
+#define PYINT_FROM_STRING(x) (NULL == strpbrk((x), "lL")) ? \
+                             PyInt_FromString((x), NULL, 10) : \
+                             PyLong_FromString((x), NULL, 10)
 #endif
 
 /* Convert PyObject to a string, or raise an error. */
@@ -104,6 +110,9 @@ extern const unsigned char _Py_ctype_tolower[256];
 
 char* convert_string(PyObject *input);
 bool case_insensitive_match(const char *s, const char *t);
+#if PY_MAJOR_VERSION == 2
+PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s);
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

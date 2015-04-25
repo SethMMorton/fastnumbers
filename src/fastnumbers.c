@@ -10,225 +10,6 @@
 #include "docstrings.h"
 #include "convenience.h"
 
-/* Used to determine if a float is so large it lost precision. */
-const double maxsize = 9007199254740992;  /* 2^53 */
-
-
-/* Safely convert to an int or float, depending on value. */
-static PyObject *
-fastnumbers_safe_real(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *input = NULL, *result = NULL;
-    PyObject *intresult = NULL, *isint = NULL;
-    PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
-    char *str;
-    double dresult;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
-
-    /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_real", keywords,
-                                     &input, &raise_on_invalid, &default_value))
-        return NULL;
-
-    /* If the input is already a number, return now as-is. */
-    IF_ANYNUM_RETURN_AS_IS(input);
-
-    /* Attempt conversion of the (string) input object to a float. */
-    result = PYFLOAT_FROM_PYSTRING(input);
-
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, check to make sure input is a string. */
-    /* If so, clear error stack and return that string.  */
-    /* If not, raise the TypeError. */
-    if (PyObject_IsTrue(raise_on_invalid)) {
-        IF_TRUE_RAISE(result == NULL);
-    }
-    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
-                               default_value);
-    IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
-    /* Check if this float can be represented as an integer. */
-    /* If so, return as an int object. */
-    isint = PyObject_CallMethod(result, "is_integer", NULL);
-    if (PyObject_IsTrue(isint)) {
-        Py_DECREF(isint);
-        /* If the float is over 2^53, re-read */
-        /* the input string because we may have lost some precision. */
-        dresult = PyFloat_AsDouble(result);
-        if (dresult > maxsize) {
-            CONVERT_TO_STRING_OR_RAISE(input, str);
-            intresult = PYINT_FROM_STRING(str);
-            /* If it could not be read as an integer, return the float. */
-            IF_TRUE_RETURN_VALUE(intresult == NULL, result);
-        } else {
-            intresult = PYNUM_ASINT(result);
-        }
-        Py_DECREF(result);
-        return intresult;            
-    }
-
-    /* Otherwise as a float object. */
-    Py_DECREF(isint);
-    return result;
-}
-
-
-/* Safely convert to a float, depending on value. */
-static PyObject *
-fastnumbers_safe_float(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *input = NULL, *result = NULL;
-    PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
-
-    /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_float", keywords,
-                                     &input, &raise_on_invalid, &default_value))
-        return NULL;
-
-    /* If the input is already a number, return now. */
-    IF_ANYNUM_RETURN_FLOAT(input);
-
-    /* Attempt conversion of the (string) object to a float. */
-    result = PYFLOAT_FROM_PYSTRING(input);
-
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, check to make sure input is a string. */
-    /* If so, clear error stack and return that string.  */
-    /* If not, raise the TypeError. */
-    if (PyObject_IsTrue(raise_on_invalid)) {
-        IF_TRUE_RAISE(result == NULL);
-    }
-    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
-                               default_value);
-    IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
-
-    /* If successful, return this float object. */
-    return result;
-}
-
-
-/* Safely convert to an int, depending on value. */
-static PyObject *
-fastnumbers_safe_int(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *input = NULL, *result = NULL;
-    PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
-    char *str;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
-
-    /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_int", keywords,
-                                     &input, &raise_on_invalid, &default_value))
-        return NULL;
-
-    /* If the input is already a number, return now. */
-    IF_ANYNUM_RETURN_INT(input);
-
-    /* Attempt to convert to char*, or raise a TypeError. */
-    CONVERT_TO_STRING_OR_RAISE(input, str);
-
-    /* Attempt the conversion to a int. */
-    result = PYINT_FROM_STRING(str);
-
-    /* If unsuccessful, clear error stack and return input as-is */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, clear error stack and return the input string.  */
-    if (PyObject_IsTrue(raise_on_invalid)) {
-        IF_TRUE_RAISE(result == NULL);
-    }
-    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
-                               default_value);
-    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL, input);
-
-    /* Otherwise, return the int object */
-    return result;
-}
-
-
-/* Safely convert to an int (even if in a string and as a float), depending on value. */
-static PyObject *
-fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *input = NULL, *result = NULL;
-    PyObject *intresult = NULL, *isint = NULL;
-    PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
-    char *str;
-    double dresult;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
-
-    /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:safe_forceint", keywords,
-                                     &input, &raise_on_invalid, &default_value))
-        return NULL;
-
-    /* If the input is already a number, return now as an int. */
-    IF_ANYNUM_RETURN_INT(input);
-
-    /* Attempt conversion of the (string) object to a float. */
-    result = PYFLOAT_FROM_PYSTRING(input);
-
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, check to make sure input is a string. */
-    /* If so, clear error stack and return that string.  */
-    /* If not, raise the TypeError. */
-    if (PyObject_IsTrue(raise_on_invalid)) {
-        IF_TRUE_RAISE(result == NULL);
-    }
-    IF_TRUE_RETURN_INPUT_AS_IS(result == NULL && default_value != Py_None,
-                               default_value);
-    IF_TRUE_RETURN_IF_STRING_OR_RAISE(result == NULL, input);
-
-    /* Check if this float can be represented as an integer. */
-    /* If so, return as an int object making sure we don't lose accuracy. */
-    isint = PyObject_CallMethod(result, "is_integer", NULL);
-    dresult = PyFloat_AsDouble(result);
-    if (PyObject_IsTrue(isint)) {
-        /* If the float is over 2^53, re-read */
-        /* the input string because we may have lost some precision. */
-        if (dresult > maxsize) {
-            CONVERT_TO_STRING_OR_RAISE(input, str);
-            intresult = PYINT_FROM_STRING(str);
-            /* If it could not be read as an integer, just convert the float. */
-            if (intresult == NULL) {
-                PyErr_Clear();
-                intresult = PYNUM_ASINT(result);
-            }
-        } else {
-            intresult = PYNUM_ASINT(result);
-        }
-    }
-    /* Otherwise it as a float object, convert directly to int (truncating). */
-    /* Be careful about infinity. For infinity return sys.maxsize. */
-    else {
-        if (Py_IS_INFINITY(dresult)) {
-            intresult = dresult > 0 ? PYNUM_ASINT_FROM_SIZET(PY_SSIZE_T_MAX)
-                                    : PYNUM_ASINT_FROM_SIZET(-PY_SSIZE_T_MAX-1);
-            Py_INCREF(intresult);
-        }
-        else 
-            intresult = PYNUM_ASINT(result);
-    }
-
-    Py_DECREF(isint);
-    Py_DECREF(result);
-    /* For nan return as-is or raise the value error. */
-    if (Py_IS_NAN(dresult)) {
-        if (PyObject_IsTrue(raise_on_invalid))
-            return NULL;
-        else {
-            PyErr_Clear();
-            return Py_INCREF(input), input;
-        }
-    }
-    return intresult;
-}
 
 /* Quickly convert to an int or float, depending on value. */
 static PyObject *
@@ -237,10 +18,11 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = Py_None;
+    PyObject *isint = NULL, *pyresult = NULL;
     char *str;
     double result;
     long intresult;
-    bool error;
+    bool error = false, overflow = false, isintbool;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -254,35 +36,66 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Attempt to convert to char*. Raise a TypeError if not. */
     CONVERT_TO_STRING_OR_RAISE(input, str);
 
-    /* Attempt to convert to a float */
-    result = fast_atof(str, &error);
+    /* First attempt to convert to an int */
+    intresult = fast_atoi(str, &error, &overflow);
 
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, return input as-is. */
+    /* If successful, return this integer now. */
+    if (! error) {
+        /* If there was overflow, use Python's conversion function. */
+        if (overflow) {
+            return PYINT_FROM_STRING(str);
+        }
+        /* Otherwise return the integer. */
+        return Py_BuildValue("l", intresult);
+    }
+
+    /* Conversion to an integer was unsuccessful. Try converting to a float. */
+    /* Attempt to convert to a float */
+    result = fast_atof(str, &error, &overflow);
+
+    /* If unsuccessful, either: */
+    /*   a) raise a ValueError */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
-            "could not convert string to float: '%.200s'", str);
+            "could not convert string to float or int: '%.200s'", str);
     }
+    /*   b) return a default value */
     IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
                                default_value);
+    /*   c) return input as-is */
     IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
-    /* Make the integer version of the input. */
-    /* If the value is greater than 2^53, */
-    /* re-read because some precision may have been lost. */
-    if (result > maxsize) {
-        intresult = fast_atoi(str, &error);
-        if (error) intresult = 0;  /* Set to 0 on error. */
+    /* Determine if this float can be represented as an integer. */
+    /* If there was an overflow error, */
+    /* use Python's float function to read string. */
+    if (overflow) {
+        /* We already know this string parses as a float, */
+        /* so no error checking is needed. */
+        pyresult = PYFLOAT_FROM_PYSTRING(input);
+        isint = PyObject_CallMethod(pyresult, "is_integer", NULL);
+        isintbool = PyObject_IsTrue(isint);
+        Py_DECREF(isint);
+    } else {
+        /* Convert from double form to PyFloat. */
+        /* Use fast method to determine int-ness of */
+        /* float if float is not too large. */
+        pyresult = PyFloat_FromDouble(result);
+        if (result > maxsize) {
+            isint = PyObject_CallMethod(pyresult, "is_integer", NULL);
+            isintbool = PyObject_IsTrue(isint);
+            Py_DECREF(isint);
+        } else {
+            isintbool = result == (long) result;
+        }
     }
-    else
-        intresult = (long) result;
 
-    /* Otherwise, return the float or int object */
-    if (result == intresult)
-        return Py_BuildValue("l", intresult);
-    else
-        return Py_BuildValue("d", result);
+    /* Return as int or float dependent on the int-ness. */
+    if (isintbool) {
+        return PYNUM_ASINT(pyresult);
+    } else {
+        return pyresult;
+    }
+
 }
 
 
@@ -295,7 +108,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = Py_None;
     char *str;
     double result;
-    bool error;
+    bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -310,21 +123,31 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     CONVERT_TO_STRING_OR_RAISE(input, str);
 
     /* Attempt to convert to a float */
-    result = fast_atof(str, &error);
+    result = fast_atof(str, &error, &overflow);
 
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, return input as-is. */
+    /* If unsuccessful, either: */
+    /*   a) raise a ValueError */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to float: '%.200s'", str);
     }
+    /*   b) return a default value */
     IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
                                default_value);
+    /*   c) return input as-is */
     IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
-    /* Otherwise, return the float object */
-    return Py_BuildValue("d", result);
+    /* If there was an overflow error, use Python's float function. */
+    /* We already know this string parses as a float, */
+    /* so no error checking is needed and we can return directly. */
+    if (overflow) {
+        return PYFLOAT_FROM_PYSTRING(input);
+    }
+
+    /* Otherwise, return the float result. */
+    else {
+        return Py_BuildValue("d", result);
+    }
 }
 
 
@@ -337,7 +160,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = Py_None;
     char *str;
     long result;
-    bool error;
+    bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -352,21 +175,31 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     CONVERT_TO_STRING_OR_RAISE(input, str);
 
     /* Attempt to convert to a int */
-    result = fast_atoi(str, &error);
+    result = fast_atoi(str, &error, &overflow);
 
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, return input as-is. */
+    /* If unsuccessful, either: */
+    /*   a) raise a ValueError */
     if (PyObject_IsTrue(raise_on_invalid)) {
         IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
             "could not convert string to int: '%.200s'", str);
     }
+    /*   b) return a default value */
     IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
                                default_value);
+    /*   c) return input as-is */
     IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
-    /* If there was an error, return input as-is. */
-    return Py_BuildValue("l", result);
+    /* If there was an overflow error, use Python's integer function. */
+    /* We already know this string parses as an integer, */
+    /* so no error checking is needed and we can return directly. */
+    if (overflow) {
+        return PYINT_FROM_STRING(str);
+    }
+
+    /* Otherwise, return the integer result. */
+    else {
+        return Py_BuildValue("l", result);
+    }
 }
 
 
@@ -377,10 +210,11 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = Py_None;
+    PyObject *pytemp = NULL, *pyreturn = NULL;
     char *str;
     double result;
     long intresult;
-    bool error;
+    bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
 
     /* Read the function argument. */
@@ -394,43 +228,59 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Attempt to convert to char*. Raise a TypeError if not. */
     CONVERT_TO_STRING_OR_RAISE(input, str);
 
-    /* Attempt to convert to a float */
-    result = fast_atof(str, &error);
+    /* First attempt to convert to an int */
+    intresult = fast_atoi(str, &error, &overflow);
 
-    /* Let's call NaN an error. */
-    error = Py_IS_NAN(result) || error;
-
-    /* If unsuccessful, raise the ValueError if the user wants that. */
-    /* Or, return a default value if the user wants that. */
-    /* Otherwise, return input as-is.*/
-    if (PyObject_IsTrue(raise_on_invalid)) {
-        IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
-            "could not convert string to float: '%.200s'", str);
+    /* If successful, return this integer now. */
+    if (! error) {
+        /* If there was overflow, use Python's conversion function. */
+        if (overflow) {
+            return PYINT_FROM_STRING(str);
+        }
+        /* Otherwise return the integer. */
+        return Py_BuildValue("l", intresult);
     }
+
+    /* Attempt to convert to a float */
+    result = fast_atof(str, &error, &overflow);
+
+    /* Call NaN and infinity errors. */
+    error = error || Py_IS_INFINITY(result) || Py_IS_NAN(result);
+
+    /* If unsuccessful, either: */
+    /*   a) raise a ValueError */
+    if (PyObject_IsTrue(raise_on_invalid)) {
+        IF_TRUE_RAISE_ERR_STR(Py_IS_INFINITY(result), PyExc_OverflowError,
+            "could not convert infinity to int");
+        IF_TRUE_RAISE_ERR_STR(Py_IS_NAN(result), PyExc_ValueError,
+            "could not convert NaN to int");
+        IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
+            "could not convert string to int: '%.200s'", str);
+    }
+    /*   b) return a default value */
     IF_TRUE_RETURN_INPUT_AS_IS(error && default_value != Py_None,
                                default_value);
+    /*   c) return input as-is */
     IF_TRUE_RETURN_INPUT_AS_IS(error, input);
 
-    /* Make the integer version of the input. */
-    /* If the input is infinity, return sys.maxsize. */
-    if (Py_IS_INFINITY(result)) {
-        intresult = result > 0 ? PY_SSIZE_T_MAX : -PY_SSIZE_T_MAX-1;
-        result = intresult;  /* To make sure we return this as-is. */
-    }
-    /* If the value is greater than 2^53, */
-    /* re-read because some precision may have been lost. */
-    else if (result > maxsize) {
-        intresult = fast_atoi(str, &error);
-        if (error) intresult = 0;  /* Set to 0 on error. */
-    }
-    else
-        intresult = (long) result;
 
-    /* Otherwise, return the float or int object */
-    if (result == intresult)
-        return Py_BuildValue("l", intresult);
-    else
-        return Py_BuildValue("l", (long) result);
+    /* If there was an overflow error, use Python's float function. */
+    /* We already know this string parses as a float, */
+    /* so no error checking is needed and we can return directly. */
+    if (overflow) {
+        pytemp = PYFLOAT_FROM_PYSTRING(input);
+        pyreturn = PYNUM_ASINT(pytemp);
+        Py_DECREF(pytemp);
+        return pyreturn;
+    }
+
+    /* Otherwise, return the float as an int using Python's conversion. */
+    else {
+        pytemp = PyFloat_FromDouble(result);
+        pyreturn = PYNUM_ASINT(pytemp);
+        Py_DECREF(pytemp);
+        return pyreturn;
+    }
 }
 
 
@@ -548,7 +398,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *str_only = Py_False;
     char *str;
     double result;
-    bool error;
+    bool error, overflow;
     static char *keywords[] = { "x", "str_only", NULL };
 
     /* Read the function argument. */
@@ -574,7 +424,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Try converting the string to a float, */
     /* and then running is_integer on that. */
-    result = fast_atof(str, &error);
+    result = fast_atof(str, &error, &overflow);
 
     /* If there was an error, return False now. */
     if (error) Py_RETURN_FALSE;
@@ -589,10 +439,10 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
-    {"safe_real", (PyCFunction) fastnumbers_safe_real, METH_VARARGS | METH_KEYWORDS, safe_real_docstring},
-    {"safe_float", (PyCFunction) fastnumbers_safe_float, METH_VARARGS | METH_KEYWORDS, safe_float_docstring},
-    {"safe_int", (PyCFunction) fastnumbers_safe_int, METH_VARARGS | METH_KEYWORDS, safe_int_docstring},
-    {"safe_forceint", (PyCFunction) fastnumbers_safe_forceint, METH_VARARGS | METH_KEYWORDS, safe_forceint_docstring},
+    {"safe_real", (PyCFunction) fastnumbers_fast_real, METH_VARARGS | METH_KEYWORDS, safe_real_docstring},
+    {"safe_float", (PyCFunction) fastnumbers_fast_float, METH_VARARGS | METH_KEYWORDS, safe_float_docstring},
+    {"safe_int", (PyCFunction) fastnumbers_fast_int, METH_VARARGS | METH_KEYWORDS, safe_int_docstring},
+    {"safe_forceint", (PyCFunction) fastnumbers_fast_forceint, METH_VARARGS | METH_KEYWORDS, safe_forceint_docstring},
     {"fast_real", (PyCFunction) fastnumbers_fast_real, METH_VARARGS | METH_KEYWORDS, fast_real_docstring},
     {"fast_float", (PyCFunction) fastnumbers_fast_float, METH_VARARGS | METH_KEYWORDS, fast_float_docstring},
     {"fast_int", (PyCFunction) fastnumbers_fast_int, METH_VARARGS | METH_KEYWORDS, fast_int_docstring},

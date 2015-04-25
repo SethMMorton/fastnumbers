@@ -34,5 +34,4 @@ def int_try(x):
 
 time_conv(['int_re', int_re],
           ['int_try', int_try],
-          ['safe_int', 'from fastnumbers import safe_int'],
           ['fast_int', 'from fastnumbers import fast_int'])

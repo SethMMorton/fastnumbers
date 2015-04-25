@@ -5,10 +5,9 @@ The "Fast" Functions
 ====================
 
 Each of these functions will quickly convert strings to numbers
-(and also numbers to numbers) faster than a pure Python implementation,
-but without bounds and overflow checking on the conversion, so they
-are much faster than the "safe" functions but may not give accurate
-results for very large or very small numbers.
+(and also numbers to numbers) faster than a pure Python implementation.
+They are guaranteed to return results identical to the built-in
+``float`` or ``int`` functions.
 
 :func:`~fastnumbers.fast_real`
 ------------------------------

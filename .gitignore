@@ -25,6 +25,7 @@ pip-log.txt
 .coverage
 .tox
 .cache
+.hypothesis
 
 #Translations
 *.mo
