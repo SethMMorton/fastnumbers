@@ -20,7 +20,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = Py_None;
     PyObject *isint = NULL, *pyresult = NULL;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     double result;
     long intresult;
     bool error = false, overflow = false, isintbool;
@@ -41,7 +41,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str != NULL)
         intresult = fast_atoi(str, &error, &overflow);
     else {
-        intresult = fast_utoi(uni);
+        intresult = Py_UNICODE_TODIGIT(uni);
         error = intresult < 0;
     }
 
@@ -60,7 +60,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str != NULL)
         result = fast_atof(str, &error, &overflow);
     else {
-        result = fast_utof(uni);
+        result = Py_UNICODE_TONUMERIC(uni);
         error = result < 0;
     }
 
@@ -73,7 +73,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         }
         else {
             IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
-                "could not convert string to float or int: '%S'", (wchar_t*) uni);
+                "could not convert string to float or int: '%c'", uni);
         }
     }
     /*   b) return a default value */
@@ -124,7 +124,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = Py_None;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     double result;
     bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
@@ -144,7 +144,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str != NULL)
         result = fast_atof(str, &error, &overflow);
     else {
-        result = fast_utof(uni);
+        result = Py_UNICODE_TONUMERIC(uni);
         error = result < 0;
     }
 
@@ -157,7 +157,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
         }
         else {
             IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
-                "could not convert string to float or int: '%S'", (wchar_t*) uni);
+                "could not convert string to float or int: '%c'", uni);
         }
     }
     /*   b) return a default value */
@@ -188,7 +188,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = Py_None;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     long result;
     bool error = false, overflow = false;
     static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
@@ -208,7 +208,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str != NULL)
         result = fast_atoi(str, &error, &overflow);
     else {
-        result = fast_utoi(uni);
+        result = Py_UNICODE_TODIGIT(uni);
         error = result < 0;
     }
 
@@ -221,7 +221,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
         }
         else {
             IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
-                "could not convert string to float or int: '%S'", (wchar_t*) uni);
+                "could not convert string to float or int: '%c'", uni);
         }
     }
     /*   b) return a default value */
@@ -253,7 +253,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = Py_None;
     PyObject *pytemp = NULL, *pyreturn = NULL;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     double result;
     long intresult;
     bool error = false, overflow = false;
@@ -274,7 +274,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str != NULL)
         intresult = fast_atoi(str, &error, &overflow);
     else {
-        intresult = fast_utoi(uni);
+        intresult = Py_UNICODE_TODIGIT(uni);
         error = intresult < 0;
     }
 
@@ -292,7 +292,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     if (str != NULL)
         result = fast_atof(str, &error, &overflow);
     else {
-        result = fast_utof(uni);
+        result = Py_UNICODE_TONUMERIC(uni);
         error = result < 0;
     }
 
@@ -312,7 +312,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         }
         else {
             IF_TRUE_RAISE_ERR_FMT(error, PyExc_ValueError,
-                "could not convert string to float or int: '%S'", (wchar_t*) uni);
+                "could not convert string to float or int: '%c'", uni);
         }
     }
     /*   b) return a default value */
@@ -351,7 +351,7 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *allow_inf = Py_False;
     PyObject *allow_nan = Py_False;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     static char *keywords[] = { "x", "str_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
@@ -369,12 +369,12 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
     convert_string(input, &str, &uni);
 
     /* If it cannot be converted to a string, return False. */
-    if (str == NULL && uni == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+    if (str == NULL && uni == NULL_UNI) { PyErr_Clear(); Py_RETURN_FALSE; }
 
     /* If the string can be a float, return True, False otherwise. */
     if (str != NULL && fast_atof_test(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan)))
         Py_RETURN_TRUE;
-    else if (uni != NULL && fast_utof_test(uni))
+    else if (uni != NULL_UNI && Py_UNICODE_ISNUMERIC(uni))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -390,7 +390,7 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *allow_inf = Py_False;
     PyObject *allow_nan = Py_False;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     static char *keywords[] = { "x", "str_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
@@ -409,12 +409,12 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
     convert_string(input, &str, &uni);
 
     /* If it cannot be converted to a string, return False. */
-    if (str == NULL && uni == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+    if (str == NULL && uni == NULL_UNI) { PyErr_Clear(); Py_RETURN_FALSE; }
 
     /* If the string can be a float, return True, False otherwise. */
     if (str != NULL && fast_atof_test(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan)))
         Py_RETURN_TRUE;
-    else if (uni != NULL && fast_utof_test(uni))
+    else if (uni != NULL_UNI && Py_UNICODE_ISNUMERIC(uni))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -428,7 +428,7 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     static char *keywords[] = { "x", "str_only", NULL };
 
     /* Read the function argument. */
@@ -447,11 +447,11 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     convert_string(input, &str, &uni);
 
     /* If it cannot be converted to a string, return False. */
-    if (str == NULL && uni == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+    if (str == NULL && uni == NULL_UNI) { PyErr_Clear(); Py_RETURN_FALSE; }
 
     /* If the string can be an int, return True, False otherwise. */
     if (str != NULL && fast_atoi_test(str)) Py_RETURN_TRUE;
-    else if (uni != NULL && fast_utoi_test(uni)) Py_RETURN_TRUE;
+    else if (uni != NULL_UNI && Py_UNICODE_ISDIGIT(uni)) Py_RETURN_TRUE;
     else Py_RETURN_FALSE;
 }
 
@@ -463,7 +463,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL, *intlike = NULL, *pyresult = NULL;
     PyObject *str_only = Py_False;
     char *str = NULL;
-    Py_UNICODE *uni = NULL;
+    Py_UCS4 uni = NULL_UNI;
     double result;
     bool error, overflow;
     static char *keywords[] = { "x", "str_only", NULL };
@@ -484,18 +484,18 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     convert_string(input, &str, &uni);
 
     /* If it cannot be converted to a string, return False. */
-    if (str == NULL && uni == NULL) { PyErr_Clear(); Py_RETURN_FALSE; }
+    if (str == NULL && uni == NULL_UNI) { PyErr_Clear(); Py_RETURN_FALSE; }
 
     /* If the string can be an int, return True now. */
     if (str != NULL && fast_atoi_test(str)) Py_RETURN_TRUE;
-    if (uni != NULL && fast_utoi_test(uni)) Py_RETURN_TRUE;
+    if (uni != NULL_UNI && Py_UNICODE_ISDIGIT(uni)) Py_RETURN_TRUE;
 
     /* Try converting the string to a float, */
     /* and then running is_integer on that. */
     if (str != NULL)
         result = fast_atof(str, &error, &overflow);
     else {
-        result = fast_utof(uni);
+        result = Py_UNICODE_TONUMERIC(uni);
         error = result < 0;
     }
 

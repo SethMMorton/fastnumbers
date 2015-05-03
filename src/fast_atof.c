@@ -204,13 +204,6 @@ double fast_atof (const char *p, bool *error, bool *overflow)
     return sign * value;
 }
 
-
-double fast_utof (const Py_UNICODE *p)
-{
-    /* The only character should be a number. */
-    return Py_UNICODE_TONUMERIC(*p);
-}
-
 /* Calculates the exponential scaling factor with hard-coded values. */
 
 long double scaling_factor(int expon) {

@@ -15,29 +15,41 @@ const double maxsize = 9007199254740992;  /* 2^53 */
  * If unsuccessful, raise a TypeError.
  * A return value of NULL means an error occurred.
  */
-void convert_string(PyObject *input, char **str, Py_UNICODE **uni) {
+void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
     PyObject *temp_bytes = NULL;
     *str = NULL;
-    *uni = NULL;
+    *uni = NULL_UNI;
     /* Try Bytes (Python2 str). */
     if (PyBytes_Check(input)) {
         *str = PyBytes_AS_STRING(input);        
     /* Try Unicode. */
     } else if (PyUnicode_Check(input)) {
-        /* Now convert this unicode object to a char*. */
+        /* Now convert this unicode object to a char* as ASCII, if possible. */
         temp_bytes = PyUnicode_AsEncodedString(input, "ascii", "strict");
         if (temp_bytes != NULL) {
             *str = PyBytes_AS_STRING(temp_bytes);
             Py_DECREF(temp_bytes);
         }
-        /* If char* didn't work, try Py_UNICODE*. */
+        /* If char* didn't work, try a single Py_UCS4 character. */
+        /* If at any point it is found that the input is not valid unicode */
+        /* or more than one character, simply return a space. */
         else {
-            PyErr_Clear();
-            if (PySequence_Length(input) == 1) {
-                *uni = PyUnicode_AS_UNICODE(input);
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
+            if (PyUnicode_READY(input)) {
+                *uni = (Py_UCS4) ' ';
             } else {
-                *uni = (Py_UNICODE *) ' ';
+                *uni = PyUnicode_GET_LENGTH(input) == 1 ?
+                       PyUnicode_READ_CHAR(input, 0) :
+                       (Py_UCS4) ' ';
             }
+#else
+            if (PySequence_Length(input) == 1) {
+                *uni = (Py_UCS4) PyUnicode_AS_UNICODE(input)[0];
+            } else {
+                *uni = (Py_UCS4) ' ';
+            }
+#endif
+            PyErr_Clear();
         }
     /* If none of the above, not a string type. */
     } else {

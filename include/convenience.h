@@ -12,12 +12,15 @@ extern "C" {
 /* Used to determine if a float is so large it lost precision. */
 extern const double maxsize;
 
+/* Bad unicode. */
+#define NULL_UNI ((Py_UCS4)-1)
+
 /**********
  * MACROS *
  **********/
 
 /* Convert character to lower.  Only needed for Python 2.6. */
-#if PY_MAJOR_VERSION == 2 || PY_MINOR_VERSION == 6
+#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 6
 #define Py_CHARMASK(c) ((unsigned char)((c) & 0xff))
 extern const unsigned char _Py_ctype_tolower[256];
 #define Py_TOLOWER(c) (_Py_ctype_tolower[Py_CHARMASK(c)])
@@ -70,7 +73,7 @@ extern const unsigned char _Py_ctype_tolower[256];
 
 /* Convert PyObject to a string, or raise an error. */
 #define CONVERT_TO_STRING_OR_RAISE(in, out, outuni) \
-    convert_string(in, &out, &outuni); if (out == NULL && outuni == NULL) return NULL;
+    convert_string(in, &out, &outuni); if (out == NULL && outuni == NULL_UNI) return NULL;
 
 /* Return an error unless the variable is a string. */
 #define RETURN_IF_STRING_OR_RAISE(x) \
@@ -108,7 +111,7 @@ extern const unsigned char _Py_ctype_tolower[256];
  * Functions *
  *************/
 
-void convert_string(PyObject *input, char **str, Py_UNICODE **uni);
+void convert_string(PyObject *input, char **str, Py_UCS4 *uni);
 bool case_insensitive_match(const char *s, const char *t);
 #if PY_MAJOR_VERSION == 2
 PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s);

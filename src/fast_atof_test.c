@@ -127,10 +127,3 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
         return *p == '\0' ? !is_inf && !is_nan && valid : false;
 
 }
-
-
-bool fast_utof_test (const Py_UNICODE *p)
-{
-    /* The only character should be a number. */
-    return Py_UNICODE_ISNUMERIC(*p);
-}

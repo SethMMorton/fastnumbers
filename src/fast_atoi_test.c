@@ -44,10 +44,3 @@ bool fast_atoi_test (const char *p)
     return *p == '\0' ? valid : false;
 
 }
-
-
-bool fast_utoi_test (const Py_UNICODE *p)
-{
-    /* The only character should be a number. */
-    return Py_UNICODE_ISDIGIT(*p);
-}
