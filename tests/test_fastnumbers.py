@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Find the build location and add that to the path
 from __future__ import print_function, division
 import re
@@ -15,11 +16,11 @@ if python_version_tuple()[0] == '3':
     long = int
 
 
-def not_a_number(s):
-    m = not bool(re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$', s, re.U))
-    n = not bool(re.match(r'\s*([-+]?\d+[lL]?)\s*$', s, re.U))
-    o = not bool(re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$', s, re.U))
-    return m and n and o and '\0' not in s
+def a_number(s):
+    m = bool(re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
+    n = bool(re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U))
+    o = bool(re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
+    return m or n or o
 
 
 def test_version():
@@ -127,13 +128,13 @@ def test_fast_real_given_padded_int_string_returns_int(x):
 @example('e8')
 @example('.')
 def test_fast_real_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_real(x) is x
 
 
 @given(str)
 def test_fast_real_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_real(x, raise_on_invalid=True)
 
@@ -146,13 +147,13 @@ def test_fast_real_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_real_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_real(x, default=90) == 90
 
 
 @given(str)
 def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_real(x, default=90, raise_on_invalid=True)
 
@@ -255,13 +256,13 @@ def test_fast_float_given_padded_int_string_returns_float(x):
 @example('e8')
 @example('.')
 def test_fast_float_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_float(x) is x
 
 
 @given(str)
 def test_fast_float_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_float(x, raise_on_invalid=True)
 
@@ -274,13 +275,13 @@ def test_fast_float_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_float_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_float(x, default=90.0) == 90.0
 
 
 @given(str)
 def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_float(x, default=90.0, raise_on_invalid=True)
 
@@ -376,13 +377,13 @@ def test_fast_int_given_padded_int_string_returns_int(x):
 @example('e8')
 @example('.')
 def test_fast_int_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_int(x) is x
 
 
 @given(str)
 def test_fast_int_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_int(x, raise_on_invalid=True)
 
@@ -395,13 +396,13 @@ def test_fast_int_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_int_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_int(x, default=90) == 90
 
 
 @given(str)
 def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
 
@@ -501,13 +502,13 @@ def test_fast_forceint_given_padded_int_string_returns_int(x):
 @example('e8')
 @example('.')
 def test_fast_forceint_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_forceint(x) is x
 
 
 @given(str)
 def test_fast_forceint_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_forceint(x, raise_on_invalid=True)
 
@@ -520,13 +521,13 @@ def test_fast_forceint_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_forceint(x, default=90.0) == 90.0
 
 
 @given(str)
 def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
 
@@ -581,7 +582,7 @@ def test_isreal_returns_True_if_given_float_string_padded_or_not(x):
 @example('e8')
 @example('.')
 def test_isreal_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isreal(x)
 
 
@@ -649,7 +650,7 @@ def test_isfloat_returns_True_if_given_float_string_padded_or_not(x):
 @example('e8')
 @example('.')
 def test_isfloat_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isfloat(x)
 
 
@@ -716,7 +717,7 @@ def test_isint_returns_False_if_given_float_string_padded_or_not(x):
 @example('e8')
 @example('.')
 def test_isint_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isint(x)
 
 
@@ -800,7 +801,7 @@ def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not
 @example('e8')
 @example('.')
 def test_isintlike_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isintlike(x)
 
 
