@@ -63,3 +63,10 @@ long fast_atoi (const char *p, bool *error, bool *overflow)
     return sign * value;
 
 }
+
+
+long fast_utoi (const Py_UNICODE *p)
+{
+    /* The only character should be a number. */
+    return Py_UNICODE_TODIGIT(*p);
+}

@@ -15,31 +15,36 @@ const double maxsize = 9007199254740992;  /* 2^53 */
  * If unsuccessful, raise a TypeError.
  * A return value of NULL means an error occurred.
  */
-char* convert_string(PyObject *input) {
-    char* str;
+void convert_string(PyObject *input, char **str, Py_UNICODE **uni) {
     PyObject *temp_bytes = NULL;
+    *str = NULL;
+    *uni = NULL;
     /* Try Bytes (Python2 str). */
     if (PyBytes_Check(input)) {
-        str = PyBytes_AS_STRING(input);        
+        *str = PyBytes_AS_STRING(input);        
     /* Try Unicode. */
     } else if (PyUnicode_Check(input)) {
         /* Now convert this unicode object to a char*. */
-        temp_bytes = PyUnicode_AsEncodedString(input, "utf-8", "ignore");
+        temp_bytes = PyUnicode_AsEncodedString(input, "ascii", "strict");
         if (temp_bytes != NULL) {
-            str = PyBytes_AS_STRING(temp_bytes);
+            *str = PyBytes_AS_STRING(temp_bytes);
             Py_DECREF(temp_bytes);
         }
-        else
-            return NULL; // UnicodeEncodeError
+        /* If char* didn't work, try Py_UNICODE*. */
+        else {
+            PyErr_Clear();
+            if (PySequence_Length(input) == 1) {
+                *uni = PyUnicode_AS_UNICODE(input);
+            } else {
+                *uni = (Py_UNICODE *) ' ';
+            }
+        }
     /* If none of the above, not a string type. */
     } else {
-        return (char*) PyErr_Format(PyExc_TypeError,
-                                    "expected str, float, or int argument, got %.200s",
-                                    input->ob_type->tp_name);
+        PyErr_Format(PyExc_TypeError,
+                     "expected str, float, or int argument, got %.200s",
+                     input->ob_type->tp_name);
     }
-    /* There was an error with conversion. */
-    if (str == NULL) return NULL;
-    return str;
 }
 
 /* Case-insensitive string match used for nan and inf detection; t should be

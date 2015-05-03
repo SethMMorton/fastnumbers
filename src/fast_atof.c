@@ -204,6 +204,13 @@ double fast_atof (const char *p, bool *error, bool *overflow)
     return sign * value;
 }
 
+
+double fast_utof (const Py_UNICODE *p)
+{
+    /* The only character should be a number. */
+    return Py_UNICODE_TONUMERIC(*p);
+}
+
 /* Calculates the exponential scaling factor with hard-coded values. */
 
 long double scaling_factor(int expon) {
@@ -826,5 +833,5 @@ long double scaling_factor(int expon) {
     case -307: return 1E-307L;
     case -308: return 1E-308L;
     default: return expon < 0 ? 1E-308L : 1E308L;
-}
+    }
 }

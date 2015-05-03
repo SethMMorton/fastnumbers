@@ -69,8 +69,8 @@ extern const unsigned char _Py_ctype_tolower[256];
 #endif
 
 /* Convert PyObject to a string, or raise an error. */
-#define CONVERT_TO_STRING_OR_RAISE(in, out) \
-    out = convert_string(in); if (out == NULL) return NULL;
+#define CONVERT_TO_STRING_OR_RAISE(in, out, outuni) \
+    convert_string(in, &out, &outuni); if (out == NULL && outuni == NULL) return NULL;
 
 /* Return an error unless the variable is a string. */
 #define RETURN_IF_STRING_OR_RAISE(x) \
@@ -108,7 +108,7 @@ extern const unsigned char _Py_ctype_tolower[256];
  * Functions *
  *************/
 
-char* convert_string(PyObject *input);
+void convert_string(PyObject *input, char **str, Py_UNICODE **uni);
 bool case_insensitive_match(const char *s, const char *t);
 #if PY_MAJOR_VERSION == 2
 PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s);
