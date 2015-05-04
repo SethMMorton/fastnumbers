@@ -17,6 +17,7 @@ const double maxsize = 9007199254740992;  /* 2^53 */
  */
 void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
     PyObject *temp_bytes = NULL;
+    PyObject *stripped = NULL;
     *str = NULL;
     *uni = NULL_UNI;
     /* Try Bytes (Python2 str). */
@@ -33,20 +34,31 @@ void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
         /* If char* didn't work, try a single Py_UCS4 character. */
         /* If at any point it is found that the input is not valid unicode */
         /* or more than one character, simply return a space. */
+        /* Strip whitespace from input first if not of length 1. */
         else {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
             if (PyUnicode_READY(input)) {
                 *uni = (Py_UCS4) ' ';
             } else {
-                *uni = PyUnicode_GET_LENGTH(input) == 1 ?
-                       PyUnicode_READ_CHAR(input, 0) :
-                       (Py_UCS4) ' ';
+                if (PyUnicode_GET_LENGTH(input) == 1) {
+                    *uni = PyUnicode_READ_CHAR(input, 0);
+                } else {
+                    stripped = PyObject_CallMethod(input, "strip", NULL);
+                    *uni = PyUnicode_GET_LENGTH(stripped) == 1 ?
+                           PyUnicode_READ_CHAR(stripped, 0) :
+                           (Py_UCS4) ' ';
+                    Py_DECREF(stripped);
+                }
             }
 #else
             if (PySequence_Length(input) == 1) {
                 *uni = (Py_UCS4) PyUnicode_AS_UNICODE(input)[0];
             } else {
-                *uni = (Py_UCS4) ' ';
+                stripped = PyObject_CallMethod(input, "strip", NULL);
+                *uni = PySequence_Length(stripped) == 1 ?
+                       (Py_UCS4) PyUnicode_AS_UNICODE(stripped)[0] :
+                       (Py_UCS4) ' ';
+                Py_DECREF(stripped);
             }
 #endif
             PyErr_Clear();
