@@ -158,7 +158,6 @@ def test_fast_real_given_unicode_digit_returns_int(x):
 
 @given(sampled_from(numeric))
 def test_fast_real_given_unicode_numeral_returns_float(x):
-    assume(x not in digits)
     assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.fast_real(x) == unicodedata.numeric(x)
     assert isinstance(fastnumbers.fast_real(x), float)
@@ -315,8 +314,6 @@ def test_fast_float_given_unicode_digit_returns_float(x):
 
 @given(sampled_from(numeric))
 def test_fast_float_given_unicode_numeral_returns_float(x):
-    assume(x not in digits)
-    assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.fast_float(x) == unicodedata.numeric(x)
     assert isinstance(fastnumbers.fast_float(x), float)
     # Try padded as well
@@ -467,7 +464,6 @@ def test_fast_int_given_unicode_digit_returns_int(x):
 @given(sampled_from(numeric))
 def test_fast_int_given_unicode_numeral_returns_as_is(x):
     assume(x not in digits)
-    assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.fast_int(x) == x
 
 
@@ -618,8 +614,6 @@ def test_fast_forceint_given_unicode_digit_returns_int(x):
 
 @given(sampled_from(numeric))
 def test_fast_forceint_given_unicode_numeral_returns_int(x):
-    assume(x not in digits)
-    assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.fast_forceint(x) == int(unicodedata.numeric(x))
     assert isinstance(fastnumbers.fast_forceint(x), (int, long))
     # Try padded as well
