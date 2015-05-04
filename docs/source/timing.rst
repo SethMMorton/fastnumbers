@@ -11,6 +11,10 @@ are collected below for comparison to equivalent python implementations.
 The numbers may change depending on the machine you are on. Feel free
 to download the source code to run all timing tests.
 
+Note that the test results are for Python 2.7. Both the ``re`` and ``try``
+results are a little bit faster on Python 3.x, but the ``fast`` results are
+still better than or equal to the Python equivalents.
+
 Timing Runner
 -------------
 

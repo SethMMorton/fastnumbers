@@ -15,7 +15,7 @@ Please see the
 for timing details.
 Check out the `API <http://pythonhosted.org//fastnumbers/api.html>`_.
 
-**NOTE:** The :func:`safe_real`, :func:`safe_float`, :func:`safe_int`, and
+**NOTE:** The old :func:`safe_real`, :func:`safe_float`, :func:`safe_int`, and
 :func:`safe_forceint` functions are deprecated as of :mod:`fastnumbers` version
 >= 0.3.0; :func:`fast_real`, :func:`fast_float`, :func:`fast_int`, and
 :func:`fast_forceint` have each been reimplemented to fall back on the
@@ -61,6 +61,11 @@ Some example usage:
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
+    >>> # Single unicode characters can be converted.
+    >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
+    5.0
+    >>> fast_float(u'\u2466')  # 7 enclosed in a circle
+    7.0
 
 To achieve this, the module makes some assumptions about the input type
 (input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),

@@ -9,6 +9,6 @@ fastnumbers API
 .. toctree::
    :maxdepth: 2
 
-   safe.rst
    fast.rst
    checks.rst
+   safe.rst

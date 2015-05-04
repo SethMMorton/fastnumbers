@@ -1,6 +1,7 @@
 #ifndef FAST_CONVERSIONS
 #define FAST_CONVERSIONS
 
+#include <Python.h>
 #include "fn_bool.h"
 
 #ifdef __cplusplus

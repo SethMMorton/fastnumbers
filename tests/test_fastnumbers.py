@@ -1,25 +1,52 @@
+# -*- coding: utf-8 -*-
 # Find the build location and add that to the path
 from __future__ import print_function, division
 import re
 import sys
 import os
 import math
-from random import randint
+import unicodedata
+from random import randint, sample
 from itertools import repeat
 from platform import python_version_tuple
 from pytest import raises
 from hypothesis import given, assume, example
+from hypothesis.specifiers import sampled_from
 import fastnumbers
 
 if python_version_tuple()[0] == '3':
+    unicode = str
     long = int
+    unichr = chr
 
 
-def not_a_number(s):
-    m = not bool(re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$', s, re.U))
-    n = not bool(re.match(r'\s*([-+]?\d+[lL]?)\s*$', s, re.U))
-    o = not bool(re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$', s, re.U))
-    return m and n and o and '\0' not in s
+# Predefine Unicode digits, numbers, and not those.
+digits = []
+numeric = []
+not_numeric = []
+for x in range(0x10FFF):
+    try:
+        a = unichr(x)
+    except ValueError:
+        break
+    try:
+        unicodedata.digit(a)
+        digits.append(a)
+    except ValueError:
+        pass
+    try:
+        unicodedata.numeric(a)
+        numeric.append(a)
+    except ValueError:
+        not_numeric.append(a)
+not_numeric = sample(not_numeric, 1000)  # This is too big otherwise
+
+
+def a_number(s):
+    m = bool(re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
+    n = bool(re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U))
+    o = bool(re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
+    return m or n or o
 
 
 def test_version():
@@ -121,19 +148,48 @@ def test_fast_real_given_padded_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_real(y), (int, long))
 
 
+@given(sampled_from(digits))
+def test_fast_real_given_unicode_digit_returns_int(x):
+    assert fastnumbers.fast_real(x) == unicodedata.digit(x)
+    assert isinstance(fastnumbers.fast_real(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_real(u'   ' + x + u'   ') == unicodedata.digit(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_real_given_unicode_numeral_returns_float(x):
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.fast_real(x) == unicodedata.numeric(x)
+    assert isinstance(fastnumbers.fast_real(x), float)
+    # Try padded as well
+    assert fastnumbers.fast_real(u'   ' + x + u'   ') == unicodedata.numeric(x)
+
+
+@given(sampled_from(not_numeric))
+def test_fast_real_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_real(x) == x
+
+
+@given(unicode)
+def test_fast_real_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_real(x) == x
+
+
 @given(str)
 @example('+')
 @example('-')
 @example('e8')
 @example('.')
 def test_fast_real_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_real(x) is x
 
 
 @given(str)
 def test_fast_real_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_real(x, raise_on_invalid=True)
 
@@ -146,13 +202,13 @@ def test_fast_real_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_real_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_real(x, default=90) == 90
 
 
 @given(str)
 def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_real(x, default=90, raise_on_invalid=True)
 
@@ -248,6 +304,34 @@ def test_fast_float_given_padded_int_string_returns_float(x):
     assert isinstance(fastnumbers.fast_float(y), float)
 
 
+@given(sampled_from(digits))
+def test_fast_float_given_unicode_digit_returns_float(x):
+    assert fastnumbers.fast_float(x) == unicodedata.numeric(x)
+    assert isinstance(fastnumbers.fast_float(x), float)
+    # Try padded as well
+    assert fastnumbers.fast_float(u'   ' + x + u'   ') == unicodedata.numeric(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_float_given_unicode_numeral_returns_float(x):
+    assert fastnumbers.fast_float(x) == unicodedata.numeric(x)
+    assert isinstance(fastnumbers.fast_float(x), float)
+    # Try padded as well
+    assert fastnumbers.fast_float(u'   ' + x + u'   ') == unicodedata.numeric(x)
+
+
+@given(sampled_from(not_numeric))
+def test_fast_float_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_float(x) == x
+
+
+@given(unicode)
+def test_fast_float_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_float(x) == x
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -255,13 +339,13 @@ def test_fast_float_given_padded_int_string_returns_float(x):
 @example('e8')
 @example('.')
 def test_fast_float_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_float(x) is x
 
 
 @given(str)
 def test_fast_float_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_float(x, raise_on_invalid=True)
 
@@ -274,13 +358,13 @@ def test_fast_float_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_float_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_float(x, default=90.0) == 90.0
 
 
 @given(str)
 def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_float(x, default=90.0, raise_on_invalid=True)
 
@@ -369,6 +453,32 @@ def test_fast_int_given_padded_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_int(y), (int, long))
 
 
+@given(sampled_from(digits))
+def test_fast_int_given_unicode_digit_returns_int(x):
+    assert fastnumbers.fast_int(x) == unicodedata.digit(x)
+    assert isinstance(fastnumbers.fast_int(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_int(u'   ' + x + u'   ') == unicodedata.digit(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_int_given_unicode_numeral_returns_as_is(x):
+    assume(x not in digits)
+    assert fastnumbers.fast_int(x) == x
+
+
+@given(sampled_from(not_numeric))
+def test_fast_int_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_int(x) == x
+
+
+@given(unicode)
+def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_int(x) == x
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -376,13 +486,13 @@ def test_fast_int_given_padded_int_string_returns_int(x):
 @example('e8')
 @example('.')
 def test_fast_int_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_int(x) is x
 
 
 @given(str)
 def test_fast_int_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_int(x, raise_on_invalid=True)
 
@@ -395,13 +505,13 @@ def test_fast_int_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_int_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_int(x, default=90) == 90
 
 
 @given(str)
 def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
 
@@ -494,6 +604,34 @@ def test_fast_forceint_given_padded_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
 
 
+@given(sampled_from(digits))
+def test_fast_forceint_given_unicode_digit_returns_int(x):
+    assert fastnumbers.fast_forceint(x) == unicodedata.digit(x)
+    assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_forceint(u'   ' + x + u'   ') == unicodedata.digit(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_forceint_given_unicode_numeral_returns_int(x):
+    assert fastnumbers.fast_forceint(x) == int(unicodedata.numeric(x))
+    assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_forceint(u'   ' + x + u'   ') == int(unicodedata.numeric(x))
+
+
+@given(sampled_from(not_numeric))
+def test_fast_forceint_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_forceint(x) == x
+
+
+@given(unicode)
+def test_fast_forceint_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_int(x) == x
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -501,13 +639,13 @@ def test_fast_forceint_given_padded_int_string_returns_int(x):
 @example('e8')
 @example('.')
 def test_fast_forceint_given_invalid_string_returns_string_as_is(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_forceint(x) is x
 
 
 @given(str)
 def test_fast_forceint_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_forceint(x, raise_on_invalid=True)
 
@@ -520,13 +658,13 @@ def test_fast_forceint_given_invalid_type_raises_TypeError(x):
 
 @given(str)
 def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert fastnumbers.fast_forceint(x, default=90.0) == 90.0
 
 
 @given(str)
 def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
 
@@ -574,6 +712,34 @@ def test_isreal_returns_True_if_given_float_string_padded_or_not(x):
     assert fastnumbers.isreal(y)
 
 
+@given(sampled_from(digits))
+def test_isreal_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isreal(x)
+    # Try padded as well
+    assert fastnumbers.isreal(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isreal_given_unicode_numeral_returns_True(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.isreal(x)
+    # Try padded as well
+    assert fastnumbers.isreal(u'   ' + x + u'   ')
+
+
+@given(sampled_from(not_numeric))
+def test_isreal_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isreal(x)
+
+
+@given(unicode)
+def test_isreal_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isreal(x)
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -581,7 +747,7 @@ def test_isreal_returns_True_if_given_float_string_padded_or_not(x):
 @example('e8')
 @example('.')
 def test_isreal_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isreal(x)
 
 
@@ -642,6 +808,34 @@ def test_isfloat_returns_True_if_given_float_string_padded_or_not(x):
     assert fastnumbers.isfloat(y)
 
 
+@given(sampled_from(digits))
+def test_isfloat_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isfloat(x)
+    # Try padded as well
+    assert fastnumbers.isfloat(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isfloat_given_unicode_numeral_returns_True(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.isfloat(x)
+    # Try padded as well
+    assert fastnumbers.isfloat(u'   ' + x + u'   ')
+
+
+@given(sampled_from(not_numeric))
+def test_isfloat_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isfloat(x)
+
+
+@given(unicode)
+def test_isfloat_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isfloat(x)
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -649,7 +843,7 @@ def test_isfloat_returns_True_if_given_float_string_padded_or_not(x):
 @example('e8')
 @example('.')
 def test_isfloat_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isfloat(x)
 
 
@@ -709,6 +903,32 @@ def test_isint_returns_False_if_given_float_string_padded_or_not(x):
     assert not fastnumbers.isint(y)
 
 
+@given(sampled_from(digits))
+def test_isint_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isint(x)
+    # Try padded as well
+    assert fastnumbers.isint(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isint_given_unicode_numeral_returns_False(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert not fastnumbers.isint(x)
+
+
+@given(sampled_from(not_numeric))
+def test_isint_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isint(x)
+
+
+@given(unicode)
+def test_isint_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isint(x)
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -716,7 +936,7 @@ def test_isint_returns_False_if_given_float_string_padded_or_not(x):
 @example('e8')
 @example('.')
 def test_isint_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isint(x)
 
 
@@ -793,6 +1013,41 @@ def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not
     assert not fastnumbers.isintlike(y)
 
 
+@given(sampled_from(digits))
+def test_isintlike_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isintlike(x)
+    # Try padded as well
+    assert fastnumbers.isintlike(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isintlike_given_unicode_non_digit_numeral_returns_False(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert not fastnumbers.isintlike(x)
+
+
+@given(sampled_from(numeric))
+def test_isintlike_given_unicode_digit_numeral_returns_False(x):
+    assume(x not in digits)
+    assume(unicodedata.numeric(x).is_integer())
+    assert fastnumbers.isintlike(x)
+    # Try padded as well
+    assert fastnumbers.isintlike(u'   ' + x + u'   ')
+
+
+@given(sampled_from(not_numeric))
+def test_isintlike_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isintlike(x)
+
+
+@given(unicode)
+def test_isintlike_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isintlike(x)
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -800,7 +1055,7 @@ def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not
 @example('e8')
 @example('.')
 def test_isintlike_returns_False_if_given_non_number_string(x):
-    assume(not_a_number(x))
+    assume(not a_number(x))
     assert not fastnumbers.isintlike(x)
 
 

@@ -19,11 +19,11 @@ To achieve this, the module makes some assumptions about the input type
 (input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
 and otherwise a ``TypeError`` is raised.
 
-**NOTE:** The ``safe_real``, ``safe_float``, ``safe_int``, and
+**NOTE:** The old ``safe_real``, ``safe_float``, ``safe_int``, and
 ``safe_forceint`` functions are deprecated as of ``fastnumbers`` version
 >= 0.3.0; ``fast_real``, ``fast_float``, ``fast_int``, and ``fast_forceint``
 have each been reimplemented to fall back on the "safe" algorithm if
-overflow or loss of precision is detect and so the separate "safe" functions
+overflow or loss of precision is detected and so the separate "safe" functions
 are no longer needed.
 
 Examples
@@ -65,6 +65,12 @@ Some example usage:
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
+    >>> # Single unicode characters can be converted.
+    >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
+    5.0
+    >>> fast_float(u'\u2466')  # 7 enclosed in a circle
+    7.0
+
 
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
 function of your choice to ``locale.atof``.
@@ -161,6 +167,12 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+05-03-2015 v. 0.4.0
+'''''''''''''''''''
+
+    - Added support for conversion of single Unicode characters
+      that represent numbers and digits.
+
 04-23-2015 v. 0.3.0
 '''''''''''''''''''
 
@@ -177,13 +189,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 '''''''''''''''''''
 
     - Added a 'default' option to the conversion functions.
-
-08-12-2014 v. 0.1.4
-'''''''''''''''''''
-
-    - Fixed bug where '.' was incorrectly identified as a valid
-      float/int and converted to 0.  This bug only applied to the ``fast_*``
-      and ``is*`` functions.
-    - The method to catch corner-cases like '.', '+', 'e', etc. has been
-      reworked to be more general... case-by-case patches should no longer
-      be needed.

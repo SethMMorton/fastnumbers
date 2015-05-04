@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Find the build location and add that to the path
 from __future__ import print_function, division
 import sys
@@ -29,6 +30,7 @@ if python_version_tuple()[0] == '3':
 # 15. NaN
 # 16. Sign/'e'/'.' only
 # 17. Default value.
+# 18. Unicode numbers
 
 
 def test_fast_real():
@@ -83,6 +85,11 @@ def test_fast_real():
     assert fastnumbers.fast_real('invalid', default=90) == 90
     with raises(ValueError):
         assert fastnumbers.fast_real('invalid', default=90, raise_on_invalid=True)
+    # 18. Unicode numbers
+    assert fastnumbers.fast_real(u'⑦') == 7
+    assert fastnumbers.fast_real(u'⁸') == 8
+    assert fastnumbers.fast_real(u'⅔') == 2.0 / 3.0
+    assert fastnumbers.fast_real(u'Ⅴ') == 5
 
 
 def test_fast_float():
@@ -135,6 +142,11 @@ def test_fast_float():
     assert fastnumbers.fast_float('invalid', default=90) == 90
     with raises(ValueError):
         assert fastnumbers.fast_float('invalid', default=90, raise_on_invalid=True)
+    # 18. Unicode numbers
+    assert fastnumbers.fast_float(u'⑦') == 7.0
+    assert fastnumbers.fast_float(u'⁸') == 8.0
+    assert fastnumbers.fast_float(u'⅔') == 2.0 / 3.0
+    assert fastnumbers.fast_float(u'Ⅴ') == 5.0
 
 
 def test_fast_int():
@@ -185,6 +197,11 @@ def test_fast_int():
     assert fastnumbers.fast_int('invalid', default=90) == 90
     with raises(ValueError):
         assert fastnumbers.fast_int('invalid', default=90, raise_on_invalid=True)
+    # 18. Unicode numbers
+    assert fastnumbers.fast_int(u'⑦') == 7
+    assert fastnumbers.fast_int(u'⁸') == 8
+    assert fastnumbers.fast_int(u'⅔') == u'⅔'
+    assert fastnumbers.fast_int(u'Ⅴ') == u'Ⅴ'
 
 
 def test_fast_forceint():
@@ -236,6 +253,11 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint('invalid', default=90) == 90
     with raises(ValueError):
         assert fastnumbers.fast_forceint('invalid', default=90, raise_on_invalid=True)
+    # 18. Unicode numbers
+    assert fastnumbers.fast_forceint(u'⑦') == 7
+    assert fastnumbers.fast_forceint(u'⁸') == 8
+    assert fastnumbers.fast_forceint(u'⅔') == 0
+    assert fastnumbers.fast_forceint(u'Ⅴ') == 5
 
 
 def test_isreal():
@@ -284,6 +306,11 @@ def test_isreal():
     assert not fastnumbers.isreal('-')
     assert not fastnumbers.isreal('e')
     assert not fastnumbers.isreal('.')
+    # 18. Unicode numbers
+    assert fastnumbers.isreal(u'⑦')
+    assert fastnumbers.isreal(u'⁸')
+    assert fastnumbers.isreal(u'⅔')
+    assert fastnumbers.isreal(u'Ⅴ')
 
 
 def test_isfloat():
@@ -332,6 +359,11 @@ def test_isfloat():
     assert not fastnumbers.isfloat('-')
     assert not fastnumbers.isfloat('e')
     assert not fastnumbers.isfloat('.')
+    # 18. Unicode numbers
+    assert fastnumbers.isfloat(u'⑦')
+    assert fastnumbers.isfloat(u'⁸')
+    assert fastnumbers.isfloat(u'⅔')
+    assert fastnumbers.isfloat(u'Ⅴ')
 
 
 def test_isint():
@@ -377,6 +409,11 @@ def test_isint():
     assert not fastnumbers.isint('-')
     assert not fastnumbers.isint('e')
     assert not fastnumbers.isint('.')
+    # 18. Unicode numbers
+    assert fastnumbers.isint(u'⑦')
+    assert fastnumbers.isint(u'⁸')
+    assert not fastnumbers.isint(u'⅔')
+    assert not fastnumbers.isint(u'Ⅴ')
 
 
 def test_isintlike():
@@ -424,3 +461,8 @@ def test_isintlike():
     assert not fastnumbers.isintlike('-')
     assert not fastnumbers.isintlike('e')
     assert not fastnumbers.isintlike('.')
+    # 18. Unicode numbers
+    assert fastnumbers.isintlike(u'⑦')
+    assert fastnumbers.isintlike(u'⁸')
+    assert not fastnumbers.isintlike(u'⅔')
+    assert fastnumbers.isintlike(u'Ⅴ')
