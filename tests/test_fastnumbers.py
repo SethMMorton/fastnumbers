@@ -5,15 +5,41 @@ import re
 import sys
 import os
 import math
-from random import randint
+import unicodedata
+from random import randint, sample
 from itertools import repeat
 from platform import python_version_tuple
 from pytest import raises
 from hypothesis import given, assume, example
+from hypothesis.specifiers import sampled_from
 import fastnumbers
 
 if python_version_tuple()[0] == '3':
+    unicode = str
     long = int
+    unichr = chr
+
+
+# Predefine Unicode digits, numbers, and not those.
+digits = []
+numeric = []
+not_numeric = []
+for x in range(0x10FFF):
+    try:
+        a = unichr(x)
+    except ValueError:
+        break
+    try:
+        unicodedata.digit(a)
+        digits.append(a)
+    except ValueError:
+        pass
+    try:
+        unicodedata.numeric(a)
+        numeric.append(a)
+    except ValueError:
+        not_numeric.append(a)
+not_numeric = sample(not_numeric, 1000)  # This is too big otherwise
 
 
 def a_number(s):
@@ -120,6 +146,36 @@ def test_fast_real_given_padded_int_string_returns_int(x):
     y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
     assert fastnumbers.fast_real(y) == x
     assert isinstance(fastnumbers.fast_real(y), (int, long))
+
+
+@given(sampled_from(digits))
+def test_fast_real_given_unicode_digit_returns_int(x):
+    assert fastnumbers.fast_real(x) == unicodedata.digit(x)
+    assert isinstance(fastnumbers.fast_real(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_real(u'   ' + x + u'   ') == unicodedata.digit(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_real_given_unicode_numeral_returns_float(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.fast_real(x) == unicodedata.numeric(x)
+    assert isinstance(fastnumbers.fast_real(x), float)
+    # Try padded as well
+    assert fastnumbers.fast_real(u'   ' + x + u'   ') == unicodedata.numeric(x)
+
+
+@given(sampled_from(not_numeric))
+def test_fast_real_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_real(x) == x
+
+
+@given(unicode)
+def test_fast_real_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_real(x) == x
 
 
 @given(str)
@@ -249,6 +305,36 @@ def test_fast_float_given_padded_int_string_returns_float(x):
     assert isinstance(fastnumbers.fast_float(y), float)
 
 
+@given(sampled_from(digits))
+def test_fast_float_given_unicode_digit_returns_float(x):
+    assert fastnumbers.fast_float(x) == unicodedata.numeric(x)
+    assert isinstance(fastnumbers.fast_float(x), float)
+    # Try padded as well
+    assert fastnumbers.fast_float(u'   ' + x + u'   ') == unicodedata.numeric(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_float_given_unicode_numeral_returns_float(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.fast_float(x) == unicodedata.numeric(x)
+    assert isinstance(fastnumbers.fast_float(x), float)
+    # Try padded as well
+    assert fastnumbers.fast_float(u'   ' + x + u'   ') == unicodedata.numeric(x)
+
+
+@given(sampled_from(not_numeric))
+def test_fast_float_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_float(x) == x
+
+
+@given(unicode)
+def test_fast_float_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_float(x) == x
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -368,6 +454,33 @@ def test_fast_int_given_padded_int_string_returns_int(x):
     y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
     assert fastnumbers.fast_int(y) == x
     assert isinstance(fastnumbers.fast_int(y), (int, long))
+
+
+@given(sampled_from(digits))
+def test_fast_int_given_unicode_digit_returns_int(x):
+    assert fastnumbers.fast_int(x) == unicodedata.digit(x)
+    assert isinstance(fastnumbers.fast_int(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_int(u'   ' + x + u'   ') == unicodedata.digit(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_int_given_unicode_numeral_returns_as_is(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.fast_int(x) == x
+
+
+@given(sampled_from(not_numeric))
+def test_fast_int_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_int(x) == x
+
+
+@given(unicode)
+def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_int(x) == x
 
 
 @given(str)
@@ -495,6 +608,36 @@ def test_fast_forceint_given_padded_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
 
 
+@given(sampled_from(digits))
+def test_fast_forceint_given_unicode_digit_returns_int(x):
+    assert fastnumbers.fast_forceint(x) == unicodedata.digit(x)
+    assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_forceint(u'   ' + x + u'   ') == unicodedata.digit(x)
+
+
+@given(sampled_from(numeric))
+def test_fast_forceint_given_unicode_numeral_returns_int(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.fast_forceint(x) == int(unicodedata.numeric(x))
+    assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+    # Try padded as well
+    assert fastnumbers.fast_forceint(u'   ' + x + u'   ') == int(unicodedata.numeric(x))
+
+
+@given(sampled_from(not_numeric))
+def test_fast_forceint_given_unicode_non_numeral_returns_as_is(x):
+    assert fastnumbers.fast_forceint(x) == x
+
+
+@given(unicode)
+def test_fast_forceint_given_unicode_of_more_than_one_char_returns_as_is(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert fastnumbers.fast_int(x) == x
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -575,6 +718,34 @@ def test_isreal_returns_True_if_given_float_string_padded_or_not(x):
     assert fastnumbers.isreal(y)
 
 
+@given(sampled_from(digits))
+def test_isreal_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isreal(x)
+    # Try padded as well
+    assert fastnumbers.isreal(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isreal_given_unicode_numeral_returns_True(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.isreal(x)
+    # Try padded as well
+    assert fastnumbers.isreal(u'   ' + x + u'   ')
+
+
+@given(sampled_from(not_numeric))
+def test_isreal_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isreal(x)
+
+
+@given(unicode)
+def test_isreal_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isreal(x)
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -643,6 +814,34 @@ def test_isfloat_returns_True_if_given_float_string_padded_or_not(x):
     assert fastnumbers.isfloat(y)
 
 
+@given(sampled_from(digits))
+def test_isfloat_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isfloat(x)
+    # Try padded as well
+    assert fastnumbers.isfloat(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isfloat_given_unicode_numeral_returns_True(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert fastnumbers.isfloat(x)
+    # Try padded as well
+    assert fastnumbers.isfloat(u'   ' + x + u'   ')
+
+
+@given(sampled_from(not_numeric))
+def test_isfloat_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isfloat(x)
+
+
+@given(unicode)
+def test_isfloat_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isfloat(x)
+
+
 @given(str)
 @example('+')
 @example('-')
@@ -708,6 +907,32 @@ def test_isint_returns_False_if_given_float_string_padded_or_not(x):
     y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
     assert not fastnumbers.isint(repr(x))
     assert not fastnumbers.isint(y)
+
+
+@given(sampled_from(digits))
+def test_isint_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isint(x)
+    # Try padded as well
+    assert fastnumbers.isint(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isint_given_unicode_numeral_returns_False(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert not fastnumbers.isint(x)
+
+
+@given(sampled_from(not_numeric))
+def test_isint_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isint(x)
+
+
+@given(unicode)
+def test_isint_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isint(x)
 
 
 @given(str)
@@ -792,6 +1017,41 @@ def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not
     y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
     assert not fastnumbers.isintlike(repr(x))
     assert not fastnumbers.isintlike(y)
+
+
+@given(sampled_from(digits))
+def test_isintlike_given_unicode_digit_returns_True(x):
+    assert fastnumbers.isintlike(x)
+    # Try padded as well
+    assert fastnumbers.isintlike(u'   ' + x + u'   ')
+
+
+@given(sampled_from(numeric))
+def test_isintlike_given_unicode_non_digit_numeral_returns_False(x):
+    assume(x not in digits)
+    assume(not unicodedata.numeric(x).is_integer())
+    assert not fastnumbers.isintlike(x)
+
+
+@given(sampled_from(numeric))
+def test_isintlike_given_unicode_digit_numeral_returns_False(x):
+    assume(x not in digits)
+    assume(unicodedata.numeric(x).is_integer())
+    assert fastnumbers.isintlike(x)
+    # Try padded as well
+    assert fastnumbers.isintlike(u'   ' + x + u'   ')
+
+
+@given(sampled_from(not_numeric))
+def test_isintlike_given_unicode_non_numeral_returns_False(x):
+    assert not fastnumbers.isintlike(x)
+
+
+@given(unicode)
+def test_isintlike_given_unicode_of_more_than_one_char_returns_False(x):
+    assume(len(x) > 1)
+    assume(not a_number(x))
+    assert not fastnumbers.isintlike(x)
 
 
 @given(str)

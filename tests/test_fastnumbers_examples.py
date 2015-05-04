@@ -89,7 +89,7 @@ def test_fast_real():
     assert fastnumbers.fast_real(u'⑦') == 7
     assert fastnumbers.fast_real(u'⁸') == 8
     assert fastnumbers.fast_real(u'⅔') == 2.0 / 3.0
-    assert fastnumbers.fast_real(u'Ⅴ') == 5.0
+    assert fastnumbers.fast_real(u'Ⅴ') == 5
 
 
 def test_fast_float():
