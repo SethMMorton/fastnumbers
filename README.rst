@@ -167,6 +167,12 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+05-03-2015 v. 0.4.0
+'''''''''''''''''''
+
+    - Added support for conversion of single Unicode characters
+      that represent numbers and digits.
+
 04-23-2015 v. 0.3.0
 '''''''''''''''''''
 
@@ -183,13 +189,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 '''''''''''''''''''
 
     - Added a 'default' option to the conversion functions.
-
-08-12-2014 v. 0.1.4
-'''''''''''''''''''
-
-    - Fixed bug where '.' was incorrectly identified as a valid
-      float/int and converted to 0.  This bug only applied to the ``fast_*``
-      and ``is*`` functions.
-    - The method to catch corner-cases like '.', '+', 'e', etc. has been
-      reworked to be more general... case-by-case patches should no longer
-      be needed.

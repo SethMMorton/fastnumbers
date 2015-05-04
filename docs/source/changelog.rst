@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+05-03-2015 v. 0.4.0
+'''''''''''''''''''
+
+    - Added support for conversion of single Unicode characters
+      that represent numbers and digits.
+
 04-23-2015 v. 0.3.0
 '''''''''''''''''''
 
