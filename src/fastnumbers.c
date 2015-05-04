@@ -61,7 +61,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atof(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
-        error = result < 0;
+        error = result <= -1.0;
     }
 
     /* If unsuccessful, either: */
@@ -145,7 +145,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atof(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
-        error = result < 0;
+        error = result <= -1.0;
     }
 
     /* If unsuccessful, either: */
@@ -209,7 +209,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atoi(str, &error, &overflow);
     else {
         result = Py_UNICODE_TODIGIT(uni);
-        error = result < 0;
+        error = result <= -1.0;
     }
 
     /* If unsuccessful, either: */
@@ -293,7 +293,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atof(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
-        error = result < 0;
+        error = result <= -1.0;
     }
 
     /* Call NaN and infinity errors. */
@@ -496,7 +496,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atof(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
-        error = result < 0;
+        error = result <= -1.0;
     }
 
     /* If there was an error, return False now. */
