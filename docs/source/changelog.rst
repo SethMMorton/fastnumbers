@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+05-12-2015 v. 0.5.0
+'''''''''''''''''''
+
+    - Made 'default' first optional argument instead of 'raise_on_invalid'
+      for conversion functions.
+    - Added 'num_only' option for checker functions.
+
 05-03-2015 v. 0.4.0
 '''''''''''''''''''
 

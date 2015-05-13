@@ -56,6 +56,9 @@ Some example usage:
     >>> # Unconvertable strings can trigger a default value
     >>> fast_float('bad input', default=0)
     0
+    >>> # 'default' is also the first optional positional arg
+    >>> fast_float('bad input', 0)
+    0
     >>> # Integers are converted to floats
     >>> fast_float(54)
     54.0
@@ -167,6 +170,13 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+05-12-2015 v. 0.5.0
+'''''''''''''''''''
+
+    - Made 'default' first optional argument instead of 'raise_on_invalid'
+      for conversion functions.
+    - Added 'num_only' option for checker functions.
+
 05-03-2015 v. 0.4.0
 '''''''''''''''''''
 
@@ -184,8 +194,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
       the ``fast_*`` functions.
     - Updated all unit testing to use the ``hypothesis`` module,
       which results in better test coverage.
-
-09-03-2014 v. 0.2.0
-'''''''''''''''''''
-
-    - Added a 'default' option to the conversion functions.
