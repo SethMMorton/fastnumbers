@@ -264,9 +264,11 @@ def test_isreal():
     # 1. float number
     assert fastnumbers.isreal(-367.3268)
     assert not fastnumbers.isreal(-367.3268, str_only=True)
+    assert fastnumbers.isreal(-367.3268, num_only=True)
     # 2. signed float string
     assert fastnumbers.isreal("+367.3268")
     assert fastnumbers.isreal("+367.3268", True)
+    assert not fastnumbers.isreal("+367.3268", num_only=True)
     # 3. float string with exponents
     assert fastnumbers.isreal("-367.3268e207")
     # 4. float string with padded whitespace
@@ -317,9 +319,11 @@ def test_isfloat():
     # 1. float number
     assert fastnumbers.isfloat(-367.3268)
     assert not fastnumbers.isfloat(-367.3268, str_only=True)
+    assert fastnumbers.isfloat(-367.3268, num_only=True)
     # 2. signed float string
     assert fastnumbers.isfloat("+367.3268")
     assert fastnumbers.isfloat("+367.3268", True)
+    assert not fastnumbers.isfloat("+367.3268", num_only=True)
     # 3. float string with exponents
     assert fastnumbers.isfloat("-367.3268e207")
     # 4. float string with padded whitespace
@@ -378,9 +382,11 @@ def test_isint():
     # 5. int number
     assert fastnumbers.isint(499)
     assert not fastnumbers.isint(499, str_only=True)
+    assert fastnumbers.isint(499, num_only=True)
     # 6. signed int string
     assert fastnumbers.isint('-499')
     assert fastnumbers.isint('-499', True)
+    assert not fastnumbers.isint('-499', num_only=True)
     # 7. int string with padded whitespace
     assert fastnumbers.isint('   +3001   ')
     # 8. long number
@@ -421,10 +427,12 @@ def test_isintlike():
     assert not fastnumbers.isintlike(-367.3268)
     assert fastnumbers.isintlike(-367.0)
     assert not fastnumbers.isintlike(-367.0, str_only=True)
+    assert fastnumbers.isintlike(-367.0, num_only=True)
     # 2. signed float string
     assert not fastnumbers.isintlike("+367.3268")
     assert fastnumbers.isintlike("+367.0")
     assert fastnumbers.isintlike("+367.0", True)
+    assert not fastnumbers.isintlike("+367.0", num_only=True)
     # 3. float string with exponents
     assert fastnumbers.isintlike("-367.3268e207")
     # 4. float string with padded whitespace

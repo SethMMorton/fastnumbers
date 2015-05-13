@@ -348,15 +348,16 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
+    PyObject *num_only = Py_False;
     PyObject *allow_inf = Py_False;
     PyObject *allow_nan = Py_False;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
-    static char *keywords[] = { "x", "str_only", "allow_inf", "allow_nan", NULL };
+    static char *keywords[] = { "x", "str_only", "num_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOO:isreal", keywords,
-                                     &input, &str_only, &allow_inf, &allow_nan))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOOO:isreal", keywords,
+                                     &input, &str_only, &num_only, &allow_inf, &allow_nan))
         return NULL;
 
     /* If the input is a number, return True now unless */
@@ -364,6 +365,8 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
     if (ANYNUM(input)) {
         if (PyObject_IsTrue(str_only)) Py_RETURN_FALSE; else Py_RETURN_TRUE;
     }
+    /* If the input is not a number, return False if num_only. */
+    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
 
     /* Attempt to convert to char*. */
     convert_string(input, &str, &uni);
@@ -387,19 +390,22 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
+    PyObject *num_only = Py_False;
     PyObject *allow_inf = Py_False;
     PyObject *allow_nan = Py_False;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
-    static char *keywords[] = { "x", "str_only", "allow_inf", "allow_nan", NULL };
+    static char *keywords[] = { "x", "str_only", "num_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOO:isfloat", keywords,
-                                     &input, &str_only, &allow_inf, &allow_nan))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOOO:isfloat", keywords,
+                                     &input, &str_only, &num_only, &allow_inf, &allow_nan))
         return NULL;
 
     /* If str_only is True and this is a number, return False now. */
     if (PyObject_IsTrue(str_only) && ANYNUM(input)) Py_RETURN_FALSE;
+    /* If num_only is True and this is not a number, return False now. */
+    if (PyObject_IsTrue(num_only) && !ANYNUM(input)) Py_RETURN_FALSE;
     /* If the input is a float, return True now. */
     if (PyFloat_Check(input)) Py_RETURN_TRUE;
     /* If the input is an int, return False now. */
@@ -427,17 +433,20 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
+    PyObject *num_only = Py_False;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
-    static char *keywords[] = { "x", "str_only", NULL };
+    static char *keywords[] = { "x", "str_only", "num_only", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:isint", keywords,
-                                     &input, &str_only))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:isint", keywords,
+                                     &input, &str_only, &num_only))
         return NULL;
 
     /* If str_only is True and this is a number, return False now. */
     if (PyObject_IsTrue(str_only) && ANYNUM(input)) Py_RETURN_FALSE;
+    /* If num_only is True and this is not a number, return False now. */
+    if (PyObject_IsTrue(num_only) && !ANYNUM(input)) Py_RETURN_FALSE;
     /* If the input is an int, return True now. */
     if (PYINT_CHECK(input)) Py_RETURN_TRUE;
     /* If the input is a float, return False now. */
@@ -462,19 +471,22 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL, *intlike = NULL, *pyresult = NULL;
     PyObject *str_only = Py_False;
+    PyObject *num_only = Py_False;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
     double result;
     bool error, overflow;
-    static char *keywords[] = { "x", "str_only", NULL };
+    static char *keywords[] = { "x", "str_only", "num_only", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:isintlike", keywords,
-                                     &input, &str_only))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:isintlike", keywords,
+                                     &input, &str_only, &num_only))
         return NULL;
 
     /* If str_only is True and this is a number, return False now. */
     if (PyObject_IsTrue(str_only) && ANYNUM(input)) Py_RETURN_FALSE;
+    /* If num_only is True and this is not a number, return False now. */
+    if (PyObject_IsTrue(num_only) && !ANYNUM(input)) Py_RETURN_FALSE;
     /* If the input is an int, return True now. */
     if (PYINT_CHECK(input)) Py_RETURN_TRUE;
     /* If the input is a float, return the result of "is_integer". */

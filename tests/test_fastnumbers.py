@@ -701,11 +701,13 @@ def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and
 @given(int)
 def test_isreal_returns_True_if_given_int(x):
     assert fastnumbers.isreal(x)
+    assert fastnumbers.isreal(x, num_only=True)
 
 
 @given(float)
 def test_isreal_returns_True_if_given_float(x):
     assert fastnumbers.isreal(x)
+    assert fastnumbers.isreal(x, num_only=True)
 
 
 @given(int)
@@ -734,6 +736,11 @@ def test_isreal_returns_True_if_given_float_string_padded_or_not(x):
     assert fastnumbers.isreal(repr(x))
     assert fastnumbers.isreal(repr(x), str_only=True)
     assert fastnumbers.isreal(y)
+
+
+@given(int)
+def test_isreal_returns_False_if_given_string_and_num_only_is_True(x):
+    assert not fastnumbers.isreal(repr(x), num_only=True)
 
 
 @given(sampled_from(digits))
@@ -800,6 +807,7 @@ def test_isfloat_returns_False_if_given_int(x):
 @given(float)
 def test_isfloat_returns_True_if_given_float(x):
     assert fastnumbers.isfloat(x)
+    assert fastnumbers.isfloat(x, num_only=True)
 
 
 @given(float)
@@ -830,6 +838,13 @@ def test_isfloat_returns_True_if_given_float_string_padded_or_not(x):
     assert fastnumbers.isfloat(repr(x))
     assert fastnumbers.isfloat(repr(x), str_only=True)
     assert fastnumbers.isfloat(y)
+
+
+@given(float)
+def test_isfloat_returns_False_if_given_string_and_num_only_is_True(x):
+    assume(not math.isnan(x))
+    assume(not math.isinf(x))
+    assert not fastnumbers.isfloat(repr(x), num_only=True)
 
 
 @given(sampled_from(digits))
@@ -890,7 +905,7 @@ def test_isfloat_returns_False_for_inf_string_unless_allow_inf_is_True():
 
 @given(int)
 def test_isint_returns_True_if_given_int(x):
-    assert fastnumbers.isint(x)
+    assert fastnumbers.isint(x, num_only=True)
 
 
 @given(float)
@@ -925,6 +940,11 @@ def test_isint_returns_False_if_given_float_string_padded_or_not(x):
     y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
     assert not fastnumbers.isint(repr(x))
     assert not fastnumbers.isint(y)
+
+
+@given(int)
+def test_isint_returns_False_if_given_string_and_num_only_is_True(x):
+    assert not fastnumbers.isint(repr(x), num_only=True)
 
 
 @given(sampled_from(digits))
@@ -977,6 +997,7 @@ def test_isint_returns_False_for_nan_or_inf_string():
 @given(int)
 def test_isintlike_returns_True_if_given_int(x):
     assert fastnumbers.isintlike(x)
+    assert fastnumbers.isintlike(x, num_only=True)
 
 
 @given(float)
@@ -1035,6 +1056,11 @@ def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not
     y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
     assert not fastnumbers.isintlike(repr(x))
     assert not fastnumbers.isintlike(y)
+
+
+@given(int)
+def test_isintlike_returns_False_if_given_string_and_num_only_is_True(x):
+    assert not fastnumbers.isintlike(repr(x), num_only=True)
 
 
 @given(sampled_from(digits))
