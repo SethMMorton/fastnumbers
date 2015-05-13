@@ -56,6 +56,9 @@ Some example usage:
     >>> # Unconvertable strings can trigger a default value
     >>> fast_float('bad input', default=0)
     0
+    >>> # 'default' is also the first optional positional arg
+    >>> fast_float('bad input', 0)
+    0
     >>> # Integers are converted to floats
     >>> fast_float(54)
     54.0

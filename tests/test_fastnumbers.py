@@ -67,6 +67,7 @@ def test_fast_real_given_float_returns_float(x):
     assume(not math.isnan(x))
     assert fastnumbers.fast_real(x) == x
     assert fastnumbers.fast_real(x, raise_on_invalid=True) == x
+    assert fastnumbers.fast_real(x, None, True) == x
     assert isinstance(fastnumbers.fast_real(x), float)
 
 
@@ -75,12 +76,14 @@ def test_fast_real_given_nan_returns_nan():
 
 
 @given(float)
+@example(5.675088586167575e-116)
 def test_fast_real_given_float_string_returns_float(x):
     assume(not math.isnan(x))
     assume(not x.is_integer())
     y = repr(x)
     assert fastnumbers.fast_real(y) == x
-    assert fastnumbers.fast_real(y, True) == x
+    assert fastnumbers.fast_real(y, raise_on_invalid=True) == x
+    assert fastnumbers.fast_real(y, None, True) == x
     assert isinstance(fastnumbers.fast_real(y), float)
 
 
@@ -204,13 +207,15 @@ def test_fast_real_given_invalid_type_raises_TypeError(x):
 def test_fast_real_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_real(x, default=90) == 90
+    assert fastnumbers.fast_real(x, 90) == 90
 
 
 @given(str)
 def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
     with raises(ValueError):
-        assert fastnumbers.fast_real(x, default=90, raise_on_invalid=True)
+        fastnumbers.fast_real(x, default=90, raise_on_invalid=True)
+        fastnumbers.fast_real(x, 90, True)
 
 
 ##############
@@ -222,6 +227,7 @@ def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_def
 def test_fast_float_given_float_returns_float(x):
     assume(not math.isnan(x))
     assert fastnumbers.fast_float(x) == x
+    assert fastnumbers.fast_float(x, None, True) == x
     assert fastnumbers.fast_float(x, raise_on_invalid=True) == x
     assert isinstance(fastnumbers.fast_float(x), float)
 
@@ -231,12 +237,14 @@ def test_fast_float_given_nan_returns_nan():
 
 
 @given(float)
+@example(5.675088586167575e-116)
 def test_fast_float_given_float_string_returns_float(x):
     assume(not math.isnan(x))
     assume(not x.is_integer())
     y = repr(x)
     assert fastnumbers.fast_float(y) == x
-    assert fastnumbers.fast_float(y, True) == x
+    assert fastnumbers.fast_float(y, None, True) == x
+    assert fastnumbers.fast_float(y, raise_on_invalid=True) == x
     assert isinstance(fastnumbers.fast_float(y), float)
 
 
@@ -347,6 +355,7 @@ def test_fast_float_given_invalid_string_returns_string_as_is(x):
 def test_fast_float_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
     with raises(ValueError):
+        fastnumbers.fast_float(x, None, True)
         fastnumbers.fast_float(x, raise_on_invalid=True)
 
 
@@ -360,6 +369,7 @@ def test_fast_float_given_invalid_type_raises_TypeError(x):
 def test_fast_float_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_float(x, default=90.0) == 90.0
+    assert fastnumbers.fast_float(x, 90.0) == 90.0
 
 
 @given(str)
@@ -367,6 +377,7 @@ def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_de
     assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_float(x, default=90.0, raise_on_invalid=True)
+        assert fastnumbers.fast_float(x, 90.0, True)
 
 
 ############
@@ -380,6 +391,7 @@ def test_fast_int_given_float_returns_int(x):
     assume(not math.isinf(x))
     assert fastnumbers.fast_int(x) == int(x)
     assert fastnumbers.fast_int(x, raise_on_invalid=True) == int(x)
+    assert fastnumbers.fast_int(x, None, True) == int(x)
     assert isinstance(fastnumbers.fast_int(x), (int, long))
 
 
@@ -416,7 +428,8 @@ def test_fast_int_given_float_string_raises_ValueError_if_raise_on_invalid_is_Tr
     assume(not x.is_integer())
     y = repr(x)
     with raises(ValueError):
-        fastnumbers.fast_int(y, True)
+        fastnumbers.fast_int(y, None, True)
+        fastnumbers.fast_int(y, raise_on_invalid=True)
 
 
 @given(int)
@@ -495,6 +508,7 @@ def test_fast_int_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_
     assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_int(x, raise_on_invalid=True)
+        fastnumbers.fast_int(x, None, True)
 
 
 @given([int])
@@ -507,6 +521,7 @@ def test_fast_int_given_invalid_type_raises_TypeError(x):
 def test_fast_int_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_int(x, default=90) == 90
+    assert fastnumbers.fast_int(x, 90) == 90
 
 
 @given(str)
@@ -514,6 +529,7 @@ def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_defa
     assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
+        assert fastnumbers.fast_int(x, 90, True)
 
 
 #################
@@ -527,6 +543,7 @@ def test_fast_forceint_given_float_returns_int(x):
     assume(not math.isinf(x))
     assert fastnumbers.fast_forceint(x) == int(x)
     assert fastnumbers.fast_forceint(x, raise_on_invalid=True) == int(x)
+    assert fastnumbers.fast_forceint(x, None, True) == int(x)
     assert isinstance(fastnumbers.fast_forceint(x), (int, long))
 
 
@@ -546,19 +563,23 @@ def test_fast_forceint_given_float_string_returns_int(x):
     assume(not math.isinf(x))
     y = repr(x)
     assert fastnumbers.fast_forceint(y) == int(x)
-    assert fastnumbers.fast_forceint(y, True) == int(x)
+    assert fastnumbers.fast_forceint(y, None, True) == int(x)
+    assert fastnumbers.fast_forceint(y, raise_on_invalid=True) == int(x)
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
 
 
 def test_fast_forceint_given_nan_string_raises_ValueError_with_raise_on_invalid_as_True():
     with raises(ValueError): 
         fastnumbers.fast_forceint('nan', raise_on_invalid=True)
+        fastnumbers.fast_forceint('nan', None, True)
 
 
 def test_fast_forceint_given_inf_string_raises_OverflowError_with_raise_on_invalid_as_True():
     with raises(OverflowError): 
         fastnumbers.fast_forceint('inf', raise_on_invalid=True)
         fastnumbers.fast_forceint('-infinity', raise_on_invalid=True)
+        fastnumbers.fast_forceint('inf', None, True)
+        fastnumbers.fast_forceint('-infinity', None, True)
 
 
 @given(float)
@@ -648,6 +669,7 @@ def test_fast_forceint_given_invalid_string_raises_ValueError_if_raise_on_invali
     assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_forceint(x, raise_on_invalid=True)
+        fastnumbers.fast_forceint(x, None, True)
 
 
 @given([int])
@@ -660,6 +682,7 @@ def test_fast_forceint_given_invalid_type_raises_TypeError(x):
 def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_forceint(x, default=90.0) == 90.0
+    assert fastnumbers.fast_forceint(x, 90.0) == 90.0
 
 
 @given(str)
@@ -667,6 +690,7 @@ def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and
     assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
+        assert fastnumbers.fast_forceint(x, 90.0, True)
 
 
 ###########

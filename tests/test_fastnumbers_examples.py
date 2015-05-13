@@ -69,7 +69,7 @@ def test_fast_real():
     # 13. Invalid input string with numbers
     assert fastnumbers.fast_real('26.8 lb') == '26.8 lb'
     with raises(ValueError):
-        assert fastnumbers.fast_real('26.8 lb', True)
+        assert fastnumbers.fast_real('26.8 lb', None, True)
     # 14. Infinity
     assert fastnumbers.fast_real('inf') == float('inf')
     assert fastnumbers.fast_real('-iNFinity') == float('-inf')
@@ -84,7 +84,7 @@ def test_fast_real():
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_real('invalid', default=90) == 90
     with raises(ValueError):
-        assert fastnumbers.fast_real('invalid', default=90, raise_on_invalid=True)
+        assert fastnumbers.fast_real('invalid', 90, True)
     # 18. Unicode numbers
     assert fastnumbers.fast_real(u'⑦') == 7
     assert fastnumbers.fast_real(u'⁸') == 8
@@ -126,7 +126,7 @@ def test_fast_float():
     # 13. Invalid input string with numbers
     assert fastnumbers.fast_float('26.8 lb') == '26.8 lb'
     with raises(ValueError):
-        assert fastnumbers.fast_float('26.8 lb', True)
+        assert fastnumbers.fast_float('26.8 lb', None, True)
     # 14. Infinity
     assert fastnumbers.fast_float('inf') == float('inf')
     assert fastnumbers.fast_float('-iNFinity') == float('-inf')
@@ -141,7 +141,7 @@ def test_fast_float():
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_float('invalid', default=90) == 90
     with raises(ValueError):
-        assert fastnumbers.fast_float('invalid', default=90, raise_on_invalid=True)
+        assert fastnumbers.fast_float('invalid', 90, True)
     # 18. Unicode numbers
     assert fastnumbers.fast_float(u'⑦') == 7.0
     assert fastnumbers.fast_float(u'⁸') == 8.0
@@ -156,7 +156,7 @@ def test_fast_int():
     # 2. signed float string
     assert fastnumbers.fast_int("+367.3268") == "+367.3268"
     with raises(ValueError):
-        assert fastnumbers.fast_int("+367.3268", True)
+        assert fastnumbers.fast_int("+367.3268", None, True)
     # 3. float string with exponents
     assert fastnumbers.fast_int("-367.3268e207") == "-367.3268e207"
     # 4. float string with padded whitespace
@@ -183,7 +183,7 @@ def test_fast_int():
    # 13. Invalid input string with numbers
     assert fastnumbers.fast_int('26.8 lb') == '26.8 lb'
     with raises(ValueError):
-        assert fastnumbers.fast_int('26.8 lb', True)
+        assert fastnumbers.fast_int('26.8 lb', None, True)
     # 14. Infinity
     assert fastnumbers.fast_int('inf') == 'inf'
     # 15. NaN
@@ -196,7 +196,7 @@ def test_fast_int():
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_int('invalid', default=90) == 90
     with raises(ValueError):
-        assert fastnumbers.fast_int('invalid', default=90, raise_on_invalid=True)
+        assert fastnumbers.fast_int('invalid', 90, True)
     # 18. Unicode numbers
     assert fastnumbers.fast_int(u'⑦') == 7
     assert fastnumbers.fast_int(u'⁸') == 8
@@ -238,7 +238,7 @@ def test_fast_forceint():
     # 13. Invalid input string with numbers
     assert fastnumbers.fast_forceint('26.8 lb') == '26.8 lb'
     with raises(ValueError):
-        assert fastnumbers.fast_forceint('26.8 lb', True)
+        assert fastnumbers.fast_forceint('26.8 lb', None, True)
     # 14. Infinity
     assert fastnumbers.fast_forceint('inf') == 'inf'
     assert fastnumbers.fast_forceint('-iNFinity') == '-iNFinity'
@@ -252,7 +252,7 @@ def test_fast_forceint():
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_forceint('invalid', default=90) == 90
     with raises(ValueError):
-        assert fastnumbers.fast_forceint('invalid', default=90, raise_on_invalid=True)
+        assert fastnumbers.fast_forceint('invalid', 90, True)
     # 18. Unicode numbers
     assert fastnumbers.fast_forceint(u'⑦') == 7
     assert fastnumbers.fast_forceint(u'⁸') == 8

@@ -24,11 +24,11 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     double result;
     long intresult;
     bool error = false, overflow = false, isintbool;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
+    static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_real", keywords,
-                                     &input, &raise_on_invalid, &default_value))
+                                     &input, &default_value, &raise_on_invalid))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -127,11 +127,11 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_UCS4 uni = NULL_UNI;
     double result;
     bool error = false, overflow = false;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
+    static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_float", keywords,
-                                     &input, &raise_on_invalid, &default_value))
+                                     &input, &default_value, &raise_on_invalid))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -191,11 +191,11 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_UCS4 uni = NULL_UNI;
     long result;
     bool error = false, overflow = false;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
+    static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_int", keywords,
-                                     &input, &raise_on_invalid, &default_value))
+                                     &input, &default_value, &raise_on_invalid))
         return NULL;
 
     /* If the input is already a number, return now. */
@@ -257,11 +257,11 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     double result;
     long intresult;
     bool error = false, overflow = false;
-    static char *keywords[] = { "x", "raise_on_invalid", "default", NULL };
+    static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_forceint", keywords,
-                                     &input, &raise_on_invalid, &default_value))
+                                     &input, &default_value, &raise_on_invalid))
         return NULL;
 
     /* If the input is already a number, return now. */
