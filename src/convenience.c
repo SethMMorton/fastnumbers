@@ -22,13 +22,13 @@ void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
     *uni = NULL_UNI;
     /* Try Bytes (Python2 str). */
     if (PyBytes_Check(input)) {
-        *str = PyBytes_AS_STRING(input);        
+        if (PyBytes_AsStringAndSize(input, str, NULL) == -1) *str = NULL;
     /* Try Unicode. */
     } else if (PyUnicode_Check(input)) {
         /* Now convert this unicode object to a char* as ASCII, if possible. */
         temp_bytes = PyUnicode_AsEncodedString(input, "ascii", "strict");
         if (temp_bytes != NULL) {
-            *str = PyBytes_AS_STRING(temp_bytes);
+            if (PyBytes_AsStringAndSize(temp_bytes, str, NULL) == -1) *str = NULL;
             Py_DECREF(temp_bytes);
         }
         /* If char* didn't work, try a single Py_UCS4 character. */
