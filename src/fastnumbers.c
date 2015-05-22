@@ -199,7 +199,24 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
 
     /* If the input is already a number, return now. */
-    IF_ANYNUM_RETURN_INT(input);
+    if (ANYNUM(input)) {
+        if (Py_IS_INFINITY(PyFloat_AsDouble(input)) || Py_IS_NAN(PyFloat_AsDouble(input))) {
+            if (PyObject_IsTrue(raise_on_invalid)) {
+                if (Py_IS_INFINITY(PyFloat_AsDouble(input))) {
+                    PyErr_SetString(PyExc_OverflowError, "cannot convert Infinity to integer");
+                    return NULL;
+                } else {
+                    PyErr_SetString(PyExc_ValueError, "cannot convert NaN to integer");
+                    return NULL;
+                }
+            } else if (default_value != Py_None) {
+                return Py_INCREF(default_value), (default_value);
+            } else {
+                return Py_INCREF(input), (input);
+            }
+        }
+        return PYNUM_ASINT(input);
+    }
 
     /* Attempt to convert to char*. Raise a TypeError if not. */
     CONVERT_TO_STRING_OR_RAISE(input, str, uni);
@@ -265,7 +282,24 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
 
     /* If the input is already a number, return now. */
-    IF_ANYNUM_RETURN_INT(input);
+    if (ANYNUM(input)) {
+        if (Py_IS_INFINITY(PyFloat_AsDouble(input)) || Py_IS_NAN(PyFloat_AsDouble(input))) {
+            if (PyObject_IsTrue(raise_on_invalid)) {
+                if (Py_IS_INFINITY(PyFloat_AsDouble(input))) {
+                    PyErr_SetString(PyExc_OverflowError, "cannot convert Infinity to integer");
+                    return NULL;
+                } else {
+                    PyErr_SetString(PyExc_ValueError, "cannot convert NaN to integer");
+                    return NULL;
+                }
+            } else if (default_value != Py_None) {
+                return Py_INCREF(default_value), (default_value);
+            } else {
+                return Py_INCREF(input), (input);
+            }
+        }
+        return PYNUM_ASINT(input);
+    }
 
     /* Attempt to convert to char*. Raise a TypeError if not. */
     CONVERT_TO_STRING_OR_RAISE(input, str, uni);

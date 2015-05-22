@@ -405,14 +405,18 @@ def test_fast_int_given_float_returns_int(x):
     assert isinstance(fastnumbers.fast_int(x), (int, long))
 
 
-def test_fast_int_given_nan_raises_ValueError():
+def test_fast_int_given_nan_raises_ValueError_or_returns_as_is_or_returns_default():
     with raises(ValueError):
-        fastnumbers.fast_int(float('nan'))
+        fastnumbers.fast_int(float('nan'), raise_on_invalid=True)
+    assert math.isnan(fastnumbers.fast_int(float('nan')))
+    assert fastnumbers.fast_int(float('nan'), 'Sample') == 'Sample'
 
 
 def test_fast_int_given_inf_raises_OverflowError():
     with raises(OverflowError):
-        fastnumbers.fast_int(float('inf'))
+        fastnumbers.fast_int(float('inf'), raise_on_invalid=True)
+    assert math.isinf(fastnumbers.fast_int(float('inf')))
+    assert fastnumbers.fast_int(float('inf'), 'Sample') == 'Sample'
 
 
 @given(float)
@@ -561,14 +565,18 @@ def test_fast_forceint_given_float_returns_int(x):
     assert isinstance(fastnumbers.fast_forceint(x), (int, long))
 
 
-def test_fast_forceint_given_nan_raises_ValueError():
+def test_fast_forceint_given_nan_raises_ValueError_or_returns_as_is_or_returns_default():
     with raises(ValueError):
-        fastnumbers.fast_forceint(float('nan'))
+        fastnumbers.fast_forceint(float('nan'), raise_on_invalid=True)
+    assert math.isnan(fastnumbers.fast_forceint(float('nan')))
+    assert fastnumbers.fast_forceint(float('nan'), 'Sample') == 'Sample'
 
 
 def test_fast_forceint_given_inf_raises_OverflowError():
     with raises(OverflowError):
-        fastnumbers.fast_forceint(float('inf'))
+        fastnumbers.fast_forceint(float('inf'), raise_on_invalid=True)
+    assert math.isinf(fastnumbers.fast_forceint(float('inf')))
+    assert fastnumbers.fast_forceint(float('inf'), 'Sample') == 'Sample'
 
 
 @given(float)
