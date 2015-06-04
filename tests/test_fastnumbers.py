@@ -177,7 +177,6 @@ def test_fast_real_given_unicode_non_numeral_returns_as_is(x):
 def test_fast_real_given_unicode_of_more_than_one_char_returns_as_is(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_real(x) == x
 
 
@@ -188,14 +187,12 @@ def test_fast_real_given_unicode_of_more_than_one_char_returns_as_is(x):
 @example('.')
 def test_fast_real_given_invalid_string_returns_string_as_is(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_real(x) is x
 
 
 @given(str)
 def test_fast_real_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         fastnumbers.fast_real(x, raise_on_invalid=True)
 
@@ -209,7 +206,6 @@ def test_fast_real_given_invalid_type_raises_TypeError(x):
 @given(str)
 def test_fast_real_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_real(x, default=90) == 90
     assert fastnumbers.fast_real(x, 90) == 90
 
@@ -217,7 +213,6 @@ def test_fast_real_returns_default_value_if_given_invalid_string(x):
 @given(str)
 def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         fastnumbers.fast_real(x, default=90, raise_on_invalid=True)
         fastnumbers.fast_real(x, 90, True)
@@ -342,7 +337,6 @@ def test_fast_float_given_unicode_non_numeral_returns_as_is(x):
 def test_fast_float_given_unicode_of_more_than_one_char_returns_as_is(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_float(x) == x
 
 
@@ -354,14 +348,12 @@ def test_fast_float_given_unicode_of_more_than_one_char_returns_as_is(x):
 @example('.')
 def test_fast_float_given_invalid_string_returns_string_as_is(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_float(x) is x
 
 
 @given(str)
 def test_fast_float_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         fastnumbers.fast_float(x, None, True)
         fastnumbers.fast_float(x, raise_on_invalid=True)
@@ -376,7 +368,6 @@ def test_fast_float_given_invalid_type_raises_TypeError(x):
 @given(str)
 def test_fast_float_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_float(x, default=90.0) == 90.0
     assert fastnumbers.fast_float(x, 90.0) == 90.0
 
@@ -384,7 +375,6 @@ def test_fast_float_returns_default_value_if_given_invalid_string(x):
 @given(str)
 def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         assert fastnumbers.fast_float(x, default=90.0, raise_on_invalid=True)
         assert fastnumbers.fast_float(x, 90.0, True)
@@ -502,7 +492,6 @@ def test_fast_int_given_unicode_non_numeral_returns_as_is(x):
 def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_int(x) == x
 
 
@@ -514,14 +503,12 @@ def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
 @example('.')
 def test_fast_int_given_invalid_string_returns_string_as_is(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_int(x) is x
 
 
 @given(str)
 def test_fast_int_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         fastnumbers.fast_int(x, raise_on_invalid=True)
         fastnumbers.fast_int(x, None, True)
@@ -536,7 +523,6 @@ def test_fast_int_given_invalid_type_raises_TypeError(x):
 @given(str)
 def test_fast_int_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_int(x, default=90) == 90
     assert fastnumbers.fast_int(x, 90) == 90
 
@@ -544,7 +530,6 @@ def test_fast_int_returns_default_value_if_given_invalid_string(x):
 @given(str)
 def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
         assert fastnumbers.fast_int(x, 90, True)
@@ -672,7 +657,6 @@ def test_fast_forceint_given_unicode_non_numeral_returns_as_is(x):
 def test_fast_forceint_given_unicode_of_more_than_one_char_returns_as_is(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_int(x) == x
 
 
@@ -684,14 +668,12 @@ def test_fast_forceint_given_unicode_of_more_than_one_char_returns_as_is(x):
 @example('.')
 def test_fast_forceint_given_invalid_string_returns_string_as_is(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_forceint(x) is x
 
 
 @given(str)
 def test_fast_forceint_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         fastnumbers.fast_forceint(x, raise_on_invalid=True)
         fastnumbers.fast_forceint(x, None, True)
@@ -706,7 +688,6 @@ def test_fast_forceint_given_invalid_type_raises_TypeError(x):
 @given(str)
 def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert fastnumbers.fast_forceint(x, default=90.0) == 90.0
     assert fastnumbers.fast_forceint(x, 90.0) == 90.0
 
@@ -714,7 +695,6 @@ def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
 @given(str)
 def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     with raises(ValueError):
         assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
         assert fastnumbers.fast_forceint(x, 90.0, True)
@@ -794,7 +774,6 @@ def test_isreal_given_unicode_non_numeral_returns_False(x):
 def test_isreal_given_unicode_of_more_than_one_char_returns_False(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isreal(x)
 
 
@@ -806,7 +785,6 @@ def test_isreal_given_unicode_of_more_than_one_char_returns_False(x):
 @example('.')
 def test_isreal_returns_False_if_given_non_number_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isreal(x)
 
 
@@ -899,7 +877,6 @@ def test_isfloat_given_unicode_non_numeral_returns_False(x):
 def test_isfloat_given_unicode_of_more_than_one_char_returns_False(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isfloat(x)
 
 
@@ -911,7 +888,6 @@ def test_isfloat_given_unicode_of_more_than_one_char_returns_False(x):
 @example('.')
 def test_isfloat_returns_False_if_given_non_number_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isfloat(x)
 
 
@@ -998,7 +974,6 @@ def test_isint_given_unicode_non_numeral_returns_False(x):
 def test_isint_given_unicode_of_more_than_one_char_returns_False(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isint(x)
 
 
@@ -1010,7 +985,6 @@ def test_isint_given_unicode_of_more_than_one_char_returns_False(x):
 @example('.')
 def test_isint_returns_False_if_given_non_number_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isint(x)
 
 
@@ -1124,7 +1098,6 @@ def test_isintlike_given_unicode_non_numeral_returns_False(x):
 def test_isintlike_given_unicode_of_more_than_one_char_returns_False(x):
     assume(len(x) > 1)
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isintlike(x)
 
 
@@ -1136,7 +1109,6 @@ def test_isintlike_given_unicode_of_more_than_one_char_returns_False(x):
 @example('.')
 def test_isintlike_returns_False_if_given_non_number_string(x):
     assume(not a_number(x))
-    assume('\0' not in x)
     assert not fastnumbers.isintlike(x)
 
 

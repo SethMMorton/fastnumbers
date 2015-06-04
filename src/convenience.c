@@ -18,21 +18,27 @@ const double maxsize = 9007199254740992;  /* 2^53 */
 void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
     PyObject *temp_bytes = NULL;
     PyObject *stripped = NULL;
+    Py_ssize_t s_len;
+    char *s;
     *str = NULL;
     *uni = NULL_UNI;
     /* Try Bytes (Python2 str). */
     if (PyBytes_Check(input)) {
-        if (PyBytes_AsStringAndSize(input, str, NULL) == -1) *str = NULL;
+        PyBytes_AsStringAndSize(input, &s, &s_len);
+        *str = malloc((size_t)s_len + 1);
+        strcpy(*str, s);
     /* Try Unicode. */
     } else if (PyUnicode_Check(input)) {
         /* Now convert this unicode object to a char* as ASCII, if possible. */
         temp_bytes = PyUnicode_AsEncodedString(input, "ascii", "strict");
         if (temp_bytes != NULL) {
-            if (PyBytes_AsStringAndSize(temp_bytes, str, NULL) == -1) *str = NULL;
+            PyBytes_AsStringAndSize(temp_bytes, &s, &s_len);
+            *str = malloc((size_t)s_len + 1);
+            strcpy(*str, s);
             Py_DECREF(temp_bytes);
         }
         /* If char* didn't work, try a single Py_UCS4 character. */
-        /* If at any point it is found that the input is not valid unicode */
+        /* If at any point it is found that the input is not valid Unicode */
         /* or more than one character, simply return a space. */
         /* Strip whitespace from input first if not of length 1. */
         else {
@@ -81,6 +87,49 @@ bool case_insensitive_match(const char *s, const char *t)
         t++;
     }
     return *t ? 0 : 1;
+}
+
+/* Handle errors. Return the appropriate return value for the error situation. */
+PyObject * handle_error(PyObject *input,
+                        PyObject *default_value,
+                        const bool raise_on_invalid,
+                        const bool bad_inf,
+                        const bool bad_nan,
+                        const char* str,
+                        const Py_UCS4 uni)
+{
+    /* If an error should be raised, raise the proper error. */
+    if (raise_on_invalid) {
+        if (bad_inf) {
+            PyErr_SetString(PyExc_OverflowError,
+                            "cannot convert Infinity to integer");
+        }
+        else if (bad_nan) {
+            PyErr_SetString(PyExc_ValueError,
+                            "cannot convert NaN to integer");
+        }
+        else if (str != NULL) {
+            PyErr_Format(PyExc_ValueError,
+                         "could not convert string to float or int: '%s'",
+                         str);
+        }
+        else {
+            PyErr_Format(PyExc_ValueError,
+                         "could not convert string to float or int: '%c'",
+                         uni);
+        }
+        return NULL;
+    }
+
+    /* If a default value is given, return that. */
+    else if (default_value != Py_None) {
+        return default_value;
+    }
+
+    /* Otherwise, return the input as given. */
+    else {
+        return input;
+    }
 }
 
 #if PY_MAJOR_VERSION == 2

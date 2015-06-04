@@ -62,8 +62,6 @@ def test_fast_real():
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_real(['hey'])
-    with raises(TypeError):
-        fastnumbers.fast_real('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert fastnumbers.fast_real('not_a_number') == 'not_a_number'
     with raises(ValueError):
@@ -121,8 +119,6 @@ def test_fast_float():
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_float(['hey'])
-    with raises(TypeError):
-        fastnumbers.fast_float('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert fastnumbers.fast_float('not_a_number') == 'not_a_number'
     with raises(ValueError):
@@ -180,8 +176,6 @@ def test_fast_int():
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_int(['hey'])
-    with raises(TypeError):
-        fastnumbers.fast_int('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert fastnumbers.fast_int('not_a_number') == 'not_a_number'
     with raises(ValueError):
@@ -237,8 +231,6 @@ def test_fast_forceint():
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_forceint(['hey'])
-    with raises(TypeError):
-        fastnumbers.fast_forceint('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert fastnumbers.fast_forceint('not_a_number') == 'not_a_number'
     with raises(ValueError):
@@ -299,7 +291,6 @@ def test_isreal():
     assert fastnumbers.isreal("hey") is False
     # 11. TypeError for invalid input
     assert not fastnumbers.isreal(['hey'])
-    assert not fastnumbers.isreal('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert not fastnumbers.isreal('not_a_number')
     # 13. Invalid input string with numbers
@@ -355,7 +346,6 @@ def test_isfloat():
     assert fastnumbers.isfloat("4029", True) is True
     # 11. TypeError for invalid input
     assert not fastnumbers.isfloat(['hey'])
-    assert not fastnumbers.isfloat('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert not fastnumbers.isfloat('not_a_number')
     # 13. Invalid input string with numbers
@@ -412,7 +402,6 @@ def test_isint():
     assert fastnumbers.isint(4029.50) is False
     # 11. TypeError for invalid input
     assert not fastnumbers.isint(['hey'])
-    assert not fastnumbers.isint('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert not fastnumbers.isint('not_a_number')
     # 13. Invalid input string with numbers
@@ -467,7 +456,6 @@ def test_isintlike():
     assert fastnumbers.isintlike(4029.50) is False
     # 11. TypeError for invalid input
     assert not fastnumbers.isintlike(['hey'])
-    assert not fastnumbers.isintlike('hey\0')  # Null terminiated isn't allowed in Python
     # 12. Invalid input string
     assert not fastnumbers.isintlike('not_a_number')
     # 13. Invalid input string with numbers
