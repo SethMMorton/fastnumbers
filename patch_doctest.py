@@ -33,7 +33,7 @@ doctest_str = doctest_str.replace(
 # looking for functions with docstrings.
 doctest_str = doctest_str.replace(
     'if ((inspect.isfunction(val) or inspect.isclass(val)) and',
-    'if ((inspect.isbuiltin(val) or inspect.isclass(val)) and'
+    'if ((inspect.isfunction(val) or inspect.isbuiltin(val) or inspect.isclass(val)) and'
 )
 
 # Replace the configuration extension with nothing on Python3

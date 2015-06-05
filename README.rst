@@ -170,6 +170,13 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+06-04-2015 v. 0.5.1
+'''''''''''''''''''
+
+    - Solved rare segfault when parsing Unicode input.
+    - Made handling of Infinity and NaN for "fast_int" and "fast_forceint"
+      consistent with the "built-in" int function.
+
 05-12-2015 v. 0.5.0
 '''''''''''''''''''
 
@@ -182,15 +189,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 
     - Added support for conversion of single Unicode characters
       that represent numbers and digits.
-
-04-23-2015 v. 0.3.0
-'''''''''''''''''''
-
-    - Updated the ``fast_*`` functions to check if an overflow
-      loss of precision has occurred, and if so fall back on the
-      more accurate number conversion method.
-    - In response to the above change, the ``safe_*`` functions
-      are now deprecated, and internally now use the same code as
-      the ``fast_*`` functions.
-    - Updated all unit testing to use the ``hypothesis`` module,
-      which results in better test coverage.

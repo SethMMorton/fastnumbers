@@ -24,7 +24,7 @@ if python_version_tuple()[0] == '3':
 digits = []
 numeric = []
 not_numeric = []
-for x in range(0x10FFF):
+for x in range(0x10FFFF):
     try:
         a = unichr(x)
     except ValueError:
@@ -46,7 +46,7 @@ def a_number(s):
     m = bool(re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
     n = bool(re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U))
     o = bool(re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
-    return m or n or o
+    return m or n or o or s in numeric
 
 
 def test_version():
@@ -395,14 +395,18 @@ def test_fast_int_given_float_returns_int(x):
     assert isinstance(fastnumbers.fast_int(x), (int, long))
 
 
-def test_fast_int_given_nan_raises_ValueError():
+def test_fast_int_given_nan_raises_ValueError_or_returns_as_is_or_returns_default():
     with raises(ValueError):
-        fastnumbers.fast_int(float('nan'))
+        fastnumbers.fast_int(float('nan'), raise_on_invalid=True)
+    assert math.isnan(fastnumbers.fast_int(float('nan')))
+    assert fastnumbers.fast_int(float('nan'), 'Sample') == 'Sample'
 
 
 def test_fast_int_given_inf_raises_OverflowError():
     with raises(OverflowError):
-        fastnumbers.fast_int(float('inf'))
+        fastnumbers.fast_int(float('inf'), raise_on_invalid=True)
+    assert math.isinf(fastnumbers.fast_int(float('inf')))
+    assert fastnumbers.fast_int(float('inf'), 'Sample') == 'Sample'
 
 
 @given(float)
@@ -474,9 +478,8 @@ def test_fast_int_given_unicode_digit_returns_int(x):
     assert fastnumbers.fast_int(u'   ' + x + u'   ') == unicodedata.digit(x)
 
 
-@given(sampled_from(numeric))
+@given(sampled_from([x for x in numeric if x not in digits]))
 def test_fast_int_given_unicode_numeral_returns_as_is(x):
-    assume(x not in digits)
     assert fastnumbers.fast_int(x) == x
 
 
@@ -547,14 +550,18 @@ def test_fast_forceint_given_float_returns_int(x):
     assert isinstance(fastnumbers.fast_forceint(x), (int, long))
 
 
-def test_fast_forceint_given_nan_raises_ValueError():
+def test_fast_forceint_given_nan_raises_ValueError_or_returns_as_is_or_returns_default():
     with raises(ValueError):
-        fastnumbers.fast_forceint(float('nan'))
+        fastnumbers.fast_forceint(float('nan'), raise_on_invalid=True)
+    assert math.isnan(fastnumbers.fast_forceint(float('nan')))
+    assert fastnumbers.fast_forceint(float('nan'), 'Sample') == 'Sample'
 
 
 def test_fast_forceint_given_inf_raises_OverflowError():
     with raises(OverflowError):
-        fastnumbers.fast_forceint(float('inf'))
+        fastnumbers.fast_forceint(float('inf'), raise_on_invalid=True)
+    assert math.isinf(fastnumbers.fast_forceint(float('inf')))
+    assert fastnumbers.fast_forceint(float('inf'), 'Sample') == 'Sample'
 
 
 @given(float)
@@ -750,9 +757,8 @@ def test_isreal_given_unicode_digit_returns_True(x):
     assert fastnumbers.isreal(u'   ' + x + u'   ')
 
 
-@given(sampled_from(numeric))
+@given(sampled_from([x for x in numeric if x not in digits]))
 def test_isreal_given_unicode_numeral_returns_True(x):
-    assume(x not in digits)
     assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.isreal(x)
     # Try padded as well
@@ -854,9 +860,8 @@ def test_isfloat_given_unicode_digit_returns_True(x):
     assert fastnumbers.isfloat(u'   ' + x + u'   ')
 
 
-@given(sampled_from(numeric))
+@given(sampled_from([x for x in numeric if x not in digits]))
 def test_isfloat_given_unicode_numeral_returns_True(x):
-    assume(x not in digits)
     assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.isfloat(x)
     # Try padded as well
@@ -954,9 +959,8 @@ def test_isint_given_unicode_digit_returns_True(x):
     assert fastnumbers.isint(u'   ' + x + u'   ')
 
 
-@given(sampled_from(numeric))
+@given(sampled_from([x for x in numeric if x not in digits]))
 def test_isint_given_unicode_numeral_returns_False(x):
-    assume(x not in digits)
     assume(not unicodedata.numeric(x).is_integer())
     assert not fastnumbers.isint(x)
 
@@ -1077,9 +1081,8 @@ def test_isintlike_given_unicode_non_digit_numeral_returns_False(x):
     assert not fastnumbers.isintlike(x)
 
 
-@given(sampled_from(numeric))
+@given(sampled_from([x for x in numeric if x not in digits]))
 def test_isintlike_given_unicode_digit_numeral_returns_False(x):
-    assume(x not in digits)
     assume(unicodedata.numeric(x).is_integer())
     assert fastnumbers.isintlike(x)
     # Try padded as well

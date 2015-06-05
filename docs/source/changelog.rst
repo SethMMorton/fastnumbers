@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+06-04-2015 v. 0.5.1
+'''''''''''''''''''
+
+    - Solved rare segfault when parsing Unicode input.
+    - Made handling of Infinity and NaN for ``fast_int`` and ``fast_forceint``
+      consistent with the ``built-in`` int function.
+
 05-12-2015 v. 0.5.0
 '''''''''''''''''''
 

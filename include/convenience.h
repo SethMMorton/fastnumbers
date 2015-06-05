@@ -71,47 +71,18 @@ extern const unsigned char _Py_ctype_tolower[256];
                              PyLong_FromString((x), NULL, 10)
 #endif
 
-/* Convert PyObject to a string, or raise an error. */
-#define CONVERT_TO_STRING_OR_RAISE(in, out, outuni) \
-    convert_string(in, &out, &outuni); if (out == NULL && outuni == NULL_UNI) return NULL;
-
-/* Return an error unless the variable is a string. */
-#define RETURN_IF_STRING_OR_RAISE(x) \
-    if (PyUnicode_Check(x) || PyBytes_Check(x)) { \
-        PyErr_Clear(); \
-        return Py_INCREF(x), (x); \
-    } \
-    else return NULL;
-
-/* Check a condition, and if true return an error unless the variable is a string. */
-#define IF_TRUE_RETURN_IF_STRING_OR_RAISE(condition, x) \
-    if (condition) { RETURN_IF_STRING_OR_RAISE(x) }
-
-/* Check a condition, and if true return NULL (i.e. raise error). */
-#define IF_TRUE_RAISE(condition) \
-    if (condition) { return NULL; }
-
-/* Check a condition, and if true return NULL, first setting an exception. */
-#define IF_TRUE_RAISE_ERR_STR(condition, err, str) \
-    if (condition) { PyErr_SetString(err, str); return NULL; }
-
-/* Check a condition, and if true return NULL, first setting an exception by formatting. */
-#define IF_TRUE_RAISE_ERR_FMT(condition, err, fmt, val) \
-    if (condition) { return PyErr_Format(err, fmt, val); }
-
-/* Check a condition, and if true, clear error cache and return input as-is. */
-#define IF_TRUE_RETURN_INPUT_AS_IS(condition, x) \
-    if (condition) { PyErr_Clear(); return Py_INCREF(x), (x); }
-
-/* Check a condition, and if true clear error cache and return value. */
-#define IF_TRUE_RETURN_VALUE(condition, x) \
-    if (condition) { PyErr_Clear(); return (x); }
-
 /*************
  * Functions *
  *************/
 
 void convert_string(PyObject *input, char **str, Py_UCS4 *uni);
+PyObject * handle_error(PyObject *input,
+                        PyObject *default_value,
+                        const bool raise_on_invalid,
+                        const bool bad_inf,
+                        const bool bad_nan,
+                        const char* str,
+                        const Py_UCS4 uni);
 bool case_insensitive_match(const char *s, const char *t);
 #if PY_MAJOR_VERSION == 2
 PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s);
