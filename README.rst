@@ -170,6 +170,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+06-11-2015 v. 0.5.2
+'''''''''''''''''''
+
+    - Fixed compile error Visual Studio compilers.
+
 06-04-2015 v. 0.5.1
 '''''''''''''''''''
 
@@ -183,9 +188,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
     - Made 'default' first optional argument instead of 'raise_on_invalid'
       for conversion functions.
     - Added 'num_only' option for checker functions.
-
-05-03-2015 v. 0.4.0
-'''''''''''''''''''
-
-    - Added support for conversion of single Unicode characters
-      that represent numbers and digits.
