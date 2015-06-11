@@ -3,6 +3,11 @@
 Changelog
 ---------
 
+06-11-2015 v. 0.5.2
+'''''''''''''''''''
+
+    - Fixed compile error Visual Studio compilers.
+
 06-04-2015 v. 0.5.1
 '''''''''''''''''''
 
