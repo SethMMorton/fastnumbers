@@ -16,6 +16,7 @@ from hypothesis.strategies import (
     floats,
     integers,
     text,
+    binary,
     lists,
 )
 import fastnumbers
@@ -48,10 +49,29 @@ not_numeric = sample(not_numeric, 1000)  # This is too big otherwise
 
 
 def a_number(s):
-    m = bool(re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
-    n = bool(re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U))
-    o = bool(re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U))
-    return m or n or o or s in numeric
+    try:
+        int(s)
+    except ValueError:
+        try:
+            float(s)
+        except ValueError:
+            pass
+        else:
+            return True
+    else:
+        return True
+    if python_version_tuple()[0] == '3':
+        if isinstance(s, bytes):
+            return False
+    if re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
+        return True
+    if re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U):
+        return True
+    if re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
+        return True
+    if s in numeric:
+        return True
+    return False
 
 
 def test_version():
@@ -184,7 +204,7 @@ def test_fast_real_given_unicode_of_more_than_one_char_returns_as_is(x):
     assert fastnumbers.fast_real(x) == x
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e8')
@@ -194,7 +214,7 @@ def test_fast_real_given_invalid_string_returns_string_as_is(x):
     assert fastnumbers.fast_real(x) is x
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_real_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -207,14 +227,14 @@ def test_fast_real_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_real(x)
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_real_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_real(x, default=90) == 90
     assert fastnumbers.fast_real(x, 90) == 90
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -343,7 +363,7 @@ def test_fast_float_given_unicode_of_more_than_one_char_returns_as_is(x):
     assert fastnumbers.fast_float(x) == x
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
@@ -354,7 +374,7 @@ def test_fast_float_given_invalid_string_returns_string_as_is(x):
     assert fastnumbers.fast_float(x) is x
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_float_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -368,14 +388,14 @@ def test_fast_float_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_float(x)
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_float_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_float(x, default=90.0) == 90.0
     assert fastnumbers.fast_float(x, 90.0) == 90.0
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -497,7 +517,7 @@ def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
     assert fastnumbers.fast_int(x) == x
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
@@ -508,7 +528,7 @@ def test_fast_int_given_invalid_string_returns_string_as_is(x):
     assert fastnumbers.fast_int(x) is x
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_int_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -522,14 +542,14 @@ def test_fast_int_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_int(x)
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_int_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_int(x, default=90) == 90
     assert fastnumbers.fast_int(x, 90) == 90
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -661,7 +681,7 @@ def test_fast_forceint_given_unicode_of_more_than_one_char_returns_as_is(x):
     assert fastnumbers.fast_int(x) == x
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
@@ -672,7 +692,7 @@ def test_fast_forceint_given_invalid_string_returns_string_as_is(x):
     assert fastnumbers.fast_forceint(x) is x
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_forceint_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -686,14 +706,14 @@ def test_fast_forceint_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_forceint(x)
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
     assume(not a_number(x))
     assert fastnumbers.fast_forceint(x, default=90.0) == 90.0
     assert fastnumbers.fast_forceint(x, 90.0) == 90.0
 
 
-@given(text())
+@given(text() | binary())
 def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
     assume(not a_number(x))
     with raises(ValueError):
@@ -777,7 +797,7 @@ def test_isreal_given_unicode_of_more_than_one_char_returns_False(x):
     assert not fastnumbers.isreal(x)
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
@@ -879,7 +899,7 @@ def test_isfloat_given_unicode_of_more_than_one_char_returns_False(x):
     assert not fastnumbers.isfloat(x)
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
@@ -975,7 +995,7 @@ def test_isint_given_unicode_of_more_than_one_char_returns_False(x):
     assert not fastnumbers.isint(x)
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
@@ -1098,7 +1118,7 @@ def test_isintlike_given_unicode_of_more_than_one_char_returns_False(x):
     assert not fastnumbers.isintlike(x)
 
 
-@given(text())
+@given(text() | binary())
 @example('+')
 @example('-')
 @example('e')
