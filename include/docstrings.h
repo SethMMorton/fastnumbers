@@ -64,7 +64,7 @@ static char safe_forceint_docstring[] =
 
 
 static char fast_real_docstring[] = 
-"fast_real(x, default=None, raise_on_invalid=False)\n"
+"fast_real(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Quickly convert input to an `int` or `float` depending on value.\n"
 "\n"
 "Convert input to an `int` if the input is `int`-like, or to a `float`\n"
@@ -90,6 +90,12 @@ static char fast_real_docstring[] =
 "    If *True*, a `ValueError` will be raised if string input cannot be\n"
 "    converted to a `float` or `int`.  If *False*, the string will be\n"
 "    returned as-is.  The default is *False*.\n"
+"nan : optional\n"
+"    If the input value is NaN or can be parsed as NaN, rather than\n"
+"    returning NaN the value given for this option will be returned.\n"
+"inf : optional\n"
+"    If the input value is INF or can be parsed as INF, rather than\n"
+"    returning INF the value given for this option will be returned.\n"
 "\n"
 "Returns\n"
 "-------\n"
@@ -167,7 +173,7 @@ static char fast_real_docstring[] =
 
 
 static char fast_float_docstring[] = 
-"fast_float(x, default=None, raise_on_invalid=False)\n"
+"fast_float(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Quickly convert input to a `float`.\n"
 "\n"
 "Quickly convert input to a `float`. If the input cannot be converted\n"
@@ -192,6 +198,12 @@ static char fast_float_docstring[] =
 "    If *True*, a `ValueError` will be raised if string input cannot be\n"
 "    converted to a `float`.  If *False*, the string will be\n"
 "    returned as-is.  The default is *False*.\n"
+"nan : optional\n"
+"    If the input value is NaN or can be parsed as NaN, rather than\n"
+"    returning NaN the value given for this option will be returned.\n"
+"inf : optional\n"
+"    If the input value is INF or can be parsed as INF, rather than\n"
+"    returning INF the value given for this option will be returned.\n"
 "\n"
 "Returns\n"
 "-------\n"

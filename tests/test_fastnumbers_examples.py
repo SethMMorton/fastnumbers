@@ -73,9 +73,11 @@ def test_fast_real():
     # 14. Infinity
     assert fastnumbers.fast_real('inf') == float('inf')
     assert fastnumbers.fast_real('-iNFinity') == float('-inf')
+    assert fastnumbers.fast_real('-iNFinity', inf=7608) == 7608
     # 15. NaN
     assert math.isnan(fastnumbers.fast_real('nan'))
     assert math.isnan(fastnumbers.fast_real('-NaN'))
+    assert fastnumbers.fast_real('-NaN', nan=0) == 0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_real('+') == '+'
     assert fastnumbers.fast_real('-') == '-'
@@ -130,9 +132,11 @@ def test_fast_float():
     # 14. Infinity
     assert fastnumbers.fast_float('inf') == float('inf')
     assert fastnumbers.fast_float('-iNFinity') == float('-inf')
+    assert fastnumbers.fast_float('-iNFinity', inf=523) == 523
     # 15. NaN
     assert math.isnan(fastnumbers.fast_float('nan'))
     assert math.isnan(fastnumbers.fast_float('-NaN'))
+    assert fastnumbers.fast_float('-NaN', nan=0) == 0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_float('+') == '+'
     assert fastnumbers.fast_float('-') == '-'
