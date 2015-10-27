@@ -24,7 +24,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
     PyObject *inf_sub = NULL;
     PyObject *nan_sub = NULL;
     PyObject *isint = NULL, *pyresult = NULL, *pyreturn = NULL;
@@ -144,7 +144,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
     PyObject *inf_sub = NULL;
     PyObject *nan_sub = NULL;
     PyObject *pyreturn = NULL;
@@ -217,7 +217,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
     PyObject *pyreturn = NULL;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
@@ -284,7 +284,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
     PyObject *pytemp = NULL, *pyreturn = NULL;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;

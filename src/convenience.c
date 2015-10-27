@@ -122,7 +122,7 @@ PyObject * handle_error(PyObject *input,
     }
 
     /* If a default value is given, return that. */
-    else if (default_value != Py_None) {
+    else if (default_value != NULL) {
         return default_value;
     }
 

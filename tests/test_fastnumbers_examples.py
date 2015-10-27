@@ -85,6 +85,7 @@ def test_fast_real():
     assert fastnumbers.fast_real('.') == '.'
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_real('invalid', default=90) == 90
+    assert fastnumbers.fast_real('invalid', default=None) is None
     with raises(ValueError):
         assert fastnumbers.fast_real('invalid', 90, True)
     # 18. Unicode numbers
@@ -144,6 +145,7 @@ def test_fast_float():
     assert fastnumbers.fast_float('.') == '.'
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_float('invalid', default=90) == 90
+    assert fastnumbers.fast_float('invalid', default=None) is None
     with raises(ValueError):
         assert fastnumbers.fast_float('invalid', 90, True)
     # 18. Unicode numbers
@@ -199,6 +201,7 @@ def test_fast_int():
     assert fastnumbers.fast_int('.') == '.'
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_int('invalid', default=90) == 90
+    assert fastnumbers.fast_int('invalid', default=None) is None
     with raises(ValueError):
         assert fastnumbers.fast_int('invalid', 90, True)
     # 18. Unicode numbers
@@ -255,6 +258,7 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint('.') == '.'
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_forceint('invalid', default=90) == 90
+    assert fastnumbers.fast_forceint('invalid', default=None) is None
     with raises(ValueError):
         assert fastnumbers.fast_forceint('invalid', 90, True)
     # 18. Unicode numbers
