@@ -49,6 +49,11 @@ not_numeric = sample(not_numeric, 1000)  # This is too big otherwise
 
 
 def a_number(s):
+    s = s.strip()
+    if python_version_tuple()[0] == '3' and isinstance(s, bytes):
+        s = s.rstrip(b'\0')
+    else:
+        s = s.rstrip('\0')
     try:
         int(s)
     except ValueError:
