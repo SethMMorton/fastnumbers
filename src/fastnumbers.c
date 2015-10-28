@@ -61,7 +61,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         intresult = fast_atoi(str, &error, &overflow);
     else {
         intresult = Py_UNICODE_TODIGIT(uni);
-        error = intresult < 0;
+        error = intresult <= -1;
     }
 
     /* If successful, return this integer now. */
@@ -253,7 +253,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atoi(str, &error, &overflow);
     else {
         result = Py_UNICODE_TODIGIT(uni);
-        error = result <= -1.0;
+        error = result <= -1;
     }
 
     /* If an error occurred, handle it properly. */
@@ -321,7 +321,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         intresult = fast_atoi(str, &error, &overflow);
     else {
         intresult = Py_UNICODE_TODIGIT(uni);
-        error = intresult < 0;
+        error = intresult <= 1;
     }
 
     /* If successful, return this integer now. */
