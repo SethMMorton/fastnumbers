@@ -3,6 +3,16 @@
 Changelog
 ---------
 
+10-27-2015 v. 0.6.0
+'''''''''''''''''''
+
+    - Fixed issue where giving a default of *None* would be ignored.
+    - Added the "nan" and "inf" options to "fast_real" and "fast_float".
+      These options allow alternate return values in the case of *nan*
+      or *inf*, respectively.
+    - Improved documentation.
+    - Improved testing.
+  
 06-11-2015 v. 0.5.2
 '''''''''''''''''''
 
