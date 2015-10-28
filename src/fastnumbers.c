@@ -24,22 +24,33 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
+    PyObject *inf_sub = NULL;
+    PyObject *nan_sub = NULL;
     PyObject *isint = NULL, *pyresult = NULL, *pyreturn = NULL;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
     double result;
     long intresult;
     bool error = false, overflow = false, isintbool;
-    static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "default", "raise_on_invalid", "inf", "nan", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_real", keywords,
-                                     &input, &default_value, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOOO:fast_real", keywords,
+                                     &input, &default_value, &raise_on_invalid,
+                                     &inf_sub, &nan_sub))
         return NULL;
 
     /* If the input is already a number, return now. */
-    if (ANYNUM(input)) { RETURN(Py_BuildValue("O", input)); }
+    if (ANYNUM(input)) { 
+        if (nan_sub != NULL && Py_IS_NAN(PyFloat_AS_DOUBLE(input))) {
+            RETURN(Py_BuildValue("O", nan_sub));
+        }
+        else if (inf_sub != NULL && Py_IS_INFINITY(PyFloat_AS_DOUBLE(input))) {
+            RETURN(Py_BuildValue("O", inf_sub));
+        }
+        RETURN(Py_BuildValue("O", input));
+    }
 
     /* Attempt to convert to char*. Raise an error if not possible. */
     convert_string(input, &str, &uni);
@@ -50,7 +61,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         intresult = fast_atoi(str, &error, &overflow);
     else {
         intresult = Py_UNICODE_TODIGIT(uni);
-        error = intresult < 0;
+        error = intresult <= -1;
     }
 
     /* If successful, return this integer now. */
@@ -94,6 +105,16 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         Py_DECREF(isint);
     }
 
+    /* If the result is INF and we want to substitute INF, return here. */
+    else if (inf_sub != NULL && Py_IS_INFINITY(result)) {
+        RETURN(Py_BuildValue("O", inf_sub));
+    }
+
+    /* If the result is NAN and we want to substitute NAN, return here. */
+    else if (nan_sub != NULL && Py_IS_NAN(result)) {
+        RETURN(Py_BuildValue("O", nan_sub));
+    }
+
     /* Convert from double form to PyFloat. */
     /* Use fast method to determine int-ness of */
     /* float if float is not too large. */
@@ -123,21 +144,32 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
+    PyObject *inf_sub = NULL;
+    PyObject *nan_sub = NULL;
     PyObject *pyreturn = NULL;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
     double result;
     bool error = false, overflow = false;
-    static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
+    static char *keywords[] = { "x", "default", "raise_on_invalid", "inf", "nan", NULL };
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO:fast_float", keywords,
-                                     &input, &default_value, &raise_on_invalid))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOOO:fast_float", keywords,
+                                     &input, &default_value, &raise_on_invalid,
+                                     &inf_sub, &nan_sub))
         return NULL;
 
     /* If the input is already a number, return now. */
-    if (ANYNUM(input)) { RETURN(PyNumber_Float(input)); }
+    if (ANYNUM(input)) { 
+        if (nan_sub != NULL && Py_IS_NAN(PyFloat_AS_DOUBLE(input))) {
+            RETURN(Py_BuildValue("O", nan_sub));
+        }
+        else if (inf_sub != NULL && Py_IS_INFINITY(PyFloat_AS_DOUBLE(input))) {
+            RETURN(Py_BuildValue("O", inf_sub));
+        }
+        RETURN(PyNumber_Float(input));
+    }
 
     /* Attempt to convert to char*. Raise an error if not possible. */
     convert_string(input, &str, &uni);
@@ -164,6 +196,16 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     /* so no error checking is needed and we can return directly. */
     else if (overflow) { RETURN(PYFLOAT_FROM_PYSTRING(input)); }
 
+    /* If the result is INF and we want to substitute INF, do here. */
+    else if (inf_sub != NULL && Py_IS_INFINITY(result)) {
+        RETURN(Py_BuildValue("O", inf_sub));
+    }
+
+    /* If the result is NAN and we want to substitute NAN, do here. */
+    else if (nan_sub != NULL && Py_IS_NAN(result)) {
+        RETURN(Py_BuildValue("O", nan_sub));
+    }
+
     /* Otherwise, return the float result. */
     else { RETURN(Py_BuildValue("d", result)); }
 }
@@ -175,7 +217,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
     PyObject *pyreturn = NULL;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
@@ -211,7 +253,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
         result = fast_atoi(str, &error, &overflow);
     else {
         result = Py_UNICODE_TODIGIT(uni);
-        error = result <= -1.0;
+        error = result <= -1;
     }
 
     /* If an error occurred, handle it properly. */
@@ -242,7 +284,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
-    PyObject *default_value = Py_None;
+    PyObject *default_value = NULL;
     PyObject *pytemp = NULL, *pyreturn = NULL;
     char *str = NULL;
     Py_UCS4 uni = NULL_UNI;
@@ -279,7 +321,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         intresult = fast_atoi(str, &error, &overflow);
     else {
         intresult = Py_UNICODE_TODIGIT(uni);
-        error = intresult < 0;
+        error = intresult <= 1;
     }
 
     /* If successful, return this integer now. */

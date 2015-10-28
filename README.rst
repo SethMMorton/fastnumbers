@@ -170,6 +170,16 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+10-27-2015 v. 0.6.0
+'''''''''''''''''''
+
+    - Fixed issue where giving a default of *None* would be ignored.
+    - Added the "nan" and "inf" options to "fast_real" and "fast_float".
+      These options allow alternate return values in the case of *nan*
+      or *inf*, respectively.
+    - Improved documentation.
+    - Improved testing.
+
 06-11-2015 v. 0.5.2
 '''''''''''''''''''
 
@@ -181,10 +191,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
     - Solved rare segfault when parsing Unicode input.
     - Made handling of Infinity and NaN for "fast_int" and "fast_forceint"
       consistent with the "built-in" int function.
-
-05-12-2015 v. 0.5.0
-'''''''''''''''''''
-
-    - Made 'default' first optional argument instead of 'raise_on_invalid'
-      for conversion functions.
-    - Added 'num_only' option for checker functions.
