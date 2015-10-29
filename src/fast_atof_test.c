@@ -13,12 +13,13 @@
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
 
-bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
+bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan, size_t expected_len)
 {
     const char *s;
     bool valid = false;
     bool is_nan = false;
     bool is_inf = false;
+    size_t n = (size_t)p;
 
     /* Skip leading white space, if any. */
  
@@ -113,6 +114,10 @@ bool fast_atof_test (const char *p, const bool allow_inf, const bool allow_nan)
     /* Skip trailing white space, if any. */
  
     while (white_space(*p)) { p += 1; }
+
+    /* Make sure there are no non-null trailing characters. */
+
+    while (((size_t)p - n) < expected_len && *p == '\0') { p += 1; }
 
     /* If the next character is the null character, it is a float. */
     /* Make sure we have at least seen one valid character. */

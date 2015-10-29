@@ -75,7 +75,7 @@ extern const unsigned char _Py_ctype_tolower[256];
  * Functions *
  *************/
 
-void convert_string(PyObject *input, char **str, Py_UCS4 *uni);
+void convert_string(PyObject *input, char **str, Py_UCS4 *uni, size_t *str_length);
 PyObject * handle_error(PyObject *input,
                         PyObject *default_value,
                         const bool raise_on_invalid,

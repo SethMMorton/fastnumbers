@@ -15,7 +15,7 @@ const double maxsize = 9007199254740992;  /* 2^53 */
  * If unsuccessful, raise a TypeError.
  * A return value of NULL means an error occurred.
  */
-void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
+void convert_string(PyObject *input, char **str, Py_UCS4 *uni, size_t *str_length) {
     PyObject *temp_bytes = NULL;
     PyObject *stripped = NULL;
     Py_ssize_t s_len;
@@ -25,16 +25,18 @@ void convert_string(PyObject *input, char **str, Py_UCS4 *uni) {
     /* Try Bytes (Python2 str). */
     if (PyBytes_Check(input)) {
         PyBytes_AsStringAndSize(input, &s, &s_len);
-        *str = malloc((size_t)s_len + 1);
-        strcpy(*str, s);
+        *str_length = s_len;
+        *str = malloc((*str_length) + 1);
+        memcpy(*str, s, (*str_length)+1);
     /* Try Unicode. */
     } else if (PyUnicode_Check(input)) {
         /* Now convert this unicode object to a char* as ASCII, if possible. */
         temp_bytes = PyUnicode_AsEncodedString(input, "ascii", "strict");
         if (temp_bytes != NULL) {
             PyBytes_AsStringAndSize(temp_bytes, &s, &s_len);
-            *str = malloc((size_t)s_len + 1);
-            strcpy(*str, s);
+            *str_length = s_len;
+            *str = malloc((*str_length) + 1);
+            memcpy(*str, s, (*str_length)+1);
             Py_DECREF(temp_bytes);
         }
         /* If char* didn't work, try a single Py_UCS4 character. */
