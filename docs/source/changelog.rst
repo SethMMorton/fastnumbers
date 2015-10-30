@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+10-29-2015 v. 0.6.1
+'''''''''''''''''''
+
+    - Fixed segfault on Python 3.5 that seemed to be related to a
+      change in the PyObject_CallMethod C function.
+    - Sped up unit testing.
+    - Added tox.ini.
+
 10-27-2015 v. 0.6.0
 '''''''''''''''''''
 

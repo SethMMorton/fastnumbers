@@ -22,13 +22,14 @@
 
 long double scaling_factor(int expon);
 
-double fast_atof (const char *p, bool *error, bool *overflow)
+double fast_atof (const char *p, bool *error, bool *overflow, size_t expected_len)
 {
     int frac = 1, sign = 1, ndigits = 0;
     unsigned int expon = 0;
     unsigned long intvalue = 0L, decimal = 0L, tmpval = 0L;
     long double value = 0.0L, pow10 = 10.0L, scale = 1.0L;
     bool valid = false;
+    size_t n = (size_t)p;
     const char *s;
     *overflow = false;
 
@@ -188,6 +189,10 @@ double fast_atof (const char *p, bool *error, bool *overflow)
     /* Skip trailing white space, if any. */
  
     while (white_space(*p)) { p += 1; }
+
+    /* Make sure there are no non-null trailing characters. */
+
+    while (((size_t)p - n) < expected_len && *p == '\0') { p += 1; }
 
     /* If the next character is not the null character, it is an error. */
     /* Make sure we have at least seen one valid character. */

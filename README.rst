@@ -170,6 +170,14 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+10-29-2015 v. 0.6.1
+'''''''''''''''''''
+
+    - Fixed segfault on Python 3.5 that seemed to be related to a
+      change in the PyObject_CallMethod C function.
+    - Sped up unit testing.
+    - Added tox.ini.
+
 10-27-2015 v. 0.6.0
 '''''''''''''''''''
 
@@ -184,10 +192,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 '''''''''''''''''''
 
     - Fixed compile error Visual Studio compilers.
-
-06-04-2015 v. 0.5.1
-'''''''''''''''''''
-
-    - Solved rare segfault when parsing Unicode input.
-    - Made handling of Infinity and NaN for "fast_int" and "fast_forceint"
-      consistent with the "built-in" int function.

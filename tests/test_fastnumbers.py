@@ -46,6 +46,8 @@ for x in range(0x10FFFF):
     except ValueError:
         not_numeric.append(a)
 not_numeric = sample(not_numeric, 1000)  # This is too big otherwise
+numeric_not_digit = [x for x in numeric if x not in digits]
+numeric_not_digit_not_int = [x for x in numeric_not_digit if not unicodedata.numeric(x).is_integer()]
 
 
 def a_number(s):
@@ -74,8 +76,9 @@ def a_number(s):
         return True
     if re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
         return True
-    if s in numeric:
-        return True
+    if int(python_version_tuple()[0]) >= 3 or not isinstance(s, str):
+        if s in numeric:
+            return True
     return False
 
 
@@ -205,9 +208,8 @@ def test_fast_real_given_unicode_digit_returns_int(x):
     assert fastnumbers.fast_real(u'   ' + x + u'   ') == unicodedata.digit(x)
 
 
-@given(sampled_from(numeric))
+@given(sampled_from(numeric_not_digit_not_int))
 def test_fast_real_given_unicode_numeral_returns_float(x):
-    assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.fast_real(x) == unicodedata.numeric(x)
     assert isinstance(fastnumbers.fast_real(x), float)
     # Try padded as well
@@ -537,7 +539,7 @@ def test_fast_int_given_unicode_digit_returns_int(x):
     assert fastnumbers.fast_int(u'   ' + x + u'   ') == unicodedata.digit(x)
 
 
-@given(sampled_from([x for x in numeric if x not in digits]))
+@given(sampled_from(numeric_not_digit))
 def test_fast_int_given_unicode_numeral_returns_as_is(x):
     assert fastnumbers.fast_int(x) == x
 
@@ -814,9 +816,8 @@ def test_isreal_given_unicode_digit_returns_True(x):
     assert fastnumbers.isreal(u'   ' + x + u'   ')
 
 
-@given(sampled_from([x for x in numeric if x not in digits]))
+@given(sampled_from(numeric_not_digit_not_int))
 def test_isreal_given_unicode_numeral_returns_True(x):
-    assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.isreal(x)
     # Try padded as well
     assert fastnumbers.isreal(u'   ' + x + u'   ')
@@ -916,9 +917,8 @@ def test_isfloat_given_unicode_digit_returns_True(x):
     assert fastnumbers.isfloat(u'   ' + x + u'   ')
 
 
-@given(sampled_from([x for x in numeric if x not in digits]))
+@given(sampled_from(numeric_not_digit_not_int))
 def test_isfloat_given_unicode_numeral_returns_True(x):
-    assume(not unicodedata.numeric(x).is_integer())
     assert fastnumbers.isfloat(x)
     # Try padded as well
     assert fastnumbers.isfloat(u'   ' + x + u'   ')
@@ -1014,9 +1014,8 @@ def test_isint_given_unicode_digit_returns_True(x):
     assert fastnumbers.isint(u'   ' + x + u'   ')
 
 
-@given(sampled_from([x for x in numeric if x not in digits]))
+@given(sampled_from(numeric_not_digit_not_int))
 def test_isint_given_unicode_numeral_returns_False(x):
-    assume(not unicodedata.numeric(x).is_integer())
     assert not fastnumbers.isint(x)
 
 
@@ -1128,14 +1127,12 @@ def test_isintlike_given_unicode_digit_returns_True(x):
     assert fastnumbers.isintlike(u'   ' + x + u'   ')
 
 
-@given(sampled_from(numeric))
+@given(sampled_from(numeric_not_digit_not_int))
 def test_isintlike_given_unicode_non_digit_numeral_returns_False(x):
-    assume(x not in digits)
-    assume(not unicodedata.numeric(x).is_integer())
     assert not fastnumbers.isintlike(x)
 
 
-@given(sampled_from([x for x in numeric if x not in digits]))
+@given(sampled_from(numeric_not_digit))
 def test_isintlike_given_unicode_digit_numeral_returns_False(x):
     assume(unicodedata.numeric(x).is_integer())
     assert fastnumbers.isintlike(x)

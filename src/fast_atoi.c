@@ -12,11 +12,12 @@
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
 
-long fast_atoi (const char *p, bool *error, bool *overflow)
+long fast_atoi (const char *p, bool *error, bool *overflow, size_t expected_len)
 {
     long sign = 1L;
     long value = 0L, tmpval = 0L;
     bool valid = false;
+    size_t n = (size_t)p;
     *overflow = false;
  
     /* Skip leading white space, if any. */
@@ -52,6 +53,10 @@ long fast_atoi (const char *p, bool *error, bool *overflow)
     /* Skip trailing white space, if any. */
  
     while (white_space(*p)) { p += 1; }
+
+    /* Make sure there are no non-null trailing characters. */
+
+    while (((size_t)p - n) < expected_len && *p == '\0') { p += 1; }
 
     /* If the next character is not the null character, it is an error. */
     /* Make sure we have at least seen one valid character. */
