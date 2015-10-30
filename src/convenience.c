@@ -17,9 +17,16 @@ const double maxsize = 9007199254740992;  /* 2^53 */
  */
 void convert_string(PyObject *input, char **str, Py_UCS4 *uni, size_t *str_length) {
     PyObject *temp_bytes = NULL;
-    PyObject *stripped = NULL;
-    Py_ssize_t s_len;
-    char *s;
+    Py_ssize_t s_len, u_len;
+    bool found_char = false;
+    char *s;       /* char string */
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
+    Py_UCS4 *us;    /* Unicode string */
+#else
+    Py_UNICODE *us; /* Unicode string */
+#endif
+    Py_UCS4 uc;     /* Unicode character */
+    Py_ssize_t i;   /* Loop index */
     *str = NULL;
     *uni = NULL_UNI;
     /* Try Bytes (Python2 str). */
@@ -48,25 +55,66 @@ void convert_string(PyObject *input, char **str, Py_UCS4 *uni, size_t *str_lengt
             if (PyUnicode_READY(input)) {
                 *uni = (Py_UCS4) ' ';
             } else {
-                if (PyUnicode_GET_LENGTH(input) == 1) {
+                u_len = PyUnicode_GET_LENGTH(input);
+                /* For length 1, simply get the one character. */
+                if (u_len == 1) {
                     *uni = PyUnicode_READ_CHAR(input, 0);
+                /* For length > 1, try to strip whitespace */
+                /* and hope there is only one character without whitespace. */
                 } else {
-                    stripped = PyObject_CallMethod(input, "strip", NULL);
-                    *uni = PyUnicode_GET_LENGTH(stripped) == 1 ?
-                           PyUnicode_READ_CHAR(stripped, 0) :
-                           (Py_UCS4) ' ';
-                    Py_DECREF(stripped);
+                    us = PyUnicode_AsUCS4Copy(input);
+                    if (us == NULL) {
+                        *uni = (Py_UCS4) ' ';  /* Error */
+                    } else {
+                        /* Loop over each character of the unicode array. */
+                        /* Skip whitespace, looking to find only a single */
+                        /* non-whitespace character. If multiple found, */
+                        /* call it an error and quit. */
+                        for (i = 0; i < u_len; ++i) {
+                            uc = PyUnicode_READ(PyUnicode_4BYTE_KIND, us, i);
+                            if (!Py_UNICODE_ISSPACE(uc)) {
+                                if (found_char) {
+                                    *uni = (Py_UCS4) ' ';  /* Error */
+                                    break;
+                                } else {
+                                    found_char = true;
+                                    *uni = uc;
+                                }
+                            }
+                        }
+                        free(us);
+                        /* Only whitespace found, error. */
+                        if (*uni == NULL_UNI) *uni = (Py_UCS4) ' ';
+                    }
                 }
             }
 #else
-            if (PySequence_Length(input) == 1) {
-                *uni = (Py_UCS4) PyUnicode_AS_UNICODE(input)[0];
+            u_len = PySequence_Length(input);
+            us = PyUnicode_AsUnicode(input);
+            if (us == NULL) {
+                *uni = (Py_UCS4) ' ';  /* Error */
+            /* For length 1, simply get the one character. */
+            } else if (u_len == 1) {
+                *uni = (Py_UCS4) us[0];
+            /* For length > 1, try to strip whitespace */
+            /* and hope there is only one character without whitespace. */
             } else {
-                stripped = PyObject_CallMethod(input, "strip", NULL);
-                *uni = PySequence_Length(stripped) == 1 ?
-                       (Py_UCS4) PyUnicode_AS_UNICODE(stripped)[0] :
-                       (Py_UCS4) ' ';
-                Py_DECREF(stripped);
+                /* See above IFDEF section for explanation */
+                for (i = 0; i < u_len; ++i) {
+                    uc = (Py_UCS4) us[i];
+                    // uc = PyUnicode_READ(PyUnicode_4BYTE_KIND, us, i);
+                    if (!Py_UNICODE_ISSPACE(uc)) {
+                        if (found_char) {
+                            *uni = (Py_UCS4) ' ';  /* Error */
+                            break;
+                        } else {
+                            found_char = true;
+                            *uni = (Py_UCS4) uc;
+                        }
+                    }
+                }
+                /* Only whitespace found, error. */
+                if (*uni == NULL_UNI) *uni = (Py_UCS4) ' ';
             }
 #endif
             PyErr_Clear();
