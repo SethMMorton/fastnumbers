@@ -12,7 +12,7 @@ static char module_docstring[] = "Quickly convert strings to numbers.\n";
 
 
 static char safe_real_docstring[] = 
-"safe_real(x, default=None, raise_on_invalid=False)\n"
+"safe_real(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Identical to `fast_real`; kept for backwards compatibility.\n"
 "\n"
 "Deprecated as of ``fastnumbers`` version >= 0.3.0, please use\n"
@@ -25,7 +25,7 @@ static char safe_real_docstring[] =
 
 
 static char safe_float_docstring[] = 
-"safe_float(x, default=None, raise_on_invalid=False)\n"
+"safe_float(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Identical to `fast_float`; kept for backwards compatibility.\n"
 "\n"
 "Deprecated as of ``fastnumbers`` version >= 0.3.0, please use\n"
