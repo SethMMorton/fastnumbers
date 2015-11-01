@@ -170,6 +170,13 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+11-01-2015 v. 0.6.2
+'''''''''''''''''''
+
+    - Fixed bug that caused a SystemError exception to be raised
+      on Python 3.5 if a very large int was passed to the "fast"
+      functions.
+
 10-29-2015 v. 0.6.1
 '''''''''''''''''''
 
@@ -187,8 +194,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
       or *inf*, respectively.
     - Improved documentation.
     - Improved testing.
-
-06-11-2015 v. 0.5.2
-'''''''''''''''''''
-
-    - Fixed compile error Visual Studio compilers.

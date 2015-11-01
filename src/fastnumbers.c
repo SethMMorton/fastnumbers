@@ -50,6 +50,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         else if (inf_sub != NULL && Py_IS_INFINITY(PyFloat_AS_DOUBLE(input))) {
             RETURN(Py_BuildValue("O", inf_sub));
         }
+        PyErr_Clear();
         RETURN(Py_BuildValue("O", input));
     }
 
@@ -98,10 +99,10 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     /* If there was an overflow error, */
     /* use Python's float function to read string. */
     else if (overflow) {
-        /* We already know this string parses as a float, */
-        /* so no error checking is needed. */
         pyresult = PYFLOAT_FROM_PYSTRING(input);
+        if (pyresult == NULL) { RETURN(NULL); }
         isint = PyObject_CallMethod(pyresult, "is_integer", NULL);
+        if (isint == NULL) { RETURN(NULL); }
         isintbool = PyObject_IsTrue(isint);
         Py_DECREF(isint);
     }
@@ -123,6 +124,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         pyresult = PyFloat_FromDouble(result);
         if (result > maxsize) {
             isint = PyObject_CallMethod(pyresult, "is_integer", NULL);
+            if (isint == NULL) { RETURN(NULL); }
             isintbool = PyObject_IsTrue(isint);
             Py_DECREF(isint);
         } else {
@@ -170,6 +172,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
         else if (inf_sub != NULL && Py_IS_INFINITY(PyFloat_AS_DOUBLE(input))) {
             RETURN(Py_BuildValue("O", inf_sub));
         }
+        PyErr_Clear();
         RETURN(PyNumber_Float(input));
     }
 
@@ -244,6 +247,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
             Py_XINCREF(pyreturn);
             RETURN(pyreturn);
         }
+        PyErr_Clear();
         RETURN(PYNUM_ASINT(input));
     }
 
@@ -313,6 +317,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
             Py_XINCREF(pyreturn);
             RETURN(pyreturn);
         }
+        PyErr_Clear();
         RETURN(PYNUM_ASINT(input));
     }
 
@@ -363,6 +368,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* so no error checking is needed and we can return directly. */
     else if (overflow) {
         pytemp = PYFLOAT_FROM_PYSTRING(input);
+        if (pytemp == NULL) { RETURN(NULL); }
         pyreturn = PYNUM_ASINT(pytemp);
         Py_DECREF(pytemp);
         RETURN(pyreturn);
@@ -371,6 +377,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Otherwise, return the float as an int using Python's conversion. */
     else {
         pytemp = PyFloat_FromDouble(result);
+        if (pytemp == NULL) { RETURN(NULL); }
         pyreturn = PYNUM_ASINT(pytemp);
         Py_DECREF(pytemp);
         RETURN(pyreturn);
@@ -547,7 +554,9 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Convert to float type and return the result of "is_integer". */
     pyresult = PyFloat_FromDouble(result);
+    if (pyresult == NULL) { RETURN(NULL); }
     intlike = PyObject_CallMethod(pyresult, "is_integer", NULL);
+    if (intlike == NULL) { RETURN(NULL); }
     Py_DECREF(pyresult);
     RETURN(intlike);
 }
