@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+11-01-2015 v. 0.6.2
+'''''''''''''''''''
+
+    - Fixed bug that caused a SystemError exception to be raised
+      on Python 3.5 if a very large int was passed to the "fast"
+      functions.
+
 10-29-2015 v. 0.6.1
 '''''''''''''''''''
 
