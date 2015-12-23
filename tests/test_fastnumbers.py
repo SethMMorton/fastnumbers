@@ -5,6 +5,7 @@ import re
 import sys
 import os
 import math
+import warnings
 import unicodedata
 from random import randint, sample
 from itertools import repeat
@@ -86,9 +87,31 @@ def test_version():
     assert hasattr(fastnumbers, '__version__')
 
 
-# NOTE: safe_* functions are not tested because internally the code
-#       for the fast_* functions is reused... only the docstrings
-#       are different.
+##################
+# Safe Functions #
+##################
+
+def test_safe_and_fast_are_the_same():
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_real(0.0) == fastnumbers.safe_real(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_real instead of safe_real'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_float(0.0) == fastnumbers.safe_float(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_float instead of safe_float'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_int(0.0) == fastnumbers.safe_int(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_int instead of safe_int'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_forceint(0.0) == fastnumbers.safe_forceint(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_forceint instead of safe_forceint'
 
 #############
 # Fast Real #

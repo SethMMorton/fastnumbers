@@ -561,13 +561,37 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     RETURN(intlike);
 }
 
+static PyObject *
+fastnumbers_safe_real(PyObject *self, PyObject *args, PyObject *kwargs) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "please use fast_real instead of safe_real", 1);
+    return fastnumbers_fast_real(self, args, kwargs);
+}
+
+static PyObject *
+fastnumbers_safe_float(PyObject *self, PyObject *args, PyObject *kwargs) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "please use fast_float instead of safe_float", 1);
+    return fastnumbers_fast_float(self, args, kwargs);
+}
+
+static PyObject *
+fastnumbers_safe_int(PyObject *self, PyObject *args, PyObject *kwargs) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "please use fast_int instead of safe_int", 1);
+    return fastnumbers_fast_int(self, args, kwargs);
+}
+
+static PyObject *
+fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "please use fast_forceint instead of safe_forceint", 1);
+    return fastnumbers_fast_forceint(self, args, kwargs);
+}
+
 
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
-    {"safe_real", (PyCFunction) fastnumbers_fast_real, METH_VARARGS | METH_KEYWORDS, safe_real_docstring},
-    {"safe_float", (PyCFunction) fastnumbers_fast_float, METH_VARARGS | METH_KEYWORDS, safe_float_docstring},
-    {"safe_int", (PyCFunction) fastnumbers_fast_int, METH_VARARGS | METH_KEYWORDS, safe_int_docstring},
-    {"safe_forceint", (PyCFunction) fastnumbers_fast_forceint, METH_VARARGS | METH_KEYWORDS, safe_forceint_docstring},
+    {"safe_real", (PyCFunction) fastnumbers_safe_real, METH_VARARGS | METH_KEYWORDS, safe_real_docstring},
+    {"safe_float", (PyCFunction) fastnumbers_safe_float, METH_VARARGS | METH_KEYWORDS, safe_float_docstring},
+    {"safe_int", (PyCFunction) fastnumbers_safe_int, METH_VARARGS | METH_KEYWORDS, safe_int_docstring},
+    {"safe_forceint", (PyCFunction) fastnumbers_safe_forceint, METH_VARARGS | METH_KEYWORDS, safe_forceint_docstring},
     {"fast_real", (PyCFunction) fastnumbers_fast_real, METH_VARARGS | METH_KEYWORDS, fast_real_docstring},
     {"fast_float", (PyCFunction) fastnumbers_fast_float, METH_VARARGS | METH_KEYWORDS, fast_float_docstring},
     {"fast_int", (PyCFunction) fastnumbers_fast_int, METH_VARARGS | METH_KEYWORDS, fast_int_docstring},
