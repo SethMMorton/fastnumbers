@@ -11,20 +11,15 @@ Convert strings to numbers quickly.
     - Documentation: http://pythonhosted.org//fastnumbers/
 
 This module is a Python C extension that will convert strings to
-numbers *much* faster than can be done using pure Python.  Additionally,
-if the string cannot be converted, instead of a ``ValueError`` the return
-value can be either the input as-is or a default value.
+numbers *much* faster than can be done using pure Python; numeric types
+can also be converted to other numeric types.
 
-To achieve this, the module makes some assumptions about the input type
-(input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
-and otherwise a ``TypeError`` is raised.
+Additionally, the user has control over what happens in the event that the
+input string cannot be converted to a number:
 
-**NOTE:** The old ``safe_real``, ``safe_float``, ``safe_int``, and
-``safe_forceint`` functions are deprecated as of ``fastnumbers`` version
->= 0.3.0; ``fast_real``, ``fast_float``, ``fast_int``, and ``fast_forceint``
-have each been reimplemented to fall back on the "safe" algorithm if
-overflow or loss of precision is detected and so the separate "safe" functions
-are no longer needed.
+    - a ``ValueError`` can be raised (like the built-in ``float`` or ``int``)
+    - the input can be returned as-is
+    - a default value can be returned
 
 Examples
 --------
@@ -41,6 +36,12 @@ Pure Python function:
             if raise_on_invalid:
                 raise
             return default if default is not None else input
+
+In addition to ``fast_float``, there are also ``fast_real``,
+``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``, ``isint``, 
+and ``isintlike`` - please see the
+`API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
+for full details.
 
 Some example usage:
 
@@ -142,22 +143,6 @@ The results will be similar to the below, by vary on the system you are on::
 
 As you can see, in all cases ``fastnumbers`` beats the pure python
 implementations.
-
-Full Suite of Functions
------------------------
-
-In addition to ``fast_float`` mentioned above, there are also
-
-    - fast_real
-    - fast_int
-    - fast_forceint
-    - isreal
-    - isfloat
-    - isint
-    - isintlike
-
-Please see the `API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
-for full details.
 
 Author
 ------

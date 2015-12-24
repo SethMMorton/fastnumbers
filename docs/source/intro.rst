@@ -15,13 +15,6 @@ Please see the
 for timing details.
 Check out the `API <http://pythonhosted.org//fastnumbers/api.html>`_.
 
-**NOTE:** The old :func:`safe_real`, :func:`safe_float`, :func:`safe_int`, and
-:func:`safe_forceint` functions are deprecated as of :mod:`fastnumbers` version
->= 0.3.0; :func:`fast_real`, :func:`fast_float`, :func:`fast_int`, and
-:func:`fast_forceint` have each been reimplemented to fall back on the
-"safe" algorithm if overflow or loss of precision is detect and so the
-separate "safe" functions are no longer needed.
-
 Quick Description
 -----------------
 
@@ -37,7 +30,13 @@ Pure Python function:
             if raise_on_invalid:
                 raise
             return default if default is not None else input
-    
+
+In addition to ``fast_float``, there are also ``fast_real``,
+``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``, ``isint``, 
+and ``isintlike`` - please see the
+`API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
+for full details.
+
 Some example usage:
 
 .. code-block:: python
@@ -69,10 +68,6 @@ Some example usage:
     5.0
     >>> fast_float(u'\u2466')  # 7 enclosed in a circle
     7.0
-
-To achieve this, the module makes some assumptions about the input type
-(input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
-and otherwise a ``TypeError`` is raised.
 
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
 function of your choice to ``locale.atof``.
