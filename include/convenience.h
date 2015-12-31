@@ -1,5 +1,5 @@
-#ifndef CONVENIENCE
-#define CONVENIENCE
+#ifndef __CONVENIENCE
+#define __CONVENIENCE
 
 #include <Python.h>
 #include <string.h>
@@ -92,4 +92,4 @@ PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s);
 } /* extern "C" */
 #endif
 
-#endif /* CONVENIENCE */
+#endif /* __CONVENIENCE */

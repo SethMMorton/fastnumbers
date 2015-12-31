@@ -1,5 +1,5 @@
-#ifndef DOCSTRINGS
-#define DOCSTRINGS
+#ifndef __DOCSTRINGS
+#define __DOCSTRINGS
 
 /*
  * Docstrings for the fastnumbers functions.
@@ -785,4 +785,4 @@ static char isintlike_docstring[] =
 "\n";
 
 
-#endif /* DOCSTRINGS */
+#endif /* __DOCSTRINGS */

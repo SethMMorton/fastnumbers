@@ -1,5 +1,5 @@
-#ifndef FAST_CONVERSIONS
-#define FAST_CONVERSIONS
+#ifndef __FAST_CONVERSIONS
+#define __FAST_CONVERSIONS
 
 #include <Python.h>
 #include "fn_bool.h"
@@ -17,4 +17,4 @@ bool fast_atoi_test (const char *p, size_t str_len);
 } /* extern "C" */
 #endif
 
-#endif /* FAST_CONVERSIONS */
+#endif /* __FAST_CONVERSIONS */

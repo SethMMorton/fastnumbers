@@ -1,5 +1,5 @@
-#ifndef FN_BOOL
-#define FN_BOOL
+#ifndef __FN_BOOL
+#define __FN_BOOL
 
 #ifndef __cplusplus
 
@@ -43,4 +43,4 @@
 
 #endif /* __cplusplus */
 
-#endif /* FN_BOOL */
+#endif /* __FN_BOOL */
