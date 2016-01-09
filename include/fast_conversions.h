@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-long fast_atoi(const char *str, bool *error, bool *overflow);
-double fast_atof (const char *str, bool *error, bool *overflow);
-bool fast_atof_test (const char *str, const bool allow_inf, const bool allow_nan);
-bool fast_atoi_test (const char *str);
+long parse_integer_from_string (const char *str, bool *error, bool *overflow);
+double parse_float_from_string (const char *str, bool *error, bool *overflow);
+bool string_contains_float (const char *str, const bool allow_inf, const bool allow_nan);
+bool string_contains_integer (const char *str);
 
 #ifdef __cplusplus
 } /* extern "C" */

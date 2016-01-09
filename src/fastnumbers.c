@@ -13,9 +13,9 @@
 #define RETURN(val) { if (str != NULL) { free(str); } return val; }
 #define RETURN_TRUE { if (str != NULL) { free(str); } Py_RETURN_TRUE; }
 #define RETURN_FALSE { if (str != NULL) { free(str); } Py_RETURN_FALSE; }
-#define IS_FLOAT_STR ((str != NULL && fast_atof_test(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan))) || \
+#define IS_FLOAT_STR ((str != NULL && string_contains_float(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan))) || \
                       (uni != NULL_UNI && Py_UNICODE_ISNUMERIC(uni)))
-#define IS_INTEGER_STR ((str != NULL && fast_atoi_test(str)) || (uni != NULL_UNI && Py_UNICODE_ISDIGIT(uni)))
+#define IS_INTEGER_STR ((str != NULL && string_contains_integer(str)) || (uni != NULL_UNI && Py_UNICODE_ISDIGIT(uni)))
 #define STR_NOT_CONVERTED (str == NULL && uni == NULL_UNI)
 
 /* Quickly convert to an int or float, depending on value. */
@@ -59,7 +59,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* First attempt to convert to an int */
     if (str != NULL)
-        intresult = fast_atoi(str, &error, &overflow);
+        intresult = parse_integer_from_string(str, &error, &overflow);
     else {
         intresult = Py_UNICODE_TODIGIT(uni);
         error = intresult <= -1;
@@ -79,7 +79,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Conversion to an integer was unsuccessful. Try converting to a float. */
     /* Attempt to convert to a float */
     if (str != NULL)
-        result = fast_atof(str, &error, &overflow);
+        result = parse_float_from_string(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
         error = result <= -1.0;
@@ -179,7 +179,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     if (STR_NOT_CONVERTED) { return NULL; }
 
     /* Attempt to convert to a float */
-    if (str != NULL) { result = fast_atof(str, &error, &overflow); }
+    if (str != NULL) { result = parse_float_from_string(str, &error, &overflow); }
     else {
         result = Py_UNICODE_TONUMERIC(uni);
         error = result <= -1.0;
@@ -254,7 +254,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Attempt to convert to a int */
     if (str != NULL)
-        result = fast_atoi(str, &error, &overflow);
+        result = parse_integer_from_string(str, &error, &overflow);
     else {
         result = Py_UNICODE_TODIGIT(uni);
         error = result <= -1;
@@ -323,7 +323,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* First attempt to convert to an int */
     if (str != NULL)
-        intresult = fast_atoi(str, &error, &overflow);
+        intresult = parse_integer_from_string(str, &error, &overflow);
     else {
         intresult = Py_UNICODE_TODIGIT(uni);
         error = intresult <= 1;
@@ -342,7 +342,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Attempt to convert to a float */
     if (str != NULL)
-        result = fast_atof(str, &error, &overflow);
+        result = parse_float_from_string(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
         error = result <= -1.0;
@@ -535,7 +535,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Try converting the string to a float, */
     /* and then running is_integer on that. */
     if (str != NULL)
-        result = fast_atof(str, &error, &overflow);
+        result = parse_float_from_string(str, &error, &overflow);
     else {
         result = Py_UNICODE_TONUMERIC(uni);
         error = result <= -1.0;

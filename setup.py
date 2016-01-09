@@ -82,9 +82,13 @@ class Distclean(Command):
 
 
 # Create a list of all the source files
-sourcefiles = ['fast_atoi.c', 'fast_atof.c',
-               'fast_atoi_test.c', 'fast_atof_test.c', 
-               'convenience.c', 'fastnumbers.c']
+sourcefiles = ['parse_integer_from_string.c',
+               'parse_float_from_string.c',
+               'string_contains_integer.c',
+               'string_contains_float.c', 
+               'convenience.c',
+               'fastnumbers.c',
+               ]
 sourcefiles = [join('src', sf) for sf in sourcefiles]
 
 

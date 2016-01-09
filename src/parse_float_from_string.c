@@ -9,7 +9,7 @@ static long double power_of_ten_scaling_factor(const int expon);
 inline static long double apply_power_of_ten_scaling(const long double value, const int expon);
 inline static bool check_for_overflow(const unsigned long value, const unsigned long cur_val);
 
-double fast_atof (const char *str, bool *error, bool *overflow)
+double parse_float_from_string (const char *str, bool *error, bool *overflow)
 {
     *overflow = false;
 
