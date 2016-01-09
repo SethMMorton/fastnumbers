@@ -2,7 +2,7 @@
 #include "parsing.h"
 #include "fast_conversions.h"
 
-bool fast_atoi_test (const char *str, size_t expected_len)
+bool fast_atoi_test (const char *str)
 {
     register bool valid = false;
     consume_white_space(&str);

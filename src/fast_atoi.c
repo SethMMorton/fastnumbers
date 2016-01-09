@@ -5,7 +5,7 @@
 
 inline static bool check_for_overflow(const long value, const long cur_val);
 
-long fast_atoi (const char *str, bool *error, bool *overflow, size_t expected_len)
+long fast_atoi (const char *str, bool *error, bool *overflow)
 {
     register long value = 0L;
     register bool valid = false;

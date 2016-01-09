@@ -2,7 +2,7 @@
 #include "parsing.h"
 #include "fast_conversions.h"
 
-bool fast_atof_test (const char *str, const bool allow_inf, const bool allow_nan, size_t expected_len)
+bool fast_atof_test (const char *str, const bool allow_inf, const bool allow_nan)
 {
     register bool valid = false;
 
