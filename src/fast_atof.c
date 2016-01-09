@@ -1,217 +1,108 @@
-/*
- * Simple and fast atof (ascii to float) function.
- *
- * - Executes about 5x faster than standard MSCRT library atof().
- * - An attractive alternative if the number of calls is in the millions.
- * - Assumes input is a proper integer, fraction, or scientific format.
- * - Matches library atof() to 15 digits (except at extreme exponents).
- *
- * 09-May-2009 Tom Van Baak (tvb) www.LeapSecond.com
- * Error checking added by Seth M. Morton, July 30, 2014
- * Overflow checking added by Seth M. Morton, April 19, 2015
- * Hard-coded exponent scaling added by Seth M. Morton, April 19, 2015
- */
-
+/* See if a string contains a python float, and return the contained double. */
 #include <Python.h>
+#include <limits.h>
 #include <float.h>
+#include "parsing.h"
 #include "fast_conversions.h"
-#include "convenience.h"
 
-#define white_space(c) ((c) == ' ' || (c) == '\t')
-#define valid_digit(c) ((c) >= '0' && (c) <= '9')
+static long double power_of_ten_scaling_factor(const int expon);
+inline static long double apply_power_of_ten_scaling(const long double value, const int expon);
+inline static bool check_for_overflow(const unsigned long value, const unsigned long cur_val);
 
-long double scaling_factor(int expon);
-
-double fast_atof (const char *p, bool *error, bool *overflow, size_t expected_len)
+double fast_atof (const char *str, bool *error, bool *overflow, size_t expected_len)
 {
-    int frac = 1, sign = 1, ndigits = 0;
-    unsigned int expon = 0;
-    unsigned long intvalue = 0L, decimal = 0L, tmpval = 0L;
-    long double value = 0.0L, pow10 = 10.0L, scale = 1.0L;
-    bool valid = false;
-    size_t n = (size_t)p;
-    const char *s;
     *overflow = false;
 
-    /* Skip leading white space, if any. */
- 
-    while (white_space(*p)) { p += 1; }
- 
-    /* Get sign, if any. */
- 
-    if (*p == '-') {
-        sign = -1;
-        p += 1;
-    } else if (*p == '+') {
-        p += 1;
-    }
- 
+    consume_white_space(&str);
+    const long sign = consume_sign_and_is_negative(&str) ? -1L : 1L;
+
     /* Are we possibly dealing with infinity or NAN? */
 
-    if (*p == 'i' || *p == 'I' || *p == 'n' || *p == 'N') {
+    if (is_n_or_N(str) || is_i_or_I(str)) {
         
-        /* Make a pointer copy so we can back up if needed. */
-
-        s = p;
-
-        /* Are we infinity? */
-
-        if (case_insensitive_match(s, "inf")) {
-            s += 3;
-            if (case_insensitive_match(s, "inity")) 
-                s += 5;
-            value = Py_HUGE_VAL;
-            valid = true;
+        if (case_insensitive_match(str, "inf")) {
+            str += 3;
+            if (case_insensitive_match(str, "inity"))
+                str += 5;
+            *error = !trailing_characters_are_vaild_and_nul_terminated(&str);
+            return sign * Py_HUGE_VAL;
         }
 
-        /* Are we NaN? */
-
-        else if (case_insensitive_match(s, "nan")) {
-            s += 3;
-            value = Py_NAN;
-            valid = true;
+        else if (case_insensitive_match(str, "nan")) {
+            str += 3;
+            *error = !trailing_characters_are_vaild_and_nul_terminated(&str);
+            return Py_NAN;
         }
-
-        /* Reset pointer. */
-
-        p = s;
 
     }
 
-    /* Otherwise this is might be an actual number. */
+    /* Otherwise parse as an actual number. */
 
-    else {
+    register unsigned long intvalue = 0UL;
+    register bool valid = false;
+    register int ndigits = 0;
+    for (intvalue = 0UL; is_valid_digit(str); valid = true, ndigits += 1, str += 1) {
+        const unsigned long tmpval = ascii2ulong(str);
+        *overflow = *overflow || check_for_overflow(intvalue, tmpval);
+        intvalue *= 10L;
+        intvalue += tmpval;
+    }
+    register long double value = (long double) intvalue;
 
-        /* Get digits before decimal point or exponent, if any. */
-        /* Check for overflow. */
-        /* Use an long integer here to retain as much precision as possible. */
+    if (!consume_python2_long_literal_lL(&str)) {
+        register int expon;
+
+        if (is_decimal(str)) {
+            str += 1;
+            register unsigned long decimal = 0UL;
+            for (expon = 0;
+                 is_valid_digit(str);
+                 valid = true, str += 1, ndigits += 1, expon += 1)
+            {
+                const unsigned long tmpval = ascii2ulong(str);
+                *overflow = *overflow || check_for_overflow(decimal, tmpval);
+                decimal *= 10L;
+                decimal += tmpval;
+            }
+            *overflow = *overflow || (ndigits >= DBL_DIG - 1);  // Too many digits loses precision
+            value += apply_power_of_ten_scaling(decimal, -expon);
+        }
      
-        intvalue = 0;
-        while (valid_digit(*p)) {
-            ndigits += 1;
-            tmpval = (unsigned long) (*p - '0');
-            *overflow = *overflow
-                     || ( intvalue > ( ULONG_MAX - tmpval ) / 10L );
-            intvalue = intvalue * 10L + tmpval;
-            valid = true;
-            p += 1;
-        }
-
-        /* Convert the long integer to a double now. */
-
-        value = (long double) intvalue;
-
-#if PY_MAJOR_VERSION == 2
-        /* On Python 2, long literals are allowed and end in 'l'. */
-
-        if (*p == 'l' || *p == 'L') { p += 1; }
-
-        /* The following code is for floats, and can only be */
-        /* valid if not a long literal, hence the else. */
-
-        else {
-#endif
-
-            /* Get digits after decimal point, if any. */
-         
-            if (*p == '.') {
-
-                /* Store the digit component in a long. */
-
-                p += 1;
-                expon = 0;
-                while (valid_digit(*p)) {
-                    expon += 1;
-                    ndigits += 1;
-                    tmpval = (unsigned long) (*p - '0');
-                    *overflow = *overflow
-                             || ( decimal > ( ULONG_MAX - tmpval ) / 10L );
-                    decimal = decimal * 10L + tmpval;
-                    valid = true;
-                    p += 1;
-                }
-
-                /* Convert to decimal component and add to the value. */
-
-                pow10 = scaling_factor(expon);
-                value += ((long double) decimal / pow10);
-
-                /* If more digits than can be stored have been read, */
-                /* say an overflow occurred since loss of precision may */
-                /* have occurred. */
-
-                *overflow = *overflow || (ndigits >= DBL_DIG);
-
+        if (is_e_or_E(str) && valid) {
+            valid = false;
+            str += 1;
+            const int exp_sign = consume_sign_and_is_negative(&str) ? -1 : 1;
+            for (expon = 0; is_valid_digit(str); valid = true, str += 1) {
+                expon *= 10;
+                expon += ascii2uint(str);
             }
-         
-            /* Handle exponent, if any. */
-         
-            if (((*p == 'e') || (*p == 'E')) && valid) {
-                valid = false;
-         
-                /* Get sign of exponent, if any. */
-         
-                p += 1;
-                if (*p == '-') {
-                    frac = -1;
-                    p += 1;
-                } else if (*p == '+') {
-                    p += 1;
-                }
-         
-                /* Get digits of exponent, if any. */
-                expon = 0;
-                while (valid_digit(*p)) {
-                    expon = expon * 10 + (*p - '0');
-                    valid = true;
-                    p += 1;
-                }
-
-                /* Scale the value. */
-         
-                scale = scaling_factor(expon);
-                value = frac == -1 ? value / scale : value * scale;
-
-                /* If the exponent is greater than 255, since the numbers */
-                /* can get unreliable past that point. */
-
-                *overflow = *overflow || (expon > 255);
-
-
-            }
-
-#if PY_MAJOR_VERSION == 2
+            *overflow = *overflow || (expon > 255);  // Exponent > 255 is unreliable
+            value = apply_power_of_ten_scaling(value, exp_sign * expon);
         }
-#endif
 
     }
 
-    /* Skip trailing white space, if any. */
- 
-    while (white_space(*p)) { p += 1; }
-
-    /* Make sure there are no non-null trailing characters. */
-
-    while (((size_t)p - n) < expected_len && *p == '\0') { p += 1; }
-
-    /* If the next character is not the null character, it is an error. */
-    /* Make sure we have at least seen one valid character. */
-
-    *error = *p != '\0' ? true : !valid;
-
-    /* If the return value is less than 0 at this point, */
-    /* an overflow has occurred. */
-
-    *overflow = *overflow || ((double) value < 0);
-
-    /* Return signed and scaled floating point result. */
- 
+    *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
+    *overflow = *overflow || (value > DBL_MAX);  // One last overflow check
     return sign * value;
 }
 
-/* Calculates the exponential scaling factor with hard-coded values. */
+bool check_for_overflow(const unsigned long value, const unsigned long cur_val)
+{
+    static const unsigned long overflow_cutoff = ULONG_MAX / 10UL;
+    static const unsigned long overflow_last_digit_limit = ULONG_MAX % 10UL;
+    return value > overflow_cutoff ||
+          (value == overflow_cutoff && cur_val > overflow_last_digit_limit);
+}
 
-long double scaling_factor(int expon) {
+long double apply_power_of_ten_scaling(const long double value, const int expon)
+{
+    const long double scale = power_of_ten_scaling_factor(abs(expon));
+    return expon < 0 ? value / scale : value * scale;
+}
+
+long double power_of_ten_scaling_factor(const int expon) {
+    /* Calculates the exponential scaling factor with hard-coded values. */
     switch(expon) {
     case 0:    return 1E0L;
     case 1:    return 1E1L;

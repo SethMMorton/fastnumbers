@@ -127,18 +127,6 @@ void convert_string(PyObject *input, char **str, Py_UCS4 *uni, size_t *str_lengt
     }
 }
 
-/* Case-insensitive string match used for nan and inf detection; t should be
-   lower-case.  Returns 1 for a successful match, 0 otherwise.
-   Taken from the Python pystrtod.c source code. */
-bool case_insensitive_match(const char *s, const char *t)
-{
-    while(*t && Py_TOLOWER(*s) == *t) {
-        s++;
-        t++;
-    }
-    return *t ? 0 : 1;
-}
-
 /* Handle errors. Return the appropriate return value for the error situation. */
 PyObject * handle_error(PyObject *input,
                         PyObject *default_value,

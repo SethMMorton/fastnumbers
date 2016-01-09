@@ -83,7 +83,6 @@ PyObject * handle_error(PyObject *input,
                         const bool bad_nan,
                         const char* str,
                         const Py_UCS4 uni);
-bool case_insensitive_match(const char *s, const char *t);
 #if PY_MAJOR_VERSION == 2
 PyObject * convert_PyString_to_PyFloat_possible_long_literal(PyObject *s);
 #endif
