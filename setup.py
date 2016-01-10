@@ -85,8 +85,10 @@ class Distclean(Command):
 sourcefiles = ['parse_integer_from_string.c',
                'parse_float_from_string.c',
                'string_contains_integer.c',
+               'string_contains_intlike_float.c', 
                'string_contains_float.c', 
-               'convenience.c',
+               'py_to_char.c',
+               'py_shortcuts.c',
                'fastnumbers.c',
                ]
 sourcefiles = [join('src', sf) for sf in sourcefiles]

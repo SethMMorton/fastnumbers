@@ -11,6 +11,7 @@ extern "C" {
 long parse_integer_from_string (const char *str, bool *error, bool *overflow);
 double parse_float_from_string (const char *str, bool *error, bool *overflow);
 bool string_contains_float (const char *str, const bool allow_inf, const bool allow_nan);
+bool string_contains_intlike_float (const char *str);
 bool string_contains_integer (const char *str);
 
 #ifdef __cplusplus

@@ -8,15 +8,41 @@
 #include "fast_conversions.h"
 #include "version.h"
 #include "docstrings.h"
-#include "convenience.h"
+#include "py_to_char.h"
+#include "py_shortcuts.h"
 
-#define RETURN(val) { if (str != NULL) { free(str); } return val; }
-#define RETURN_TRUE { if (str != NULL) { free(str); } Py_RETURN_TRUE; }
-#define RETURN_FALSE { if (str != NULL) { free(str); } Py_RETURN_FALSE; }
-#define IS_FLOAT_STR ((str != NULL && string_contains_float(str, PyObject_IsTrue(allow_inf), PyObject_IsTrue(allow_nan))) || \
-                      (uni != NULL_UNI && Py_UNICODE_ISNUMERIC(uni)))
-#define IS_INTEGER_STR ((str != NULL && string_contains_integer(str)) || (uni != NULL_UNI && Py_UNICODE_ISDIGIT(uni)))
-#define STR_NOT_CONVERTED (str == NULL && uni == NULL_UNI)
+
+static inline PyObject* assess_PyNumber(PyObject *input, PyObject *retval,
+                                        PyObject *default_value, PyObject *raise_on_invalid,
+                                        const PyNumberType type)
+{
+    /* NULL and no error set? It must be a TypeError. These always raise an error. */
+    if (retval == Py_None) {
+        PyErr_Format(PyExc_TypeError,
+                     "expected str, float, or int argument, got %.200s",
+                     input->ob_type->tp_name);
+        return NULL;
+    }
+
+    /* Handle error. */
+    else if (retval == NULL) {
+        if (raise_on_invalid == Py_True) {
+            if (type == REAL || type == FLOAT)
+                return PyNumber_Float(input);
+            else
+                return PyNumber_ToInt(input);
+        }
+        else if (default_value != NULL)
+            return Py_INCREF(default_value), default_value;
+        else
+            return Py_INCREF(input), input;
+    }
+
+    /* Return correct result. */
+    else
+        return retval;
+}
+
 
 /* Quickly convert to an int or float, depending on value. */
 static PyObject *
@@ -27,12 +53,6 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = NULL;
     PyObject *inf_sub = NULL;
     PyObject *nan_sub = NULL;
-    PyObject *isint = NULL, *pyresult = NULL, *pyreturn = NULL;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
-    double result;
-    long intresult;
-    bool error = false, overflow = false, isintbool;
     static char *keywords[] = { "x", "default", "raise_on_invalid", "inf", "nan", NULL };
 
     /* Read the function argument. */
@@ -41,102 +61,8 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &inf_sub, &nan_sub))
         return NULL;
 
-    /* If the input is already a number, return now. */
-    if (ANYNUM(input)) { 
-        if (nan_sub != NULL && Py_IS_NAN(PyFloat_AS_DOUBLE(input))) {
-            RETURN(Py_BuildValue("O", nan_sub));
-        }
-        else if (inf_sub != NULL && Py_IS_INFINITY(PyFloat_AS_DOUBLE(input))) {
-            RETURN(Py_BuildValue("O", inf_sub));
-        }
-        PyErr_Clear();
-        RETURN(Py_BuildValue("O", input));
-    }
-
-    /* Attempt to convert to char*. Raise an error if not possible. */
-    convert_string(input, &str, &uni);
-    if (STR_NOT_CONVERTED) { return NULL; }
-
-    /* First attempt to convert to an int */
-    if (str != NULL)
-        intresult = parse_integer_from_string(str, &error, &overflow);
-    else {
-        intresult = Py_UNICODE_TODIGIT(uni);
-        error = intresult <= -1;
-    }
-
-    /* If successful, return this integer now. */
-    if (! error) {
-        /* If there was overflow, use Python's conversion function. */
-        if (overflow) {
-            pyresult = PYINT_FROM_STRING(str);
-            RETURN(pyresult);
-        }
-        /* Otherwise return the integer. */
-        else { RETURN(Py_BuildValue("l", intresult)); }
-    }
-
-    /* Conversion to an integer was unsuccessful. Try converting to a float. */
-    /* Attempt to convert to a float */
-    if (str != NULL)
-        result = parse_float_from_string(str, &error, &overflow);
-    else {
-        result = Py_UNICODE_TONUMERIC(uni);
-        error = result <= -1.0;
-    }
-
-    /* If an error occurred, handle it properly. */
-    if (error) {
-        pyreturn = handle_error(input, default_value,
-                                PyObject_IsTrue(raise_on_invalid),
-                                false, false, str, uni);
-        Py_XINCREF(pyreturn);
-        RETURN(pyreturn);
-    }
-
-    /* Determine if this float can be represented as an integer. */
-    /* If there was an overflow error, */
-    /* use Python's float function to read string. */
-    else if (overflow) {
-        pyresult = PYFLOAT_FROM_PYSTRING(input);
-        if (pyresult == NULL) { RETURN(NULL); }
-        isint = PyObject_CallMethod(pyresult, "is_integer", NULL);
-        if (isint == NULL) { RETURN(NULL); }
-        isintbool = PyObject_IsTrue(isint);
-        Py_DECREF(isint);
-    }
-
-    /* If the result is INF and we want to substitute INF, return here. */
-    else if (inf_sub != NULL && Py_IS_INFINITY(result)) {
-        RETURN(Py_BuildValue("O", inf_sub));
-    }
-
-    /* If the result is NAN and we want to substitute NAN, return here. */
-    else if (nan_sub != NULL && Py_IS_NAN(result)) {
-        RETURN(Py_BuildValue("O", nan_sub));
-    }
-
-    /* Convert from double form to PyFloat. */
-    /* Use fast method to determine int-ness of */
-    /* float if float is not too large. */
-    else {
-        pyresult = PyFloat_FromDouble(result);
-        if (result > maxsize) {
-            isint = PyObject_CallMethod(pyresult, "is_integer", NULL);
-            if (isint == NULL) { RETURN(NULL); }
-            isintbool = PyObject_IsTrue(isint);
-            Py_DECREF(isint);
-        } else {
-            isintbool = result == (long) result;
-        }
-    }
-
-    /* Return as int or float dependent on the int-ness. */
-    if (isintbool) {
-        RETURN(PYNUM_ASINT(pyresult));
-    } else {
-        RETURN(pyresult);
-    }
+    PyObject *pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub);
+    return assess_PyNumber(input, pyreturn, default_value, raise_on_invalid, REAL);
 }
 
 
@@ -149,11 +75,6 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = NULL;
     PyObject *inf_sub = NULL;
     PyObject *nan_sub = NULL;
-    PyObject *pyreturn = NULL;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
-    double result;
-    bool error = false, overflow = false;
     static char *keywords[] = { "x", "default", "raise_on_invalid", "inf", "nan", NULL };
 
     /* Read the function argument. */
@@ -162,55 +83,8 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &inf_sub, &nan_sub))
         return NULL;
 
-    /* If the input is already a number, return now. */
-    if (ANYNUM(input)) { 
-        if (nan_sub != NULL && Py_IS_NAN(PyFloat_AS_DOUBLE(input))) {
-            RETURN(Py_BuildValue("O", nan_sub));
-        }
-        else if (inf_sub != NULL && Py_IS_INFINITY(PyFloat_AS_DOUBLE(input))) {
-            RETURN(Py_BuildValue("O", inf_sub));
-        }
-        PyErr_Clear();
-        RETURN(PyNumber_Float(input));
-    }
-
-    /* Attempt to convert to char*. Raise an error if not possible. */
-    convert_string(input, &str, &uni);
-    if (STR_NOT_CONVERTED) { return NULL; }
-
-    /* Attempt to convert to a float */
-    if (str != NULL) { result = parse_float_from_string(str, &error, &overflow); }
-    else {
-        result = Py_UNICODE_TONUMERIC(uni);
-        error = result <= -1.0;
-    }
-
-    /* If an error occurred, handle it properly. */
-    if (error) {
-        pyreturn = handle_error(input, default_value,
-                                PyObject_IsTrue(raise_on_invalid),
-                                false, false, str, uni);
-        Py_XINCREF(pyreturn);
-        RETURN(pyreturn);
-    }
-
-    /* If there was an overflow error, use Python's float function. */
-    /* We already know this string parses as a float, */
-    /* so no error checking is needed and we can return directly. */
-    else if (overflow) { RETURN(PYFLOAT_FROM_PYSTRING(input)); }
-
-    /* If the result is INF and we want to substitute INF, do here. */
-    else if (inf_sub != NULL && Py_IS_INFINITY(result)) {
-        RETURN(Py_BuildValue("O", inf_sub));
-    }
-
-    /* If the result is NAN and we want to substitute NAN, do here. */
-    else if (nan_sub != NULL && Py_IS_NAN(result)) {
-        RETURN(Py_BuildValue("O", nan_sub));
-    }
-
-    /* Otherwise, return the float result. */
-    else { RETURN(Py_BuildValue("d", result)); }
+    PyObject *pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub);
+    return assess_PyNumber(input, pyreturn, default_value, raise_on_invalid, FLOAT);
 }
 
 
@@ -221,11 +95,6 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    PyObject *pyreturn = NULL;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
-    long result;
-    bool error = false, overflow = false;
     static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
 
     /* Read the function argument. */
@@ -233,52 +102,8 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &default_value, &raise_on_invalid))
         return NULL;
 
-    /* If the input is already a number, return now. */
-    if (ANYNUM(input)) {
-        /* If an infinity or NaN was given, raise as an error. */
-        if (Py_IS_INFINITY(PyFloat_AsDouble(input)) || Py_IS_NAN(PyFloat_AsDouble(input))) {
-            pyreturn = handle_error(input, default_value,
-                                    PyObject_IsTrue(raise_on_invalid),
-                                    Py_IS_INFINITY(PyFloat_AsDouble(input)),
-                                    Py_IS_NAN(PyFloat_AsDouble(input)), NULL, NULL_UNI);
-            Py_XINCREF(pyreturn);
-            RETURN(pyreturn);
-        }
-        PyErr_Clear();
-        RETURN(PYNUM_ASINT(input));
-    }
-
-    /* Attempt to convert to char*. Raise an error if not possible. */
-    convert_string(input, &str, &uni);
-    if (STR_NOT_CONVERTED) { return NULL; }
-
-    /* Attempt to convert to a int */
-    if (str != NULL)
-        result = parse_integer_from_string(str, &error, &overflow);
-    else {
-        result = Py_UNICODE_TODIGIT(uni);
-        error = result <= -1;
-    }
-
-    /* If an error occurred, handle it properly. */
-    if (error) {
-        pyreturn = handle_error(input, default_value,
-                                PyObject_IsTrue(raise_on_invalid),
-                                false, false, str, uni);
-        Py_XINCREF(pyreturn);
-        RETURN(pyreturn);
-    }
-
-    /* If there was an overflow error, use Python's integer function. */
-    /* We already know this string parses as an integer, */
-    /* so no error checking is needed and we can return directly. */
-    else if (overflow) { 
-        pyreturn = PYINT_FROM_STRING(str);
-        RETURN(pyreturn);
-    }
-
-    /* Otherwise, return the integer result. */
-    else { RETURN(Py_BuildValue("l", result)); }
+    PyObject *pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL);
+    return assess_PyNumber(input, pyreturn, default_value, raise_on_invalid, INT);
 }
 
 
@@ -289,12 +114,6 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    PyObject *pytemp = NULL, *pyreturn = NULL;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
-    double result;
-    long intresult;
-    bool error = false, overflow = false;
     static char *keywords[] = { "x", "default", "raise_on_invalid", NULL };
 
     /* Read the function argument. */
@@ -302,82 +121,8 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &default_value, &raise_on_invalid))
         return NULL;
 
-    /* If the input is already a number, return now. */
-    if (ANYNUM(input)) {
-        /* If an infinity or NaN was given, raise as an error. */
-        if (Py_IS_INFINITY(PyFloat_AsDouble(input)) || Py_IS_NAN(PyFloat_AsDouble(input))) {
-            pyreturn = handle_error(input, default_value,
-                                    PyObject_IsTrue(raise_on_invalid),
-                                    Py_IS_INFINITY(PyFloat_AsDouble(input)),
-                                    Py_IS_NAN(PyFloat_AsDouble(input)), NULL, NULL_UNI);
-            Py_XINCREF(pyreturn);
-            RETURN(pyreturn);
-        }
-        PyErr_Clear();
-        RETURN(PYNUM_ASINT(input));
-    }
-
-    /* Attempt to convert to char*. Raise an error if not possible. */
-    convert_string(input, &str, &uni);
-    if (STR_NOT_CONVERTED) { return NULL; }
-
-    /* First attempt to convert to an int */
-    if (str != NULL)
-        intresult = parse_integer_from_string(str, &error, &overflow);
-    else {
-        intresult = Py_UNICODE_TODIGIT(uni);
-        error = intresult <= 1;
-    }
-
-    /* If successful, return this integer now. */
-    if (! error) {
-        /* If there was overflow, use Python's conversion function. */
-        if (overflow) {
-            pyreturn = PYINT_FROM_STRING(str);
-            RETURN(pyreturn);
-        }
-        /* Otherwise return the integer. */
-        RETURN(Py_BuildValue("l", intresult));
-    }
-
-    /* Attempt to convert to a float */
-    if (str != NULL)
-        result = parse_float_from_string(str, &error, &overflow);
-    else {
-        result = Py_UNICODE_TONUMERIC(uni);
-        error = result <= -1.0;
-    }
-
-    /* If an error occurred, handle it properly. */
-    /* Call NaN and infinity errors. */
-    if (error || Py_IS_INFINITY(result) || Py_IS_NAN(result)) {
-        pyreturn = handle_error(input, default_value,
-                                PyObject_IsTrue(raise_on_invalid),
-                                Py_IS_INFINITY(result), Py_IS_NAN(result),
-                                str, uni);
-        Py_XINCREF(pyreturn);
-        RETURN(pyreturn);
-    }
-
-    /* If there was an overflow error, use Python's float function. */
-    /* We already know this string parses as a float, */
-    /* so no error checking is needed and we can return directly. */
-    else if (overflow) {
-        pytemp = PYFLOAT_FROM_PYSTRING(input);
-        if (pytemp == NULL) { RETURN(NULL); }
-        pyreturn = PYNUM_ASINT(pytemp);
-        Py_DECREF(pytemp);
-        RETURN(pyreturn);
-    }
-
-    /* Otherwise, return the float as an int using Python's conversion. */
-    else {
-        pytemp = PyFloat_FromDouble(result);
-        if (pytemp == NULL) { RETURN(NULL); }
-        pyreturn = PYNUM_ASINT(pytemp);
-        Py_DECREF(pytemp);
-        RETURN(pyreturn);
-    }
+    PyObject *pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL);
+    return assess_PyNumber(input, pyreturn, default_value, raise_on_invalid, FORCEINT);
 }
 
 
@@ -390,8 +135,6 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *num_only = Py_False;
     PyObject *allow_inf = Py_False;
     PyObject *allow_nan = Py_False;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
     static char *keywords[] = { "x", "str_only", "num_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
@@ -399,24 +142,10 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only, &allow_inf, &allow_nan))
         return NULL;
 
-    /* If the input is a number, return True now unless */
-    /* str_only is True, then return False. */
-    if (ANYNUM(input)) {
-        if (PyObject_IsTrue(str_only)) { RETURN_FALSE; }
-        else { RETURN_TRUE; }
-    }
-    /* If the input is not a number, return False if num_only. */
-    if (PyObject_IsTrue(num_only)) { RETURN_FALSE; }
-
-    /* Attempt to convert to char*. */
-    convert_string(input, &str, &uni);
-
-    /* If it cannot be converted to a string, return False. */
-    if (STR_NOT_CONVERTED) { PyErr_Clear(); RETURN_FALSE; }
-
-    /* If the string can be a float, return True, False otherwise. */
-    if (IS_FLOAT_STR) { RETURN_TRUE; }
-    else { RETURN_FALSE; }
+    if (PyNumber_Check(input))
+        return PyBool_from_bool(PyNumber_is_correct_type(input, REAL, str_only));
+    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
+    return PyString_is_a_number(input, REAL, allow_inf, allow_nan);
 }
 
 
@@ -429,8 +158,6 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *num_only = Py_False;
     PyObject *allow_inf = Py_False;
     PyObject *allow_nan = Py_False;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
     static char *keywords[] = { "x", "str_only", "num_only", "allow_inf", "allow_nan", NULL };
 
     /* Read the function argument. */
@@ -438,24 +165,10 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only, &allow_inf, &allow_nan))
         return NULL;
 
-    /* If str_only is True and this is a number, return False now. */
-    if (PyObject_IsTrue(str_only) && ANYNUM(input)) { RETURN_FALSE; }
-    /* If num_only is True and this is not a number, return False now. */
-    if (PyObject_IsTrue(num_only) && !ANYNUM(input)) { RETURN_FALSE; }
-    /* If the input is a float, return True now. */
-    if (PyFloat_Check(input)) { RETURN_TRUE; }
-    /* If the input is an int, return False now. */
-    if (PYINT_CHECK(input)) { RETURN_FALSE; }
-
-    /* Attempt to convert to char*. */
-    convert_string(input, &str, &uni);
-
-    /* If it cannot be converted to a string, return False. */
-    if (STR_NOT_CONVERTED) { PyErr_Clear(); RETURN_FALSE; }
-
-    /* If the string can be a float, return True, False otherwise. */
-    if (IS_FLOAT_STR) { RETURN_TRUE; }
-    else { RETURN_FALSE; }
+    if (PyNumber_Check(input))
+        return PyBool_from_bool(PyNumber_is_correct_type(input, FLOAT, str_only));
+    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
+    return PyString_is_a_number(input, FLOAT, allow_inf, allow_nan);
 }
 
 
@@ -466,8 +179,6 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
     PyObject *num_only = Py_False;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
     static char *keywords[] = { "x", "str_only", "num_only", NULL };
 
     /* Read the function argument. */
@@ -475,24 +186,10 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only))
         return NULL;
 
-    /* If str_only is True and this is a number, return False now. */
-    if (PyObject_IsTrue(str_only) && ANYNUM(input)) { RETURN_FALSE; }
-    /* If num_only is True and this is not a number, return False now. */
-    if (PyObject_IsTrue(num_only) && !ANYNUM(input)) { RETURN_FALSE; }
-    /* If the input is an int, return True now. */
-    if (PYINT_CHECK(input)) { RETURN_TRUE; }
-    /* If the input is a float, return False now. */
-    if (PyFloat_Check(input)) { RETURN_FALSE; }
-
-    /* Attempt to convert to char*. */
-    convert_string(input, &str, &uni);
-
-    /* If it cannot be converted to a string, return False. */
-    if (STR_NOT_CONVERTED) { PyErr_Clear(); RETURN_FALSE; }
-
-    /* If the string can be an int, return True, False otherwise. */
-    if (IS_INTEGER_STR) { RETURN_TRUE; }
-    else { RETURN_FALSE; }
+    if (PyNumber_Check(input))
+        return PyBool_from_bool(PyNumber_is_correct_type(input, INT, str_only));
+    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
+    return PyString_is_a_number(input, INT, NULL, NULL);
 }
 
 
@@ -500,13 +197,9 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *input = NULL, *intlike = NULL, *pyresult = NULL;
+    PyObject *input = NULL;
     PyObject *str_only = Py_False;
     PyObject *num_only = Py_False;
-    char *str = NULL;
-    Py_UCS4 uni = NULL_UNI;
-    double result;
-    bool error, overflow;
     static char *keywords[] = { "x", "str_only", "num_only", NULL };
 
     /* Read the function argument. */
@@ -514,44 +207,12 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only))
         return NULL;
 
-    /* If str_only is True and this is a number, return False now. */
-    if (PyObject_IsTrue(str_only) && ANYNUM(input)) { RETURN_FALSE; }
-    /* If num_only is True and this is not a number, return False now. */
-    if (PyObject_IsTrue(num_only) && !ANYNUM(input)) { RETURN_FALSE; }
-    /* If the input is an int, return True now. */
-    if (PYINT_CHECK(input)) { RETURN_TRUE; }
-    /* If the input is a float, return the result of "is_integer". */
-    else if (PyFloat_Check(input)) { RETURN(PyObject_CallMethod(input, "is_integer", NULL)); }
-
-    /* Attempt to convert to char*. */
-    convert_string(input, &str, &uni);
-
-    /* If it cannot be converted to a string, return False. */
-    if (STR_NOT_CONVERTED) { PyErr_Clear(); RETURN_FALSE; }
-
-    /* If the string can be an int, return True now. */
-    if (IS_INTEGER_STR) { RETURN_TRUE; }
-
-    /* Try converting the string to a float, */
-    /* and then running is_integer on that. */
-    if (str != NULL)
-        result = parse_float_from_string(str, &error, &overflow);
-    else {
-        result = Py_UNICODE_TONUMERIC(uni);
-        error = result <= -1.0;
-    }
-
-    /* If there was an error, return False now. */
-    if (error) { RETURN_FALSE; }
-
-    /* Convert to float type and return the result of "is_integer". */
-    pyresult = PyFloat_FromDouble(result);
-    if (pyresult == NULL) { RETURN(NULL); }
-    intlike = PyObject_CallMethod(pyresult, "is_integer", NULL);
-    if (intlike == NULL) { RETURN(NULL); }
-    Py_DECREF(pyresult);
-    RETURN(intlike);
+    if (PyNumber_Check(input))
+        return PyBool_from_bool(PyNumber_is_correct_type(input, INTLIKE, str_only));
+    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
+    return PyString_is_a_number(input, INTLIKE, NULL, NULL);
 }
+
 
 static PyObject *
 fastnumbers_safe_real(PyObject *self, PyObject *args, PyObject *kwargs) {

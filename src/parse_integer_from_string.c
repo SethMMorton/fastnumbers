@@ -10,6 +10,7 @@ long parse_integer_from_string (const char *str, bool *error, bool *overflow)
     register long value = 0L;
     register bool valid = false;
     *overflow = false;
+    *error = true;
  
     consume_white_space(&str);
     const long sign = consume_sign_and_is_negative(&str) ? -1L : 1L;

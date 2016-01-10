@@ -12,6 +12,7 @@ inline static bool check_for_overflow(const unsigned long value, const unsigned 
 double parse_float_from_string (const char *str, bool *error, bool *overflow)
 {
     *overflow = false;
+    *error = true;
 
     consume_white_space(&str);
     const long sign = consume_sign_and_is_negative(&str) ? -1L : 1L;
@@ -49,37 +50,45 @@ double parse_float_from_string (const char *str, bool *error, bool *overflow)
     }
     register long double value = (long double) intvalue;
 
-    if (!consume_python2_long_literal_lL(&str)) {
-        register int expon;
+    /* If long literal, quit here. */
 
-        if (is_decimal(str)) {
-            str += 1;
-            register unsigned long decimal = 0UL;
-            for (expon = 0;
-                 is_valid_digit(str);
-                 valid = true, str += 1, ndigits += 1, expon += 1)
-            {
-                const unsigned long tmpval = ascii2ulong(str);
-                *overflow = *overflow || check_for_overflow(decimal, tmpval);
-                decimal *= 10L;
-                decimal += tmpval;
-            }
-            *overflow = *overflow || (ndigits >= DBL_DIG - 1);  // Too many digits loses precision
-            value += apply_power_of_ten_scaling(decimal, -expon);
-        }
-     
-        if (is_e_or_E(str) && valid) {
-            valid = false;
-            str += 1;
-            const int exp_sign = consume_sign_and_is_negative(&str) ? -1 : 1;
-            for (expon = 0; is_valid_digit(str); valid = true, str += 1) {
-                expon *= 10;
-                expon += ascii2uint(str);
-            }
-            *overflow = *overflow || (expon > 255);  // Exponent > 255 is unreliable
-            value = apply_power_of_ten_scaling(value, exp_sign * expon);
-        }
+    if (consume_python2_long_literal_lL(&str)) {
+        *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
+        *overflow = *overflow || (value > DBL_MAX);  // One last overflow check
+        return sign * value;
+    }
 
+    /* Parse decimal part. */
+
+    register int expon;
+    if (is_decimal(str)) {
+        str += 1;
+        register unsigned long decimal = 0UL;
+        for (expon = 0;
+             is_valid_digit(str);
+             valid = true, str += 1, ndigits += 1, expon += 1)
+        {
+            const unsigned long tmpval = ascii2ulong(str);
+            *overflow = *overflow || check_for_overflow(decimal, tmpval);
+            decimal *= 10L;
+            decimal += tmpval;
+        }
+        *overflow = *overflow || (ndigits >= DBL_DIG - 1);  // Too many digits loses precision
+        value += apply_power_of_ten_scaling(decimal, -expon);
+    }
+ 
+    /* Parse exponential part. */
+
+    if (is_e_or_E(str) && valid) {
+        valid = false;
+        str += 1;
+        const int exp_sign = consume_sign_and_is_negative(&str) ? -1 : 1;
+        for (expon = 0; is_valid_digit(str); valid = true, str += 1) {
+            expon *= 10;
+            expon += ascii2int(str);
+        }
+        *overflow = *overflow || (expon > 255);  // Exponent > 255 is unreliable
+        value = apply_power_of_ten_scaling(value, exp_sign * expon);
     }
 
     *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
@@ -87,7 +96,7 @@ double parse_float_from_string (const char *str, bool *error, bool *overflow)
     return sign * value;
 }
 
-bool check_for_overflow(const unsigned long value, const unsigned long cur_val)
+inline bool check_for_overflow(const unsigned long value, const unsigned long cur_val)
 {
     static const unsigned long overflow_cutoff = ULONG_MAX / 10UL;
     static const unsigned long overflow_last_digit_limit = ULONG_MAX % 10UL;
@@ -95,7 +104,7 @@ bool check_for_overflow(const unsigned long value, const unsigned long cur_val)
           (value == overflow_cutoff && cur_val > overflow_last_digit_limit);
 }
 
-long double apply_power_of_ten_scaling(const long double value, const int expon)
+inline long double apply_power_of_ten_scaling(const long double value, const int expon)
 {
     const long double scale = power_of_ten_scaling_factor(abs(expon));
     return expon < 0 ? value / scale : value * scale;

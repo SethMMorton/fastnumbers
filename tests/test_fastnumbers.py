@@ -54,9 +54,9 @@ numeric_not_digit_not_int = [x for x in numeric_not_digit if not unicodedata.num
 def a_number(s):
     s = s.strip()
     if python_version_tuple()[0] == '3' and isinstance(s, bytes):
-        s = s.rstrip(b'\0')
+        s = s.split(b'\0')[0]
     else:
-        s = s.rstrip('\0')
+        s = s.split('\0')[0]
     try:
         int(s)
     except ValueError:
@@ -667,7 +667,7 @@ def test_fast_forceint_given_nan_string_raises_ValueError_with_raise_on_invalid_
 
 
 def test_fast_forceint_given_inf_string_raises_OverflowError_with_raise_on_invalid_as_True():
-    with raises(OverflowError): 
+    with raises(ValueError): 
         fastnumbers.fast_forceint('inf', raise_on_invalid=True)
         fastnumbers.fast_forceint('-infinity', raise_on_invalid=True)
         fastnumbers.fast_forceint('inf', None, True)
