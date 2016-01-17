@@ -53,10 +53,6 @@ numeric_not_digit_not_int = [x for x in numeric_not_digit if not unicodedata.num
 
 def a_number(s):
     s = s.strip()
-    if python_version_tuple()[0] == '3' and isinstance(s, bytes):
-        s = s.split(b'\0')[0]
-    else:
-        s = s.split('\0')[0]
     try:
         int(s)
     except ValueError:
@@ -71,11 +67,11 @@ def a_number(s):
     if python_version_tuple()[0] == '3':
         if isinstance(s, bytes):
             return False
-    if re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
+    if re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$', s, re.U):
         return True
-    if re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U):
+    if re.match(r'\s*([-+]?\d+[lL]?)\s*$', s, re.U):
         return True
-    if re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
+    if re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$', s, re.U):
         return True
     if int(python_version_tuple()[0]) >= 3 or not isinstance(s, str):
         if s in numeric:

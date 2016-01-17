@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <limits.h>
+#include "parsing.h"
 #include "py_shortcuts.h"
 #include "fast_conversions.h"
 
@@ -182,7 +183,8 @@ PyObject* PyString_is_a_number(PyObject *obj, const PyNumberType type,
     const char *str = convert_PyString_to_str(obj, &bytes);
     if (str == NULL)
         return PyUnicode_is_a_number(obj, type);
-    }
+    else if (is_null(str))  /* Str contained null characters. */
+        Py_RETURN_FALSE;
     bool result = false;
     switch (type) {
     case REAL:
@@ -211,7 +213,8 @@ PyObject* PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
     PyObject *bytes = NULL;
     const char *str = convert_PyString_to_str(obj, &bytes);
     if (str != NULL) {
-        PyObject *pyreturn = str_to_PyNumber(str, type, inf_sub, nan_sub);
+        PyObject *pyreturn = is_null(str) ? NULL
+                                          : str_to_PyNumber(str, type, inf_sub, nan_sub);
         Py_XDECREF(bytes);
         return pyreturn;
     }
