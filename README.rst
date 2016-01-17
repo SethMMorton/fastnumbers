@@ -18,7 +18,7 @@ Additionally, the user has control over what happens in the event that the
 input string cannot be converted to a number:
 
     - a ``ValueError`` can be raised (like the built-in ``float`` or ``int``)
-    - the input can be returned as-is
+    - the input can be returned as-is (this is the default behavior)
     - a default value can be returned
 
 Examples
