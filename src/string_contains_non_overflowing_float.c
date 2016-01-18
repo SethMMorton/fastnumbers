@@ -6,9 +6,10 @@
 bool string_contains_non_overflowing_float (const char *str)
 {
     register bool valid = false;
+    register unsigned ndigits = 0;
 
-    consume_white_space(&str);
-    consume_sign(&str); 
+    consume_white_space(str);
+    consume_sign(str); 
  
     /* Are we possibly dealing with infinity or NAN? */
 
@@ -29,10 +30,10 @@ bool string_contains_non_overflowing_float (const char *str)
     }
 
     /* Check if it is a float. */
-    register unsigned ndigits = 0;
+    ndigits = 0;
     while (is_valid_digit(str)) { str += 1; ndigits += 1; valid = true; }
 
-    if (!consume_python2_long_literal_lL(&str)) {
+    if (!consume_python2_long_literal_lL(str)) {
 
         if (is_decimal(str)) {  /* After decimal digits */
             str += 1;
@@ -42,7 +43,7 @@ bool string_contains_non_overflowing_float (const char *str)
         if (is_e_or_E(str) && valid) {  /* Exponent */
             valid = false;
             str += 1;
-            consume_sign(&str);         
+            consume_sign(str);         
             while (is_valid_digit(str)) { str += 1; valid = true; }
         }
 

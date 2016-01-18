@@ -6,16 +6,22 @@
 #include "fast_conversions.h"
 
 static long double power_of_ten_scaling_factor(const int expon);
-inline static long double apply_power_of_ten_scaling(const long double value, const int expon);
-inline static bool check_for_overflow(const unsigned long value, const unsigned long cur_val);
+static long double apply_power_of_ten_scaling(const long double value, const int expon);
+static bool check_for_overflow(const unsigned long value, const unsigned long cur_val);
 
 double parse_float_from_string (const char *str, bool *error, bool *overflow)
 {
+    register long sign = 1L;
+    register unsigned long intvalue = 0UL;
+    register bool valid = false;
+    register int ndigits = 0;
+    register int expon = 0;
+    register long double value = 0.0L;
     *overflow = false;
     *error = true;
 
-    consume_white_space(&str);
-    const long sign = consume_sign_and_is_negative(&str) ? -1L : 1L;
+    consume_white_space(str);
+    sign = consume_sign_and_is_negative(str) ? -1L : 1L;
 
     /* Are we possibly dealing with infinity or NAN? */
 
@@ -39,31 +45,27 @@ double parse_float_from_string (const char *str, bool *error, bool *overflow)
 
     /* Otherwise parse as an actual number. */
 
-    register unsigned long intvalue = 0UL;
-    register bool valid = false;
-    register int ndigits = 0;
     for (intvalue = 0UL; is_valid_digit(str); valid = true, ndigits += 1, str += 1) {
         const unsigned long tmpval = ascii2ulong(str);
         *overflow = *overflow || check_for_overflow(intvalue, tmpval);
         intvalue *= 10L;
         intvalue += tmpval;
     }
-    register long double value = (long double) intvalue;
+    value = (long double) intvalue;
 
     /* If long literal, quit here. */
 
-    if (consume_python2_long_literal_lL(&str)) {
+    if (consume_python2_long_literal_lL(str)) {
         *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
-        *overflow = *overflow || (value > DBL_MAX);  // One last overflow check
-        return sign * value;
+        *overflow = *overflow || (value > DBL_MAX);  /* One last overflow check */
+        return (double) (sign * value);
     }
 
     /* Parse decimal part. */
 
-    register int expon;
     if (is_decimal(str)) {
-        str += 1;
         register unsigned long decimal = 0UL;
+        str += 1;
         for (expon = 0;
              is_valid_digit(str);
              valid = true, str += 1, ndigits += 1, expon += 1)
@@ -73,30 +75,29 @@ double parse_float_from_string (const char *str, bool *error, bool *overflow)
             decimal *= 10L;
             decimal += tmpval;
         }
-        *overflow = *overflow || (ndigits >= DBL_DIG - 1);  // Too many digits loses precision
+        *overflow = *overflow || (ndigits >= DBL_DIG - 1);  /* Too many digits loses precision */
         value += apply_power_of_ten_scaling(decimal, -expon);
     }
  
     /* Parse exponential part. */
 
     if (is_e_or_E(str) && valid) {
+        const int exp_sign = ++str && consume_sign_and_is_negative(str) ? -1 : 1;
         valid = false;
-        str += 1;
-        const int exp_sign = consume_sign_and_is_negative(&str) ? -1 : 1;
         for (expon = 0; is_valid_digit(str); valid = true, str += 1) {
             expon *= 10;
             expon += ascii2int(str);
         }
-        *overflow = *overflow || (expon > 255);  // Exponent > 255 is unreliable
+        *overflow = *overflow || (expon > 255);  /* Exponent > 255 is unreliable */
         value = apply_power_of_ten_scaling(value, exp_sign * expon);
     }
 
     *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
-    *overflow = *overflow || (value > DBL_MAX);  // One last overflow check
-    return sign * value;
+    *overflow = *overflow || (value > DBL_MAX);  /* One last overflow check */
+    return (double) (sign * value);
 }
 
-inline bool check_for_overflow(const unsigned long value, const unsigned long cur_val)
+bool check_for_overflow(const unsigned long value, const unsigned long cur_val)
 {
     static const unsigned long overflow_cutoff = ULONG_MAX / 10UL;
     static const unsigned long overflow_last_digit_limit = ULONG_MAX % 10UL;
@@ -104,7 +105,7 @@ inline bool check_for_overflow(const unsigned long value, const unsigned long cu
           (value == overflow_cutoff && cur_val > overflow_last_digit_limit);
 }
 
-inline long double apply_power_of_ten_scaling(const long double value, const int expon)
+long double apply_power_of_ten_scaling(const long double value, const int expon)
 {
     const long double scale = power_of_ten_scaling_factor(abs(expon));
     return expon < 0 ? value / scale : value * scale;

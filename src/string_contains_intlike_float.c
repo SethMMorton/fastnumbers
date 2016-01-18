@@ -3,9 +3,10 @@
 #include "fast_conversions.h"
 
 
-inline static bool between_chars_are_zero_or_decimal(const char* start, const char* end)
+static bool between_chars_are_zero_or_decimal(const char* start, const char* end)
 {
-    for (const char *c = start; c < end; c += 1) {
+    register const char *c = NULL;
+    for (c = start; c < end; c += 1) {
         if (!is_zero(c) && !is_decimal(c))
             return false;
     }
@@ -15,40 +16,47 @@ inline static bool between_chars_are_zero_or_decimal(const char* start, const ch
 bool string_contains_intlike_float (const char *str)
 {
     register bool valid = false;
+    register int pre_ndigits = 0;
+    register int post_ndigits = 0;
+    register int expon = 0;
+    register int exp_sign = 0;
+    register const char* pre_decimal_end = NULL;
+    register const char *decimal_start = NULL;
+    register const char *float_end = NULL;
 
-    consume_white_space(&str);
-    consume_sign(&str); 
+    consume_white_space(str);
+    consume_sign(str); 
  
     /* Before decimal. Keep track of number of digits read. */
 
-    register int pre_ndigits = 0;
+    pre_ndigits = 0;
     while (is_valid_digit(str)) { valid = true; pre_ndigits += 1; str += 1; }
-    const char* pre_decimal_end = str;
+    pre_decimal_end = str;
 
     /* If a long literal, stop here. */
-    if (consume_python2_long_literal_lL(&str))
+    if (consume_python2_long_literal_lL(str))
         return valid && trailing_characters_are_vaild_and_nul_terminated(&str);
 
     /* Decimal part of float. Keep track of number of digits read */
     /* as well as beginning and end locations. */
 
-    register int post_ndigits = 0;
-    const char *decimal_start = str;
+    post_ndigits = 0;
+    decimal_start = str;
     if (is_decimal(str)) {  /* After decimal digits */
         str += 1;
         decimal_start = str;
         while (is_valid_digit(str)) { valid = true; post_ndigits += 1; str += 1; }
     }
-    const char *float_end = str;
+    float_end = str;
 
     /* Exponential part of float. Parse the magnitude. */
 
-    register int expon = 0;
-    register int exp_sign = 0;
+    expon = 0;
+    exp_sign = 0;
     if (is_e_or_E(str) && valid) {  /* Exponent */
         valid = false;
         str += 1;
-        exp_sign = consume_sign_and_is_negative(&str) ? -1 : 1;
+        exp_sign = consume_sign_and_is_negative(str) ? -1 : 1;
         for (expon = 0; is_valid_digit(str); valid = true, str += 1) {
             expon *= 10;
             expon += ascii2int(str);

@@ -6,8 +6,8 @@ bool string_contains_float (const char *str, const bool allow_inf, const bool al
 {
     register bool valid = false;
 
-    consume_white_space(&str);
-    consume_sign(&str); 
+    consume_white_space(str);
+    consume_sign(str); 
  
     /* Are we possibly dealing with infinity or NAN? */
 
@@ -31,7 +31,7 @@ bool string_contains_float (const char *str, const bool allow_inf, const bool al
 
     while (is_valid_digit(str)) { str += 1; valid = true; }
 
-    if (!consume_python2_long_literal_lL(&str)) {
+    if (!consume_python2_long_literal_lL(str)) {
 
         if (is_decimal(str)) {  /* After decimal digits */
             str += 1;
@@ -41,7 +41,7 @@ bool string_contains_float (const char *str, const bool allow_inf, const bool al
         if (is_e_or_E(str) && valid) {  /* Exponent */
             valid = false;
             str += 1;
-            consume_sign(&str);         
+            consume_sign(str);         
             while (is_valid_digit(str)) { str += 1; valid = true; }
         }
 

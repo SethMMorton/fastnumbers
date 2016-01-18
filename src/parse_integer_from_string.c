@@ -3,17 +3,18 @@
 #include "parsing.h"
 #include "fast_conversions.h"
 
-inline static bool check_for_overflow(const long value, const long cur_val);
+static bool check_for_overflow(const long value, const long cur_val);
 
 long parse_integer_from_string (const char *str, bool *error, bool *overflow)
 {
     register long value = 0L;
     register bool valid = false;
+    register long sign = 1L;
     *overflow = false;
     *error = true;
  
-    consume_white_space(&str);
-    const long sign = consume_sign_and_is_negative(&str) ? -1L : 1L;
+    consume_white_space(str);
+    sign = consume_sign_and_is_negative(str) ? -1L : 1L;
 
     /* Convert digits, if any. Check for overflow. */
  
@@ -24,7 +25,7 @@ long parse_integer_from_string (const char *str, bool *error, bool *overflow)
         value += tmpval;
     }
  
-    consume_python2_long_literal_lL(&str);
+    consume_python2_long_literal_lL(str);
     *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
     return sign * value;
 
