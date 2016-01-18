@@ -15,29 +15,36 @@ Please see the
 for timing details.
 Check out the `API <http://pythonhosted.org//fastnumbers/api.html>`_.
 
-**NOTE:** The old :func:`safe_real`, :func:`safe_float`, :func:`safe_int`, and
-:func:`safe_forceint` functions are deprecated as of :mod:`fastnumbers` version
->= 0.3.0; :func:`fast_real`, :func:`fast_float`, :func:`fast_int`, and
-:func:`fast_forceint` have each been reimplemented to fall back on the
-"safe" algorithm if overflow or loss of precision is detect and so the
-separate "safe" functions are no longer needed.
-
 Quick Description
 -----------------
 
-:mod:`fastnumbers` is essentially a fast C implementation of the following
-Pure Python function:
+:mod:`fastnumbers` contains functions that are fast C implementations similar
+to the following Pure Python function:
 
 .. code-block:: python
 
-    def fast_float(input, raise_on_invalid=False, default=None):
+    def fast_float(input, default=None, raise_on_invalid=False, inf=None, nan=None):
+        import math
         try:
-            return float(input)
+            x = float(input)
         except ValueError:
             if raise_on_invalid:
                 raise
             return default if default is not None else input
-    
+        else:
+            if inf is not None and math.isinf(x):
+                return inf
+            elif nan is not None and math.isnan(x):
+                return nan
+            else:
+                return x
+
+In addition to ``fast_float``, there are also ``fast_real``,
+``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``, ``isint``, 
+and ``isintlike`` - please see the
+`API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
+for full details.
+
 Some example usage:
 
 .. code-block:: python
@@ -58,6 +65,15 @@ Some example usage:
     >>> # Integers are converted to floats
     >>> fast_float(54)
     54.0
+    >>> # One can ask inf or nan to be substituted with another value
+    >>> fast_float('nan')
+    nan
+    >>> fast_float('nan', nan=0.0)
+    0.0
+    >>> fast_float(float('nan'), nan=0.0)
+    0.0
+    >>> fast_float('56.07', nan=0.0)
+    56.07
     >>> # The default built-in float behavior can be triggered with
     >>> # "raise_on_invalid" set to True. 
     >>> fast_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
@@ -69,10 +85,6 @@ Some example usage:
     5.0
     >>> fast_float(u'\u2466')  # 7 enclosed in a circle
     7.0
-
-To achieve this, the module makes some assumptions about the input type
-(input is ``int`` (or ``long``), ``float``, or ``str`` (or ``unicode``)),
-and otherwise a ``TypeError`` is raised.
 
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
 function of your choice to ``locale.atof``.

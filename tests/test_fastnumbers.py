@@ -5,6 +5,7 @@ import re
 import sys
 import os
 import math
+import warnings
 import unicodedata
 from random import randint, sample
 from itertools import repeat
@@ -52,10 +53,6 @@ numeric_not_digit_not_int = [x for x in numeric_not_digit if not unicodedata.num
 
 def a_number(s):
     s = s.strip()
-    if python_version_tuple()[0] == '3' and isinstance(s, bytes):
-        s = s.rstrip(b'\0')
-    else:
-        s = s.rstrip('\0')
     try:
         int(s)
     except ValueError:
@@ -70,11 +67,11 @@ def a_number(s):
     if python_version_tuple()[0] == '3':
         if isinstance(s, bytes):
             return False
-    if re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
+    if re.match(r'\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$', s, re.U):
         return True
-    if re.match(r'\s*([-+]?\d+[lL]?)(\s*$|\0)', s, re.U):
+    if re.match(r'\s*([-+]?\d+[lL]?)\s*$', s, re.U):
         return True
-    if re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)(\s*$|\0)', s, re.U):
+    if re.match(r'\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$', s, re.U):
         return True
     if int(python_version_tuple()[0]) >= 3 or not isinstance(s, str):
         if s in numeric:
@@ -86,9 +83,31 @@ def test_version():
     assert hasattr(fastnumbers, '__version__')
 
 
-# NOTE: safe_* functions are not tested because internally the code
-#       for the fast_* functions is reused... only the docstrings
-#       are different.
+##################
+# Safe Functions #
+##################
+
+def test_safe_and_fast_are_the_same():
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_real(0.0) == fastnumbers.safe_real(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_real instead of safe_real'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_float(0.0) == fastnumbers.safe_float(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_float instead of safe_float'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_int(0.0) == fastnumbers.safe_int(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_int instead of safe_int'
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always', DeprecationWarning)
+        assert fastnumbers.fast_forceint(0.0) == fastnumbers.safe_forceint(0.0)
+    assert issubclass(w[0].category, DeprecationWarning)
+    assert str(w[0].message) == 'please use fast_forceint instead of safe_forceint'
 
 #############
 # Fast Real #
@@ -644,7 +663,7 @@ def test_fast_forceint_given_nan_string_raises_ValueError_with_raise_on_invalid_
 
 
 def test_fast_forceint_given_inf_string_raises_OverflowError_with_raise_on_invalid_as_True():
-    with raises(OverflowError): 
+    with raises(ValueError): 
         fastnumbers.fast_forceint('inf', raise_on_invalid=True)
         fastnumbers.fast_forceint('-infinity', raise_on_invalid=True)
         fastnumbers.fast_forceint('inf', None, True)

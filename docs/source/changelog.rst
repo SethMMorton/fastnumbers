@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+01-18-2016 v. 0.7.0
+'''''''''''''''''''
+
+    - Broke all functions into smaller components, eliminating
+      a lot of duplication.
+    - Sped up functions by eliminating an unnecessary string copy.
+    - Improved documentation.
+
 11-01-2015 v. 0.6.2
 '''''''''''''''''''
 
