@@ -103,7 +103,7 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
     /* call it an error and quit. */
     for (i = 0; i < u_len; ++i) {
         const Py_UCS4 uc = read_PyUnicode_char(us, i);
-        if (!Py_UNICODE_ISSPACE((Py_UNICODE) uc)) {
+        if (!Py_UNICODE_ISSPACE((unsigned long) uc)) {
             if (found_char) {
                 if (needs_free) free(us);
                 return ERR_UNI;
