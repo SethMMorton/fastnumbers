@@ -11,4 +11,3 @@ fastnumbers API
 
    fast.rst
    checks.rst
-   safe.rst
