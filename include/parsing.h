@@ -40,8 +40,11 @@ extern "C" {
 	                                      (consume_sign(str) && true) : \
 	                                      (consume_sign(str) && false))
 
-bool case_insensitive_match(const char *s, const char *t);
-bool trailing_characters_are_vaild_and_nul_terminated(const char **str);
+bool
+case_insensitive_match(const char *s, const char *t);
+
+bool
+trailing_characters_are_vaild_and_nul_terminated(const char **str);
 
 #ifdef __cplusplus
 } /* extern "C" */

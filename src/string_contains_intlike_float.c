@@ -3,17 +3,19 @@
 #include "fast_conversions.h"
 
 
-static bool between_chars_are_zero_or_decimal(const char* start, const char* end)
+static bool
+between_chars_are_zero_or_decimal(const char* start, const char* end)
 {
     register const char *c = NULL;
-    for (c = start; c < end; c += 1) {
+    for (c = start; c < end; c++) {
         if (!is_zero(c) && !is_decimal(c))
             return false;
     }
     return true;
 }
 
-bool string_contains_intlike_float (const char *str)
+bool
+string_contains_intlike_float (const char *str)
 {
     register bool valid = false;
     register int pre_ndigits = 0;
@@ -30,7 +32,7 @@ bool string_contains_intlike_float (const char *str)
     /* Before decimal. Keep track of number of digits read. */
 
     pre_ndigits = 0;
-    while (is_valid_digit(str)) { valid = true; pre_ndigits += 1; str += 1; }
+    while (is_valid_digit(str)) { valid = true; pre_ndigits++; str++; }
     pre_decimal_end = str;
 
     /* If a long literal, stop here. */
@@ -43,9 +45,9 @@ bool string_contains_intlike_float (const char *str)
     post_ndigits = 0;
     decimal_start = str;
     if (is_decimal(str)) {  /* After decimal digits */
-        str += 1;
+        str++;
         decimal_start = str;
-        while (is_valid_digit(str)) { valid = true; post_ndigits += 1; str += 1; }
+        while (is_valid_digit(str)) { valid = true; post_ndigits++; str++; }
     }
     float_end = str;
 
@@ -55,16 +57,16 @@ bool string_contains_intlike_float (const char *str)
     exp_sign = 0;
     if (is_e_or_E(str) && valid) {  /* Exponent */
         valid = false;
-        str += 1;
+        str++;
         exp_sign = consume_sign_and_is_negative(str) ? -1 : 1;
-        for (expon = 0; is_valid_digit(str); valid = true, str += 1) {
+        for (expon = 0; is_valid_digit(str); valid = true, str++) {
             expon *= 10;
             expon += ascii2int(str);
         }
     }
 
-    /* Move the decimal place left or right based on the exponential magnitude. */
-    /* Only zeros are allowed to follow the decimal place. */ 
+    /* Move the decimal place left or right based on the exponential magnitude.
+       Only zeros are allowed to follow the decimal place. */ 
     if (expon && post_ndigits) {
         if (exp_sign < 0 && expon >= pre_ndigits)
             valid = false;

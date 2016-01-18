@@ -6,14 +6,16 @@
 #include "fast_conversions.h"
 
 
-PyObject* PyBool_from_bool_and_DECREF(const bool b, PyObject *obj)
+PyObject*
+PyBool_from_bool_and_DECREF(const bool b, PyObject *obj)
 {
     Py_XDECREF(obj);
     return PyBool_from_bool(b);
 }
 
 
-static bool _PyFloat_is_Intlike(PyObject *obj) {
+static bool
+_PyFloat_is_Intlike(PyObject *obj) {
     PyObject *py_is_intlike = PyObject_CallMethod(obj, "is_integer", NULL);
     if (py_is_intlike == NULL)
         return PyErr_Clear(), false;
@@ -25,7 +27,8 @@ static bool _PyFloat_is_Intlike(PyObject *obj) {
 }
 
 
-static bool double_is_intlike(const double val)
+static bool
+double_is_intlike(const double val)
 {
     if (val < LONG_MAX && val > LONG_MIN)
         return val == round(val);
@@ -38,7 +41,8 @@ static bool double_is_intlike(const double val)
 }
 
 
-static bool PyFloat_is_Intlike(PyObject *obj)
+static bool
+PyFloat_is_Intlike(PyObject *obj)
 {
     const double dval = PyFloat_AS_DOUBLE(obj);
     if (dval < LONG_MAX && dval > LONG_MIN)
@@ -47,7 +51,8 @@ static bool PyFloat_is_Intlike(PyObject *obj)
 }
 
 
-static bool unicode_result_error(const double d, const long i, const PyNumberType type)
+static bool
+unicode_result_error(const double d, const long i, const PyNumberType type)
 {
     switch (type) {
     case REAL:
@@ -63,15 +68,20 @@ static bool unicode_result_error(const double d, const long i, const PyNumberTyp
 }
 
 
-static PyObject* PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
-                                      PyObject *inf_sub, PyObject *nan_sub)
+static PyObject*
+PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
+                     PyObject *inf_sub, PyObject *nan_sub)
 {
     switch (type) {
     case REAL:
     case FLOAT:
-        if (nan_sub != NULL && PyFloat_CheckExact(pynum) && Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
+        if (nan_sub != NULL &&
+            PyFloat_CheckExact(pynum) &&
+            Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(nan_sub), nan_sub;
-        if (inf_sub != NULL && PyFloat_CheckExact(pynum) && Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
+        if (inf_sub != NULL &&
+            PyFloat_CheckExact(pynum) &&
+            Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(inf_sub), inf_sub;
         return type == REAL ? (Py_INCREF(pynum), pynum) : PyNumber_Float(pynum);
     case INT:
@@ -90,7 +100,8 @@ static PyObject* PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
 }
 
 
-static PyObject* PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType type)
+static PyObject*
+PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType type)
 {
     const double dresult = Py_UNICODE_TONUMERIC((Py_UNICODE) uni);
     const long iresult = Py_UNICODE_TODIGIT((Py_UNICODE) uni);
@@ -98,7 +109,8 @@ static PyObject* PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType typ
         return NULL;
     switch (type) {
     case REAL:
-        return iresult > -1 ? long_to_PyInt(iresult) : PyFloat_FromDouble(dresult);
+        return iresult > -1 ? long_to_PyInt(iresult)
+                            : PyFloat_FromDouble(dresult);
     case FLOAT:
         return PyFloat_FromDouble(dresult);
     case INT:
@@ -122,7 +134,8 @@ static PyObject* PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType typ
 }
 
 
-static PyObject* convert_PyFloat_to_PyInt(PyObject * fobj)
+static PyObject*
+convert_PyFloat_to_PyInt(PyObject * fobj)
 {
     if (fobj == NULL)
         return NULL;
@@ -134,8 +147,9 @@ static PyObject* convert_PyFloat_to_PyInt(PyObject * fobj)
 }
 
 
-static PyObject* str_to_PyNumber(const char* str, const PyNumberType type,
-                          PyObject *inf_sub, PyObject *nan_sub)
+static PyObject*
+str_to_PyNumber(const char* str, const PyNumberType type,
+                PyObject *inf_sub, PyObject *nan_sub)
 {
     bool error = false, overflow = false;
     PyObject *pyresult = NULL;
@@ -172,7 +186,8 @@ static PyObject* str_to_PyNumber(const char* str, const PyNumberType type,
     {
         long result = parse_integer_from_string(str, &error, &overflow);
         if (!error)
-            pyresult = overflow ? str_to_PyInt((char*) str) : long_to_PyInt(result);        
+            pyresult = overflow ? str_to_PyInt((char*) str)
+                                : long_to_PyInt(result);        
         break;
     }
     case INTLIKE:
@@ -188,7 +203,8 @@ static PyObject* str_to_PyNumber(const char* str, const PyNumberType type,
 }
 
 
-static bool PyUnicode_is_int(PyObject *obj)
+static bool
+PyUnicode_is_int(PyObject *obj)
 {
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (uni == NULL_UNI)
@@ -197,7 +213,8 @@ static bool PyUnicode_is_int(PyObject *obj)
 }
 
 
-static bool PyUnicode_is_intlike(PyObject *obj)
+static bool
+PyUnicode_is_intlike(PyObject *obj)
 {
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (uni == NULL_UNI)
@@ -213,7 +230,8 @@ static bool PyUnicode_is_intlike(PyObject *obj)
 }
 
 
-static bool PyUnicode_is_float(PyObject *obj)
+static bool
+PyUnicode_is_float(PyObject *obj)
 {
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (uni == NULL_UNI)
@@ -222,7 +240,8 @@ static bool PyUnicode_is_float(PyObject *obj)
 }
 
 
-static PyObject* PyUnicode_is_a_number(PyObject *obj, const PyNumberType type)
+static PyObject*
+PyUnicode_is_a_number(PyObject *obj, const PyNumberType type)
 {
     switch (type) {
     case REAL:
@@ -238,10 +257,12 @@ static PyObject* PyUnicode_is_a_number(PyObject *obj, const PyNumberType type)
 }
 
 
-bool PyNumber_is_correct_type(PyObject *obj, const PyNumberType type, PyObject *str_only)
+bool
+PyNumber_is_correct_type(PyObject *obj,
+                         const PyNumberType type,
+                         PyObject *str_only)
 {
     if (PyObject_IsTrue(str_only)) return false;
-    /* if (PyComplex_CheckExact(obj)) return false; */ /* Complex not allowed! */
     switch (type) {
     case REAL:
         return true;
@@ -257,8 +278,9 @@ bool PyNumber_is_correct_type(PyObject *obj, const PyNumberType type, PyObject *
 }
 
 
-PyObject* PyString_is_a_number(PyObject *obj, const PyNumberType type,
-                               PyObject *allow_inf, PyObject *allow_nan)
+PyObject*
+PyString_is_a_number(PyObject *obj, const PyNumberType type,
+                     PyObject *allow_inf, PyObject *allow_nan)
 {
     bool result = false;
     PyObject *bytes = NULL;
@@ -286,8 +308,9 @@ PyObject* PyString_is_a_number(PyObject *obj, const PyNumberType type,
 }
 
 
-PyObject* PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                               PyObject *inf_sub, PyObject *nan_sub)
+PyObject*
+PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
+                     PyObject *inf_sub, PyObject *nan_sub)
 {
     PyObject *bytes = NULL;
     if (PyNumber_Check(obj))

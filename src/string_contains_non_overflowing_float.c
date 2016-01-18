@@ -3,7 +3,8 @@
 #include "parsing.h"
 #include "fast_conversions.h"
 
-bool string_contains_non_overflowing_float (const char *str)
+bool
+string_contains_non_overflowing_float (const char *str)
 {
     register bool valid = false;
     register unsigned ndigits = 0;
@@ -31,20 +32,20 @@ bool string_contains_non_overflowing_float (const char *str)
 
     /* Check if it is a float. */
     ndigits = 0;
-    while (is_valid_digit(str)) { str += 1; ndigits += 1; valid = true; }
+    while (is_valid_digit(str)) { str++; ndigits++; valid = true; }
 
     if (!consume_python2_long_literal_lL(str)) {
 
         if (is_decimal(str)) {  /* After decimal digits */
-            str += 1;
-            while (is_valid_digit(str)) { str += 1; ndigits += 1; valid = true; }
+            str++;
+            while (is_valid_digit(str)) { str++; ndigits++; valid = true; }
         }
 
         if (is_e_or_E(str) && valid) {  /* Exponent */
             valid = false;
-            str += 1;
+            str++;
             consume_sign(str);         
-            while (is_valid_digit(str)) { str += 1; valid = true; }
+            while (is_valid_digit(str)) { str++; valid = true; }
         }
 
     }

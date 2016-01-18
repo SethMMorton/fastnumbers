@@ -2,7 +2,10 @@
 #include "parsing.h"
 #include "fast_conversions.h"
 
-bool string_contains_float (const char *str, const bool allow_inf, const bool allow_nan)
+bool
+string_contains_float (const char *str,
+                       const bool allow_inf,
+                       const bool allow_nan)
 {
     register bool valid = false;
 
@@ -17,32 +20,34 @@ bool string_contains_float (const char *str, const bool allow_inf, const bool al
             str += 3;
             if (case_insensitive_match(str, "inity"))
                 str += 5;
-            return allow_inf && trailing_characters_are_vaild_and_nul_terminated(&str);
+            return allow_inf &&
+                   trailing_characters_are_vaild_and_nul_terminated(&str);
         }
 
         else if (case_insensitive_match(str, "nan")) {
             str += 3;
-            return allow_nan && trailing_characters_are_vaild_and_nul_terminated(&str);
+            return allow_nan &&
+                   trailing_characters_are_vaild_and_nul_terminated(&str);
         }
 
     }
 
     /* Check if it is a float. */
 
-    while (is_valid_digit(str)) { str += 1; valid = true; }
+    while (is_valid_digit(str)) { str++; valid = true; }
 
     if (!consume_python2_long_literal_lL(str)) {
 
         if (is_decimal(str)) {  /* After decimal digits */
-            str += 1;
-            while (is_valid_digit(str)) { str += 1; valid = true; }
+            str++;
+            while (is_valid_digit(str)) { str++; valid = true; }
         }
 
         if (is_e_or_E(str) && valid) {  /* Exponent */
             valid = false;
-            str += 1;
+            str++;
             consume_sign(str);         
-            while (is_valid_digit(str)) { str += 1; valid = true; }
+            while (is_valid_digit(str)) { str++; valid = true; }
         }
 
     }

@@ -7,12 +7,17 @@
 #include <Python.h>
 #include "py_to_char.h"
 
-static Py_ssize_t get_PyUnicode_length(PyObject *input);
-static Py_UCS4 read_first_PyUnicode_char(PyObject *input);
+static Py_ssize_t
+get_PyUnicode_length(PyObject *input);
+
+static Py_UCS4
+read_first_PyUnicode_char(PyObject *input);
+
+static Py_UCS4
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-static Py_UCS4 read_PyUnicode_char(const Py_UCS4 *input, const Py_ssize_t i);
+read_PyUnicode_char(const Py_UCS4 *input, const Py_ssize_t i);
 #else
-static Py_UCS4 read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i);
+read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i);
 #endif
 
 
@@ -21,7 +26,8 @@ static Py_UCS4 read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i);
  * Possibly convert unicode to bytes object first.
  * If the string contains nul characters, return "\0".
  */
-const char* convert_PyString_to_str(PyObject *input, PyObject **bytes_object)
+const char*
+convert_PyString_to_str(PyObject *input, PyObject **bytes_object)
 {
     *bytes_object = NULL;
     if (PyBytes_CheckExact(input)) {
@@ -54,7 +60,8 @@ const char* convert_PyString_to_str(PyObject *input, PyObject **bytes_object)
  * or more than one character, simply return a space.
  * Allow padded whitespace.
  */
-Py_UCS4 convert_PyUnicode_to_unicode_char(PyObject *input)
+Py_UCS4
+convert_PyUnicode_to_unicode_char(PyObject *input)
 {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
      static const bool needs_free = true;
@@ -114,7 +121,8 @@ Py_UCS4 convert_PyUnicode_to_unicode_char(PyObject *input)
 
 
 /* Retrieve length of a unicode string */
-static Py_ssize_t get_PyUnicode_length(PyObject *input)
+static Py_ssize_t
+get_PyUnicode_length(PyObject *input)
 {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
     return PyUnicode_GET_LENGTH(input);
@@ -125,7 +133,8 @@ static Py_ssize_t get_PyUnicode_length(PyObject *input)
 
 
 /* Get the first character only from a unicode string. */
-static Py_UCS4 read_first_PyUnicode_char(PyObject *input)
+static Py_UCS4
+read_first_PyUnicode_char(PyObject *input)
 {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
     return PyUnicode_READ_CHAR(input, 0);
@@ -141,13 +150,14 @@ static Py_UCS4 read_first_PyUnicode_char(PyObject *input)
 
 
 /* Get a particular character from a unicode char array by index. */
+static Py_UCS4
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-static Py_UCS4 read_PyUnicode_char(const Py_UCS4 *input, const Py_ssize_t i)
+read_PyUnicode_char(const Py_UCS4 *input, const Py_ssize_t i)
 {
     return PyUnicode_READ(PyUnicode_4BYTE_KIND, input, i);
 }
 #else
-static Py_UCS4 read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i)
+read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i)
 {
     return (Py_UCS4) input[i];
 }

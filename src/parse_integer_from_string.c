@@ -3,9 +3,11 @@
 #include "parsing.h"
 #include "fast_conversions.h"
 
-static bool check_for_overflow(const long value, const long cur_val);
+static bool
+check_for_overflow(const long value, const long cur_val);
 
-long parse_integer_from_string (const char *str, bool *error, bool *overflow)
+long
+parse_integer_from_string (const char *str, bool *error, bool *overflow)
 {
     register long value = 0L;
     register bool valid = false;
@@ -18,7 +20,7 @@ long parse_integer_from_string (const char *str, bool *error, bool *overflow)
 
     /* Convert digits, if any. Check for overflow. */
  
-    for (value = 0L; is_valid_digit(str); valid = true, str += 1) {
+    for (value = 0L; is_valid_digit(str); valid = true, str++) {
         const long tmpval = ascii2long(str);
         *overflow = *overflow || check_for_overflow(value, tmpval);
         value *= 10L;
@@ -31,7 +33,8 @@ long parse_integer_from_string (const char *str, bool *error, bool *overflow)
 
 }
 
-bool check_for_overflow(const long value, const long cur_val)
+bool
+check_for_overflow(const long value, const long cur_val)
 {
     static const long overflow_cutoff = LONG_MAX / 10L;
     static const long overflow_last_digit_limit = LONG_MAX % 10L;

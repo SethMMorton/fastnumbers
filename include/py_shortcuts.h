@@ -9,13 +9,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 typedef enum PyNumberType { REAL, FLOAT, INT, INTLIKE, FORCEINT } PyNumberType;
-bool PyNumber_is_correct_type(PyObject *obj, const PyNumberType type, PyObject *str_only);
-PyObject* PyString_is_a_number(PyObject *obj, const PyNumberType type,
-                               PyObject *allow_inf, PyObject *allow_nan);
-PyObject* PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                               PyObject *inf_sub, PyObject *nan_sub);
-PyObject* PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
+
+bool 
+PyNumber_is_correct_type(PyObject *obj, const PyNumberType type, PyObject *str_only);
+
+PyObject* 
+PyString_is_a_number(PyObject *obj, const PyNumberType type,
+                     PyObject *allow_inf, PyObject *allow_nan);
+
+PyObject*
+PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
+                     PyObject *inf_sub, PyObject *nan_sub);
+
+PyObject*
+PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
 
 #define PyBool_from_bool(b) ((b) ? (Py_INCREF(Py_True), Py_True) \
                                  : (Py_INCREF(Py_False), Py_False))

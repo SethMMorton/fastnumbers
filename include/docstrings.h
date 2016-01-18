@@ -6,12 +6,13 @@
  *
  * Author: Seth M. Morton, August 2, 2014
  */
+#include <Python.h>
 
 
-static char module_docstring[] = "Quickly convert strings to numbers.\n";
+PyDoc_STRVAR(fastnumbers__doc__, "Quickly convert strings to numbers.\n");
 
 
-static char safe_real_docstring[] = 
+PyDoc_STRVAR(safe_real__doc__, 
 "safe_real(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Identical to `fast_real`; kept for backwards compatibility.\n"
 "\n"
@@ -21,10 +22,10 @@ static char safe_real_docstring[] =
 "See Also\n"
 "--------\n"
 "fast_real\n"
-"\n";
+"\n");
 
 
-static char safe_float_docstring[] = 
+PyDoc_STRVAR(safe_float__doc__, 
 "safe_float(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Identical to `fast_float`; kept for backwards compatibility.\n"
 "\n"
@@ -34,10 +35,10 @@ static char safe_float_docstring[] =
 "See Also\n"
 "--------\n"
 "fast_float\n"
-"\n";
+"\n");
 
 
-static char safe_int_docstring[] = 
+PyDoc_STRVAR(safe_int__doc__, 
 "safe_int(x, default=None, raise_on_invalid=False)\n"
 "Identical to `fast_int`; kept for backwards compatibility.\n"
 "\n"
@@ -47,10 +48,10 @@ static char safe_int_docstring[] =
 "See Also\n"
 "--------\n"
 "fast_int\n"
-"\n";
+"\n");
 
 
-static char safe_forceint_docstring[] = 
+PyDoc_STRVAR(safe_forceint__doc__, 
 "safe_forceint(x, default=None, raise_on_invalid=False)\n"
 "Identical to `fast_forceint`; kept for backwards compatibility.\n"
 "\n"
@@ -60,10 +61,10 @@ static char safe_forceint_docstring[] =
 "See Also\n"
 "--------\n"
 "fast_forceint\n"
-"\n";
+"\n");
 
 
-static char fast_real_docstring[] = 
+PyDoc_STRVAR(fast_real__doc__, 
 "fast_real(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Quickly convert input to an `int` or `float` depending on value.\n"
 "\n"
@@ -169,10 +170,10 @@ static char fast_real_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__float__`\n"
 "or `__int__` methods won't be converted properly.\n"
-"\n";
+"\n");
 
 
-static char fast_float_docstring[] = 
+PyDoc_STRVAR(fast_float__doc__, 
 "fast_float(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
 "Quickly convert input to a `float`.\n"
 "\n"
@@ -271,10 +272,10 @@ static char fast_float_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__float__`\n"
 "method won't be converted properly.\n"
-"\n";
+"\n");
 
 
-static char fast_int_docstring[] = 
+PyDoc_STRVAR(fast_int__doc__, 
 "fast_int(x, default=None, raise_on_invalid=False)\n"
 "Quickly convert input to an `int`.\n"
 "\n"
@@ -366,10 +367,10 @@ static char fast_int_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__int__`\n"
 "method won't be converted properly.\n"
-"\n";
+"\n");
 
 
-static char fast_forceint_docstring[] = 
+PyDoc_STRVAR(fast_forceint__doc__, 
 "fast_forceint(x, default=None, raise_on_invalid=False)\n"
 "Quickly convert input to an `int`, truncating if is a `float`.\n"
 "\n"
@@ -469,10 +470,10 @@ static char fast_forceint_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__float__`\n"
 "or `__int__` methods won't be converted properly.\n"
-"\n";
+"\n");
 
 
-static char isreal_docstring[] = 
+PyDoc_STRVAR(isreal__doc__, 
 "isreal(x, str_only=False, num_only=False, allow_inf=False, allow_nan=False)\n"
 "Quickly determine if a string is a real number.\n"
 "\n"
@@ -547,10 +548,10 @@ static char isreal_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__float__`\n"
 "or `__int__` methods will likely return *False*.\n"
-"\n";
+"\n");
 
 
-static char isfloat_docstring[] = 
+PyDoc_STRVAR(isfloat__doc__, 
 "isfloat(x, str_only=False, num_only=False, allow_inf=False, allow_nan=False)\n"
 "Quickly determine if a string is a `float`.\n"
 "\n"
@@ -626,10 +627,10 @@ static char isfloat_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__float__`\n"
 "method will likely return *False*.\n"
-"\n";
+"\n");
 
 
-static char isint_docstring[] = 
+PyDoc_STRVAR(isint__doc__, 
 "isint(x, str_only=False, num_only=False)\n"
 "Quickly determine if a string is an `int`.\n"
 "\n"
@@ -698,10 +699,10 @@ static char isint_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__int__`\n"
 "method will likely return *False*.\n"
-"\n";
+"\n");
 
 
-static char isintlike_docstring[] = 
+PyDoc_STRVAR(isintlike__doc__, 
 "isintlike(x, str_only=False, num_only=False)\n"
 "Quickly determine if a string (or object) is an `int` or `int`-like.\n"
 "\n"
@@ -782,7 +783,7 @@ static char isintlike_docstring[] =
 "detailed type checking (and avoiding the exception stack); because\n"
 "most type checking is skipped, classes that define the `__float__`\n"
 "or `__int__` methods will likely return *False*.\n"
-"\n";
+"\n");
 
 
 #endif /* __DOCSTRINGS */
