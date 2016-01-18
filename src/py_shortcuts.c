@@ -62,9 +62,9 @@ unicode_result_error(const double d, const long i, const PyNumberType type)
     case INTLIKE:
         return i <= -1;
     case FORCEINT:
-    /* default: */
         return i <= -1 && d <= -1.0;
     }
+    return false;  /* Silence GCC */
 }
 
 
@@ -87,7 +87,6 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
     case INT:
     case INTLIKE:
     case FORCEINT:
-    /* default: */
     {
         if (PyFloat_CheckExact(pynum)) { /* Watch out for un-intable numbers. */
             const double d = PyFloat_AS_DOUBLE(pynum);
@@ -97,6 +96,7 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
         return PyNumber_ToInt(pynum);
     }
     }
+    return NULL;  /* Silence GCC */
 }
 
 
@@ -117,7 +117,6 @@ PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType type)
         return long_to_PyInt(iresult);
     case INTLIKE:
     case FORCEINT:
-    /* default: */
         if (iresult > -1)
             return long_to_PyInt(iresult);
         else {
@@ -131,6 +130,7 @@ PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType type)
             }
         }
     }
+    return NULL;  /* Silence GCC */
 }
 
 
@@ -192,7 +192,6 @@ str_to_PyNumber(const char* str, const PyNumberType type,
     }
     case INTLIKE:
     case FORCEINT:
-    /* default: */
     {
         pyresult = str_to_PyNumber(str, REAL, inf_sub, nan_sub);
         if (pyresult != NULL && PyFloat_CheckExact(pyresult))
@@ -251,9 +250,9 @@ PyUnicode_is_a_number(PyObject *obj, const PyNumberType type)
         return PyBool_from_bool(PyUnicode_is_int(obj));
     case INTLIKE:
     case FORCEINT:
-    /* default: */
         return PyBool_from_bool(PyUnicode_is_intlike(obj));
     }
+    return NULL;  /* Silence GCC */
 }
 
 
@@ -272,9 +271,9 @@ PyNumber_is_correct_type(PyObject *obj,
         return PyNumber_IsInt(obj);
     case INTLIKE:
     case FORCEINT:
-    /* default: */
         return PyNumber_IsInt(obj) || PyFloat_is_Intlike(obj);
     }
+    return false;  /* Silence GCC */
 }
 
 
@@ -300,7 +299,6 @@ PyString_is_a_number(PyObject *obj, const PyNumberType type,
         break;
     case FORCEINT:
     case INTLIKE:
-    /* default: */
         result = string_contains_intlike_float(str);
         break;
     }

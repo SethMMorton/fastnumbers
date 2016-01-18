@@ -27,7 +27,7 @@ string_contains_intlike_float (const char *str)
     register const char *float_end = NULL;
 
     consume_white_space(str);
-    consume_sign(str); 
+    (void) consume_sign(str); 
  
     /* Before decimal. Keep track of number of digits read. */
 

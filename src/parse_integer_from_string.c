@@ -27,7 +27,7 @@ parse_integer_from_string (const char *str, bool *error, bool *overflow)
         value += tmpval;
     }
  
-    consume_python2_long_literal_lL(str);
+    (void) consume_python2_long_literal_lL(str);
     *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
     return sign * value;
 

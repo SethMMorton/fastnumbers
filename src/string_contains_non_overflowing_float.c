@@ -10,7 +10,7 @@ string_contains_non_overflowing_float (const char *str)
     register unsigned ndigits = 0;
 
     consume_white_space(str);
-    consume_sign(str); 
+    (void) consume_sign(str); 
  
     /* Are we possibly dealing with infinity or NAN? */
 
@@ -44,7 +44,7 @@ string_contains_non_overflowing_float (const char *str)
         if (is_e_or_E(str) && valid) {  /* Exponent */
             valid = false;
             str++;
-            consume_sign(str);         
+            (void) consume_sign(str);         
             while (is_valid_digit(str)) { str++; valid = true; }
         }
 
