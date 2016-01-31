@@ -2,7 +2,6 @@ language: python
 sudo: false
 os:
 - linux
-- osx
 compiler:
 - clang
 - gcc
@@ -12,7 +11,7 @@ python:
 - "3.4"
 - "3.5"
 - "3.5-dev"
-- "nightly"
+# - "nightly"
 install:
 - pip install hypothesis hypothesis-pytest
 - pip install -e .
