@@ -31,7 +31,7 @@ if python_version_tuple()[0] == '3':
 digits = []
 numeric = []
 not_numeric = []
-for x in range(0x10FFFF):
+for x in range(0x1FFFFF):
     try:
         a = unichr(x)
     except ValueError:
@@ -285,6 +285,18 @@ def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_def
         fastnumbers.fast_real(x, 90, True)
 
 
+@given(integers() | floats())
+def test_fast_real_returns_input_as_is_if_valid_and_key_is_given(x):
+    fastnumbers.fast_real(x, key=len) == x
+    fastnumbers.fast_real(str(x), key=len) == x
+
+
+@given(text() | binary())
+def test_fast_real_returns_transformed_input_if_invalid_and_key_is_given(x):
+    assume(not a_number(x))
+    fastnumbers.fast_real(x, key=len) == len(x)
+
+
 ##############
 # Fast Float #
 ##############
@@ -461,6 +473,18 @@ def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_de
         assert fastnumbers.fast_float(x, 90.0, True)
 
 
+@given(integers() | floats())
+def test_fast_float_returns_input_as_is_if_valid_and_key_is_given(x):
+    fastnumbers.fast_float(x, key=len) == x
+    fastnumbers.fast_float(str(x), key=len) == x
+
+
+@given(text() | binary())
+def test_fast_float_returns_transformed_input_if_invalid_and_key_is_given(x):
+    assume(not a_number(x))
+    fastnumbers.fast_float(x, key=len) == len(x)
+
+
 ############
 # Fast Int #
 ############
@@ -614,6 +638,18 @@ def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_defa
     with raises(ValueError):
         assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
         assert fastnumbers.fast_int(x, 90, True)
+
+
+@given(integers())
+def test_fast_int_returns_input_as_is_if_valid_and_key_is_given(x):
+    fastnumbers.fast_int(x, key=len) == x
+    fastnumbers.fast_int(str(x), key=len) == x
+
+
+@given(text() | binary())
+def test_fast_int_returns_transformed_input_if_invalid_and_key_is_given(x):
+    assume(not a_number(x))
+    fastnumbers.fast_int(x, key=len) == len(x)
 
 
 #################
@@ -779,6 +815,20 @@ def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and
     with raises(ValueError):
         assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
         assert fastnumbers.fast_forceint(x, 90.0, True)
+
+
+@given(integers() | floats())
+def test_fast_forceint_returns_input_as_is_if_valid_and_key_is_given(x):
+    assume(not math.isnan(x))
+    assume(not math.isinf(x))
+    fastnumbers.fast_forceint(x, key=len) == int(x)
+    fastnumbers.fast_forceint(str(x), key=len) == int(x)
+
+
+@given(text() | binary())
+def test_fast_forceint_returns_transformed_input_if_invalid_and_key_is_given(x):
+    assume(not a_number(x))
+    fastnumbers.fast_forceint(x, key=len) == len(x)
 
 
 ###########

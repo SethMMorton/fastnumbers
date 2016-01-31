@@ -18,6 +18,7 @@ Additionally, the user has control over what happens in the event that the
 input string cannot be converted to a number:
 
     - the input can be returned as-is (this is the default behavior)
+    - the input can be passed to a user-given key function then returned
     - a ``ValueError`` can be raised (like the built-in ``float`` or ``int``)
     - a default value can be returned
 
@@ -29,13 +30,15 @@ to the following Pure Python function:
 
 .. code-block:: python
 
-    def fast_float(input, default=None, raise_on_invalid=False, inf=None, nan=None):
+    def fast_float(input, default=None, raise_on_invalid=False, key=None, inf=None, nan=None):
         import math
         try:
             x = float(input)
         except ValueError:
             if raise_on_invalid:
                 raise
+            elif key is not None:
+                return key(input)
             return default if default is not None else input
         else:
             if inf is not None and math.isinf(x):
@@ -86,6 +89,11 @@ Some example usage:
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
+    >>> # A key function can be used to return an alternate value for invalid input
+    >>> fast_float('bad input', key=len)
+    9
+    >>> fast_float(54, key=len)
+    54.0
     >>> # Single unicode characters can be converted.
     >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
     5.0
