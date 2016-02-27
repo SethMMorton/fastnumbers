@@ -7,7 +7,6 @@ import os
 import math
 import warnings
 import unicodedata
-from random import randint, sample
 from itertools import repeat
 from platform import python_version_tuple
 from pytest import raises
@@ -46,7 +45,8 @@ for x in range(0x1FFFFF):
         numeric.append(a)
     except ValueError:
         not_numeric.append(a)
-not_numeric = sample(not_numeric, 1000)  # This is too big otherwise
+not_numeric = sampled_from(not_numeric)
+not_numeric = [not_numeric.example() for _ in range(1000)]  # This is too big otherwise
 numeric_not_digit = [x for x in numeric if x not in digits]
 numeric_not_digit_not_int = [x for x in numeric_not_digit if not unicodedata.numeric(x).is_integer()]
 
@@ -167,11 +167,11 @@ def test_fast_real_with_inf_given_inf_string_returns_sub_value():
     assert fastnumbers.fast_real('inf', inf=10000.0) == 10000.0
 
 
-@given(floats())
-def test_fast_real_given_padded_float_strings_returns_float(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_fast_real_given_padded_float_strings_returns_float(x, y, z):
     assume(not math.isnan(x))
     assume(not x.is_integer())
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_real(y) == x
     assert isinstance(fastnumbers.fast_real(y), float)
 
@@ -206,16 +206,16 @@ def test_fast_real_given_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_real(y), (int, long))
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_fast_real_given_padded_int_string_returns_int(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_fast_real_given_padded_int_string_returns_int(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_real(y) == x
     assert isinstance(fastnumbers.fast_real(y), (int, long))
 
@@ -354,11 +354,11 @@ def test_fast_float_with_inf_given_inf_string_returns_sub_value():
     assert fastnumbers.fast_float('inf', inf=10000.0) == 10000.0
 
 
-@given(floats())
-def test_fast_float_given_padded_float_strings_returns_float(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_fast_float_given_padded_float_strings_returns_float(x, y, z):
     assume(not math.isnan(x))
     assume(not x.is_integer())
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_float(y) == x
     assert isinstance(fastnumbers.fast_float(y), float)
 
@@ -392,16 +392,16 @@ def test_fast_float_given_int_string_returns_float(x):
     assert isinstance(fastnumbers.fast_float(y), float)
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_fast_float_given_padded_int_string_returns_float(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_fast_float_given_padded_int_string_returns_float(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_float(y) == float(x)
     assert isinstance(fastnumbers.fast_float(y), float)
 
@@ -562,16 +562,16 @@ def test_fast_int_given_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_int(y), (int, long))
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_fast_int_given_padded_int_string_returns_int(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_fast_int_given_padded_int_string_returns_int(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_int(y) == x
     assert isinstance(fastnumbers.fast_int(y), (int, long))
 
@@ -706,11 +706,11 @@ def test_fast_forceint_given_inf_string_raises_OverflowError_with_raise_on_inval
         fastnumbers.fast_forceint('-infinity', None, True)
 
 
-@given(floats())
-def test_fast_forceint_given_padded_float_strings_returns_int(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_fast_forceint_given_padded_float_strings_returns_int(x, y, z):
     assume(not math.isnan(x))
     assume(not math.isinf(x))
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_forceint(y) == int(x)
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
 
@@ -736,16 +736,16 @@ def test_fast_forceint_given_int_string_returns_int(x):
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_fast_forceint_given_padded_int_string_returns_int(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_fast_forceint_given_padded_int_string_returns_int(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_forceint(y) == x
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
 
@@ -858,19 +858,19 @@ def test_isreal_returns_False_if_given_float_and_str_only_is_True(x):
     assert not fastnumbers.isreal(x, str_only=True)
 
 
-@given(integers())
-def test_isreal_returns_True_if_given_int_string_padded_or_not(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+def test_isreal_returns_True_if_given_int_string_padded_or_not(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isreal(repr(x))
     assert fastnumbers.isreal(repr(x), str_only=True)
     assert fastnumbers.isreal(y)
 
 
-@given(floats())
-def test_isreal_returns_True_if_given_float_string_padded_or_not(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_isreal_returns_True_if_given_float_string_padded_or_not(x, y, z):
     assume(not math.isnan(x))
     assume(not math.isinf(x))
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isreal(repr(x))
     assert fastnumbers.isreal(repr(x), str_only=True)
     assert fastnumbers.isreal(y)
@@ -950,26 +950,26 @@ def test_isfloat_returns_False_if_given_float_and_str_only_is_True(x):
     assert not fastnumbers.isfloat(x, str_only=True)
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_isfloat_returns_True_if_given_int_string_padded_or_not(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_isfloat_returns_True_if_given_int_string_padded_or_not(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isfloat(repr(x))
     assert fastnumbers.isfloat(repr(x), str_only=True)
     assert fastnumbers.isfloat(y)
 
 
-@given(floats())
-def test_isfloat_returns_True_if_given_float_string_padded_or_not(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_isfloat_returns_True_if_given_float_string_padded_or_not(x, y, z):
     assume(not math.isnan(x))
     assume(not math.isinf(x))
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isfloat(repr(x))
     assert fastnumbers.isfloat(repr(x), str_only=True)
     assert fastnumbers.isfloat(y)
@@ -1050,26 +1050,26 @@ def test_isint_returns_False_if_given_int_and_str_only_is_True(x):
     assert not fastnumbers.isint(x, str_only=True)
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_isint_returns_True_if_given_int_string_padded_or_not(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_isint_returns_True_if_given_int_string_padded_or_not(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isint(repr(x)) is True
     assert fastnumbers.isint(repr(x), str_only=True)
     assert fastnumbers.isint(y)
 
 
-@given(floats())
-def test_isint_returns_False_if_given_float_string_padded_or_not(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_isint_returns_False_if_given_float_string_padded_or_not(x, y, z):
     assume(not math.isnan(x))
     assume(not math.isinf(x))
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert not fastnumbers.isint(repr(x))
     assert not fastnumbers.isint(y)
 
@@ -1152,37 +1152,37 @@ def test_isintlike_returns_False_if_given_integer_float_and_str_only_is_True(x):
     assert not fastnumbers.isintlike(x, str_only=True)
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_isintlike_returns_True_if_given_int_string_padded_or_not(x):
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+@given(integers(), integers(0, 100), integers(0, 100))
+@example(40992764608243448035, 1, 1)
+@example(-41538374848935286698640072416676709, 1, 1)
+@example(240278958776173358420034462324117625982, 1, 1)
+@example(1609422692302207451978552816956662956486, 1, 1)
+@example(-121799354242674784350540853922878239740762834, 1, 1)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
+def test_isintlike_returns_True_if_given_int_string_padded_or_not(x, y, z):
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isintlike(repr(x))
     assert fastnumbers.isintlike(repr(x), str_only=True)
     assert fastnumbers.isintlike(y)
 
 
-@given(floats())
-def test_isintlike_returns_True_if_given_integer_float_string_padded_or_not(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_isintlike_returns_True_if_given_integer_float_string_padded_or_not(x, y, z):
     assume(not math.isnan(x))
     assume(not math.isinf(x))
     assume(x.is_integer())
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isintlike(repr(x))
     assert fastnumbers.isintlike(y)
 
 
-@given(floats())
-def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not(x):
+@given(floats(), integers(0, 100), integers(0, 100))
+def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not(x, y, z):
     assume(not math.isnan(x))
     assume(not math.isinf(x))
     assume(not x.is_integer())
-    y = ''.join(repeat(' ', randint(0, 100))) + repr(x) + ''.join(repeat(' ', randint(0, 100)))
+    y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert not fastnumbers.isintlike(repr(x))
     assert not fastnumbers.isintlike(y)
 
