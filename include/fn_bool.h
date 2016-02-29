@@ -16,13 +16,17 @@
             /* We choose 8 bit to match C++ */
             /* It must also promote to integer */
             #ifdef _MSC_VER
-                #if _MSC_VER >= 1600
-                    #include <stdint.h>
-                #else
-                    typedef __int8 int8_t;
+                #if _MSC_VER < 1800
+                    #if _MSC_VER >= 1600
+                        #include <stdint.h>
+                    #else
+                        typedef __int8 int8_t;
+                    #endif
+                    typedef int8_t _Bool;
                 #endif
+            #else
+                typedef int8_t _Bool;
             #endif
-            typedef int8_t _Bool;
         #endif /* __GNUC__ */
 
         /* ISO C Standard: 7.16 Boolean type */

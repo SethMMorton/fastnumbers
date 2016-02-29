@@ -7,11 +7,13 @@
 
 
 #ifdef _MSC_VER
+#if _MSC_VER < 1800
 /* Compensate for missing round in MSVC */
 static double
 round(double val) {    
-    return (val > 0.0) ? (val + 0.5) : (val - 0.5); 
+    return (val > 0.0) ? floor(val + 0.5) : floor(val - 0.5); 
 }
+#endif
 #endif
 
 
