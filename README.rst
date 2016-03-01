@@ -179,6 +179,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+02-29-2016 v. 0.7.1
+'''''''''''''''''''
+
+    - Fixed compilation bug with MSVC.
+
 01-18-2016 v. 0.7.0
 '''''''''''''''''''
 
@@ -193,11 +198,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
     - Fixed bug that caused a SystemError exception to be raised
       on Python 3.5 if a very large int was passed to the "fast"
       functions.
-
-10-29-2015 v. 0.6.1
-'''''''''''''''''''
-
-    - Fixed segfault on Python 3.5 that seemed to be related to a
-      change in the PyObject_CallMethod C function.
-    - Sped up unit testing.
-    - Added tox.ini.
