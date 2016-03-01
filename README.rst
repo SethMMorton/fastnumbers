@@ -153,7 +153,7 @@ for details into all timing results.
     print("re:", timeit('float_re("56.07")', float_re))
     print("fast", timeit('fast_float("56.07")', 'from fastnumbers import fast_float'))
 
-The results will be similar to the below, by vary on the system you are on::
+The results will be similar to below, but vary based on your system::
 
     Invalid input:
     Try: 2.27156710625
