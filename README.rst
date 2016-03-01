@@ -183,6 +183,7 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 '''''''''''''''''''
 
     - Fixed compilation bug with MSVC.
+    - Added “key” function to transform invalid input arguments.
 
 01-18-2016 v. 0.7.0
 '''''''''''''''''''
