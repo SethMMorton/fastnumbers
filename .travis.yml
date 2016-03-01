@@ -1,11 +1,17 @@
 language: python
+sudo: false
 os:
 - linux
+compiler:
+- clang
+- gcc
 python:
-- 2.7
-- 3.3
-- 3.4
-- 3.5
+- "2.7"
+- "3.3"
+- "3.4"
+- "3.5"
+- "3.5-dev"
+# - "nightly"
 install:
 - pip install hypothesis hypothesis-pytest
 - pip install -e .

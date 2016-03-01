@@ -18,6 +18,7 @@ Additionally, the user has control over what happens in the event that the
 input string cannot be converted to a number:
 
     - the input can be returned as-is (this is the default behavior)
+    - the input can be passed to a user-given key function then returned
     - a ``ValueError`` can be raised (like the built-in ``float`` or ``int``)
     - a default value can be returned
 
@@ -29,13 +30,15 @@ to the following Pure Python function:
 
 .. code-block:: python
 
-    def fast_float(input, default=None, raise_on_invalid=False, inf=None, nan=None):
+    def fast_float(input, default=None, raise_on_invalid=False, key=None, inf=None, nan=None):
         import math
         try:
             x = float(input)
         except ValueError:
             if raise_on_invalid:
                 raise
+            elif key is not None:
+                return key(input)
             return default if default is not None else input
         else:
             if inf is not None and math.isinf(x):
@@ -86,6 +89,11 @@ Some example usage:
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
+    >>> # A key function can be used to return an alternate value for invalid input
+    >>> fast_float('bad input', key=len)
+    9
+    >>> fast_float(54, key=len)
+    54.0
     >>> # Single unicode characters can be converted.
     >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
     5.0
@@ -171,6 +179,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+02-29-2016 v. 0.7.1
+'''''''''''''''''''
+
+    - Fixed compilation bug with MSVC.
+
 01-18-2016 v. 0.7.0
 '''''''''''''''''''
 
@@ -185,11 +198,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
     - Fixed bug that caused a SystemError exception to be raised
       on Python 3.5 if a very large int was passed to the "fast"
       functions.
-
-10-29-2015 v. 0.6.1
-'''''''''''''''''''
-
-    - Fixed segfault on Python 3.5 that seemed to be related to a
-      change in the PyObject_CallMethod C function.
-    - Sped up unit testing.
-    - Added tox.ini.

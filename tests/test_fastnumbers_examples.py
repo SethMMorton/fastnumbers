@@ -93,6 +93,10 @@ def test_fast_real():
     assert fastnumbers.fast_real(u'⁸') == 8
     assert fastnumbers.fast_real(u'⅔') == 2.0 / 3.0
     assert fastnumbers.fast_real(u'Ⅴ') == 5
+    # 19. Key function
+    assert fastnumbers.fast_real(76.8, key=len) == 76.8
+    assert fastnumbers.fast_real('76.8', key=len) == 76.8
+    assert fastnumbers.fast_real('invalid', key=len) == 7
 
 
 def test_fast_float():
@@ -153,6 +157,10 @@ def test_fast_float():
     assert fastnumbers.fast_float(u'⁸') == 8.0
     assert fastnumbers.fast_float(u'⅔') == 2.0 / 3.0
     assert fastnumbers.fast_float(u'Ⅴ') == 5.0
+    # 19. Key function
+    assert fastnumbers.fast_float(76.8, key=len) == 76.8
+    assert fastnumbers.fast_float('76.8', key=len) == 76.8
+    assert fastnumbers.fast_float('invalid', key=len) == 7
 
 
 def test_fast_int():
@@ -209,6 +217,10 @@ def test_fast_int():
     assert fastnumbers.fast_int(u'⁸') == 8
     assert fastnumbers.fast_int(u'⅔') == u'⅔'
     assert fastnumbers.fast_int(u'Ⅴ') == u'Ⅴ'
+    # 19. Key function
+    assert fastnumbers.fast_int(76, key=len) == 76
+    assert fastnumbers.fast_int('76', key=len) == 76
+    assert fastnumbers.fast_int('invalid', key=len) == 7
 
 
 def test_fast_forceint():
@@ -266,6 +278,10 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint(u'⁸') == 8
     assert fastnumbers.fast_forceint(u'⅔') == 0
     assert fastnumbers.fast_forceint(u'Ⅴ') == 5
+    # 19. Key function
+    assert fastnumbers.fast_forceint(76.8, key=len) == 76
+    assert fastnumbers.fast_forceint('76.8', key=len) == 76
+    assert fastnumbers.fast_forceint('invalid', key=len) == 7
 
 
 def test_isreal():

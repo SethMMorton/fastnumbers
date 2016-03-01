@@ -6,6 +6,17 @@
 #include "fast_conversions.h"
 
 
+#ifdef _MSC_VER
+#if _MSC_VER < 1800
+/* Compensate for missing round in MSVC */
+static double
+round(double val) {    
+    return (val > 0.0) ? floor(val + 0.5) : floor(val - 0.5); 
+}
+#endif
+#endif
+
+
 PyObject*
 PyBool_from_bool_and_DECREF(const bool b, PyObject *obj)
 {
