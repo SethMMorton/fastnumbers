@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Std lib imports
 import re
@@ -114,16 +115,16 @@ setup(name='fastnumbers',
       long_description=LONG_DESCRIPTION,
       tests_require=['pytest', 'hypothesis'],
       cmdclass={'test': PyTest, 'distclean': Distclean},
-      classifiers=('Development Status :: 4 - Beta',
-                   #'Development Status :: 5 - Production/Stable',
-                   'Intended Audience :: Science/Research',
-                   'Intended Audience :: Developers',
-                   'Operating System :: OS Independent',
-                   'License :: OSI Approved :: MIT License',
-                   'Natural Language :: English',
-                   'Programming Language :: Python :: 2.6',
-                   'Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 3',
-                   'Topic :: Utilities',
+      classifiers=(b'Development Status :: 4 - Beta',
+                   #b'Development Status :: 5 - Production/Stable',
+                   b'Intended Audience :: Science/Research',
+                   b'Intended Audience :: Developers',
+                   b'Operating System :: OS Independent',
+                   b'License :: OSI Approved :: MIT License',
+                   b'Natural Language :: English',
+                   b'Programming Language :: Python :: 2.6',
+                   b'Programming Language :: Python :: 2.7',
+                   b'Programming Language :: Python :: 3',
+                   b'Topic :: Utilities',
                    )
 )
