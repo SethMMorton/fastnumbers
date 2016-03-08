@@ -42,6 +42,7 @@ def test_fast_real():
     assert fastnumbers.fast_real("+367.3268", True) == +367.3268
     # 3. float string with exponents
     assert fastnumbers.fast_real("-367.3268e207") == -367.3268e207
+    assert fastnumbers.fast_real('1.175494351e-3810000000') == 0.0
     # 4. float string with padded whitespace
     assert fastnumbers.fast_real("   -367.04   ") == -367.04
     # 5. int number
@@ -108,6 +109,7 @@ def test_fast_float():
     assert fastnumbers.fast_float("+367.3268", True) == +367.3268
     # 3. float string with exponents
     assert fastnumbers.fast_float("-367.3268e207") == -367.3268e207
+    assert fastnumbers.fast_float('1.175494351e-3810000000') == 0.0
     # 4. float string with padded whitespace
     assert fastnumbers.fast_float("   -367.04   ") == -367.04
     # 5. int number

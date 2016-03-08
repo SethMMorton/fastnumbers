@@ -14,6 +14,9 @@ apply_power_of_ten_scaling(const long double value, const int expon);
 static bool
 check_for_overflow(const unsigned long value, const unsigned long cur_val);
 
+static bool
+check_for_overflow_int(const int value, const int cur_val);
+
 double
 parse_float_from_string (const char *str, bool *error, bool *overflow)
 {
@@ -94,8 +97,10 @@ parse_float_from_string (const char *str, bool *error, bool *overflow)
                              consume_sign_and_is_negative(str) ? -1 : 1;
         valid = false;
         for (expon = 0; is_valid_digit(str); valid = true, str++) {
+            const int tmpval = ascii2int(str);
+            *overflow = *overflow || check_for_overflow_int(expon, tmpval);
             expon *= 10;
-            expon += ascii2int(str);
+            expon += tmpval;
         }
         /* Exponent > 255 is unreliable */
         *overflow = *overflow || (expon > 255);
@@ -112,6 +117,15 @@ check_for_overflow(const unsigned long value, const unsigned long cur_val)
 {
     static const unsigned long overflow_cutoff = ULONG_MAX / 10UL;
     static const unsigned long overflow_last_digit_limit = ULONG_MAX % 10UL;
+    return value > overflow_cutoff ||
+          (value == overflow_cutoff && cur_val > overflow_last_digit_limit);
+}
+
+bool
+check_for_overflow_int(const int value, const int cur_val)
+{
+    static const int overflow_cutoff = INT_MAX / 10;
+    static const int overflow_last_digit_limit = INT_MAX % 10;
     return value > overflow_cutoff ||
           (value == overflow_cutoff && cur_val > overflow_last_digit_limit);
 }
