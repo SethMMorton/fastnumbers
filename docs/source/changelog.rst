@@ -3,6 +3,11 @@
 Changelog
 ---------
 
+03-07-2016 v. 0.7.2
+'''''''''''''''''''
+
+    - Fixed overflow bug in exponential parts of floats.
+
 02-29-2016 v. 0.7.1
 '''''''''''''''''''
 

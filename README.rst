@@ -153,7 +153,7 @@ for details into all timing results.
     print("re:", timeit('float_re("56.07")', float_re))
     print("fast", timeit('fast_float("56.07")', 'from fastnumbers import fast_float'))
 
-The results will be similar to the below, by vary on the system you are on::
+The results will be similar to below, but vary based on your system::
 
     Invalid input:
     Try: 2.27156710625
@@ -179,6 +179,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+03-07-2016 v. 0.7.2
+'''''''''''''''''''
+
+    - Fixed overflow bug in exponential parts of floats.
+
 02-29-2016 v. 0.7.1
 '''''''''''''''''''
 
@@ -192,10 +197,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
       a lot of duplication.
     - Sped up functions by eliminating an unnecessary string copy.
     - Improved documentation.
-
-11-01-2015 v. 0.6.2
-'''''''''''''''''''
-
-    - Fixed bug that caused a SystemError exception to be raised
-      on Python 3.5 if a very large int was passed to the "fast"
-      functions.
