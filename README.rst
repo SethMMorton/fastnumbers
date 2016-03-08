@@ -179,6 +179,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+03-07-2016 v. 0.7.2
+'''''''''''''''''''
+
+    - Fixed overflow bug in exponential parts of floats.
+
 02-29-2016 v. 0.7.1
 '''''''''''''''''''
 
@@ -192,10 +197,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
       a lot of duplication.
     - Sped up functions by eliminating an unnecessary string copy.
     - Improved documentation.
-
-11-01-2015 v. 0.6.2
-'''''''''''''''''''
-
-    - Fixed bug that caused a SystemError exception to be raised
-      on Python 3.5 if a very large int was passed to the "fast"
-      functions.
