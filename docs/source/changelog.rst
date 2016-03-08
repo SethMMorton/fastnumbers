@@ -3,6 +3,12 @@
 Changelog
 ---------
 
+03-08-2016 v. 0.7.3
+'''''''''''''''''''
+
+    - Newline is now considered to be whitespace (for consistency with
+      the builtin float and int).
+
 03-07-2016 v. 0.7.2
 '''''''''''''''''''
 

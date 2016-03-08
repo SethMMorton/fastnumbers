@@ -179,6 +179,12 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+03-08-2016 v. 0.7.3
+'''''''''''''''''''
+
+    - Newline is now considered to be whitespace (for consistency with
+      the builtin float and int).
+
 03-07-2016 v. 0.7.2
 '''''''''''''''''''
 
@@ -189,11 +195,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 
     - Fixed compilation bug with MSVC.
     - Added “key” function to transform invalid input arguments.
-
-01-18-2016 v. 0.7.0
-'''''''''''''''''''
-
-    - Broke all functions into smaller components, eliminating
-      a lot of duplication.
-    - Sped up functions by eliminating an unnecessary string copy.
-    - Improved documentation.
