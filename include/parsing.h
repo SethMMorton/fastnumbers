@@ -13,7 +13,7 @@ extern "C" {
 #define ascii2long(c) ((long) (*(c) - '0'))
 #define ascii2ulong(c) ((unsigned long) (*(c) - '0'))
 
-#define is_white_space(c) (*(c) == ' ' || *(c) == '\t')
+#define is_white_space(c) (*(c) == ' ' || *(c) == '\t' || *(c) == '\n')
 #define is_valid_digit(c) (*(c) >= '0' && *(c) <= '9')
 #define is_zero(c) (*(c) == '0')
 #define is_null(c) (*(c) == '\0')
