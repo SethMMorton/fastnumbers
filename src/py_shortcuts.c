@@ -81,10 +81,25 @@ unicode_result_error(const double d, const long i, const PyNumberType type)
 
 static PyObject*
 PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub)
+                     PyObject *inf_sub, PyObject *nan_sub, bool coerce)
 {
     switch (type) {
     case REAL:
+        if (nan_sub != NULL &&
+            PyFloat_CheckExact(pynum) &&
+            Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
+            return Py_INCREF(nan_sub), nan_sub;
+        if (inf_sub != NULL &&
+            PyFloat_CheckExact(pynum) &&
+            Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
+            return Py_INCREF(inf_sub), inf_sub;
+        if (coerce) {
+            if (PyNumber_IsInt(pynum) || PyFloat_is_Intlike(pynum))
+                return PyNumber_ToInt(pynum);
+            else
+                return PyNumber_Float(pynum);
+        }
+        return Py_INCREF(pynum), pynum;
     case FLOAT:
         if (nan_sub != NULL &&
             PyFloat_CheckExact(pynum) &&
@@ -94,7 +109,7 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
             PyFloat_CheckExact(pynum) &&
             Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(inf_sub), inf_sub;
-        return type == REAL ? (Py_INCREF(pynum), pynum) : PyNumber_Float(pynum);
+        return PyNumber_Float(pynum);
     case INT:
     case INTLIKE:
     case FORCEINT:
@@ -151,7 +166,7 @@ convert_PyFloat_to_PyInt(PyObject * fobj)
     if (fobj == NULL)
         return NULL;
     else {
-        PyObject *tmp = PyNumber_to_PyNumber(fobj, INT, NULL, NULL);
+        PyObject *tmp = PyNumber_to_PyNumber(fobj, INT, NULL, NULL, false);
         Py_DECREF(fobj);
         return tmp;
     }
@@ -319,11 +334,11 @@ PyString_is_a_number(PyObject *obj, const PyNumberType type,
 
 PyObject*
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub)
+                     PyObject *inf_sub, PyObject *nan_sub, bool coerce)
 {
     PyObject *bytes = NULL;
     if (PyNumber_Check(obj))
-        return PyNumber_to_PyNumber(obj, type, inf_sub, nan_sub);
+        return PyNumber_to_PyNumber(obj, type, inf_sub, nan_sub, coerce);
     else {
         const char *str = convert_PyString_to_str(obj, &bytes);
         if (str != NULL) {

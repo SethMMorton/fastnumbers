@@ -28,7 +28,7 @@ assess_PyNumber(PyObject *input, PyObject *retval,
 
     /* Handle error. */
     else if (retval == NULL) {
-        if (raise_on_invalid == Py_True) {
+        if (PyObject_IsTrue(raise_on_invalid)) {
             if (type == REAL || type == FLOAT)
                 return PyNumber_Float(input);
             else
@@ -58,18 +58,20 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *key = NULL;
     PyObject *inf_sub = NULL;
     PyObject *nan_sub = NULL;
+    PyObject *coerce = Py_False;
     PyObject *pyreturn = NULL;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "inf", "nan", NULL };
-    static const char *format = "O|OOOOO:fast_real";
+                                "key", "inf", "nan", "coerce", NULL };
+    static const char *format = "O|OOOOOO:fast_real";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key, &inf_sub, &nan_sub))
+                                     &key, &inf_sub, &nan_sub, &coerce))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub);
+    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub,
+                                    PyObject_IsTrue(coerce));
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, REAL);
 }
@@ -96,7 +98,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key, &inf_sub, &nan_sub))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub);
+    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub, false);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, FLOAT);
 }
@@ -121,7 +123,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL);
+    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, false);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, INT);
 }
@@ -146,7 +148,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL);
+    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL, false);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, FORCEINT);
 }
