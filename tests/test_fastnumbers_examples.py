@@ -58,6 +58,9 @@ def test_fast_real():
     # 10. return type
     assert isinstance(fastnumbers.fast_real(4029), int)
     assert isinstance(fastnumbers.fast_real(4029.0), float)
+    assert isinstance(fastnumbers.fast_real(4029, coerce=True), int)
+    assert isinstance(fastnumbers.fast_real(4029.0, coerce=True), int)
+    assert isinstance(fastnumbers.fast_real(4029.5, coerce=True), float)
     assert isinstance(fastnumbers.fast_real("4029"), int)
     assert isinstance(fastnumbers.fast_real("4029.0"), int)
     # 11. TypeError for invalid input

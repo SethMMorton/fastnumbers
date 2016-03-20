@@ -21,7 +21,7 @@ PyString_is_a_number(PyObject *obj, const PyNumberType type,
 
 PyObject*
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub);
+                     PyObject *inf_sub, PyObject *nan_sub, bool coerce);
 
 PyObject*
 PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
