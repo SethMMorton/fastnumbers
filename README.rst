@@ -179,6 +179,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+03-19-2016 v. 0.7.4
+'''''''''''''''''''
+
+    - Added the "coerce" option to fast_real.
+
 03-08-2016 v. 0.7.3
 '''''''''''''''''''
 
@@ -189,9 +194,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 '''''''''''''''''''
 
     - Fixed overflow bug in exponential parts of floats.
-
-02-29-2016 v. 0.7.1
-'''''''''''''''''''
-
-    - Fixed compilation bug with MSVC.
-    - Added “key” function to transform invalid input arguments.
