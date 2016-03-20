@@ -127,7 +127,7 @@ def test_fast_real_given_float_returns_float(x):
 def test_fast_real_given_float_returns_float_or_int_with_coerce(x):
     assume(not math.isnan(x))
     assert fastnumbers.fast_real(x, coerce=True) == int(x) if x.is_integer() else x
-    assert isinstance(fastnumbers.fast_real(x, coerce=True), int if x.is_integer() else float)
+    assert isinstance(fastnumbers.fast_real(x, coerce=True), (int, long) if x.is_integer() else float)
 
 
 def test_fast_real_given_nan_returns_nan():
