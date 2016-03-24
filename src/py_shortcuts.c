@@ -86,11 +86,11 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
     switch (type) {
     case REAL:
         if (nan_sub != NULL &&
-            PyFloat_CheckExact(pynum) &&
+            PyFloat_Check(pynum) &&
             Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(nan_sub), nan_sub;
         if (inf_sub != NULL &&
-            PyFloat_CheckExact(pynum) &&
+            PyFloat_Check(pynum) &&
             Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(inf_sub), inf_sub;
         if (coerce) {
@@ -102,11 +102,11 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
         return Py_INCREF(pynum), pynum;
     case FLOAT:
         if (nan_sub != NULL &&
-            PyFloat_CheckExact(pynum) &&
+            PyFloat_Check(pynum) &&
             Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(nan_sub), nan_sub;
         if (inf_sub != NULL &&
-            PyFloat_CheckExact(pynum) &&
+            PyFloat_Check(pynum) &&
             Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
             return Py_INCREF(inf_sub), inf_sub;
         return PyNumber_Float(pynum);
@@ -114,7 +114,7 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
     case INTLIKE:
     case FORCEINT:
     {
-        if (PyFloat_CheckExact(pynum)) { /* Watch out for un-intable numbers. */
+        if (PyFloat_Check(pynum)) { /* Watch out for un-intable numbers. */
             const double d = PyFloat_AS_DOUBLE(pynum);
             if (Py_IS_NAN(d) || Py_IS_INFINITY(d))
                 return NULL;
@@ -184,7 +184,7 @@ str_to_PyNumber(const char* str, const PyNumberType type,
     {
         const PyNumberType t = string_contains_integer(str) ? INT : FLOAT;
         pyresult = str_to_PyNumber(str, t, inf_sub, nan_sub);
-        if (pyresult != NULL && t == FLOAT && PyFloat_CheckExact(pyresult))
+        if (pyresult != NULL && t == FLOAT && PyFloat_Check(pyresult))
             if (string_contains_intlike_float(str))
                 pyresult = convert_PyFloat_to_PyInt(pyresult);
         break;
@@ -220,7 +220,7 @@ str_to_PyNumber(const char* str, const PyNumberType type,
     case FORCEINT:
     {
         pyresult = str_to_PyNumber(str, REAL, inf_sub, nan_sub);
-        if (pyresult != NULL && PyFloat_CheckExact(pyresult))
+        if (pyresult != NULL && PyFloat_Check(pyresult))
             pyresult = convert_PyFloat_to_PyInt(pyresult);
     }
     }
@@ -292,7 +292,7 @@ PyNumber_is_correct_type(PyObject *obj,
     case REAL:
         return true;
     case FLOAT:
-        return PyFloat_CheckExact(obj);
+        return PyFloat_Check(obj);
     case INT:
         return PyNumber_IsInt(obj);
     case INTLIKE:

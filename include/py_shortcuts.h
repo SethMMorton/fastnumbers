@@ -31,12 +31,12 @@ PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
 #if PY_MAJOR_VERSION >= 3
 #define long_to_PyInt(val) PyLong_FromLong(val)
 #define str_to_PyInt(str) PyLong_FromString((str), NULL, 10)
-#define PyNumber_IsInt(obj) PyLong_CheckExact(obj)
+#define PyNumber_IsInt(obj) PyLong_Check(obj)
 #define PyNumber_ToInt(obj) PyNumber_Long(obj)
 #else
 #define long_to_PyInt(val) PyInt_FromLong(val)
 #define str_to_PyInt(str) PyNumber_Int(PyLong_FromString((str), NULL, 10))
-#define PyNumber_IsInt(obj) (PyInt_CheckExact(obj) || PyLong_CheckExact(obj))
+#define PyNumber_IsInt(obj) (PyInt_CheckExact(obj) || PyLong_Check(obj))
 #define PyNumber_ToInt(obj) PyNumber_Int(obj)
 #endif
 

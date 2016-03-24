@@ -30,13 +30,13 @@ const char*
 convert_PyString_to_str(PyObject *input, PyObject **bytes_object)
 {
     *bytes_object = NULL;
-    if (PyBytes_CheckExact(input)) {
+    if (PyBytes_Check(input)) {
         const char *str = PyBytes_AS_STRING(input);
         if (strlen(str) != (size_t) PyBytes_GET_SIZE(input))
             return "\0";
         return str;
     }
-    else if (PyUnicode_CheckExact(input)) {
+    else if (PyUnicode_Check(input)) {
         *bytes_object = PyUnicode_AsEncodedString(input, "ascii", "strict");
         if (*bytes_object != NULL) {
             const char *str = PyBytes_AS_STRING(*bytes_object);
@@ -75,7 +75,7 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
     Py_ssize_t u_len = 0;
     Py_ssize_t i = 0;  /* Looping variable */
 
-    if (!PyUnicode_CheckExact(input))
+    if (!PyUnicode_Check(input))
         return NULL_UNI;
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
     if (PyUnicode_READY(input))  /* If true, then not OK for conversion. */
