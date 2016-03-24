@@ -337,8 +337,11 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
                      PyObject *inf_sub, PyObject *nan_sub, bool coerce)
 {
     PyObject *bytes = NULL;
-    if (PyNumber_Check(obj))
-        return PyNumber_to_PyNumber(obj, type, inf_sub, nan_sub, coerce);
+    if (PyNumber_Check(obj)) {
+        PyObject *num = PyNumber_to_PyNumber(obj, type, inf_sub, nan_sub,
+                                             coerce);
+        return PyErr_Clear(), num;
+    }
     else {
         const char *str = convert_PyString_to_str(obj, &bytes);
         if (str != NULL) {

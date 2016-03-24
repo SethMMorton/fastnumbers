@@ -79,6 +79,16 @@ def a_number(s):
     return False
 
 
+class DumbFloatClass(object):
+    def __float__(self):
+        raise ValueError("something here might go wrong")
+
+
+class DumbIntClass(object):
+    def __int__(self):
+        raise ValueError("something here might go wrong")
+
+
 def test_version():
     assert hasattr(fastnumbers, '__version__')
 
@@ -112,6 +122,14 @@ def test_safe_and_fast_are_the_same():
 #############
 # Fast Real #
 #############
+
+
+def test_fast_real_with_coerce_given_dumb_class_responds_to_internal_ValueError():
+    x = DumbFloatClass()
+    assert fastnumbers.fast_real(x, coerce=True) is x
+    with raises(ValueError):
+        fastnumbers.fast_real(x, coerce=True, raise_on_invalid=True)
+    assert fastnumbers.fast_real(x, coerce=True, default=5) == 5
 
 
 @given(floats())
@@ -315,6 +333,14 @@ def test_fast_real_returns_transformed_input_if_invalid_and_key_is_given(x):
 ##############
 
 
+def test_fast_float_given_dumb_class_responds_to_internal_ValueError():
+    x = DumbFloatClass()
+    assert fastnumbers.fast_float(x) is x
+    with raises(ValueError):
+        fastnumbers.fast_float(x, raise_on_invalid=True)
+    assert fastnumbers.fast_float(x, default=5) == 5
+
+
 @given(floats())
 def test_fast_float_given_float_returns_float(x):
     assume(not math.isnan(x))
@@ -503,6 +529,14 @@ def test_fast_float_returns_transformed_input_if_invalid_and_key_is_given(x):
 ############
 
 
+def test_fast_int_given_dumb_class_responds_to_internal_ValueError():
+    x = DumbIntClass()
+    assert fastnumbers.fast_int(x) is x
+    with raises(ValueError):
+        fastnumbers.fast_int(x, raise_on_invalid=True)
+    assert fastnumbers.fast_int(x, default=5) == 5
+
+
 @given(floats())
 def test_fast_int_given_float_returns_int(x):
     assume(not math.isnan(x))
@@ -668,6 +702,14 @@ def test_fast_int_returns_transformed_input_if_invalid_and_key_is_given(x):
 #################
 # Fast Forceint #
 #################
+
+
+def test_fast_forceint_given_dumb_class_responds_to_internal_ValueError():
+    x = DumbIntClass()
+    assert fastnumbers.fast_forceint(x) is x
+    with raises(ValueError):
+        fastnumbers.fast_forceint(x, raise_on_invalid=True)
+    assert fastnumbers.fast_forceint(x, default=5) == 5
 
 
 @given(floats())

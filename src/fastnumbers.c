@@ -17,8 +17,7 @@ assess_PyNumber(PyObject *input, PyObject *retval,
                 PyObject *default_value, PyObject *raise_on_invalid,
                 PyObject *key, const PyNumberType type)
 {
-    /* NULL and no error set? It must be a TypeError.
-       These always raise an error. */
+    /* None? It must be a TypeError. These always raise an error. */
     if (retval == Py_None) {
         PyErr_Format(PyExc_TypeError,
                      "expected str, float, or int argument, got %.200s",
