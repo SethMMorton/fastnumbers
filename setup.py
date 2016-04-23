@@ -15,7 +15,8 @@ from setuptools import setup, Extension, find_packages, Command
 from setuptools.command.test import test as TestCommand
 
 
-DESCRIPTION = "Quickly convert strings to number types."
+DESCRIPTION = ("Efficiently perform string to number type "
+               "conversion with error handling.")
 try:
     with open('README.rst') as fl:
         LONG_DESCRIPTION = fl.read()
@@ -115,16 +116,26 @@ setup(name='fastnumbers',
       long_description=LONG_DESCRIPTION,
       tests_require=['pytest', 'hypothesis'],
       cmdclass={'test': PyTest, 'distclean': Distclean},
-      classifiers=(b'Development Status :: 4 - Beta',
-                   #b'Development Status :: 5 - Production/Stable',
-                   b'Intended Audience :: Science/Research',
-                   b'Intended Audience :: Developers',
-                   b'Operating System :: OS Independent',
-                   b'License :: OSI Approved :: MIT License',
-                   b'Natural Language :: English',
-                   b'Programming Language :: Python :: 2.6',
-                   b'Programming Language :: Python :: 2.7',
-                   b'Programming Language :: Python :: 3',
-                   b'Topic :: Utilities',
-                   )
+      classifiers=(
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Financial and Insurance Industry',
+        'Operating System :: OS Independent',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Utilities',
+        'Topic :: Text Processing',
+        'Topic :: Text Processing :: Filters',
+    )
 )

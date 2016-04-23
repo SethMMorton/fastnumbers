@@ -1,21 +1,11 @@
 include README.rst
 include LICENSE
-graft src
-graft include
-include tests/test_fastnumbers.py
-include tests/test_fastnumbers_examples.py
-include tests/time_base.py
-include tests/time_real.py
-include tests/time_float.py
-include tests/time_int.py
-include tests/time_forceint.py
-include tests/time_isreal.py
-include tests/time_isfloat.py
-include tests/time_isint.py
-include tests/time_isintlike.py
-include tests/time_short.py
 include setup.py
 include setup.cfg
 include patch_doctest.py
-prune tests/__pycache__
+include tox.ini
+graft src
+graft include
+graft tests
+global-exclude *.py[cod] __pycache__ *.so
 graft docs/source

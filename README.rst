@@ -4,7 +4,7 @@ fastnumbers
 .. image:: https://travis-ci.org/SethMMorton/fastnumbers.svg?branch=develop
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
-Convert strings to numbers quickly.
+Efficiently perform string to number type conversion with error handling.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
     - Downloads: https://pypi.python.org/pypi/fastnumbers
@@ -144,7 +144,7 @@ for details into all timing results.
     '''
 
     print('Invalid input:')
-    print("Try:", timeit('float_try("invalid")', float_try))
+    print("try:", timeit('float_try("invalid")', float_try))
     print("re:", timeit('float_re("invalid")', float_re))
     print("fast", timeit('fast_float("invalid")', 'from fastnumbers import fast_float'))
     print()
@@ -156,7 +156,7 @@ for details into all timing results.
 The results will be similar to below, but vary based on your system::
 
     Invalid input:
-    Try: 2.27156710625
+    try: 2.27156710625
     re: 0.570491075516
     fast 0.173984050751
 
