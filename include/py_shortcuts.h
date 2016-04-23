@@ -36,7 +36,7 @@ PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
 #else
 #define long_to_PyInt(val) PyInt_FromLong(val)
 #define str_to_PyInt(str) PyNumber_Int(PyLong_FromString((str), NULL, 10))
-#define PyNumber_IsInt(obj) (PyInt_CheckExact(obj) || PyLong_Check(obj))
+#define PyNumber_IsInt(obj) (PyInt_Check(obj) || PyLong_Check(obj))
 #define PyNumber_ToInt(obj) PyNumber_Int(obj)
 #endif
 
