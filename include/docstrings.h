@@ -12,58 +12,6 @@
 PyDoc_STRVAR(fastnumbers__doc__, "Quickly convert strings to numbers.\n");
 
 
-PyDoc_STRVAR(safe_real__doc__, 
-"safe_real(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
-"Identical to `fast_real`; kept for backwards compatibility.\n"
-"\n"
-"Deprecated as of ``fastnumbers`` version >= 0.3.0, please use\n"
-"`fast_real` instead.\n"
-"\n"
-"See Also\n"
-"--------\n"
-"fast_real\n"
-"\n");
-
-
-PyDoc_STRVAR(safe_float__doc__, 
-"safe_float(x, default=None, raise_on_invalid=False, nan=None, inf=None)\n"
-"Identical to `fast_float`; kept for backwards compatibility.\n"
-"\n"
-"Deprecated as of ``fastnumbers`` version >= 0.3.0, please use\n"
-"`fast_float` instead.\n"
-"\n"
-"See Also\n"
-"--------\n"
-"fast_float\n"
-"\n");
-
-
-PyDoc_STRVAR(safe_int__doc__, 
-"safe_int(x, default=None, raise_on_invalid=False)\n"
-"Identical to `fast_int`; kept for backwards compatibility.\n"
-"\n"
-"Deprecated as of ``fastnumbers`` version >= 0.3.0, please use\n"
-"`fast_int` instead.\n"
-"\n"
-"See Also\n"
-"--------\n"
-"fast_int\n"
-"\n");
-
-
-PyDoc_STRVAR(safe_forceint__doc__, 
-"safe_forceint(x, default=None, raise_on_invalid=False)\n"
-"Identical to `fast_forceint`; kept for backwards compatibility.\n"
-"\n"
-"Deprecated as of ``fastnumbers`` version >= 0.3.0, please use\n"
-"`fast_forceint` instead.\n"
-"\n"
-"See Also\n"
-"--------\n"
-"fast_forceint\n"
-"\n");
-
-
 PyDoc_STRVAR(fast_real__doc__, 
 "fast_real(x, default=None, raise_on_invalid=False, key=None, nan=None, inf=None, coerce=True)\n"
 "Quickly convert input to an `int` or `float` depending on value.\n"

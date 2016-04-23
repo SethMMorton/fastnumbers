@@ -251,8 +251,8 @@ def test_fast_forceint():
     # 9. long string
     assert fastnumbers.fast_forceint("35892482945872302493") == 35892482945872302493
     # 10. return type
-    assert isinstance(fastnumbers.safe_forceint(4029.00), int)
-    assert isinstance(fastnumbers.safe_forceint("4029.00"), int)
+    assert isinstance(fastnumbers.fast_forceint(4029.00), int)
+    assert isinstance(fastnumbers.fast_forceint("4029.00"), int)
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_forceint(['hey'])

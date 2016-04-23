@@ -253,45 +253,8 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 
-static PyObject *
-fastnumbers_safe_real(PyObject *self, PyObject *args, PyObject *kwargs) {
-    const char *msg = "please use fast_real instead of safe_real";
-    PyErr_WarnEx(PyExc_DeprecationWarning, msg, 1);
-    return fastnumbers_fast_real(self, args, kwargs);
-}
-
-static PyObject *
-fastnumbers_safe_float(PyObject *self, PyObject *args, PyObject *kwargs) {
-    const char *msg = "please use fast_float instead of safe_float";
-    PyErr_WarnEx(PyExc_DeprecationWarning, msg, 1);
-    return fastnumbers_fast_float(self, args, kwargs);
-}
-
-static PyObject *
-fastnumbers_safe_int(PyObject *self, PyObject *args, PyObject *kwargs) {
-    const char *msg = "please use fast_int instead of safe_int";
-    PyErr_WarnEx(PyExc_DeprecationWarning, msg, 1);
-    return fastnumbers_fast_int(self, args, kwargs);
-}
-
-static PyObject *
-fastnumbers_safe_forceint(PyObject *self, PyObject *args, PyObject *kwargs) {
-    const char *msg = "please use fast_forceint instead of safe_forceint";
-    PyErr_WarnEx(PyExc_DeprecationWarning, msg, 1);
-    return fastnumbers_fast_forceint(self, args, kwargs);
-}
-
-
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
-    { "safe_real",     (PyCFunction) fastnumbers_safe_real,
-                       METH_VARARGS | METH_KEYWORDS, safe_real__doc__ },
-    { "safe_float",    (PyCFunction) fastnumbers_safe_float,
-                       METH_VARARGS | METH_KEYWORDS, safe_float__doc__ },
-    { "safe_int",      (PyCFunction) fastnumbers_safe_int,
-                       METH_VARARGS | METH_KEYWORDS, safe_int__doc__ },
-    { "safe_forceint", (PyCFunction) fastnumbers_safe_forceint,
-                       METH_VARARGS | METH_KEYWORDS, safe_forceint__doc__ },
     { "fast_real",     (PyCFunction) fastnumbers_fast_real,
                        METH_VARARGS | METH_KEYWORDS, fast_real__doc__ },
     { "fast_float",    (PyCFunction) fastnumbers_fast_float,
