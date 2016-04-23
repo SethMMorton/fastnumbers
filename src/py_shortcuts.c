@@ -193,8 +193,11 @@ str_to_PyNumber(const char* str, const PyNumberType type,
     {
         double result = parse_float_from_string(str, &error, &overflow);
         if (!error) {
-            if (overflow)
-                result = strtod(str, NULL);
+            if (overflow) {
+                char* end;  /* To avoid errors for trailing whitespace. */
+                consume_white_space(str);
+                result = PyOS_string_to_double(str, &end, NULL);
+            }
             if (inf_sub != NULL && Py_IS_INFINITY(result)) {
                 pyresult = inf_sub;
                 Py_INCREF(pyresult);
