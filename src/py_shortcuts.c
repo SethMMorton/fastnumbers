@@ -199,7 +199,7 @@ str_to_PyNumber(const char* str, const PyNumberType type,
             if (overflow) {
                 char* end;  /* To avoid errors for trailing whitespace. */
                 consume_white_space(str);
-                result = PyOS_string_to_double(str, &end, NULL);
+                result = str_to_double(str, &end);
             }
             if (inf_sub != NULL && Py_IS_INFINITY(result)) {
                 pyresult = inf_sub;

@@ -40,6 +40,12 @@ PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
 #define PyNumber_ToInt(obj) PyNumber_Int(obj)
 #endif
 
+#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 6
+#define str_to_double(str, endptr) PyOS_ascii_strtod((str), (endptr))
+#else
+#define str_to_double(str, endptr) PyOS_string_to_double((str), (endptr), NULL)
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
