@@ -175,7 +175,7 @@ convert_PyFloat_to_PyInt(PyObject * fobj)
 
 static PyObject*
 str_to_PyNumber(const char* str, const PyNumberType type,
-                PyObject *inf_sub, PyObject *nan_sub)
+                PyObject *inf_sub, PyObject *nan_sub, bool coerce)
 {
     bool error = false, overflow = false;
     PyObject *pyresult = NULL;
@@ -183,9 +183,12 @@ str_to_PyNumber(const char* str, const PyNumberType type,
     case REAL:
     {
         const PyNumberType t = string_contains_integer(str) ? INT : FLOAT;
-        pyresult = str_to_PyNumber(str, t, inf_sub, nan_sub);
-        if (pyresult != NULL && t == FLOAT && PyFloat_Check(pyresult))
-            if (string_contains_intlike_float(str))
+        pyresult = str_to_PyNumber(str, t, inf_sub, nan_sub, coerce);
+        if (coerce &&
+            pyresult != NULL &&
+            t == FLOAT &&
+            PyFloat_Check(pyresult) &&
+            string_contains_intlike_float(str))
                 pyresult = convert_PyFloat_to_PyInt(pyresult);
         break;
     }
@@ -222,7 +225,7 @@ str_to_PyNumber(const char* str, const PyNumberType type,
     case INTLIKE:
     case FORCEINT:
     {
-        pyresult = str_to_PyNumber(str, REAL, inf_sub, nan_sub);
+        pyresult = str_to_PyNumber(str, REAL, inf_sub, nan_sub, true);
         if (pyresult != NULL && PyFloat_Check(pyresult))
             pyresult = convert_PyFloat_to_PyInt(pyresult);
     }
@@ -350,7 +353,8 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
         if (str != NULL) {
             PyObject *pyreturn = is_null(str)
                                ? NULL
-                               : str_to_PyNumber(str, type, inf_sub, nan_sub);
+                               : str_to_PyNumber(str, type, inf_sub, nan_sub,
+                                                 coerce);
             Py_XDECREF(bytes);
             return pyreturn;
         }

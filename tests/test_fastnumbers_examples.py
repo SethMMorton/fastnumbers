@@ -57,12 +57,13 @@ def test_fast_real():
     assert fastnumbers.fast_real("35892482945872302493") == 35892482945872302493
     # 10. return type
     assert isinstance(fastnumbers.fast_real(4029), int)
-    assert isinstance(fastnumbers.fast_real(4029.0), float)
-    assert isinstance(fastnumbers.fast_real(4029, coerce=True), int)
-    assert isinstance(fastnumbers.fast_real(4029.0, coerce=True), int)
-    assert isinstance(fastnumbers.fast_real(4029.5, coerce=True), float)
+    assert isinstance(fastnumbers.fast_real(4029.0, coerce=False), float)
+    assert isinstance(fastnumbers.fast_real(4029), int)
+    assert isinstance(fastnumbers.fast_real(4029.0), int)
+    assert isinstance(fastnumbers.fast_real(4029.5), float)
     assert isinstance(fastnumbers.fast_real("4029"), int)
     assert isinstance(fastnumbers.fast_real("4029.0"), int)
+    assert isinstance(fastnumbers.fast_real("4029.0", coerce=False), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
         fastnumbers.fast_real(['hey'])

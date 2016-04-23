@@ -57,7 +57,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *key = NULL;
     PyObject *inf_sub = NULL;
     PyObject *nan_sub = NULL;
-    PyObject *coerce = Py_False;
+    PyObject *coerce = Py_True;
     PyObject *pyreturn = NULL;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", "coerce", NULL };

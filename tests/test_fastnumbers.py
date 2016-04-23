@@ -135,10 +135,18 @@ def test_fast_real_with_coerce_given_dumb_class_responds_to_internal_ValueError(
 @given(floats())
 def test_fast_real_given_float_returns_float(x):
     assume(not math.isnan(x))
-    assert fastnumbers.fast_real(x) == x
-    assert fastnumbers.fast_real(x, raise_on_invalid=True) == x
-    assert fastnumbers.fast_real(x, None, True) == x
-    assert isinstance(fastnumbers.fast_real(x), float)
+    assert fastnumbers.fast_real(x, coerce=False) == x
+    assert fastnumbers.fast_real(x, raise_on_invalid=True, coerce=False) == x
+    assert fastnumbers.fast_real(x, None, True, coerce=False) == x
+    assert isinstance(fastnumbers.fast_real(x, coerce=False), float)
+
+
+@given(floats())
+def test_fast_real_given_float_returns_int_if_intlike_with_coerce(x):
+    assume(not math.isnan(x))
+    assume(x.is_integer())
+    assert fastnumbers.fast_real(x, coerce=True) == int(float(x))
+    assert isinstance(fastnumbers.fast_real(x, coerce=True), (long, int))
 
 
 @given(floats())
@@ -164,12 +172,18 @@ def test_fast_real_with_inf_given_inf_string_returns_sub_value():
 @example(5.675088586167575e-116)
 def test_fast_real_given_float_string_returns_float(x):
     assume(not math.isnan(x))
-    assume(not x.is_integer())
     y = repr(x)
-    assert fastnumbers.fast_real(y) == x
-    assert fastnumbers.fast_real(y, raise_on_invalid=True) == x
-    assert fastnumbers.fast_real(y, None, True) == x
-    assert isinstance(fastnumbers.fast_real(y), float)
+    assert fastnumbers.fast_real(y, coerce=False) == x
+    assert fastnumbers.fast_real(y, raise_on_invalid=True, coerce=False) == x
+    assert fastnumbers.fast_real(y, None, True, coerce=False) == x
+    assert isinstance(fastnumbers.fast_real(y, coerce=False), float)
+
+
+@given(integers())
+def test_fast_real_given_float_string_returns_int_with_coerce_with_intlike(x):
+    y = repr(float(x))
+    assert fastnumbers.fast_real(y, coerce=True) == int(float(x))
+    assert isinstance(fastnumbers.fast_real(y, coerce=True), (long, int))
 
 
 def test_fast_real_given_nan_string_returns_nan():
@@ -195,10 +209,9 @@ def test_fast_real_with_inf_given_inf_string_returns_sub_value():
 @given(floats(), integers(0, 100), integers(0, 100))
 def test_fast_real_given_padded_float_strings_returns_float(x, y, z):
     assume(not math.isnan(x))
-    assume(not x.is_integer())
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
-    assert fastnumbers.fast_real(y) == x
-    assert isinstance(fastnumbers.fast_real(y), float)
+    assert fastnumbers.fast_real(y, coerce=False) == x
+    assert isinstance(fastnumbers.fast_real(y, coerce=False), float)
 
 
 def test_fast_real_given_padded_nan_returns_nan():
