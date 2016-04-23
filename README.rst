@@ -1,7 +1,7 @@
 fastnumbers
 ===========
 
-.. image:: https://travis-ci.org/SethMMorton/fastnumbers.svg?branch=develop
+.. image:: https://travis-ci.org/SethMMorton/fastnumbers.svg?branch=master
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
 Efficiently perform string to number type conversion with error handling.
