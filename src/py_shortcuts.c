@@ -6,17 +6,6 @@
 #include "fast_conversions.h"
 
 
-#ifdef _MSC_VER
-#if _MSC_VER < 1800
-/* Compensate for missing round in MSVC */
-static double
-round(double val) {    
-    return (val > 0.0) ? floor(val + 0.5) : floor(val - 0.5); 
-}
-#endif
-#endif
-
-
 PyObject*
 PyBool_from_bool_and_DECREF(const bool b, PyObject *obj)
 {
@@ -42,7 +31,7 @@ static bool
 double_is_intlike(const double val)
 {
     if (val < LONG_MAX && val > LONG_MIN)
-        return val == round(val);
+        return val == (long) val;
     else {
         PyObject *pyval = PyFloat_FromDouble(val);
         if (pyval == NULL)
@@ -57,7 +46,7 @@ PyFloat_is_Intlike(PyObject *obj)
 {
     const double dval = PyFloat_AS_DOUBLE(obj);
     if (dval < LONG_MAX && dval > LONG_MIN)
-        return dval == round(dval);
+        return dval == (long) dval;
     return _PyFloat_is_Intlike(obj);
 }
 
