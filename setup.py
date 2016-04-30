@@ -48,7 +48,11 @@ class PyTest(TestCommand):
     def run_tests(self):
         #import here, cause outside the eggs aren't loaded
         import pytest
-        sys.exit(pytest.main(['--doctest-glob', 'README.rst']))
+        if sys.version[:3] == '2.6':
+            sys.exit(pytest.main(['tests/test_fastnumbers_examples.py',
+                                  'README.rst']))
+        else:
+            sys.exit(pytest.main(['--doctest-glob', 'README.rst']))
 
 
 class Distclean(Command):
@@ -98,6 +102,12 @@ sourcefiles = ['parse_integer_from_string.c',
 sourcefiles = [join('src', sf) for sf in sourcefiles]
 
 
+# Define what the tests require.
+test_requires = ['pytest']
+if sys.version[:3] != '2.6':
+    test_requires.append('hypothesis')
+
+
 # Extension definition
 ext = Extension('fastnumbers', sourcefiles,
                 include_dirs=[abspath(join('include'))],
@@ -114,7 +124,7 @@ setup(name='fastnumbers',
       ext_modules=[ext],
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
-      tests_require=['pytest', 'hypothesis'],
+      tests_require=test_requires,
       cmdclass={'test': PyTest, 'distclean': Distclean},
       classifiers=(
         'Development Status :: 5 - Production/Stable',
