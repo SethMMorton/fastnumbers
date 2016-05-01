@@ -179,6 +179,20 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
 
+04-23-2016 v. 1.0.0
+'''''''''''''''''''
+
+    - "coerce" in ``fast_real`` now applies to any input, not just numeric;
+      the default is now *True* instead of *False*.
+    - Now all ASCII whitespace characters are stripped by fastnumbers
+    - Typechecking is now more forgiving
+    - fastnumbers now checks for errors when converting between numeric types
+    - Fixed bug where very small numbers are not converted properly
+    - Testing now includes Python 2.6.
+    - Removed ``safe_*`` functions (which were deprecated since version 0.3.0)
+    - Fixed unicode handling on Windows.
+    - Fixed Python2.6 on Windows.
+
 03-19-2016 v. 0.7.4
 '''''''''''''''''''
 
@@ -189,8 +203,3 @@ for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html
 
     - Newline is now considered to be whitespace (for consistency with
       the builtin float and int).
-
-03-07-2016 v. 0.7.2
-'''''''''''''''''''
-
-    - Fixed overflow bug in exponential parts of floats.

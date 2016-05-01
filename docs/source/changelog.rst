@@ -3,6 +3,20 @@
 Changelog
 ---------
 
+04-23-2016 v. 1.0.0
+'''''''''''''''''''
+
+    - "coerce" in ``fast_real`` now applies to any input, not just numeric;
+      the default is now *True* instead of *False*.
+    - Now all ASCII whitespace characters are stripped by fastnumbers
+    - Typechecking is now more forgiving
+    - fastnumbers now checks for errors when converting between numeric types
+    - Fixed bug where very small numbers are not converted properly
+    - Testing now includes Python 2.6.
+    - Removed ``safe_*`` functions (which were deprecated since version 0.3.0)
+    - Fixed unicode handling on Windows.
+    - Fixed Python2.6 on Windows.
+
 03-19-2016 v. 0.7.4
 '''''''''''''''''''
 
@@ -52,7 +66,7 @@ Changelog
 '''''''''''''''''''
 
     - Fixed issue where giving a default of *None* would be ignored.
-    - Added the "nan" and "inf" options to "fast_real" and "fast_float".
+    - Added the "nan" and "inf" options to ``fast_real`` and ``fast_float``.
       These options allow alternate return values in the case of *nan*
       or *inf*, respectively.
     - Improved documentation.
