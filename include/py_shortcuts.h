@@ -29,11 +29,19 @@ PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
 #define PyBool_from_bool(b) ((b) ? (Py_INCREF(Py_True), Py_True) \
                                  : (Py_INCREF(Py_False), Py_False))
 #if PY_MAJOR_VERSION >= 3
+#define uni_tonumeric(uni) Py_UNICODE_TONUMERIC(uni)
+#define uni_todigit(uni) Py_UNICODE_TODIGIT(uni)
+#define uni_isnumeric(uni) Py_UNICODE_ISNUMERIC(uni)
+#define uni_isdigit(uni) Py_UNICODE_ISDIGIT(uni)
 #define long_to_PyInt(val) PyLong_FromLong(val)
 #define str_to_PyInt(str) PyLong_FromString((str), NULL, 10)
 #define PyNumber_IsInt(obj) PyLong_Check(obj)
 #define PyNumber_ToInt(obj) PyNumber_Long(obj)
 #else
+#define uni_tonumeric(uni) Py_UNICODE_TONUMERIC((Py_UNICODE) (uni))
+#define uni_todigit(uni) Py_UNICODE_TODIGIT((Py_UNICODE) (uni))
+#define uni_isnumeric(uni) Py_UNICODE_ISNUMERIC((Py_UNICODE) (uni))
+#define uni_isdigit(uni) Py_UNICODE_ISDIGIT((Py_UNICODE) (uni))
 #define long_to_PyInt(val) PyInt_FromLong(val)
 #define str_to_PyInt(str) PyNumber_Int(PyLong_FromString((str), NULL, 10))
 #define PyNumber_IsInt(obj) (PyInt_Check(obj) || PyLong_Check(obj))

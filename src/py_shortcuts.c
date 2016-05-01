@@ -118,8 +118,8 @@ PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
 static PyObject*
 PyUnicode_to_PyNumber(const Py_UCS4 uni, const PyNumberType type)
 {
-    const double dresult = Py_UNICODE_TONUMERIC((Py_UNICODE) uni);
-    const long iresult = Py_UNICODE_TODIGIT((Py_UNICODE) uni);
+    const double dresult = uni_tonumeric(uni);
+    const long iresult = uni_todigit(uni);
     if (unicode_result_error(dresult, iresult, type))
         return NULL;
     switch (type) {
@@ -229,7 +229,7 @@ PyUnicode_is_int(PyObject *obj)
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (uni == NULL_UNI)
         return false;
-    return Py_UNICODE_ISDIGIT((Py_UNICODE) uni);
+    return uni_isdigit(uni);
 }
 
 
@@ -239,10 +239,10 @@ PyUnicode_is_intlike(PyObject *obj)
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (uni == NULL_UNI)
         return false;
-    else if (Py_UNICODE_ISDIGIT((Py_UNICODE) uni))
+    else if (uni_isdigit(uni))
         return true;
     else {
-        const double val = Py_UNICODE_TONUMERIC((Py_UNICODE) uni);
+        const double val = uni_tonumeric(uni);
         if (val <= -1.0)
             return false;  /* Lowerbound of values is > -1.0. */
         return double_is_intlike(val);
@@ -256,7 +256,7 @@ PyUnicode_is_float(PyObject *obj)
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (uni == NULL_UNI)
         return false;
-    return Py_UNICODE_ISNUMERIC((Py_UNICODE) uni);
+    return uni_isnumeric(uni);
 }
 
 

@@ -7,6 +7,12 @@
 #include <Python.h>
 #include "py_to_char.h"
 
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
+#define uni_isspace(uni) Py_UNICODE_ISSPACE(uni)
+#else
+#define uni_isspace(uni) Py_UNICODE_ISSPACE((Py_UNICODE) (uni))
+#endif
+
 static Py_ssize_t
 get_PyUnicode_length(PyObject *input);
 
@@ -103,7 +109,7 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
     /* call it an error and quit. */
     for (i = 0; i < u_len; ++i) {
         const Py_UCS4 uc = read_PyUnicode_char(us, i);
-        if (!Py_UNICODE_ISSPACE((unsigned long) uc)) {
+        if (!uni_isspace(uc)) {
             if (found_char) {
                 if (needs_free) free(us);
                 return ERR_UNI;
