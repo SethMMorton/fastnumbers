@@ -19,13 +19,6 @@ get_PyUnicode_length(PyObject *input);
 static Py_UCS4
 read_first_PyUnicode_char(PyObject *input);
 
-static Py_UCS4
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-read_PyUnicode_char(const Py_UCS4 *input, const Py_ssize_t i);
-#else
-read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i);
-#endif
-
 
 /*
  * Try to convert the Python object to bytes (i.e. char*).
@@ -69,18 +62,11 @@ convert_PyString_to_str(PyObject *input, PyObject **bytes_object)
 Py_UCS4
 convert_PyUnicode_to_unicode_char(PyObject *input)
 {
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-     static const bool needs_free = true;
-     Py_UCS4 *us = NULL;
-#else
-     static const bool needs_free = false;
-     Py_UNICODE *us = NULL;
-#endif
     Py_UCS4 uni = NULL_UNI;
-    bool found_char = false;
-    Py_ssize_t u_len = 0;
-    Py_ssize_t i = 0;  /* Looping variable */
+    PyObject * element = NULL;
+    PyObject * split = NULL;
 
+    /* Ensure input is a valid unicode object. */
     if (!PyUnicode_Check(input))
         return NULL_UNI;
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
@@ -88,40 +74,35 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
         return NULL_UNI;
 #endif
 
-    u_len = get_PyUnicode_length(input);
-    if (u_len == 1)  /* Only one character - return now. */
+    /* Is the input already of length 1? If so, return now. */
+    if (get_PyUnicode_length(input) == 1) {
         return read_first_PyUnicode_char(input);
+    }
 
-
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-    us = PyUnicode_AsUCS4Copy(input);
-#else
-    us = PyUnicode_AsUnicode(input);
-#endif
-    if (us == NULL) {
+    /* For some reason, the C API does not give good access to the unicode
+     * strip operation. Luckily split also strips off whitespace, so we can
+     * use this fact to remove any whitespace from our input.
+     */
+    split = PyUnicode_Split(input, NULL, -1);
+    if (split == NULL) {
         PyErr_Clear();
         return ERR_UNI;
     }
 
-    /* Loop over each character of the unicode array. */
-    /* Skip whitespace, looking to find only a single */
-    /* non-whitespace character. If multiple found, */
-    /* call it an error and quit. */
-    for (i = 0; i < u_len; ++i) {
-        const Py_UCS4 uc = read_PyUnicode_char(us, i);
-        if (!uni_isspace(uc)) {
-            if (found_char) {
-                if (needs_free) free(us);
-                return ERR_UNI;
-            } else {
-                found_char = true;
-                uni = uc;
-            }
-        }
-    }
-    if (needs_free) free(us);
-    if (uni == NULL_UNI)  /* Only whitespace found */
+    /* Ensure that both the list and the first element have length 1. */
+    if (PySequence_Length(split) != 1) {
+        Py_DECREF(split);
         return ERR_UNI;
+    }
+    element = PyList_GET_ITEM(split, 0);
+    if (get_PyUnicode_length(element) != 1) {
+        Py_DECREF(split);
+        return ERR_UNI;
+    }
+
+    /* If only a single element, return it. */
+    uni = read_first_PyUnicode_char(element);
+    Py_DECREF(split);
     return uni;
 }
 
@@ -153,18 +134,3 @@ read_first_PyUnicode_char(PyObject *input)
     return (Py_UCS4) us[0];
 #endif
 }
-
-
-/* Get a particular character from a unicode char array by index. */
-static Py_UCS4
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-read_PyUnicode_char(const Py_UCS4 *input, const Py_ssize_t i)
-{
-    return PyUnicode_READ(PyUnicode_4BYTE_KIND, input, i);
-}
-#else
-read_PyUnicode_char(const Py_UNICODE *input, const Py_ssize_t i)
-{
-    return (Py_UCS4) input[i];
-}
-#endif
