@@ -20,5 +20,4 @@ before_script:
 - python patch_doctest.py
 script:
 - python -m doctest fastnumbers*.so
-- if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then python -m pytest tests/test_fastnumbers_examples.py README.rst; fi
 - if [[ $TRAVIS_PYTHON_VERSION != '2.6' ]]; then python -m pytest --doctest-glob=README.rst; fi
