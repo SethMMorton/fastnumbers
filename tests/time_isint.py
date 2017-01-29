@@ -1,12 +1,7 @@
 from __future__ import print_function, division
 
-# Std lib imports
-import sys
-import os
-from timeit import repeat
-
 # Local import
-from time_base import time_test
+from time_base import comparison_timer
 
 isint_re = '''\
 import re
@@ -30,6 +25,6 @@ def isint_try(x):
         return type(x) != float
 '''
 
-time_test(['isint_re', isint_re],
-          ['isint_try', isint_try],
-          ['isint', 'from fastnumbers import isint'])
+comparison_timer(['isint_re', isint_re],
+                 ['isint_try', isint_try],
+                 ['isint', 'from fastnumbers import isint'])

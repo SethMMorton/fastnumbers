@@ -1,12 +1,6 @@
 from __future__ import print_function, division
 
-# Std lib imports
-import sys
-import os
-from timeit import repeat
-
-# Local import
-from time_base import time_conv
+from time_base import comparison_timer
 
 float_re = '''\
 import re
@@ -32,7 +26,6 @@ def float_try(x):
         return x
 '''
 
-time_conv(['float_re', float_re],
-          ['float_try', float_try],
-          ['fast_float', 'from fastnumbers import fast_float'])
-
+comparison_timer(['float_re', float_re],
+                 ['float_try', float_try],
+                 ['fast_float', 'from fastnumbers import fast_float'])

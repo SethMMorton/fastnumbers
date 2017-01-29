@@ -1,12 +1,7 @@
 from __future__ import print_function, division
 
-# Std lib imports
-import sys
-import os
-from timeit import repeat
-
 # Local import
-from time_base import time_test
+from time_base import comparison_timer
 
 isreal_re = '''\
 import re
@@ -29,6 +24,6 @@ def isreal_try(x):
         return True
 '''
 
-time_test(['isreal_re', isreal_re],
-          ['isreal_try', isreal_try],
-          ['isreal', 'from fastnumbers import isreal'])
+comparison_timer(['isreal_re', isreal_re],
+                 ['isreal_try', isreal_try],
+                 ['isreal', 'from fastnumbers import isreal'])

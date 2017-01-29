@@ -1,12 +1,7 @@
 from __future__ import print_function, division
 
-# Std lib imports
-import sys
-import os
-from timeit import repeat
-
 # Local import
-from time_base import time_conv
+from time_base import comparison_timer
 
 real_re = '''\
 import re
@@ -42,6 +37,6 @@ def real_try(x):
         return b if a == b else b
 '''
 
-time_conv(['real_re', real_re],
-          ['real_try', real_try],
-          ['fast_real', 'from fastnumbers import fast_real'])
+comparison_timer(['real_re', real_re],
+                 ['real_try', real_try],
+                 ['fast_real', 'from fastnumbers import fast_real'])

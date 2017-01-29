@@ -1,12 +1,7 @@
 from __future__ import print_function, division
 
-# Std lib imports
-import sys
-import os
-from timeit import repeat
-
 # Local import
-from time_base import time_conv
+from time_base import comparison_timer
 
 int_re = '''\
 import re
@@ -32,6 +27,6 @@ def int_try(x):
         return x
 '''
 
-time_conv(['int_re', int_re],
-          ['int_try', int_try],
-          ['fast_int', 'from fastnumbers import fast_int'])
+comparison_timer(['int_re', int_re],
+                 ['int_try', int_try],
+                 ['fast_int', 'from fastnumbers import fast_int'])
