@@ -33,6 +33,7 @@ extern "C" {
 #define consume_python2_long_literal_lL(str) false
 #endif
 #define consume_white_space(str) while (is_white_space(str)) ++(str)
+#define consume_non_white_space(str) while (!is_white_space(str)) ++(str)
 #define consume_sign(str) (is_sign(str) && ++(str))
 #define consume_decimal(str) (is_decimal(str) && ++(str))
 #define consume_exponent_prefix(str) (is_e_or_E(str) && ++(str))
@@ -45,6 +46,12 @@ case_insensitive_match(const char *s, const char *t);
 
 bool
 trailing_characters_are_vaild_and_nul_terminated(const char **str);
+
+bool
+precheck_input_may_be_int(const char **str);
+
+bool
+precheck_input_may_be_float(const char **str);
 
 #ifdef __cplusplus
 } /* extern "C" */

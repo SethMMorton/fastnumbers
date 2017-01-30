@@ -26,8 +26,8 @@ string_contains_intlike_float (const char *str)
     register const char *decimal_start = NULL;
     register const char *float_end = NULL;
 
-    consume_white_space(str);
-    (void) consume_sign(str); 
+    /* It is assumed that leading whitespace has already been removed. */
+    (void) consume_sign(str);
  
     /* Before decimal. Keep track of number of digits read. */
 

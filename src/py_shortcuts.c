@@ -6,14 +6,6 @@
 #include "fast_conversions.h"
 
 
-PyObject*
-PyBool_from_bool_and_DECREF(const bool b, PyObject *obj)
-{
-    Py_XDECREF(obj);
-    return PyBool_from_bool(b);
-}
-
-
 static bool
 _PyFloat_is_Intlike(PyObject *obj) {
     PyObject *py_is_intlike = PyObject_CallMethod(obj, "is_integer", NULL);
@@ -168,56 +160,68 @@ str_to_PyNumber(const char* str, const PyNumberType type,
 {
     bool error = false, overflow = false;
     PyObject *pyresult = NULL;
-    switch (type) {
-    case REAL:
-    {
-        const PyNumberType t = string_contains_integer(str) ? INT : FLOAT;
-        pyresult = str_to_PyNumber(str, t, inf_sub, nan_sub, coerce);
-        if (coerce &&
-            pyresult != NULL &&
-            t == FLOAT &&
-            PyFloat_Check(pyresult) &&
-            string_contains_intlike_float(str))
-                pyresult = convert_PyFloat_to_PyInt(pyresult);
-        break;
-    }
-    case FLOAT:
-    {
-        double result = parse_float_from_string(str, &error, &overflow);
-        if (!error) {
-            if (overflow) {
-                char* end;  /* To avoid errors for trailing whitespace. */
-                consume_white_space(str);
-                result = str_to_double(str, &end);
-            }
-            if (inf_sub != NULL && Py_IS_INFINITY(result)) {
-                pyresult = inf_sub;
-                Py_INCREF(pyresult);
-            }
-            else if (nan_sub != NULL && Py_IS_NAN(result)) {
-                pyresult = nan_sub;
-                Py_INCREF(pyresult);
-            }
-            else
-                pyresult = PyFloat_FromDouble(result);
+
+    /* Can we short-circuit? */
+    if (type == INT && !precheck_input_may_be_int(&str))
+        { /* pass */ }
+    else if (!precheck_input_may_be_float(&str))
+        { /* pass */ }
+
+    /* More rigorous determination.
+     * Note that the pre-checks above strip leading whitespace.
+     */
+    else {
+        switch (type) {
+        case REAL:
+        {
+            const PyNumberType t = string_contains_integer(str) ? INT : FLOAT;
+            pyresult = str_to_PyNumber(str, t, inf_sub, nan_sub, coerce);
+            if (coerce &&
+                pyresult != NULL &&
+                t == FLOAT &&
+                PyFloat_Check(pyresult) &&
+                string_contains_intlike_float(str))
+                    pyresult = convert_PyFloat_to_PyInt(pyresult);
+            break;
         }
-        break;
-    }
-    case INT:
-    {
-        long result = parse_integer_from_string(str, &error, &overflow);
-        if (!error)
-            pyresult = overflow ? str_to_PyInt((char*) str)
-                                : long_to_PyInt(result);        
-        break;
-    }
-    case INTLIKE:
-    case FORCEINT:
-    {
-        pyresult = str_to_PyNumber(str, REAL, inf_sub, nan_sub, true);
-        if (pyresult != NULL && PyFloat_Check(pyresult))
-            pyresult = convert_PyFloat_to_PyInt(pyresult);
-    }
+        case FLOAT:
+        {
+            double result = parse_float_from_string(str, &error, &overflow);
+            if (!error) {
+                if (overflow) {
+                    char* end;  /* To avoid errors for trailing whitespace. */
+                    consume_white_space(str);
+                    result = str_to_double(str, &end);
+                }
+                if (inf_sub != NULL && Py_IS_INFINITY(result)) {
+                    pyresult = inf_sub;
+                    Py_INCREF(pyresult);
+                }
+                else if (nan_sub != NULL && Py_IS_NAN(result)) {
+                    pyresult = nan_sub;
+                    Py_INCREF(pyresult);
+                }
+                else
+                    pyresult = PyFloat_FromDouble(result);
+            }
+            break;
+        }
+        case INT:
+        {
+            long result = parse_integer_from_string(str, &error, &overflow);
+            if (!error)
+                pyresult = overflow ? str_to_PyInt((char*) str)
+                                    : long_to_PyInt(result);
+            break;
+        }
+        case INTLIKE:
+        case FORCEINT:
+        {
+            pyresult = str_to_PyNumber(str, REAL, inf_sub, nan_sub, true);
+            if (pyresult != NULL && PyFloat_Check(pyresult))
+                pyresult = convert_PyFloat_to_PyInt(pyresult);
+        }
+        }
     }
     return pyresult;
 }
@@ -260,18 +264,18 @@ PyUnicode_is_float(PyObject *obj)
 }
 
 
-static PyObject*
+static bool
 PyUnicode_is_a_number(PyObject *obj, const PyNumberType type)
 {
     switch (type) {
     case REAL:
     case FLOAT:
-        return PyBool_from_bool(PyUnicode_is_float(obj));
+        return PyUnicode_is_float(obj);
     case INT:
-        return PyBool_from_bool(PyUnicode_is_int(obj));
+        return PyUnicode_is_int(obj);
     case INTLIKE:
     case FORCEINT:
-        return PyBool_from_bool(PyUnicode_is_intlike(obj));
+        return PyUnicode_is_intlike(obj);
     }
     return NULL;  /* Silence GCC */
 }
@@ -305,25 +309,39 @@ PyString_is_a_number(PyObject *obj, const PyNumberType type,
     bool result = false;
     PyObject *bytes = NULL;
     const char *str = convert_PyString_to_str(obj, &bytes);
+
+    /* Can we short-circuit? */
     if (str == NULL)
-        return PyUnicode_is_a_number(obj, type);
+        result = PyUnicode_is_a_number(obj, type);
     else if (is_null(str))  /* Str contained null characters. */
-        Py_RETURN_FALSE;
-    switch (type) {
-    case REAL:
-    case FLOAT:
-        result = string_contains_float(str, PyObject_IsTrue(allow_inf),
-                                            PyObject_IsTrue(allow_nan));
-        break;
-    case INT:
-        result = string_contains_integer(str);
-        break;
-    case FORCEINT:
-    case INTLIKE:
-        result = string_contains_intlike_float(str);
-        break;
+        { /* pass */ }
+    else if (type == INT && !precheck_input_may_be_int(&str))
+        { /* pass */ }
+    else if (!precheck_input_may_be_float(&str))
+        { /* pass */ }
+
+    /* More rigorous determination.
+     * Note that the pre-checks above strip leading whitespace.
+     */
+    else {
+        switch (type) {
+        case REAL:
+        case FLOAT:
+            result = string_contains_float(str, PyObject_IsTrue(allow_inf),
+                                                PyObject_IsTrue(allow_nan));
+            break;
+        case INT:
+            result = string_contains_integer(str);
+            break;
+        case FORCEINT:
+        case INTLIKE:
+            result = string_contains_intlike_float(str);
+            break;
+        }
     }
-    return PyBool_from_bool_and_DECREF(result, bytes);
+
+    Py_XDECREF(bytes);
+    return PyBool_from_bool(result);
 }
 
 

@@ -29,7 +29,8 @@ parse_float_from_string (const char *str, bool *error, bool *overflow)
     *overflow = false;
     *error = true;
 
-    consume_white_space(str);
+    /* It is assumed that leading whitespace has already been removed. */
+
     sign = consume_sign_and_is_negative(str) ? -1L : 1L;
 
     /* Are we possibly dealing with infinity or NAN? */

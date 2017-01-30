@@ -9,7 +9,8 @@ string_contains_float (const char *str,
 {
     register bool valid = false;
 
-    consume_white_space(str);
+    /* It is assumed that leading whitespace has already been removed. */
+
     (void) consume_sign(str); 
  
     /* Are we possibly dealing with infinity or NAN? */

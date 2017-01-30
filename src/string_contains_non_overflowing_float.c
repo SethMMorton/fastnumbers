@@ -9,7 +9,8 @@ string_contains_non_overflowing_float (const char *str)
     register bool valid = false;
     register unsigned ndigits = 0;
 
-    consume_white_space(str);
+    /* It is assumed that leading whitespace has already been removed. */
+
     (void) consume_sign(str); 
  
     /* Are we possibly dealing with infinity or NAN? */

@@ -23,9 +23,6 @@ PyObject*
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
                      PyObject *inf_sub, PyObject *nan_sub, bool coerce);
 
-PyObject*
-PyBool_from_bool_and_DECREF(const bool b, PyObject *obj);
-
 #define PyBool_from_bool(b) ((b) ? (Py_INCREF(Py_True), Py_True) \
                                  : (Py_INCREF(Py_False), Py_False))
 #if PY_MAJOR_VERSION >= 3
