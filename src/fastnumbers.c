@@ -5,11 +5,10 @@
  */
 
 #include <Python.h>
-#include "fast_conversions.h"
 #include "version.h"
 #include "docstrings.h"
-#include "py_to_char.h"
-#include "py_shortcuts.h"
+#include "object_handling.h"
+#include "number_handling.h"
 
 
 static PyObject*
@@ -69,8 +68,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key, &inf_sub, &nan_sub, &coerce))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub,
-                                    PyObject_IsTrue(coerce));
+    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub, coerce);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, REAL);
 }
@@ -97,7 +95,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key, &inf_sub, &nan_sub))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub, false);
+    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub, Py_False);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, FLOAT);
 }
@@ -122,7 +120,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, false);
+    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, Py_False);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, INT);
 }
@@ -147,7 +145,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL, false);
+    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL, Py_False);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, FORCEINT);
 }
@@ -172,11 +170,9 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &allow_inf, &allow_nan))
         return NULL;
 
-    if (PyNumber_Check(input))
-        return PyBool_from_bool(PyNumber_is_correct_type(input, REAL,
-                                                         str_only));
-    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
-    return PyString_is_a_number(input, REAL, allow_inf, allow_nan);
+    return PyObject_is_number(input, REAL,
+                              allow_inf, allow_nan,
+                              str_only, num_only);
 }
 
 
@@ -199,11 +195,9 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &allow_inf, &allow_nan))
         return NULL;
 
-    if (PyNumber_Check(input))
-        return PyBool_from_bool(PyNumber_is_correct_type(input, FLOAT,
-                                                         str_only));
-    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
-    return PyString_is_a_number(input, FLOAT, allow_inf, allow_nan);
+    return PyObject_is_number(input, FLOAT,
+                              allow_inf, allow_nan,
+                              str_only, num_only);
 }
 
 
@@ -222,11 +216,7 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only))
         return NULL;
 
-    if (PyNumber_Check(input))
-        return PyBool_from_bool(PyNumber_is_correct_type(input, INT,
-                                                         str_only));
-    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
-    return PyString_is_a_number(input, INT, NULL, NULL);
+    return PyObject_is_number(input, INT, NULL, NULL, str_only, num_only);
 }
 
 
@@ -245,11 +235,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only))
         return NULL;
 
-    if (PyNumber_Check(input))
-        return PyBool_from_bool(PyNumber_is_correct_type(input, INTLIKE,
-                                                         str_only));
-    if (PyObject_IsTrue(num_only)) Py_RETURN_FALSE;
-    return PyString_is_a_number(input, INTLIKE, NULL, NULL);
+    return PyObject_is_number(input, INTLIKE, NULL, NULL, str_only, num_only);
 }
 
 

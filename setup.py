@@ -88,17 +88,26 @@ class Distclean(Command):
 
 
 # Create a list of all the source files
-sourcefiles = ['parse_integer_from_string.c',
-               'parse_float_from_string.c',
-               'string_contains_integer.c',
-               'string_contains_intlike_float.c', 
-               'string_contains_float.c', 
-               'string_contains_non_overflowing_float.c', 
-               'parsing.c',
-               'py_to_char.c',
-               'py_shortcuts.c',
-               'fastnumbers.c',
-               ]
+sourcefiles = [
+    'check_number_is_number.c',
+    'check_object_is_number.c',
+    'check_string_is_number.c',
+    'check_unicode_character_is_number.c',
+    'convert_number_to_number.c',
+    'convert_object_to_number.c',
+    'convert_python_string_to_string.c',
+    'convert_python_unicode_to_unicode_character.c',
+    'convert_string_to_number.c',
+    'convert_unicode_character_to_number.c',
+    'parse_integer_from_string.c',
+    'parse_float_from_string.c',
+    'string_contains_integer.c',
+    'string_contains_intlike_float.c',
+    'string_contains_float.c',
+    'string_contains_non_overflowing_float.c',
+    'parsing.c',
+    'fastnumbers.c',
+]
 sourcefiles = [join('src', sf) for sf in sourcefiles]
 
 

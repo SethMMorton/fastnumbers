@@ -1,7 +1,6 @@
 /* See if a string contains a python integer, and return the contained long. */
 #include <limits.h>
 #include "parsing.h"
-#include "fast_conversions.h"
 
 static bool
 check_for_overflow(const long value, const long cur_val);

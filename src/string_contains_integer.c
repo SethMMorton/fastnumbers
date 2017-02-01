@@ -1,6 +1,5 @@
 /* Scan a string and determine if it is a Python integer */
 #include "parsing.h"
-#include "fast_conversions.h"
 
 bool
 string_contains_integer (const char *str)

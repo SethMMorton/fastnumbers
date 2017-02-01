@@ -1,7 +1,5 @@
 /* Scan a string and determine if it is a Python float */
 #include "parsing.h"
-#include "fast_conversions.h"
-
 
 static bool
 between_chars_are_zero_or_decimal(const char* start, const char* end)

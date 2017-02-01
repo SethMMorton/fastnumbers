@@ -3,7 +3,6 @@
 #include <limits.h>
 #include <float.h>
 #include "parsing.h"
-#include "fast_conversions.h"
 
 static long double
 power_of_ten_scaling_factor(const int expon);

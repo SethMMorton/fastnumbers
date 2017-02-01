@@ -1,6 +1,5 @@
 /* Scan a string and determine if it is a Python float */
 #include "parsing.h"
-#include "fast_conversions.h"
 
 bool
 string_contains_float (const char *str,

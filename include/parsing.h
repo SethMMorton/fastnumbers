@@ -1,5 +1,5 @@
-#ifndef __PARSING
-#define __PARSING
+#ifndef __FN_PARSING
+#define __FN_PARSING
 
 #include <Python.h>
 #include "fn_bool.h"
@@ -8,11 +8,15 @@
 extern "C" {
 #endif
 
+/* All the awesome MACROS */
+
+/* Convert char to int/long etc. */
 #define ascii2int(c) ((int) (*(c) - '0'))
 #define ascii2uint(c) ((unsigned) (*(c) - '0'))
 #define ascii2long(c) ((long) (*(c) - '0'))
 #define ascii2ulong(c) ((unsigned long) (*(c) - '0'))
 
+/* ID characters. */
 #define is_white_space(c) (*(c) == ' ' || (*(c) >= '\t' && *(c) <= '\r'))
 #define is_valid_digit(c) (*(c) >= '0' && *(c) <= '9')
 #define is_zero(c) (*(c) == '0')
@@ -27,6 +31,7 @@ extern "C" {
 #define is_sign(c) (is_negative_sign(c) || is_positive_sign(c))
 #define is_non_integer_character(c) (is_decimal(c) || is_e_or_E(c))
 
+/* Consume characters based on ID. */
 #if PY_MAJOR_VERSION == 2
 #define consume_python2_long_literal_lL(str) (is_l_or_L(str) && ++(str))
 #else
@@ -41,6 +46,8 @@ extern "C" {
 	                                      (consume_sign(str) && true) : \
 	                                      (consume_sign(str) && false))
 
+/* Helper function declarations. */
+
 bool
 case_insensitive_match(const char *s, const char *t);
 
@@ -53,8 +60,28 @@ precheck_input_may_be_int(const char **str);
 bool
 precheck_input_may_be_float(const char **str);
 
+/* These are the "fast conversion and checking" function declarations. */
+
+long
+parse_integer_from_string (const char *str, bool *error, bool *overflow);
+
+double
+parse_float_from_string (const char *str, bool *error, bool *overflow);
+
+bool
+string_contains_float (const char *str, const bool allow_inf, const bool allow_nan);
+
+bool
+string_contains_intlike_float (const char *str);
+
+bool
+string_contains_integer (const char *str);
+
+bool
+string_contains_non_overflowing_float (const char *str);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* __PARSING */
+#endif /* __FN_PARSING */
