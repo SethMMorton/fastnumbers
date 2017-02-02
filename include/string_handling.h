@@ -32,7 +32,7 @@ extern "C" {
 /* Declarations */
 
 const char*
-convert_PyString_to_str(PyObject *input, PyObject **bytes_object);
+convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_object);
 
 PyObject*
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,

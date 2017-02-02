@@ -6,7 +6,7 @@ static bool
 check_for_overflow(const long value, const long cur_val);
 
 long
-parse_integer_from_string (const char *str, bool *error, bool *overflow)
+parse_integer_from_string (const char *str, const char *end, bool *error, bool *overflow)
 {
     register long value = 0L;
     register bool valid = false;
@@ -28,7 +28,7 @@ parse_integer_from_string (const char *str, bool *error, bool *overflow)
     }
  
     (void) consume_python2_long_literal_lL(str);
-    *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
+    *error = !valid || str != end;
     return sign * value;
 
 }

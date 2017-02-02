@@ -17,7 +17,7 @@ static bool
 check_for_overflow_int(const int value, const int cur_val);
 
 double
-parse_float_from_string (const char *str, bool *error, bool *overflow)
+parse_float_from_string (const char *str, const char *end, bool *error, bool *overflow)
 {
     register long sign = 1L;
     register unsigned long intvalue = 0UL;
@@ -40,13 +40,13 @@ parse_float_from_string (const char *str, bool *error, bool *overflow)
             str += 3;
             if (case_insensitive_match(str, "inity"))
                 str += 5;
-            *error = !trailing_characters_are_vaild_and_nul_terminated(&str);
+            *error = str != end;
             return sign * Py_HUGE_VAL;
         }
 
         else if (case_insensitive_match(str, "nan")) {
             str += 3;
-            *error = !trailing_characters_are_vaild_and_nul_terminated(&str);
+            *error = str != end;
             return Py_NAN;
         }
 
@@ -65,8 +65,7 @@ parse_float_from_string (const char *str, bool *error, bool *overflow)
     /* If long literal, quit here. */
 
     if (consume_python2_long_literal_lL(str)) {
-        *error = !valid ||
-                 !trailing_characters_are_vaild_and_nul_terminated(&str);
+        *error = !valid || str != end;
         *overflow = *overflow || (value > DBL_MAX);
         return (double) (sign * value);
     }
@@ -107,7 +106,7 @@ parse_float_from_string (const char *str, bool *error, bool *overflow)
         value = apply_power_of_ten_scaling(value, exp_sign * expon);
     }
 
-    *error = !valid || !trailing_characters_are_vaild_and_nul_terminated(&str);
+    *error = !valid || str != end;
     *overflow = *overflow || (value > DBL_MAX);  /* One last overflow check */
     return (double) (sign * value);
 }

@@ -46,6 +46,15 @@ extern "C" {
 	                                      (consume_sign(str) && true) : \
 	                                      (consume_sign(str) && false))
 
+/* A rather bold MACRO to strip whitespace from both ends. */
+#define strip_whitespace(start, end, length) \
+do { \
+    (end) = (start) + (size_t) (length) - 1; /* Length includes NUL char. */ \
+    consume_white_space(start); \
+    while (is_white_space(end) && (start) != (end)) --(end); \
+    end += 1;  /* End on the space after the non-whitespace. */ \
+} while(0)
+
 /* Helper function declarations. */
 
 bool
@@ -63,22 +72,23 @@ precheck_input_may_be_float(const char **str);
 /* These are the "fast conversion and checking" function declarations. */
 
 long
-parse_integer_from_string (const char *str, bool *error, bool *overflow);
+parse_integer_from_string(const char *str, const char *end, bool *error, bool *overflow);
 
 double
-parse_float_from_string (const char *str, bool *error, bool *overflow);
+parse_float_from_string(const char *str, const char *end, bool *error, bool *overflow);
 
 bool
-string_contains_float (const char *str, const bool allow_inf, const bool allow_nan);
+string_contains_float(const char *str, const char *end,
+                      const bool allow_inf, const bool allow_nan);
 
 bool
-string_contains_intlike_float (const char *str);
+string_contains_intlike_float(const char *str, const char *end);
 
 bool
-string_contains_integer (const char *str);
+string_contains_integer(const char *str, const char *end);
 
 bool
-string_contains_non_overflowing_float (const char *str);
+string_contains_non_overflowing_float(const char *str, const char *end);
 
 #ifdef __cplusplus
 } /* extern "C" */

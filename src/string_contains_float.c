@@ -3,6 +3,7 @@
 
 bool
 string_contains_float (const char *str,
+                       const char *end,
                        const bool allow_inf,
                        const bool allow_nan)
 {
@@ -52,5 +53,5 @@ string_contains_float (const char *str,
 
     }
 
-    return valid && trailing_characters_are_vaild_and_nul_terminated(&str);
+    return valid && str == end;
 }
