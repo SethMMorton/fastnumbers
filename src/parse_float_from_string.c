@@ -1,4 +1,5 @@
 /* See if a string contains a python float, and return the contained double. */
+/* It is assumed that leading whitespace has already been removed. */
 #include <Python.h>
 #include <limits.h>
 #include <float.h>
@@ -25,32 +26,25 @@ parse_float_from_string (const char *str, const char *end, bool *error, bool *ov
     register int ndigits = 0;
     register int expon = 0;
     register long double value = 0.0L;
+    register const unsigned starts_with_sign = (unsigned) is_sign(str);
+
+    /* Shorten length by one if it starts with sign. */
+    register const size_t len = end - str - starts_with_sign;
+
     *overflow = false;
     *error = true;
 
-    /* It is assumed that leading whitespace has already been removed. */
+    /* If we had started with a sign, increment the pointer by one. */
 
-    sign = consume_sign_and_is_negative(str) ? -1L : 1L;
+    sign = starts_with_sign && is_negative_sign(str) ? -1L : 1L;
+    str += starts_with_sign;
 
     /* Are we possibly dealing with infinity or NAN? */
 
-    if (is_n_or_N(str) || is_i_or_I(str)) {
-        
-        if (case_insensitive_match(str, "inf")) {
-            str += 3;
-            if (case_insensitive_match(str, "inity"))
-                str += 5;
-            *error = str != end;
-            return sign * Py_HUGE_VAL;
-        }
-
-        else if (case_insensitive_match(str, "nan")) {
-            str += 3;
-            *error = str != end;
-            return Py_NAN;
-        }
-
-    }
+    if (quick_detect_infinity(str, len))
+        return *error = false, sign * Py_HUGE_VAL;
+    if (quick_detect_nan(str, len))
+        return *error = false, Py_NAN;
 
     /* Otherwise parse as an actual number. */
 

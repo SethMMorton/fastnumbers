@@ -1,4 +1,5 @@
 /* Scan a string and determine if it is a Python float */
+/* It is assumed that leading whitespace has already been removed. */
 #include "parsing.h"
 
 static bool
@@ -24,7 +25,6 @@ string_contains_intlike_float (const char *str, const char *end)
     register const char *decimal_start = NULL;
     register const char *float_end = NULL;
 
-    /* It is assumed that leading whitespace has already been removed. */
     (void) consume_sign(str);
  
     /* Before decimal. Keep track of number of digits read. */

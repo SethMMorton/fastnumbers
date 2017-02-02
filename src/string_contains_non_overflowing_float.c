@@ -1,4 +1,5 @@
 /* Scan a string and determine if it is a Python float */
+/* It is assumed that leading whitespace has already been removed. */
 #include <float.h>
 #include "parsing.h"
 
@@ -7,8 +8,6 @@ string_contains_non_overflowing_float (const char *str, const char *end)
 {
     register bool valid = false;
     register unsigned ndigits = 0;
-
-    /* It is assumed that leading whitespace has already been removed. */
 
     (void) consume_sign(str); 
  

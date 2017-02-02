@@ -1,4 +1,5 @@
 /* See if a string contains a python integer, and return the contained long. */
+/* It is assumed that leading whitespace has already been removed. */
 #include <limits.h>
 #include "parsing.h"
 
@@ -13,8 +14,6 @@ parse_integer_from_string (const char *str, const char *end, bool *error, bool *
     register long sign = 1L;
     *overflow = false;
     *error = true;
- 
-    /* It is assumed that leading whitespace has already been removed. */
 
     sign = consume_sign_and_is_negative(str) ? -1L : 1L;
 

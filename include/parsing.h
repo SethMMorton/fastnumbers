@@ -25,7 +25,11 @@ extern "C" {
 #define is_l_or_L(c) (*(c) == 'l' || *(c) == 'L')
 #define is_e_or_E(c) (*(c) == 'e' || *(c) == 'E')
 #define is_n_or_N(c) (*(c) == 'n' || *(c) == 'N')
+#define is_a_or_A(c) (*(c) == 'a' || *(c) == 'A')
 #define is_i_or_I(c) (*(c) == 'i' || *(c) == 'I')
+#define is_f_or_F(c) (*(c) == 'f' || *(c) == 'F')
+#define is_t_or_T(c) (*(c) == 't' || *(c) == 'T')
+#define is_y_or_Y(c) (*(c) == 'y' || *(c) == 'Y')
 #define is_negative_sign(c) (*(c) == '-')
 #define is_positive_sign(c) (*(c) == '+')
 #define is_sign(c) (is_negative_sign(c) || is_positive_sign(c))
@@ -54,6 +58,23 @@ do { \
     while (is_white_space(end) && (start) != (end)) --(end); \
     end += 1;  /* End on the space after the non-whitespace. */ \
 } while(0)
+
+/* Quickly detect INFINITY and NAN.
+ * Check length, first, and last characters, and only if they
+ * match do we continue.
+ */
+#define quick_detect_infinity(start, len) \
+    is_i_or_I(start) && \
+        (((len) == 3 && is_f_or_F((start) + 2) && is_n_or_N((start) + 1)) \
+      || ((len) == 8 && is_y_or_Y((start) + 7) && is_n_or_N((start) + 1) && \
+                                                  is_f_or_F((start) + 2) && \
+                                                  is_i_or_I((start) + 3) && \
+                                                  is_n_or_N((start) + 4) && \
+                                                  is_i_or_I((start) + 5) && \
+                                                  is_t_or_T((start) + 6)))
+#define quick_detect_nan(start, len) \
+    is_n_or_N(start) && \
+        ((len) == 3 && is_n_or_N((start) + 2) && is_a_or_A((start) + 1))
 
 /* Helper function declarations. */
 
