@@ -17,12 +17,6 @@ extern "C" {
 
 #define string_conversion_success(str) ((str) != NULL)
 
-#if PY_MAJOR_VERSION >= 3
-#define python_lib_str_to_PyInt(str) PyLong_FromString((str), NULL, 10)
-#else
-#define python_lib_str_to_PyInt(str) PyNumber_Int(PyLong_FromString((str), NULL, 10))
-#endif
-
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 6
 #define python_lib_str_to_double(str, endptr) PyOS_ascii_strtod((str), (endptr))
 #else

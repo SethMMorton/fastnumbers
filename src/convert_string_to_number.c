@@ -68,19 +68,65 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
 }
 
 
+/* We need to take some extra care on Python 2 for the str2long conversion. */
+#if PY_MAJOR_VERSION == 2
+static PyObject*
+python_lib_str_to_PyInt(const char* str, char** pend)
+{
+    PyObject *num = PyLong_FromString((char *) str, pend, 10);
+    PyObject *num_swap = NULL;
+    if (num == NULL)
+        return PyErr_Clear(), NULL;
+    /* Convert to int from long if possible. */
+    num_swap = num;
+    num = PyNumber_Int(num_swap);
+    Py_XDECREF(num_swap);
+    return num;
+}
+#else
+#define python_lib_str_to_PyInt(str, pend) \
+    PyLong_FromString((char *) (str), (pend), 10)
+#endif
+
+
 static PyObject*
 str_to_PyInt(const char *str, const char *end)
 {
-    bool error = false, overflow = false;
-
-    /* Perform the actual parse. */
-    long result = parse_integer_from_string(str, end, &error, &overflow);
-    if (error) return NULL;
-
-    /* If there was an overflow (or a possible overflow),
-     * see if Python can do better. Otherwise use our result.
+    /* Use some simple heuristics to determine if the the string
+     * is likely an int - first and last characters must be digits.
      */
-    return overflow ? python_lib_str_to_PyInt((char*) str) : long_to_PyInt(result);
+    const char* start = str + (unsigned) is_sign(str);
+    if (!is_likely_int(start, end))
+        return NULL;
+
+    /* Perform the actual parse using either the "fast" parser
+     * or Python's built-in parser. Pre-determine if the "fast"
+     * method might overflow based on the length of the string,
+     * and if it might stay on the safe side and go straight to
+     * Python's built-in version, otherwise use the "fast" version.
+     */
+    if (int_might_overflow(str, end)) {
+        char *pend;
+        /* Building an exception takes a long time. The tiny
+         * performance hit of checking that the input is a valid
+         * integer before converting to integer is well worth it
+         * compared to trying and failing and then waiting for the
+         * exception to be created, only to clear it and move on.
+         */
+        PyObject *num = string_contains_integer(str, end)
+                      ? python_lib_str_to_PyInt(str, &pend)
+                      : NULL;
+        /* If the expected end matches the parsed end, it was a success.
+         * This function includes trailing whitespace in "end" definition
+         * so we must do the same. */
+        consume_white_space(end);
+        return num != NULL && pend == end ? num : (PyErr_Clear(), NULL);
+    }
+    else {
+        bool error = false;
+        long result = parse_integer_from_string(str, end, &error);
+        return error ? NULL : long_to_PyInt(result);
+    }
 }
 
 

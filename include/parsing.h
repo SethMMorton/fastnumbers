@@ -76,6 +76,26 @@ do { \
     is_n_or_N(start) && \
         ((len) == 3 && is_n_or_N((start) + 2) && is_a_or_A((start) + 1))
 
+/* Quickly detect if a string is an integer. */
+#define MAX_INT_LEN 18
+#define int_might_overflow(start, end) ((end) - (start) - (size_t) is_sign(start)) > MAX_INT_LEN
+#define int_start_is_OK
+#if PY_MAJOR_VERSION == 2
+#define is_likely_int(start, end) \
+    ((end) - (start) > 0 && \
+        (is_valid_digit(start) && \
+            (is_valid_digit((end) - 1) || \
+                (is_l_or_L((end) - 1)    && \
+                 (end) - (start) > 1     && \
+                 is_valid_digit((end) - 2)  \
+                 ) \
+             ) \
+         ))
+#else
+#define is_likely_int(start, end) \
+    ((end) - (start) > 0 && (is_valid_digit(start) && is_valid_digit((end) - 1)))
+#endif
+
 /* Helper function declarations. */
 
 bool
@@ -93,7 +113,7 @@ precheck_input_may_be_float(const char **str);
 /* These are the "fast conversion and checking" function declarations. */
 
 long
-parse_integer_from_string(const char *str, const char *end, bool *error, bool *overflow);
+parse_integer_from_string(const char *str, const char *end, bool *error);
 
 double
 parse_float_from_string(const char *str, const char *end, bool *error, bool *overflow);
