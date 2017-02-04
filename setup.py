@@ -105,8 +105,6 @@ sourcefiles = [
     'string_contains_integer.c',
     'string_contains_intlike_float.c',
     'string_contains_float.c',
-    'string_contains_non_overflowing_float.c',
-    'parsing.c',
     'fastnumbers.c',
 ]
 sourcefiles = [join('src', sf) for sf in sourcefiles]
