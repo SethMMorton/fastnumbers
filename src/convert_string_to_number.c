@@ -72,7 +72,12 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
      * Python's built-in version, otherwise use the "fast" version.
      */
     else if (float_might_overflow(str, end)) {
-        char *pend = NULL;
+        char *pend = NULL, *nend = (char *) end;
+#if PY_MAJOR_VERSION == 2
+        /* If this is a long literal, don't include the L. */
+        if (is_l_or_L(end - 1))
+            pend = nend = (char *) end - 1;
+#endif
         /* Building an exception takes a long time. The tiny
          * performance hit of checking that the input is a valid
          * float before converting to float is well worth it
@@ -81,8 +86,8 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
          */
         const double result = string_contains_float(str, end, true, true)
                             ? python_lib_str_to_double(str, &pend)
-                            : -1.0;
-        return pend == end ? PyFloat_FromDouble(result) : (PyErr_Clear(), NULL);
+                            : -10.0;
+        return pend == nend ? PyFloat_FromDouble(result) : (PyErr_Clear(), NULL);
     }
     else {
         bool error = false;
