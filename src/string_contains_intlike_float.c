@@ -1,7 +1,6 @@
 /* Scan a string and determine if it is a Python float */
+/* It is assumed that leading whitespace has already been removed. */
 #include "parsing.h"
-#include "fast_conversions.h"
-
 
 static bool
 between_chars_are_zero_or_decimal(const char* start, const char* end)
@@ -15,7 +14,7 @@ between_chars_are_zero_or_decimal(const char* start, const char* end)
 }
 
 bool
-string_contains_intlike_float (const char *str)
+string_contains_intlike_float (const char *str, const char *end)
 {
     register bool valid = false;
     register int pre_ndigits = 0;
@@ -26,8 +25,7 @@ string_contains_intlike_float (const char *str)
     register const char *decimal_start = NULL;
     register const char *float_end = NULL;
 
-    consume_white_space(str);
-    (void) consume_sign(str); 
+    (void) consume_sign(str);
  
     /* Before decimal. Keep track of number of digits read. */
 
@@ -37,7 +35,7 @@ string_contains_intlike_float (const char *str)
 
     /* If a long literal, stop here. */
     if (consume_python2_long_literal_lL(str))
-        return valid && trailing_characters_are_vaild_and_nul_terminated(&str);
+        return valid && str == end;
 
     /* Decimal part of float. Keep track of number of digits read */
     /* as well as beginning and end locations. */
@@ -92,5 +90,5 @@ string_contains_intlike_float (const char *str)
             valid = true;
     }
 
-    return valid && trailing_characters_are_vaild_and_nul_terminated(&str);
+    return valid && str == end;
 }

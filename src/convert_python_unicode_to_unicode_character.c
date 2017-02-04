@@ -1,56 +1,20 @@
 /*
- * Convenience functions for fastnumbers.
+ * Conversion from PyUnicode type to a single unicode character.
  *
- * Author: Seth M. Morton, Aug. 2, 2014
+ * Author: Seth M. Morton
+ *
+ * January 2017
  */
 
-#include <Python.h>
-#include "py_to_char.h"
+#include "unicode_handling.h"
 
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
-#define uni_isspace(uni) Py_UNICODE_ISSPACE(uni)
-#else
-#define uni_isspace(uni) Py_UNICODE_ISSPACE((Py_UNICODE) (uni))
-#endif
+/* Declarations */
 
 static Py_ssize_t
 get_PyUnicode_length(PyObject *input);
 
 static Py_UCS4
 read_first_PyUnicode_char(PyObject *input);
-
-
-/*
- * Try to convert the Python object to bytes (i.e. char*).
- * Possibly convert unicode to bytes object first.
- * If the string contains nul characters, return "\0".
- */
-const char*
-convert_PyString_to_str(PyObject *input, PyObject **bytes_object)
-{
-    *bytes_object = NULL;
-    if (PyBytes_Check(input)) {
-        const char *str = PyBytes_AS_STRING(input);
-        if (strlen(str) != (size_t) PyBytes_GET_SIZE(input))
-            return "\0";
-        return str;
-    }
-    else if (PyUnicode_Check(input)) {
-        *bytes_object = PyUnicode_AsEncodedString(input, "ascii", "strict");
-        if (*bytes_object != NULL) {
-            const char *str = PyBytes_AS_STRING(*bytes_object);
-            if (strlen(str) != (size_t) PyBytes_GET_SIZE(*bytes_object))
-                return "\0";
-            return str;
-        }
-        else {
-            PyErr_Clear();
-            return NULL;
-        }
-    }
-    else
-        return NULL;
-}
 
 
 /*
@@ -90,7 +54,7 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
     }
 
     /* Ensure that both the list and the first element have length 1. */
-    if (PySequence_Length(split) != 1) {
+    if (PyList_GET_SIZE(split) != 1) {
         Py_DECREF(split);
         return ERR_UNI;
     }
@@ -107,7 +71,6 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
 }
 
 
-/* Retrieve length of a unicode string */
 static Py_ssize_t
 get_PyUnicode_length(PyObject *input)
 {
@@ -115,11 +78,10 @@ get_PyUnicode_length(PyObject *input)
     return PyUnicode_GET_LENGTH(input);
 #else
     return PySequence_Length(input);
-#endif 
+#endif
 }
 
 
-/* Get the first character only from a unicode string. */
 static Py_UCS4
 read_first_PyUnicode_char(PyObject *input)
 {

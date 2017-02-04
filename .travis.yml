@@ -2,9 +2,9 @@ language: python
 sudo: false
 os:
 - linux
-compiler:
-- clang
-- gcc
+env:
+- CC=clang
+- CC=gcc
 python:
 - "2.6"
 - "2.7"
@@ -14,6 +14,7 @@ python:
 - "3.6"
 - "nightly"
 install:
+- pip install -U pip
 - pip install hypothesis hypothesis-pytest
 - pip install -e .
 before_script:

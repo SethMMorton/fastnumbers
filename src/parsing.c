@@ -26,3 +26,19 @@ trailing_characters_are_vaild_and_nul_terminated(const char **str)
     consume_white_space(*str);
     return is_null(*str);
 }
+
+
+bool
+precheck_input_may_be_int(const char **str)
+{
+    consume_white_space(*str);
+    return is_valid_digit(*str) || is_sign(*str);
+}
+
+bool
+precheck_input_may_be_float(const char **str)
+{
+    consume_white_space(*str);
+    return is_valid_digit(*str) || is_sign(*str) ||
+           is_decimal(*str) || is_n_or_N(*str) || is_i_or_I(*str);
+}

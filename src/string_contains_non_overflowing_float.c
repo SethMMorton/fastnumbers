@@ -1,15 +1,14 @@
 /* Scan a string and determine if it is a Python float */
+/* It is assumed that leading whitespace has already been removed. */
 #include <float.h>
 #include "parsing.h"
-#include "fast_conversions.h"
 
 bool
-string_contains_non_overflowing_float (const char *str)
+string_contains_non_overflowing_float (const char *str, const char *end)
 {
     register bool valid = false;
     register unsigned ndigits = 0;
 
-    consume_white_space(str);
     (void) consume_sign(str); 
  
     /* Are we possibly dealing with infinity or NAN? */
@@ -20,12 +19,12 @@ string_contains_non_overflowing_float (const char *str)
             str += 3;
             if (case_insensitive_match(str, "inity"))
                 str += 5;
-            return trailing_characters_are_vaild_and_nul_terminated(&str);
+            return str == end;
         }
 
         else if (case_insensitive_match(str, "nan")) {
             str += 3;
-            return trailing_characters_are_vaild_and_nul_terminated(&str);
+            return str == end;
         }
 
     }
@@ -50,6 +49,5 @@ string_contains_non_overflowing_float (const char *str)
 
     }
 
-    return valid && ndigits < DBL_DIG &&
-           trailing_characters_are_vaild_and_nul_terminated(&str);
+    return valid && ndigits < DBL_DIG && str == end;
 }
