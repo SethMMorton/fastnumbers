@@ -35,6 +35,6 @@ float_might_overflow(const char *str, const char *end)
                             && *(str + 3) >= '0' && *(str + 3) <= '5');
     }
 
-    /* To be safe, we only allow up to two less than max double length. */
-    return len >= DBL_DIG - 2 || !exp_ok;
+    /* To be safe, we only allow up to three less than max double length. */
+    return len >= DBL_DIG - 3 || !exp_ok;
 }
