@@ -101,6 +101,7 @@ sourcefiles = [
     'convert_unicode_character_to_number.c',
     'parse_integer_from_string.c',
     'parse_float_from_string.c',
+    'quick_float_might_overflow.c',
     'string_contains_integer.c',
     'string_contains_intlike_float.c',
     'string_contains_float.c',

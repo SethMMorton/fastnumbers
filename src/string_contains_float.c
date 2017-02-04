@@ -1,12 +1,13 @@
 /* Scan a string and determine if it is a Python float */
 /* It is assumed that leading whitespace has already been removed. */
 #include "parsing.h"
+#include "quick_detection.h"
 
 bool
-string_contains_float (const char *str,
-                       const char *end,
-                       const bool allow_inf,
-                       const bool allow_nan)
+string_contains_float(const char *str,
+                      const char *end,
+                      const bool allow_inf,
+                      const bool allow_nan)
 {
     register bool valid = false;
     register const unsigned starts_with_sign = (unsigned) is_sign(str);

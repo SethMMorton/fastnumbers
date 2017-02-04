@@ -59,43 +59,6 @@ do { \
     end += 1;  /* End on the space after the non-whitespace. */ \
 } while(0)
 
-/* Quickly detect INFINITY and NAN.
- * Check length, first, and last characters, and only if they
- * match do we continue.
- */
-#define quick_detect_infinity(start, len) \
-    is_i_or_I(start) && \
-        (((len) == 3 && is_f_or_F((start) + 2) && is_n_or_N((start) + 1)) \
-      || ((len) == 8 && is_y_or_Y((start) + 7) && is_n_or_N((start) + 1) && \
-                                                  is_f_or_F((start) + 2) && \
-                                                  is_i_or_I((start) + 3) && \
-                                                  is_n_or_N((start) + 4) && \
-                                                  is_i_or_I((start) + 5) && \
-                                                  is_t_or_T((start) + 6)))
-#define quick_detect_nan(start, len) \
-    is_n_or_N(start) && \
-        ((len) == 3 && is_n_or_N((start) + 2) && is_a_or_A((start) + 1))
-
-/* Quickly detect if a string is an integer. */
-#define MAX_INT_LEN 18
-#define int_might_overflow(start, end) ((end) - (start) - (size_t) is_sign(start)) > MAX_INT_LEN
-#define int_start_is_OK
-#if PY_MAJOR_VERSION == 2
-#define is_likely_int(start, end) \
-    ((end) - (start) > 0 && \
-        (is_valid_digit(start) && \
-            (is_valid_digit((end) - 1) || \
-                (is_l_or_L((end) - 1)    && \
-                 (end) - (start) > 1     && \
-                 is_valid_digit((end) - 2)  \
-                 ) \
-             ) \
-         ))
-#else
-#define is_likely_int(start, end) \
-    ((end) - (start) > 0 && (is_valid_digit(start) && is_valid_digit((end) - 1)))
-#endif
-
 /* Helper function declarations. */
 
 bool
@@ -116,7 +79,7 @@ long
 parse_integer_from_string(const char *str, const char *end, bool *error);
 
 double
-parse_float_from_string(const char *str, const char *end, bool *error, bool *overflow);
+parse_float_from_string(const char *str, const char *end, bool *error);
 
 bool
 string_contains_float(const char *str, const char *end,

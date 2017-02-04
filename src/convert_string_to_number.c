@@ -9,6 +9,7 @@
 #include "string_handling.h"
 #include "number_handling.h"
 #include "parsing.h"
+#include "quick_detection.h"
 
 /* Declarations for "private" static functions. */
 
@@ -43,28 +44,51 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
 static PyObject*
 str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *nan_sub)
 {
-    bool error = false, overflow = false;
-
-    /* Perform the actual parse. */
-    double result = parse_float_from_string(str, end, &error, &overflow);
-    if (error) return NULL;
-
-    /* If there was an overflow (or a possible overflow),
-     * see if Python can do better.
+    /* Use some simple heuristics to determine if the the string
+     * is likely a float - first and last characters must be digits.
+     * Also quick detect NaN and INFINITY.
      */
-    if (overflow) {
-        char* dummy_end;  /* To avoid errors for trailing whitespace. */
-        result = python_lib_str_to_double(str, &dummy_end);
+    const char* start = str + (unsigned) is_sign(str);
+    const unsigned len = end - start;
+    if (quick_detect_infinity(start, len)) {
+        if (inf_sub == NULL)
+            Py_RETURN_INF(is_negative_sign(str) ? -1.0 : 1.0);
+        else
+            return Py_INCREF(inf_sub), inf_sub;
     }
+    else if (quick_detect_nan(start, len)) {
+        if (nan_sub == NULL)
+            Py_RETURN_NAN;
+        else
+            return Py_INCREF(nan_sub), nan_sub;
+    }
+    else if (!is_likely_float(start, end))
+        return NULL;
 
-    /* Return the converted number. */
-    if (inf_sub != NULL && Py_IS_INFINITY(result))
-        return Py_INCREF(inf_sub), inf_sub;
-    else if (nan_sub != NULL && Py_IS_NAN(result))
-        return Py_INCREF(nan_sub), nan_sub;
-    else
-        return PyFloat_FromDouble(result);
-
+    /* Perform the actual parse using either the "fast" parser
+     * or Python's built-in parser. Pre-determine if the "fast"
+     * method might overflow based on the length of the string,
+     * and if it might stay on the safe side and go straight to
+     * Python's built-in version, otherwise use the "fast" version.
+     */
+    else if (float_might_overflow(str, end)) {
+        char *pend = NULL;
+        /* Building an exception takes a long time. The tiny
+         * performance hit of checking that the input is a valid
+         * float before converting to float is well worth it
+         * compared to trying and failing and then waiting for the
+         * exception to be created, only to clear it and move on.
+         */
+        const double result = string_contains_float(str, end, true, true)
+                            ? python_lib_str_to_double(str, &pend)
+                            : -1.0;
+        return pend == end ? PyFloat_FromDouble(result) : (PyErr_Clear(), NULL);
+    }
+    else {
+        bool error = false;
+        double result = parse_float_from_string(str, end, &error);
+        return error ? NULL : PyFloat_FromDouble(result);
+    }
 }
 
 
@@ -105,7 +129,7 @@ str_to_PyInt(const char *str, const char *end)
      * and if it might stay on the safe side and go straight to
      * Python's built-in version, otherwise use the "fast" version.
      */
-    if (int_might_overflow(str, end)) {
+    else if (int_might_overflow(str, end)) {
         char *pend;
         /* Building an exception takes a long time. The tiny
          * performance hit of checking that the input is a valid
