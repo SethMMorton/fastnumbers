@@ -94,9 +94,11 @@ double_is_intlike(const double val)
         return val == (long) val;
     else {
         PyObject *pyval = PyFloat_FromDouble(val);
-        if (pyval == NULL)
-            return PyErr_Clear(), false;
-        return _PyFloat_is_Intlike(pyval);
+        const bool result = pyval == NULL
+                          ? (PyErr_Clear(), false)
+                          : _PyFloat_is_Intlike(pyval);
+        Py_XDECREF(pyval);
+        return result;
     }
 }
 
