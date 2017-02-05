@@ -14,19 +14,19 @@ os:
 
 env:
 - CC=clang
-- CC=gcc
+- CC=gcc CFLAGS="-coverage -O0"
 
 install:
 - pip install -U pip
 - pip install hypothesis hypothesis-pytest
-- CFLAGS="-coverage -O0" pip install -e .
+- pip install -e .
 
 before_script:
 - python patch_doctest.py
 
 script:
 - python -m doctest fastnumbers*.so
-- if [[ $TRAVIS_PYTHON_VERSION != '2.6' ]]; then python -m pytest --doctest-glob=README.rst; fi
+- (test "$TRAVIS_PYTHON_VERSION" != '2.6' && python -m pytest --doctest-glob=README.rst) || echo "skipping pytest on Python 2.6"
 
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+- (test "$CC" == "gcc" && bash <(curl -s https://codecov.io/bash)) || echo "skipping coverage for $CC"
