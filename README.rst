@@ -1,8 +1,20 @@
 fastnumbers
 ===========
 
-.. image:: https://travis-ci.org/SethMMorton/fastnumbers.svg?branch=master
+.. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg
     :target: https://travis-ci.org/SethMMorton/fastnumbers
+
+.. image:: https://img.shields.io/coveralls/SethMMorton/fastnumbers/master.svg
+    :target: https://coveralls.io/r/SethMMorton/fastnumbers
+
+.. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
+    :target: https://pypi.python.org/pypi/fastnumbers
+
+.. image:: https://img.shields.io/pypi/format/fastnumbers.svg
+    :target: https://pypi.python.org/pypi/fastnumbers
+
+.. image:: https://img.shields.io/pypi/l/fastnumbers.svg
+    :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
 
 Efficiently perform string to number type conversion with error handling.
 
