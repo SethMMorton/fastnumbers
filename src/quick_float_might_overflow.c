@@ -23,16 +23,30 @@ float_might_overflow(const char *str, const char *end)
         str++;
     }
 
-    /* If an exponent was found, ensure it is less than or equal to 255. */
+    /* If an exponent was found, ensure it is within chosen range. */
     if (str != end) {  /* If not at end, we must have broken above. */
+        register bool negative = is_negative_sign(++str); /* First remove exponential. */
         register unsigned len2 = 0;
-        str++;  /* Exponential. */
         (void) consume_sign(str);
         len2 = end - str;
-        exp_ok = (len2 > 0 && len2 < 3) ||
-                 (len2 == 3 && *(str + 1) >= '0' && *(str + 1) <= '2'
-                            && *(str + 2) >= '0' && *(str + 2) <= '5'
-                            && *(str + 3) >= '0' && *(str + 3) <= '5');
+        /* Positive exponential can handle up to 22. */
+        if (negative)
+            exp_ok = (len2 > 0 && len2 < 2) ||
+                     (len2 == 2 && (*str <= '1' ||
+                                        (*str == '2' && *(str + 1) <= '2')
+                                    )
+                      );
+        /* Positive exponential can handle up to 255. */
+        else
+            exp_ok = (len2 > 0 && len2 < 3) ||
+                     (len2 == 3 && (*str <= '1' ||
+                                        (*str == '2' &&
+                                            (*(str + 1) < '5' ||
+                                                (*(str + 1) == '5' && *(str + 2) <= '5')
+                                             )
+                                         )
+                                    )
+                      );
     }
 
     /* To be safe, we only allow up to three less than max double length. */

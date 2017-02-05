@@ -347,6 +347,13 @@ def test_fast_float_with_nan_given_nan_string_returns_sub_value():
 def test_fast_float_with_inf_given_inf_string_returns_sub_value():
     assert fastnumbers.fast_float(float('inf'), inf=1000.0) == 1000.0
 
+
+def test_fast_float_with_range_of_exponents_correctly_parses():
+    for x in range(-300, 300):
+        val = '1.0E{0:d}'.format(x)
+        assert fastnumbers.fast_float(val) == float(val)
+
+
 @given(floats())
 @example(5.675088586167575e-116)
 def test_fast_float_given_float_string_returns_float(x):
@@ -364,19 +371,11 @@ def test_fast_float_given_nan_string_returns_nan():
     assert math.isnan(fastnumbers.fast_float('NaN'))
 
 
-def test_fast_float_with_nan_given_nan_string_returns_sub_value():
-    assert fastnumbers.fast_float('nan', nan=0) == 0
-
-
 def test_fast_float_given_inf_string_returns_inf():
     assert fastnumbers.fast_float('inf') == float('inf')
     assert fastnumbers.fast_float('-INF') == float('-inf')
     assert fastnumbers.fast_float('infinity') == float('inf')
     assert fastnumbers.fast_float('-infINIty') == float('-inf')
-
-
-def test_fast_float_with_inf_given_inf_string_returns_sub_value():
-    assert fastnumbers.fast_float('inf', inf=10000.0) == 10000.0
 
 
 @given(floats(), integers(0, 100), integers(0, 100))

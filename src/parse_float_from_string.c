@@ -400,6 +400,7 @@ power_of_ten_scaling_factor(const int expon) {
     case 307:  return 1E307;
     case 308:  return 1E308;
     */
+    /* This should never be reached. */
     default: return 1E308;
     }
 }
