@@ -14,7 +14,7 @@ os:
 
 env:
 - CC=clang
-- CC=gcc CFLAGS="-coverage -O0"
+- CC=gcc CFLAGS="-ftest-coverage -O0" LFLAGS="-lgcov"
 
 install:
 - pip install -U pip
