@@ -12,19 +12,14 @@ sudo: false
 os:
 - linux
 
-addons:
-  apt:
-    packages:
-    - lcov
-
 env:
 - CC=clang
 - CC=gcc
 
 install:
 - pip install -U pip
-- pip install hypothesis hypothesis-pytest codecov
-- CFLAGS="-coverage" pip install -e .
+- pip install hypothesis hypothesis-pytest
+- CFLAGS="-coverage -O0" pip install -e .
 
 before_script:
 - python patch_doctest.py
@@ -34,5 +29,4 @@ script:
 - if [[ $TRAVIS_PYTHON_VERSION != '2.6' ]]; then python -m pytest --doctest-glob=README.rst; fi
 
 after_success:
-- lcov --capture --directory . --output-file lcov.info
-- codecov
+- bash <(curl -s https://codecov.io/bash)

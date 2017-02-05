@@ -4,8 +4,8 @@ fastnumbers
 .. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
-.. image:: https://img.shields.io/coveralls/SethMMorton/fastnumbers/master.svg
-    :target: https://coveralls.io/r/SethMMorton/fastnumbers
+.. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/SethMMorton/fastnumbers
 
 .. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
     :target: https://pypi.python.org/pypi/fastnumbers
