@@ -22,5 +22,5 @@ PyNumber_is_type(PyObject *obj, const PyNumberType type)
     case FORCEINT:
         return PyNumber_IsInt(obj) || PyFloat_is_Intlike(obj);
     }
-    return false;  /* Silence GCC */
+    return false;  /* Silence GCC, will never be reached. */
 }
