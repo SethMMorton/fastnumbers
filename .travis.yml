@@ -19,7 +19,7 @@ env:
 install:
 - pip install -U pip
 - pip install hypothesis hypothesis-pytest
-- pip install -e .
+- python setup.py build_ext --inplace
 
 before_script:
 - python patch_doctest.py
