@@ -465,6 +465,8 @@ def test_isintlike():
     assert not fastnumbers.isintlike("+367.0", num_only=True)
     # 3. float string with exponents
     assert fastnumbers.isintlike("-367.3268e207")
+    assert fastnumbers.isintlike("14534.000000000e4")
+    assert fastnumbers.isintlike("1400000e-4")
     # 4. float string with padded whitespace
     assert not fastnumbers.isintlike("   -367.04   ")
     # 5. int number

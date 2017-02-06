@@ -14,8 +14,12 @@ static bool
 numeric_unicode_is_intlike(Py_UCS4 uni)
 {
     const double val = uni_tonumeric(uni);
-    /* Lowerbound of values is > -1.0. */
-    return (val > -1.0) && double_is_intlike(val);
+    /* Lowerbound of values is > -1.0.
+     * tonumeric will always return values within "long" range,
+     * so no overflow risk below.
+     */
+    return (val > -1.0) && val == (long) val;
+    /* return (val > -1.0) && double_is_intlike(val); */
 }
 
 

@@ -11,16 +11,17 @@
 bool
 PyNumber_is_type(PyObject *obj, const PyNumberType type)
 {
+    register bool result = false;
     switch (type) {
     case REAL:
-        return true;
+        result = true; break;
     case FLOAT:
-        return PyFloat_Check(obj);
+        result = PyFloat_Check(obj); break;
     case INT:
-        return PyNumber_IsInt(obj);
+        result = PyNumber_IsInt(obj); break;
     case INTLIKE:
     case FORCEINT:
-        return PyNumber_IsInt(obj) || PyFloat_is_Intlike(obj);
+        result = PyNumber_IsInt(obj) || PyFloat_is_Intlike(obj); break;
     }
-    return false;  /* Silence GCC, will never be reached. */
+    return result;
 }

@@ -11,7 +11,7 @@
 static bool
 _PyFloat_is_Intlike(PyObject *obj) {
     PyObject *py_is_intlike = PyObject_CallMethod(obj, "is_integer", NULL);
-    if (py_is_intlike == NULL)
+    if (py_is_intlike == NULL)  /* Unlikely. */
         return PyErr_Clear(), false;
     else {
         const bool is_intlike = PyObject_IsTrue(py_is_intlike);
@@ -87,6 +87,7 @@ PyFloat_is_Intlike(PyObject *obj)
 }
 
 
+/* Not actually used... keeping in code for posterity's sake.
 bool
 double_is_intlike(const double val)
 {
@@ -101,6 +102,7 @@ double_is_intlike(const double val)
         return result;
     }
 }
+*/
 
 
 PyObject*

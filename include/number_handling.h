@@ -33,8 +33,10 @@ PyFloat_to_PyInt(PyObject * fobj);
 bool
 PyFloat_is_Intlike(PyObject *obj);
 
+/* Not actually used... keeping in code for posterity's sake.
 bool
 double_is_intlike(const double val);
+*/
 
 PyObject*
 PyNumber_to_PyNumber(PyObject *obj, const PyNumberType type,

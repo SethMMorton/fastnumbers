@@ -92,6 +92,51 @@ def test_version():
     assert hasattr(fastnumbers, '__version__')
 
 
+#################
+# Sanity Checks #
+#################
+
+
+def test_fast_real_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.fast_real(5, invalid='dummy')
+
+
+def test_fast_float_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.fast_float(5, invalid='dummy')
+
+
+def test_fast_int_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.fast_int(5, invalid='dummy')
+
+
+def test_fast_forceint_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.fast_forceint(5, invalid='dummy')
+
+
+def test_isreal_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.isreal(5, invalid='dummy')
+
+
+def test_isfloat_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.isfloat(5, invalid='dummy')
+
+
+def test_isint_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.isint(5, invalid='dummy')
+
+
+def test_isintlike_with_no_arguments_fails():
+    with raises(TypeError):
+        fastnumbers.isintlike(5, invalid='dummy')
+
+
 #############
 # Fast Real #
 #############
@@ -133,11 +178,15 @@ def test_fast_real_given_nan_returns_nan():
     assert math.isnan(fastnumbers.fast_real(float('nan')))
 
 
-def test_fast_real_with_nan_given_nan_string_returns_sub_value():
+def test_fast_real_given_nan_returns_sub_value():
     assert fastnumbers.fast_real(float('nan'), nan=0) == 0
 
 
-def test_fast_real_with_inf_given_inf_string_returns_sub_value():
+def test_fast_real_given_inf_returns_inf():
+    assert math.isinf(fastnumbers.fast_real(float('inf')))
+
+
+def test_fast_real_given_inf_returns_sub_value():
     assert fastnumbers.fast_real(float('inf'), inf=1000.0) == 1000.0
 
 
@@ -340,11 +389,15 @@ def test_fast_float_given_nan_returns_nan():
     assert math.isnan(fastnumbers.fast_float(float('nan')))
 
 
-def test_fast_float_with_nan_given_nan_string_returns_sub_value():
+def test_fast_float_given_nan_returns_sub_value():
     assert fastnumbers.fast_float(float('nan'), nan=0) == 0
 
 
-def test_fast_float_with_inf_given_inf_string_returns_sub_value():
+def test_fast_float_given_inf_returns_inf():
+    assert math.isinf(fastnumbers.fast_float(float('inf')))
+
+
+def test_fast_float_given_inf_returns_sub_value():
     assert fastnumbers.fast_float(float('inf'), inf=1000.0) == 1000.0
 
 
