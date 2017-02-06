@@ -86,11 +86,8 @@ read_first_PyUnicode_char(PyObject *input)
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
     return PyUnicode_READ_CHAR(input, 0);
 #else
+    /* Because of how input is vetted, will not return NULL. */
     const Py_UNICODE *us = PyUnicode_AsUnicode(input);
-    if (us == NULL) {
-        PyErr_Clear();
-        return ERR_UNI;
-    }
     return (Py_UCS4) us[0];
 #endif
 }
