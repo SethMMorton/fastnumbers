@@ -28,20 +28,29 @@ string_contains_float(const char *str,
 
     /* Check if it is a float. */
 
-    while (is_valid_digit(str)) { str++; valid = true; }
+    while (is_valid_digit(str)) {
+        str++;
+        valid = true;
+    }
 
     if (!consume_python2_long_literal_lL(str)) {
 
         if (is_decimal(str)) {  /* After decimal digits */
             str++;
-            while (is_valid_digit(str)) { str++; valid = true; }
+            while (is_valid_digit(str)) {
+                str++;
+                valid = true;
+            }
         }
 
         if (is_e_or_E(str) && valid) {  /* Exponent */
             valid = false;
             str++;
             (void) consume_sign(str);         
-            while (is_valid_digit(str)) { str++; valid = true; }
+            while (is_valid_digit(str)) {
+                str++;
+                valid = true;
+            }
         }
 
     }

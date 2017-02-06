@@ -32,9 +32,11 @@ parse_float_from_string (const char *str, const char *end, bool *error)
 
     /* Otherwise parse as an actual number. */
 
-    for (intvalue = 0UL; is_valid_digit(str); valid = true, str++) {
+    while (is_valid_digit(str)) {
         intvalue *= 10UL;
         intvalue += ascii2ulong(str);
+        valid = true;
+        str++;
     }
 
     /* If long literal, quit here. */
@@ -48,12 +50,12 @@ parse_float_from_string (const char *str, const char *end, bool *error)
 
     if (is_decimal(str)) {
         str++;
-        for (decimal_expon = 0;
-             is_valid_digit(str);
-             valid = true, str++, decimal_expon++)
-        {
+        while (is_valid_digit(str)) {
             intvalue *= 10UL;
             intvalue += ascii2ulong(str);
+            valid = true;
+            str++;
+            decimal_expon++;
         }
         decimal_expon = -decimal_expon;
     }
@@ -64,9 +66,11 @@ parse_float_from_string (const char *str, const char *end, bool *error)
         const int exp_sign = ++str &&
                              consume_sign_and_is_negative(str) ? -1 : 1;
         valid = false;
-        for (expon = 0; is_valid_digit(str); valid = true, str++) {
+        while (is_valid_digit(str)) {
             expon *= 10;
             expon += ascii2int(str);
+            valid = true;
+            str++;
         }
         expon *= exp_sign;
     }

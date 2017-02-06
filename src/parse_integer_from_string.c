@@ -13,12 +13,14 @@ parse_integer_from_string (const char *str, const char *end, bool *error)
     sign = consume_sign_and_is_negative(str) ? -1L : 1L;
 
     /* Convert digits, if any. Check for overflow. */
- 
-    for (value = 0L; is_valid_digit(str); valid = true, str++) {
+
+    while (is_valid_digit(str)) {
         value *= 10L;
         value += ascii2long(str);
+        valid = true;
+        str++;
     }
- 
+
     (void) consume_python2_long_literal_lL(str);
     *error = !valid || str != end;
     return sign * value;

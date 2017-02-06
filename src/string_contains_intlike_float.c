@@ -30,7 +30,11 @@ string_contains_intlike_float (const char *str, const char *end)
     /* Before decimal. Keep track of number of digits read. */
 
     pre_ndigits = 0;
-    while (is_valid_digit(str)) { valid = true; pre_ndigits++; str++; }
+    while (is_valid_digit(str)) {
+        valid = true;
+        pre_ndigits++;
+        str++;
+    }
     pre_decimal_end = str;
 
     /* If a long literal, stop here. */
@@ -45,7 +49,11 @@ string_contains_intlike_float (const char *str, const char *end)
     if (is_decimal(str)) {  /* After decimal digits */
         str++;
         decimal_start = str;
-        while (is_valid_digit(str)) { valid = true; post_ndigits++; str++; }
+        while (is_valid_digit(str)) {
+            valid = true;
+            post_ndigits++;
+            str++;
+        }
     }
     float_end = str;
 
@@ -57,9 +65,11 @@ string_contains_intlike_float (const char *str, const char *end)
         valid = false;
         str++;
         exp_sign = consume_sign_and_is_negative(str) ? -1 : 1;
-        for (expon = 0; is_valid_digit(str); valid = true, str++) {
+        while (is_valid_digit(str)) {
             expon *= 10;
             expon += ascii2int(str);
+            valid = true;
+            str++;
         }
     }
 
