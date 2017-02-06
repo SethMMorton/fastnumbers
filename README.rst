@@ -1,6 +1,10 @@
 fastnumbers
 ===========
 
+.. image:: https://api.codacy.com/project/badge/Grade/7221f3d2be3147e9a975d604f1770cfb
+   :alt: Codacy Badge
+   :target: https://www.codacy.com/app/SethMMorton/fastnumbers?utm_source=github.com&utm_medium=referral&utm_content=SethMMorton/fastnumbers&utm_campaign=badger
+
 .. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
