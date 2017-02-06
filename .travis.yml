@@ -29,4 +29,4 @@ script:
 - (test "$TRAVIS_PYTHON_VERSION" != '2.6' && python -m pytest --doctest-glob=README.rst) || echo "skipping pytest on Python 2.6"
 
 after_success:
-- (test "$CC" == "gcc" && codecov --gcov-args "-o ${PWD}") || echo "skipping coverage for $CC"
+- (test "$CC" == "gcc" && codecov --gcov-args '-o build/temp.*/src') || echo "skipping coverage for $CC"
