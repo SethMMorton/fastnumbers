@@ -5,7 +5,10 @@ fastnumbers
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
 .. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/SethMMorton/fastnumbers
+    :target: https://codecov.io/gh/SethMMorton/fastnumbers
+
+.. image:: https://api.codacy.com/project/badge/Grade/7221f3d2be3147e9a975d604f1770cfb
+    :target: https://www.codacy.com/app/SethMMorton/fastnumbers
 
 .. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
     :target: https://pypi.python.org/pypi/fastnumbers
