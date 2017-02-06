@@ -29,24 +29,16 @@ float_might_overflow(const char *str, const char *end)
         register unsigned len2 = 0;
         (void) consume_sign(str);
         len2 = end - str;
-        /* Positive exponential can handle up to 22. */
+        /* Positive exponential can handle up to 98. */
         if (negative)
             exp_ok = (len2 > 0 && len2 < 2) ||
-                     (len2 == 2 && (*str <= '1' ||
-                                        (*str == '2' && *(str + 1) <= '2')
+                     (len2 == 2 && (*str <= '8' ||
+                                        (*str == '9' && *(str + 1) <= '8')
                                     )
                       );
-        /* Positive exponential can handle up to 255. */
+        /* Positive exponential can handle up to 99. */
         else
-            exp_ok = (len2 > 0 && len2 < 3) ||
-                     (len2 == 3 && (*str <= '1' ||
-                                        (*str == '2' &&
-                                            (*(str + 1) < '5' ||
-                                                (*(str + 1) == '5' && *(str + 2) <= '5')
-                                             )
-                                         )
-                                    )
-                      );
+            exp_ok = len2 > 0 && len2 <= 2;
     }
 
     /* To be safe, we only allow up to three less than max double length. */
