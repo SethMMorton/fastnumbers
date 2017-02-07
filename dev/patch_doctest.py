@@ -21,11 +21,17 @@ dt_location = inspect.getsourcefile(doctest)
 with open(dt_location) as fl:
     doctest_str = fl.read()
 
+# Let's add the glob module.
+doctest_str = doctest_str.replace(
+    'import __future__',
+    'import __future__\nimport glob'
+)
+
 # Add a search for the .so extension when inspecting the input files
 # so that extension modules will be loaded properly.
 doctest_str = doctest_str.replace(
     'if filename.endswith(".py"):',
-    'if filename.endswith(".py") or filename.endswith(".so"):'
+    'if filename.endswith(".py") or filename.endswith(".so") or (len(glob.glob(filename + "*.so")) and glob.glob(filename + "*.so")[0]):'
 )
 
 # inspect.isfunction does not work for functions written in C,
@@ -47,7 +53,11 @@ if sys.version[0] == '3':
         'def _test():',
         'from sysconfig import get_config_var\ndef _test():'
     )
-
+else:
+    doctest_str = doctest_str.replace(
+        'm = __import__(filename[:-3])',
+        'm = __import__(filename[:-3] if filename.endswith(".py") or filename.endswith(".so") else filename)'
+    )
 
 # Open up the new output file and write the modified input to it.
 with open('doctest.py', 'w') as fl:

@@ -1,0 +1,7 @@
+# These requirements are for testing only!
+# There are no requirements for fastnumbers itself.
+
+# "Modern" testing on Python 2.6 is rather poor...
+pytest;              python_version >= '2.7'
+pytest-faulthandler; python_version >= '2.7'
+hypothesis;          python_version >= '2.7'
