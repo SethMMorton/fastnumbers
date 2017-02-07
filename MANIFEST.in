@@ -1,11 +1,12 @@
 include README.rst
+include CONTRIBUTING.md
 include LICENSE
 include setup.py
 include setup.cfg
-include patch_doctest.py
 include tox.ini
 graft src
 graft include
 graft tests
+graft dev
 global-exclude *.py[cod] __pycache__ *.so
 graft docs/source

@@ -9,7 +9,7 @@ development `testing-requirements.txt`. The only development collateral not in t
 folder are those files that are expected to exist in the the top-level directory
 (such as `setup.py`, `.travis.yml`, `appveyor.yml`, and `tox.ini`).
 
-I do not have strong opinions on how one should should contribute, so
+I do not have strong opinions on how one should contribute, so
 I have copy/pasted some text verbatim from the
 [Contributor's Guide](http://docs.python-requests.org/en/latest/dev/contributing/) section of
 [Kenneth Reitz's](http://docs.python-requests.org/en/latest/dev/contributing/)
