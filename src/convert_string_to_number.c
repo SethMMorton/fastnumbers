@@ -50,7 +50,7 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
      * Also quick detect NaN and INFINITY.
      */
     const char* start = str + (unsigned) is_sign(str);
-    const unsigned len = (unsigned) end - start;
+    const unsigned len = (unsigned) (end - start);
     if (quick_detect_infinity(start, len)) {
         if (inf_sub == NULL)
             Py_RETURN_INF(is_negative_sign(str) ? -1.0 : 1.0);
