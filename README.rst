@@ -1,7 +1,7 @@
 fastnumbers
 ===========
 
-.. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg
+.. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg?label=travis-ci
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
 .. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
