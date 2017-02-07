@@ -36,6 +36,7 @@ PyUnicode_is_number(PyObject *obj, const PyNumberType type)
             return PyBool_from_bool(uni_isdigit(uni));
         case FORCEINT:
         case INTLIKE:
+        default:
             return PyBool_from_bool(uni_isdigit(uni) ||
                                     numeric_unicode_is_intlike(uni));
         }

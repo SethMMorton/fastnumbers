@@ -26,12 +26,13 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
                         PyObject *inf_sub, PyObject *nan_sub,
                         PyObject *pycoerce)
 {
+    PyObject *pyresult = NULL;
     /* If the input contains an integer, convert to int directly. */
     if (string_contains_integer(str, end))
         return str_to_PyInt(str, end);
 
     /* If not an int, assume the input is a float. */
-    PyObject *pyresult = str_to_PyFloat(str, end, inf_sub, nan_sub);
+    pyresult = str_to_PyFloat(str, end, inf_sub, nan_sub);
     if (pyresult == NULL) return NULL;
 
     /* Coerce to int if needed. */
@@ -73,6 +74,7 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
      */
     else if (float_might_overflow(str, end)) {
         char *pend = NULL, *nend = (char *) end;
+        double result = -10.0;
 #if PY_MAJOR_VERSION == 2
         /* If this is a long literal, don't include the L. */
         if (is_l_or_L(end - 1))
@@ -84,9 +86,8 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
          * compared to trying and failing and then waiting for the
          * exception to be created, only to clear it and move on.
          */
-        const double result = string_contains_float(str, end, true, true)
-                            ? python_lib_str_to_double(str, &pend)
-                            : -10.0;
+        if (string_contains_float(str, end, true, true))
+            result = python_lib_str_to_double(str, &pend);
         return pend == nend ? PyFloat_FromDouble(result) : (PyErr_Clear(), NULL);
     }
     else {
