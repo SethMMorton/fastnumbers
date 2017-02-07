@@ -28,7 +28,7 @@ float_might_overflow(const char *str, const char *end)
         register bool negative = is_negative_sign(++str); /* First remove exponential. */
         register unsigned len2 = 0;
         (void) consume_sign(str);
-        len2 = end - str;
+        len2 = (unsigned) end - str;
         /* Positive exponential can handle up to 98. */
         if (negative)
             exp_ok = (len2 > 0 && len2 < 2) ||
