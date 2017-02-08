@@ -78,8 +78,8 @@ parse_float_from_string (const char *str, const char *end, bool *error)
     }
 
     *error = !valid || str != end;
-    return (long double) sign * apply_power_of_ten_scaling((long double) intvalue,
-                                                           decimal_expon + expon);
+    return (long double) sign *
+           apply_power_of_ten_scaling((long double) intvalue, decimal_expon + expon);
 }
 
 long double

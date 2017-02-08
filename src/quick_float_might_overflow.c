@@ -29,11 +29,16 @@ float_might_overflow(const char *str, const char *end)
         register unsigned len2 = 0;
         (void) consume_sign(str);
         len2 = (unsigned) (end - str);
-        /* Positive exponential can handle up to 98. */
+        /* Negative exponential can handle up to 98 (37 on MSVC). */
         if (negative)
             exp_ok = (len2 > 0 && len2 < 2) ||
+#ifdef _MSC_VER
+                     (len2 == 2 && (*str <= '2' ||
+                                        (*str == '3' && *(str + 1) <= '7')
+#else
                      (len2 == 2 && (*str <= '8' ||
                                         (*str == '9' && *(str + 1) <= '8')
+#endif
                                     )
                       );
         /* Positive exponential can handle up to 99. */
@@ -41,6 +46,11 @@ float_might_overflow(const char *str, const char *end)
             exp_ok = len2 > 0 && len2 <= 2;
     }
 
+#ifdef _MSC_VER
+    /* To be safe, we only allow up to four less than max double length. */
+    return len >= DBL_DIG - 4 || !exp_ok;
+#else
     /* To be safe, we only allow up to three less than max double length. */
     return len >= DBL_DIG - 3 || !exp_ok;
+#endif
 }
