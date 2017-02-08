@@ -78,6 +78,7 @@ PyUnicode_to_PyNumber(PyObject *obj, const PyNumberType type)
             return PyUnicode_to_PyInt(uni);
         case FORCEINT:
         case INTLIKE:
+        default:
             return PyUnicode_to_PyInt_forced(uni);
         }
     }

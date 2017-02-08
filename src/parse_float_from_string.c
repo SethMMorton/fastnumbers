@@ -16,18 +16,20 @@ apply_power_of_ten_scaling(const long double value, const int expon);
 double
 parse_float_from_string (const char *str, const char *end, bool *error)
 {
-    register long sign = 1L;
+#if ULONG_MAX == 0xffffffffffffffff
     register unsigned long intvalue = 0UL;
+#else
+    register unsigned long long intvalue = 0UL;
+#endif
     register bool valid = false;
     register int decimal_expon = 0;
     register int expon = 0;
     register const unsigned starts_with_sign = (unsigned) is_sign(str);
-
+    register long sign = starts_with_sign && is_negative_sign(str) ? -1L : 1L;
     *error = true;
 
     /* If we had started with a sign, increment the pointer by one. */
 
-    sign = starts_with_sign && is_negative_sign(str) ? -1L : 1L;
     str += starts_with_sign;
 
     /* Otherwise parse as an actual number. */
@@ -43,7 +45,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
 
     if (consume_python2_long_literal_lL(str)) {
         *error = !valid || str != end;
-        return sign * (double) intvalue;
+        return (long double) sign * (long double) intvalue;
     }
 
     /* Parse decimal part. */
@@ -76,8 +78,8 @@ parse_float_from_string (const char *str, const char *end, bool *error)
     }
 
     *error = !valid || str != end;
-    return sign * apply_power_of_ten_scaling((long double) intvalue,
-                                             decimal_expon + expon);
+    return (long double) sign *
+           apply_power_of_ten_scaling((long double) intvalue, decimal_expon + expon);
 }
 
 long double
@@ -191,6 +193,17 @@ power_of_ten_scaling_factor(const int expon) {
     case 97:   return 1E97L;
     case 98:   return 1E98L;
     case 99:   return 1E99L;
+    case 100:   return 1E100L;
+    case 101:   return 1E101L;
+    case 102:   return 1E102L;
+    case 103:   return 1E103L;
+    case 104:   return 1E104L;
+    case 105:   return 1E105L;
+    case 106:   return 1E106L;
+    case 107:   return 1E107L;
+    case 108:   return 1E108L;
+    case 109:   return 1E109L;
+    case 110:   return 1E110L;
     /* We should never see anything larger than 99. */
     /* This should never be reached. */
     default: return 1E308L;

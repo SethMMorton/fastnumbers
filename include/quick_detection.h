@@ -1,6 +1,7 @@
 #ifndef __FN_QUICK_DETECTION
 #define __FN_QUICK_DETECTION
 
+#include <limits.h>
 #include "parsing.h"
 
 #ifdef __cplusplus
@@ -24,8 +25,14 @@ extern "C" {
     is_n_or_N(start) && \
         ((len) == 3 && is_n_or_N((start) + 2) && is_a_or_A((start) + 1))
 
-/* Guess if an int will overflow. */
+/* Guess if an int will overflow.
+ * Base the value on the size of this system's long.
+ */
+#if LONG_MAX == 0xffffffffffffffff
 #define MAX_INT_LEN 18
+#else
+#define MAX_INT_LEN 9
+#endif
 #define int_might_overflow(start, end) ((end) - (start) - (size_t) is_sign(start)) > MAX_INT_LEN
 
 /* Quickly detect if a string is an integer. */

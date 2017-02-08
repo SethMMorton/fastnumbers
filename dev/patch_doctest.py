@@ -31,7 +31,9 @@ doctest_str = doctest_str.replace(
 # so that extension modules will be loaded properly.
 doctest_str = doctest_str.replace(
     'if filename.endswith(".py"):',
-    'if filename.endswith(".py") or filename.endswith(".so") or (len(glob.glob(filename + "*.so")) and glob.glob(filename + "*.so")[0]):'
+    'if filename.endswith((".py", ".so", ".pyd")) or '
+    '(len(glob.glob(filename + "*.so")) and glob.glob(filename + "*.so")[0]) or '
+    '(len(glob.glob(filename + "*.pyd")) and glob.glob(filename + "*.pyd")[0]):'
 )
 
 # inspect.isfunction does not work for functions written in C,
@@ -56,7 +58,7 @@ if sys.version[0] == '3':
 else:
     doctest_str = doctest_str.replace(
         'm = __import__(filename[:-3])',
-        'm = __import__(filename[:-3] if filename.endswith(".py") or filename.endswith(".so") else filename)'
+        'm = __import__(filename[:-3] if filename.endswith((".py", ".so", ".pyd")) else filename)'
     )
 
 # Open up the new output file and write the modified input to it.

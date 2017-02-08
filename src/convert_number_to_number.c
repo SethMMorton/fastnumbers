@@ -81,8 +81,13 @@ bool
 PyFloat_is_Intlike(PyObject *obj)
 {
     const double dval = PyFloat_AS_DOUBLE(obj);
+#ifdef _MSC_VER
+    if (dval < _I64_MAX && dval > _I64_MIN)
+        return dval == (long long) dval;
+#else
     if (dval < LONG_MAX && dval > LONG_MIN)
         return dval == (long) dval;
+#endif
     return _PyFloat_is_Intlike(obj);
 }
 

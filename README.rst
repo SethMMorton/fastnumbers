@@ -4,6 +4,9 @@ fastnumbers
 .. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg?label=travis-ci
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
+.. image:: https://ci.appveyor.com/api/projects/status/5ahtcvmt3aoui3mw/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/SethMMorton/fastnumbers/branch/master)
+
 .. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/SethMMorton/fastnumbers
 
