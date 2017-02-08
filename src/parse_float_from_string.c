@@ -45,7 +45,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
 
     if (consume_python2_long_literal_lL(str)) {
         *error = !valid || str != end;
-        return (double) sign * (double) intvalue;
+        return (long double) sign * (long double) intvalue;
     }
 
     /* Parse decimal part. */
@@ -78,8 +78,8 @@ parse_float_from_string (const char *str, const char *end, bool *error)
     }
 
     *error = !valid || str != end;
-    return (double) sign * apply_power_of_ten_scaling((long double) intvalue,
-                                                      decimal_expon + expon);
+    return (long double) sign * apply_power_of_ten_scaling((long double) intvalue,
+                                                           decimal_expon + expon);
 }
 
 long double
