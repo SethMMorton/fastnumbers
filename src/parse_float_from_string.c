@@ -16,7 +16,7 @@ apply_power_of_ten_scaling(const long double value, const int expon);
 double
 parse_float_from_string (const char *str, const char *end, bool *error)
 {
-#if ULONG_MAX == 18446744073709551615
+#if ULONG_MAX == 0xffffffffffffffff
     register unsigned long intvalue = 0UL;
 #else
     register unsigned long long intvalue = 0UL;
@@ -45,7 +45,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
 
     if (consume_python2_long_literal_lL(str)) {
         *error = !valid || str != end;
-        return sign * (double) intvalue;
+        return (double) sign * (double) intvalue;
     }
 
     /* Parse decimal part. */
@@ -78,8 +78,8 @@ parse_float_from_string (const char *str, const char *end, bool *error)
     }
 
     *error = !valid || str != end;
-    return sign * apply_power_of_ten_scaling((long double) intvalue,
-                                             decimal_expon + expon);
+    return (double) sign * apply_power_of_ten_scaling((long double) intvalue,
+                                                      decimal_expon + expon);
 }
 
 long double

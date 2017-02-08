@@ -28,10 +28,10 @@ extern "C" {
 /* Guess if an int will overflow.
  * Base the value on the size of this system's long.
  */
-#if LONG_MAX == 2147483647
-#define MAX_INT_LEN 9
-#else
+#if LONG_MAX == 0xffffffffffffffff
 #define MAX_INT_LEN 18
+#else
+#define MAX_INT_LEN 9
 #endif
 #define int_might_overflow(start, end) ((end) - (start) - (size_t) is_sign(start)) > MAX_INT_LEN
 
