@@ -41,9 +41,17 @@ float_might_overflow(const char *str, const char *end)
 #endif
                                     )
                       );
-        /* Positive exponential can handle up to 99. */
+        /* Positive exponential can handle up to 99 (22 on MSVC). */
         else
+#ifdef _MSC_VER
+            exp_ok = (len2 > 0 && len2 < 2) ||
+                     (len2 == 2 && (*str <= '1' ||
+                                        (*str == '2' && *(str + 1) <= '2')
+                                    )
+                      );
+#else
             exp_ok = len2 > 0 && len2 <= 2;
+#endif
     }
 
 #ifdef _MSC_VER
