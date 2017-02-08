@@ -16,7 +16,11 @@ apply_power_of_ten_scaling(const long double value, const int expon);
 double
 parse_float_from_string (const char *str, const char *end, bool *error)
 {
+#if ULONG_MAX == 18446744073709551615
     register unsigned long intvalue = 0UL;
+#else
+    register unsigned long long intvalue = 0UL;
+#endif
     register bool valid = false;
     register int decimal_expon = 0;
     register int expon = 0;
