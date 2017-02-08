@@ -7,10 +7,13 @@ parse_integer_from_string (const char *str, const char *end, bool *error)
 {
     register long value = 0L;
     register bool valid = false;
-    register long sign = 1L;
+    register const unsigned starts_with_sign = (unsigned) is_sign(str);
+    register long sign = starts_with_sign && is_negative_sign(str) ? -1L : 1L;
     *error = true;
 
-    sign = consume_sign_and_is_negative(str) ? -1L : 1L;
+    /* If we had started with a sign, increment the pointer by one. */
+
+    str += starts_with_sign;
 
     /* Convert digits, if any. Check for overflow. */
 

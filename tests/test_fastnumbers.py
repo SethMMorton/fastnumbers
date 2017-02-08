@@ -405,6 +405,9 @@ def test_fast_float_with_range_of_exponents_correctly_parses():
     for x in range(-300, 300):
         val = '1.0E{0:d}'.format(x)
         assert fastnumbers.fast_float(val) == float(val)
+    for x in range(-300, 300):
+        val = '1.0000000000E{0:d}'.format(x)
+        assert fastnumbers.fast_float(val) == float(val)
 
 
 @given(floats())
