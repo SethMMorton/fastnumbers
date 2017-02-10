@@ -109,15 +109,16 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
     PyObject *key = NULL;
+    int base = 10;
     PyObject *pyreturn = NULL;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", NULL };
-    static const char *format = "O|OOO:fast_int";
+                                "key", "base", NULL };
+    static const char *format = "O|OOOi:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key))
+                                     &key, &base))
         return NULL;
 
     pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, Py_False);
