@@ -232,6 +232,7 @@ def test_fast_int():
     # 18. Unicode numbers
     assert fastnumbers.fast_int(u'⑦') == 7
     assert fastnumbers.fast_int(u'⁸') == 8
+    assert fastnumbers.fast_int(u'⁸', base=10) == u'⁸'
     assert fastnumbers.fast_int(u'⅔') == u'⅔'
     assert fastnumbers.fast_int(u'Ⅴ') == u'Ⅴ'
     # 19. Key function

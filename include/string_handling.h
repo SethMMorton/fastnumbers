@@ -31,7 +31,7 @@ convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_obje
 PyObject*
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
                      PyObject *inf_sub, PyObject *nan_sub,
-                     PyObject *pycoerce);
+                     PyObject *pycoerce, const int base);
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,

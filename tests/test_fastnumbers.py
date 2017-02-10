@@ -78,6 +78,17 @@ def a_number(s):
     return False
 
 
+def baseN(num, b, numerals="0123456789abcdefghijklmnopqrstuvwxyz"):
+    """
+    Convert any integer to a Base-N string representation.
+    Shamelessly stolen from http://stackoverflow.com/a/2267428/1399279
+    """
+    neg = num < 0
+    num = abs(num)
+    val = ((num == 0) and numerals[0]) or (baseN(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
+    return '-' + val if neg else val
+
+
 class DumbFloatClass(object):
     def __float__(self):
         raise ValueError("something here might go wrong")
@@ -578,6 +589,15 @@ def test_fast_int_given_dumb_class_responds_to_internal_ValueError():
     assert fastnumbers.fast_int(x, default=5) == 5
 
 
+def test_fast_int_given_invalid_base_errors_with_ValueError():
+    with raises(ValueError):
+        fastnumbers.fast_int('10', base=-1)
+    with raises(ValueError):
+        fastnumbers.fast_int('10', base=1)
+    with raises(ValueError):
+        fastnumbers.fast_int('10', base=37)
+
+
 @given(floats())
 def test_fast_int_given_float_returns_int(x):
     assume(not math.isnan(x))
@@ -636,18 +656,26 @@ def test_fast_int_given_int_returns_int(x):
     assert isinstance(fastnumbers.fast_int(x), (int, long))
 
 
-@given(integers())
-@example(40992764608243448035)
-@example(-41538374848935286698640072416676709)
-@example(240278958776173358420034462324117625982)
-@example(1609422692302207451978552816956662956486)
-@example(-121799354242674784350540853922878239740762834)
-@example(32718704454132572934419741118153895444518280065843028297496525078)
-@example(33684944745210074227862907273261282807602986571245071790093633147269)
-def test_fast_int_given_int_string_returns_int(x):
+@given(integers(), integers(2, 36))
+@example(40992764608243448035, 10)
+@example(-41538374848935286698640072416676709, 10)
+@example(240278958776173358420034462324117625982, 10)
+@example(1609422692302207451978552816956662956486, 10)
+@example(-121799354242674784350540853922878239740762834, 10)
+@example(32718704454132572934419741118153895444518280065843028297496525078, 10)
+@example(33684944745210074227862907273261282807602986571245071790093633147269, 10)
+def test_fast_int_given_int_string_returns_int(x, base):
     y = repr(x)
     assert fastnumbers.fast_int(y) == x
     assert isinstance(fastnumbers.fast_int(y), (int, long))
+    if len(y) < 30:  # Avoid recursion error because of overly simple baseN function.
+        assert fastnumbers.fast_int(baseN(x, base), base=base) == x
+    assert fastnumbers.fast_int(bin(x), base=2) == x
+    assert fastnumbers.fast_int(bin(x), base=0) == x
+    assert fastnumbers.fast_int(oct(x), base=8) == x
+    assert fastnumbers.fast_int(oct(x), base=0) == x
+    assert fastnumbers.fast_int(hex(x), base=16) == x
+    assert fastnumbers.fast_int(hex(x), base=0) == x
 
 
 @given(integers(), integers(0, 100), integers(0, 100))
@@ -697,6 +725,7 @@ def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
 def test_fast_int_given_invalid_string_returns_string_as_is(x):
     assume(not a_number(x))
     assert fastnumbers.fast_int(x) is x
+    assert fastnumbers.fast_int(x, base=10) is x
 
 
 @given(text() | binary())
