@@ -1,4 +1,0 @@
-# These requirements are for deploying only!
-# There are no requirements for fastnumbers itself.
-
-wheel
