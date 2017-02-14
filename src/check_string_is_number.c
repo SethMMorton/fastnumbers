@@ -6,12 +6,14 @@
  * January 2017
  */
 
+#include <limits.h>
 #include "string_handling.h"
 #include "parsing.h"
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan)
+                   PyObject *allow_inf, PyObject *allow_nan,
+                   const int base)
 {
     const char* end;
     bool result = false;
@@ -27,7 +29,10 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
                                            PyObject_IsTrue(allow_nan));
             break;
         case INT:
-            result = string_contains_integer(str, end);
+            if (base == INT_MIN || base == 10)
+                result = string_contains_integer(str, end);
+            else
+                result = string_contains_integer_arbitrary_base(str, end, base);
             break;
         case FORCEINT:
         case INTLIKE:

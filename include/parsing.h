@@ -92,6 +92,9 @@ bool
 string_contains_integer(const char *str, const char *end);
 
 bool
+string_contains_integer_arbitrary_base(const char *str, const char *end, const int base);
+
+bool
 string_contains_non_overflowing_float(const char *str, const char *end);
 
 #ifdef __cplusplus

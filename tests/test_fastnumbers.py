@@ -656,20 +656,21 @@ def test_fast_int_given_int_returns_int(x):
     assert isinstance(fastnumbers.fast_int(x), (int, long))
 
 
-@given(integers(), integers(2, 36))
-@example(40992764608243448035, 10)
-@example(-41538374848935286698640072416676709, 10)
-@example(240278958776173358420034462324117625982, 10)
-@example(1609422692302207451978552816956662956486, 10)
-@example(-121799354242674784350540853922878239740762834, 10)
-@example(32718704454132572934419741118153895444518280065843028297496525078, 10)
-@example(33684944745210074227862907273261282807602986571245071790093633147269, 10)
-def test_fast_int_given_int_string_returns_int(x, base):
+@given(integers())
+@example(40992764608243448035)
+@example(-41538374848935286698640072416676709)
+@example(240278958776173358420034462324117625982)
+@example(1609422692302207451978552816956662956486)
+@example(-121799354242674784350540853922878239740762834)
+@example(32718704454132572934419741118153895444518280065843028297496525078)
+@example(33684944745210074227862907273261282807602986571245071790093633147269)
+def test_fast_int_given_int_string_returns_int(x):
     y = repr(x)
     assert fastnumbers.fast_int(y) == x
     assert isinstance(fastnumbers.fast_int(y), (int, long))
-    if len(y) < 30:  # Avoid recursion error because of overly simple baseN function.
-        assert fastnumbers.fast_int(baseN(x, base), base=base) == x
+    for base in range(2, 36+1):
+        if len(y) < 30:  # Avoid recursion error because of overly simple baseN function.
+            assert fastnumbers.fast_int(baseN(x, base), base=base) == x
     assert fastnumbers.fast_int(bin(x), base=2) == x
     assert fastnumbers.fast_int(bin(x), base=0) == x
     assert fastnumbers.fast_int(oct(x), base=8) == x
@@ -1188,6 +1189,18 @@ def test_isint_returns_True_if_given_int_string_padded_or_not(x, y, z):
     assert fastnumbers.isint(repr(x)) is True
     assert fastnumbers.isint(repr(x), str_only=True)
     assert fastnumbers.isint(y)
+    for base in range(2, 36 + 1):
+        if len(repr(x)) < 30:  # Avoid recursion error because of overly simple baseN function.
+            assert fastnumbers.isint(baseN(x, base), base=base)
+    assert fastnumbers.isint(bin(x), base=2)
+    assert fastnumbers.isint(bin(x), base=0)
+    assert fastnumbers.isint(oct(x), base=8)
+    assert fastnumbers.isint(oct(x), base=0)
+    if python_version_tuple()[0] == '2':
+        assert fastnumbers.isint(oct(x).replace('0o', '0'), base=8)
+        assert fastnumbers.isint(oct(x).replace('0o', '0'), base=0)
+    assert fastnumbers.isint(hex(x), base=16)
+    assert fastnumbers.isint(hex(x), base=0)
 
 
 @given(floats(), integers(0, 100), integers(0, 100))
@@ -1197,6 +1210,9 @@ def test_isint_returns_False_if_given_float_string_padded_or_not(x, y, z):
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert not fastnumbers.isint(repr(x))
     assert not fastnumbers.isint(y)
+    for base in range(2, 36 + 1):
+        if len(y) < 30:  # Avoid recursion error because of overly simple baseN function.
+            assert not fastnumbers.isint(y, base=base)
 
 
 @given(integers())
