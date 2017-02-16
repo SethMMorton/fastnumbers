@@ -6,6 +6,7 @@
  * January 2017
  */
 
+#include <limits.h>
 #include "string_handling.h"
 #include "number_handling.h"
 #include "parsing.h"
@@ -101,9 +102,9 @@ str_to_PyFloat(const char *str, const char *end, PyObject *inf_sub, PyObject *na
 /* We need to take some extra care on Python 2 for the str2long conversion. */
 #if PY_MAJOR_VERSION == 2
 static PyObject*
-python_lib_str_to_PyInt(const char* str, char** pend)
+python_lib_str_to_PyInt(const char* str, char** pend, const int base)
 {
-    PyObject *num = PyLong_FromString((char *) str, pend, 10);
+    PyObject *num = PyLong_FromString((char *) str, pend, (int) base);
     PyObject *num_swap = NULL;
     if (num == NULL)
         return PyErr_Clear(), NULL;
@@ -114,9 +115,26 @@ python_lib_str_to_PyInt(const char* str, char** pend)
     return num;
 }
 #else
-#define python_lib_str_to_PyInt(str, pend) \
-    PyLong_FromString((char *) (str), (pend), 10)
+#define python_lib_str_to_PyInt(str, pend, base) \
+    PyLong_FromString((char *) (str), (pend), (int) (base))
 #endif
+
+
+static PyObject*
+handle_possible_conversion_error(const char* end, char* pend, PyObject* val)
+{
+    /* If the expected end matches the parsed end, it was a success.
+     * This function includes trailing whitespace in "end" definition
+     * so we must do the same. */
+    consume_white_space(end);
+    /* If an error occurred, clear exception and return NULL. */
+    if (val == NULL || pend != end) {
+        PyErr_Clear();
+        Py_XDECREF(val);  /* Probably redundant. */
+        val = NULL;  /* Probably redundant. */
+    }
+    return val;
+}
 
 
 static PyObject*
@@ -136,7 +154,7 @@ str_to_PyInt(const char *str, const char *end)
      * Python's built-in version, otherwise use the "fast" version.
      */
     else if (int_might_overflow(str, end)) {
-        char *pend;
+        char *pend = "\0";
         /* Building an exception takes a long time. The tiny
          * performance hit of checking that the input is a valid
          * integer before converting to integer is well worth it
@@ -144,13 +162,9 @@ str_to_PyInt(const char *str, const char *end)
          * exception to be created, only to clear it and move on.
          */
         PyObject *num = string_contains_integer(str, end)
-                      ? python_lib_str_to_PyInt(str, &pend)
+                      ? python_lib_str_to_PyInt(str, &pend, 10)
                       : NULL;
-        /* If the expected end matches the parsed end, it was a success.
-         * This function includes trailing whitespace in "end" definition
-         * so we must do the same. */
-        consume_white_space(end);
-        return num != NULL && pend == end ? num : (PyErr_Clear(), NULL);
+        return handle_possible_conversion_error(end, pend, num);
     }
     else {
         bool error = false;
@@ -174,7 +188,8 @@ str_to_PyInt_forced(const char *str, const char *end)
 
 PyObject*
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub, PyObject *pycoerce)
+                     PyObject *inf_sub, PyObject *nan_sub, PyObject *pycoerce,
+                     const int base)
 {
     const char* end;
     PyObject *pyresult = Py_None;  /* None indicates TypeError, not ValueError. */
@@ -191,7 +206,13 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
             pyresult = str_to_PyFloat(str, end, inf_sub, nan_sub);
             break;
         case INT:
-            pyresult = str_to_PyInt(str, end);
+            if (base == INT_MIN || base == 10)
+                pyresult = str_to_PyInt(str, end);
+            else {
+                char* pend = "\0";
+                pyresult = python_lib_str_to_PyInt(str, &pend, base);
+                pyresult = handle_possible_conversion_error(end, pend, pyresult);
+            }
             break;
         case FORCEINT:
         case INTLIKE:

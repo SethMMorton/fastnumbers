@@ -262,7 +262,7 @@ PyDoc_STRVAR(fast_float__doc__,
 
 
 PyDoc_STRVAR(fast_int__doc__, 
-"fast_int(x, default=None, raise_on_invalid=False, key=None)\n"
+"fast_int(x, default=None, raise_on_invalid=False, key=None, base=10)\n"
 "Quickly convert input to an `int`.\n"
 "\n"
 "Any input that is valid for the built-in `int` (or `long` on Python2)\n"
@@ -290,6 +290,10 @@ PyDoc_STRVAR(fast_int__doc__,
 "    If given and the *input* cannot be converted, the input will be\n"
 "    passed to the callable object and its return value will be returned.\n"
 "    The function must take one and only one required argument.\n"
+"base : int, optional\n"
+"    Follows the rules of Python's built-in :func:`int`; see it's\n"
+"    documentation for your Python version. If given, the input\n"
+"    **must** be of type `str`.\n"
 "\n"
 "Returns\n"
 "-------\n"

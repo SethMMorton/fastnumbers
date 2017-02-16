@@ -15,7 +15,8 @@
 PyObject*
 PyObject_is_number(PyObject *obj, const PyNumberType type,
                    PyObject *allow_inf, PyObject *allow_nan,
-                   PyObject *str_only, PyObject *num_only)
+                   PyObject *str_only, PyObject *num_only,
+                   const int base)
 {
     PyObject *pyresult = NULL;
 
@@ -29,7 +30,7 @@ PyObject_is_number(PyObject *obj, const PyNumberType type,
         Py_RETURN_FALSE;
 
     /* Assume a string. */
-    pyresult = PyString_is_number(obj, type, allow_inf, allow_nan);
+    pyresult = PyString_is_number(obj, type, allow_inf, allow_nan, base);
     if (pyresult != Py_None)
         return pyresult;
 

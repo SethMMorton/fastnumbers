@@ -5,6 +5,7 @@
  */
 
 #include <Python.h>
+#include <limits.h>
 #include "version.h"
 #include "docstrings.h"
 #include "object_handling.h"
@@ -68,7 +69,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key, &inf_sub, &nan_sub, &coerce))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub, coerce);
+    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub, coerce, INT_MIN);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, REAL);
 }
@@ -95,7 +96,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key, &inf_sub, &nan_sub))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub, Py_False);
+    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub, Py_False, INT_MIN);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, FLOAT);
 }
@@ -109,18 +110,25 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
     PyObject *key = NULL;
+    int base = INT_MIN;
     PyObject *pyreturn = NULL;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", NULL };
-    static const char *format = "O|OOO:fast_int";
+                                "key", "base", NULL };
+    static const char *format = "O|OOOi:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key))
+                                     &key, &base))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, Py_False);
+    /* Ensure the base is in a valid range. */
+    if (base != INT_MIN && (base == 1 || base > 36 || base < 0)) {
+        PyErr_SetString(PyExc_ValueError,
+                        "ValueError: int() base must be >= 2 and <= 36");
+        return NULL;
+    }
+    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, Py_False, base);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, INT);
 }
@@ -145,7 +153,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &key))
         return NULL;
 
-    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL, Py_False);
+    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL, Py_False, INT_MIN);
     return assess_PyNumber(input, pyreturn,
                            default_value, raise_on_invalid, key, FORCEINT);
 }
@@ -172,7 +180,7 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
 
     return PyObject_is_number(input, REAL,
                               allow_inf, allow_nan,
-                              str_only, num_only);
+                              str_only, num_only, INT_MIN);
 }
 
 
@@ -197,7 +205,7 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
 
     return PyObject_is_number(input, FLOAT,
                               allow_inf, allow_nan,
-                              str_only, num_only);
+                              str_only, num_only, INT_MIN);
 }
 
 
@@ -208,15 +216,22 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *str_only = Py_False;
     PyObject *num_only = Py_False;
-    static char *keywords[] = { "x", "str_only", "num_only", NULL };
-    static const char *format = "O|OO:isint";
+    int base = INT_MIN;
+    static char *keywords[] = { "x", "str_only", "num_only", "base", NULL };
+    static const char *format = "O|OOi:isint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &str_only, &num_only))
+                                     &input, &str_only, &num_only, &base))
         return NULL;
 
-    return PyObject_is_number(input, INT, NULL, NULL, str_only, num_only);
+    /* Ensure the base is in a valid range. */
+    if (base != INT_MIN && (base == 1 || base > 36 || base < 0)) {
+        PyErr_SetString(PyExc_ValueError,
+                        "ValueError: int() base must be >= 2 and <= 36");
+        return NULL;
+    }
+    return PyObject_is_number(input, INT, NULL, NULL, str_only, num_only, base);
 }
 
 
@@ -235,7 +250,8 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &str_only, &num_only))
         return NULL;
 
-    return PyObject_is_number(input, INTLIKE, NULL, NULL, str_only, num_only);
+    return PyObject_is_number(input, INTLIKE, NULL, NULL,
+                              str_only, num_only, INT_MIN);
 }
 
 
