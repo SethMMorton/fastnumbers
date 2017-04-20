@@ -7,6 +7,7 @@
 
 #include <Python.h>
 #include "fn_bool.h"
+#include "options.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,8 +24,7 @@ typedef enum PyNumberType { REAL, FLOAT, INT, INTLIKE, FORCEINT } PyNumberType;
 
 PyObject*
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub,
-                     PyObject *pycoerce, const int base);
+                     const struct Options *options);
 
 PyObject*
 PyObject_is_number(PyObject *obj, const PyNumberType type,

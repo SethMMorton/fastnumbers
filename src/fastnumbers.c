@@ -8,43 +8,9 @@
 #include <limits.h>
 #include "version.h"
 #include "docstrings.h"
+#include "options.h"
 #include "object_handling.h"
 #include "number_handling.h"
-
-
-static PyObject*
-assess_PyNumber(PyObject *input, PyObject *retval,
-                PyObject *default_value, PyObject *raise_on_invalid,
-                PyObject *key, const PyNumberType type)
-{
-    /* None? It must be a TypeError. These always raise an error. */
-    if (retval == Py_None) {
-        PyErr_Format(PyExc_TypeError,
-                     "expected str, float, or int argument, got %.200s",
-                     input->ob_type->tp_name);
-        return NULL;
-    }
-
-    /* Handle error. */
-    else if (retval == NULL) {
-        if (PyObject_IsTrue(raise_on_invalid)) {
-            if (type == REAL || type == FLOAT)
-                return PyNumber_Float(input);
-            else
-                return PyNumber_ToInt(input);
-        }
-        else if (key != NULL)
-            return PyObject_CallFunctionObjArgs(key, input, NULL);
-        else if (default_value != NULL)
-            return Py_INCREF(default_value), default_value;
-        else
-            return Py_INCREF(input), input;
-    }
-
-    /* Return correct result. */
-    else
-        return retval;
-}
 
 
 /* Quickly convert to an int or float, depending on value. */
@@ -54,11 +20,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    PyObject *key = NULL;
-    PyObject *inf_sub = NULL;
-    PyObject *nan_sub = NULL;
-    PyObject *coerce = Py_True;
-    PyObject *pyreturn = NULL;
+    struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", "coerce", NULL };
     static const char *format = "O|OOOOOO:fast_real";
@@ -66,12 +28,12 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key, &inf_sub, &nan_sub, &coerce))
+                                     &opts.key, &opts.handle_inf, &opts.handle_nan,
+                                     &opts.coerce))
         return NULL;
+    Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
-    pyreturn = PyObject_to_PyNumber(input, REAL, inf_sub, nan_sub, coerce, INT_MIN);
-    return assess_PyNumber(input, pyreturn,
-                           default_value, raise_on_invalid, key, REAL);
+    return PyObject_to_PyNumber(input, REAL, &opts);
 }
 
 
@@ -82,10 +44,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    PyObject *key = NULL;
-    PyObject *inf_sub = NULL;
-    PyObject *nan_sub = NULL;
-    PyObject *pyreturn = NULL;
+    struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", NULL };
     static const char *format = "O|OOOOO:fast_float";
@@ -93,12 +52,11 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key, &inf_sub, &nan_sub))
+                                     &opts.key, &opts.handle_inf, &opts.handle_nan))
         return NULL;
+    Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
-    pyreturn = PyObject_to_PyNumber(input, FLOAT, inf_sub, nan_sub, Py_False, INT_MIN);
-    return assess_PyNumber(input, pyreturn,
-                           default_value, raise_on_invalid, key, FLOAT);
+    return PyObject_to_PyNumber(input, FLOAT, &opts);
 }
 
 
@@ -109,9 +67,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    PyObject *key = NULL;
-    int base = INT_MIN;
-    PyObject *pyreturn = NULL;
+    struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "base", NULL };
     static const char *format = "O|OOOi:fast_int";
@@ -119,18 +75,17 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key, &base))
+                                     &opts.key, &opts.base))
         return NULL;
+    Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
     /* Ensure the base is in a valid range. */
-    if (base != INT_MIN && (base == 1 || base > 36 || base < 0)) {
+    if (opts.base != INT_MIN && (opts.base == 1 || opts.base > 36 || opts.base < 0)) {
         PyErr_SetString(PyExc_ValueError,
-                        "ValueError: int() base must be >= 2 and <= 36");
+                        "int() base must be >= 2 and <= 36");
         return NULL;
     }
-    pyreturn = PyObject_to_PyNumber(input, INT, NULL, NULL, Py_False, base);
-    return assess_PyNumber(input, pyreturn,
-                           default_value, raise_on_invalid, key, INT);
+    return PyObject_to_PyNumber(input, INT, &opts);
 }
 
 
@@ -141,8 +96,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    PyObject *key = NULL;
-    PyObject *pyreturn = NULL;
+    struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", NULL };
     static const char *format = "O|OOO:fast_forceint";
@@ -150,12 +104,11 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &key))
+                                     &opts.key))
         return NULL;
+    Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
-    pyreturn = PyObject_to_PyNumber(input, FORCEINT, NULL, NULL, Py_False, INT_MIN);
-    return assess_PyNumber(input, pyreturn,
-                           default_value, raise_on_invalid, key, FORCEINT);
+    return PyObject_to_PyNumber(input, FORCEINT, &opts);
 }
 
 

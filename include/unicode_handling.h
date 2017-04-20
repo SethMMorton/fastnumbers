@@ -38,7 +38,7 @@ Py_UCS4
 convert_PyUnicode_to_unicode_char(PyObject *input);
 
 PyObject*
-PyUnicode_to_PyNumber(PyObject *obj, const PyNumberType type);
+PyUnicode_to_PyNumber(PyObject *obj, const PyNumberType type, const struct Options *options);
 
 PyObject*
 PyUnicode_is_number(PyObject *obj, const PyNumberType type);

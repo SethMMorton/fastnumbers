@@ -7,6 +7,7 @@
  */
 
 #include "number_handling.h"
+#include "options.h"
 
 static bool
 _PyFloat_is_Intlike(PyObject *obj) {
@@ -22,19 +23,16 @@ _PyFloat_is_Intlike(PyObject *obj) {
 
 
 static PyObject*
-PyNumber_to_PyInt_or_PyFloat(PyObject *pynum,
-                             PyObject *inf_sub, PyObject *nan_sub,
-                             PyObject *pycoerce)
+PyNumber_to_PyInt_or_PyFloat(PyObject *pynum, const struct Options *options)
 {
-    if (nan_sub != NULL && PyFloat_Check(pynum) &&
-            Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
-        return Py_INCREF(nan_sub), nan_sub;
-    else if (inf_sub != NULL && PyFloat_Check(pynum) &&
-            Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
-        return Py_INCREF(inf_sub), inf_sub;
-    else if (PyObject_IsTrue(pycoerce)) {
-        if (PyNumber_IsInt(pynum) || PyFloat_is_Intlike(pynum))
+    if (Options_Has_NaN_Sub(options) && PyNumber_IsNAN(pynum))
+        return Options_Return_NaN_Sub(options);
+    else if (Options_Has_INF_Sub(options) && PyNumber_IsINF(pynum))
+        return Options_Return_INF_Sub(options);
+    else if (Options_Coerce_True(options)) {
+        if (PyNumber_IsInt(pynum) || PyFloat_is_Intlike(pynum)) {
             return PyNumber_ToInt(pynum);
+        }
         else
             return PyNumber_Float(pynum);
     }
@@ -44,34 +42,43 @@ PyNumber_to_PyInt_or_PyFloat(PyObject *pynum,
 
 
 static PyObject*
-PyNumber_to_PyFloat(PyObject *pynum, PyObject *inf_sub, PyObject *nan_sub)
+PyNumber_to_PyFloat(PyObject *pynum, const struct Options *options)
 {
-    if (nan_sub != NULL && PyFloat_Check(pynum) &&
-            Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
-        return Py_INCREF(nan_sub), nan_sub;
-    else if (inf_sub != NULL && PyFloat_Check(pynum) &&
-            Py_IS_INFINITY(PyFloat_AS_DOUBLE(pynum)))
-        return Py_INCREF(inf_sub), inf_sub;
+    if (Options_Has_NaN_Sub(options) && PyNumber_IsNAN(pynum))
+        return Options_Return_NaN_Sub(options);
+    else if (Options_Has_INF_Sub(options) && PyNumber_IsINF(pynum))
+        return Options_Return_INF_Sub(options);
     else
         return PyNumber_Float(pynum);
 }
 
 
 static PyObject*
-PyNumber_to_PyInt(PyObject *pynum)
+PyNumber_to_PyInt(PyObject *pynum, const struct Options *options)
 {
     if (PyFloat_Check(pynum)) { /* Watch out for un-intable numbers. */
         const double d = PyFloat_AS_DOUBLE(pynum);
-        if (Py_IS_NAN(d) || Py_IS_INFINITY(d)) return NULL;
+        if (Py_IS_INFINITY(d)) {
+            if (Options_Should_Raise(options))
+                PyErr_SetString(PyExc_OverflowError,
+                    "cannot convert float infinity to integer");
+            return NULL;
+        }
+        if (Py_IS_NAN(d)) {
+            if (Options_Should_Raise(options))
+                PyErr_SetString(PyExc_ValueError,
+                    "cannot convert float NaN to integer");
+            return NULL;
+        }
     }
     return PyNumber_ToInt(pynum);
 }
 
 
 PyObject*
-PyFloat_to_PyInt(PyObject * fobj)
+PyFloat_to_PyInt(PyObject * fobj, const struct Options *options)
 {
-    PyObject *tmp = PyNumber_to_PyInt(fobj);
+    PyObject *tmp = PyNumber_to_PyInt(fobj, options);
     Py_DECREF(fobj);
     return tmp;
 }
@@ -112,21 +119,26 @@ double_is_intlike(const double val)
 
 PyObject*
 PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub, PyObject *pycoerce)
+                     const struct Options *options)
 {
     PyObject *pyresult = NULL;
     switch (type) {
     case REAL:
-        pyresult = PyNumber_to_PyInt_or_PyFloat(pynum, inf_sub, nan_sub, pycoerce);
+        pyresult = PyNumber_to_PyInt_or_PyFloat(pynum, options);
         break;
     case FLOAT:
-        pyresult = PyNumber_to_PyFloat(pynum, inf_sub, nan_sub);
+        pyresult = PyNumber_to_PyFloat(pynum, options);
         break;
     case INT:
     case FORCEINT:
     case INTLIKE:
-        pyresult = PyNumber_to_PyInt(pynum);
+        pyresult = PyNumber_to_PyInt(pynum, options);
         break;
     }
-    return PyErr_Clear(), pyresult;
+    /* Clear any error if the result is NULL
+     * and we do not want to raise on errors.
+     */
+    if (pyresult == NULL && !Options_Should_Raise(options))
+        PyErr_Clear();
+    return pyresult;
 }

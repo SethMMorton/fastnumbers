@@ -825,7 +825,7 @@ def test_fast_forceint_given_nan_string_raises_ValueError_with_raise_on_invalid_
 
 
 def test_fast_forceint_given_inf_string_raises_OverflowError_with_raise_on_invalid_as_True():
-    with raises(ValueError): 
+    with raises(OverflowError):
         fastnumbers.fast_forceint('inf', raise_on_invalid=True)
         fastnumbers.fast_forceint('-infinity', raise_on_invalid=True)
         fastnumbers.fast_forceint('inf', None, True)

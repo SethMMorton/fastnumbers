@@ -8,6 +8,7 @@
 #include <Python.h>
 #include "fn_bool.h"
 #include "object_handling.h"
+#include "options.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,8 +31,7 @@ convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_obje
 
 PyObject*
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     PyObject *inf_sub, PyObject *nan_sub,
-                     PyObject *pycoerce, const int base);
+                     const struct Options *options);
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
