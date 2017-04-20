@@ -11,6 +11,7 @@
 #include "options.h"
 #include "object_handling.h"
 #include "number_handling.h"
+#include "quick_detection.h"
 
 
 /* Quickly convert to an int or float, depending on value. */
@@ -233,9 +234,15 @@ static PyMethodDef FastnumbersMethods[] = {
 /* We want a module-level variable that is the version. */
 static PyObject *fastnumbers__version__;
 
+/* Some constants that may be useful for debugging. */
+static PyObject *fastnumbers_FN_MAX_INT_LEN;
+static PyObject *fastnumbers_FN_DBL_DIG;
+static PyObject *fastnumbers_FN_MAX_EXP;
+static PyObject *fastnumbers_FN_MIN_EXP;
 
-/* Define the module interface.  This is different for Python2 and Python3. */
+/* Define the module interface. This is different for Python2 and Python3. */
 #if PY_MAJOR_VERSION >= 3
+
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         "fastnumbers",
@@ -253,13 +260,8 @@ PyInit_fastnumbers(void)
     PyObject *m = PyModule_Create(&moduledef);
     if (m == NULL) return NULL;
 
-    fastnumbers__version__ = PyUnicode_FromString(FASTNUMBERS_VERSION);
-    Py_INCREF(fastnumbers__version__);
-    PyModule_AddObject(m, "__version__", fastnumbers__version__);
-
-    return m;
-}
 #else
+
 PyMODINIT_FUNC
 initfastnumbers(void)
 {
@@ -268,8 +270,27 @@ initfastnumbers(void)
                                  fastnumbers__doc__);
     if (m == NULL) return;
 
-    fastnumbers__version__ = PyUnicode_FromString(FASTNUMBERS_VERSION);
-    Py_INCREF(fastnumbers__version__);
-    PyModule_AddObject(m, "__version__", fastnumbers__version__);
-}
 #endif
+
+    /* Add module level constants. */
+    fastnumbers__version__ = PyUnicode_FromString(FASTNUMBERS_VERSION);
+    fastnumbers_FN_MAX_INT_LEN = long_to_PyInt(FN_MAX_INT_LEN);
+    fastnumbers_FN_DBL_DIG = long_to_PyInt(FN_DBL_DIG);
+    fastnumbers_FN_MAX_EXP = long_to_PyInt(FN_MAX_EXP);
+    fastnumbers_FN_MIN_EXP = long_to_PyInt(FN_MIN_EXP);
+    Py_INCREF(fastnumbers__version__);
+    Py_INCREF(fastnumbers_FN_MAX_INT_LEN);
+    Py_INCREF(fastnumbers_FN_DBL_DIG);
+    Py_INCREF(fastnumbers_FN_MAX_EXP);
+    Py_INCREF(fastnumbers_FN_MIN_EXP);
+    PyModule_AddObject(m, "__version__", fastnumbers__version__);
+    PyModule_AddObject(m, "max_int_len", fastnumbers_FN_MAX_INT_LEN);
+    PyModule_AddObject(m, "dig", fastnumbers_FN_DBL_DIG);
+    PyModule_AddObject(m, "max_exp", fastnumbers_FN_MAX_EXP);
+    PyModule_AddObject(m, "min_exp", fastnumbers_FN_MIN_EXP);
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
+}
+

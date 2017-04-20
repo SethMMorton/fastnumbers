@@ -7,8 +7,8 @@ parse_integer_from_string (const char *str, const char *end, bool *error)
 {
     register long value = 0L;
     register bool valid = false;
-    register const unsigned starts_with_sign = (unsigned) is_sign(str);
-    register long sign = starts_with_sign && is_negative_sign(str) ? -1L : 1L;
+    register const char starts_with_sign = (char) is_sign(str);
+    register long sign = (starts_with_sign && is_negative_sign(str)) ? -1L : 1L;
     *error = true;
 
     /* If we had started with a sign, increment the pointer by one. */

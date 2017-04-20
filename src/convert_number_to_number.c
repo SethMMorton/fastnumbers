@@ -8,6 +8,12 @@
 
 #include "number_handling.h"
 #include "options.h"
+#include "pstdint.h"
+
+/* Ensure 64 bits are handled. */
+#ifndef INT64_MAX
+#error "fastnumbers requires that your compiler support 64 bit integers, but it appears that this compiler does not"
+#endif
 
 static bool
 _PyFloat_is_Intlike(PyObject *obj) {
@@ -88,13 +94,10 @@ bool
 PyFloat_is_Intlike(PyObject *obj)
 {
     const double dval = PyFloat_AS_DOUBLE(obj);
-#ifdef _MSC_VER
-    if (dval < _I64_MAX && dval > _I64_MIN)
-        return dval == (long long) dval;
-#else
-    if (dval < LONG_MAX && dval > LONG_MIN)
-        return dval == (long) dval;
-#endif
+    if (!PyFloat_Check(obj))
+        return false;
+    if (dval < INT64_MAX && dval > INT64_MIN)
+        return dval == (int64_t) dval;
     return _PyFloat_is_Intlike(obj);
 }
 
@@ -103,8 +106,8 @@ PyFloat_is_Intlike(PyObject *obj)
 bool
 double_is_intlike(const double val)
 {
-    if (val < LONG_MAX && val > LONG_MIN)
-        return val == (long) val;
+    if (val < INT64_MAX && val > INT64_MIN)
+        return val == (int64_t) val;
     else {
         PyObject *pyval = PyFloat_FromDouble(val);
         const bool result = pyval == NULL

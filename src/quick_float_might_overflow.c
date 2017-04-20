@@ -6,7 +6,6 @@
  * February 2017
  */
 
-#include <float.h>
 #include "quick_detection.h"
 
 bool
@@ -29,36 +28,9 @@ float_might_overflow(const char *str, const char *end)
         register unsigned len2 = 0;
         (void) consume_sign(str);
         len2 = (unsigned) (end - str);
-        /* Negative exponential can handle up to 98 (22 on MSVC). */
-        if (negative)
-            exp_ok = (len2 > 0 && len2 < 2) ||
-#ifdef _MSC_VER
-                     (len2 == 2 && (*str <= '1' ||
-                                        (*str == '2' && *(str + 1) <= '2')
-#else
-                     (len2 == 2 && (*str <= '8' ||
-                                        (*str == '9' && *(str + 1) <= '8')
-#endif
-                                    )
-                      );
-        /* Positive exponential can handle up to 99 (22 on MSVC). */
-        else
-#ifdef _MSC_VER
-            exp_ok = (len2 > 0 && len2 < 2) ||
-                     (len2 == 2 && (*str <= '1' ||
-                                        (*str == '2' && *(str + 1) <= '2')
-                                    )
-                      );
-#else
-            exp_ok = len2 > 0 && len2 <= 2;
-#endif
+        exp_ok = negative ? neg_exp_might_overflow(len2, str) : pos_exp_might_overflow(len2, str);
     }
 
-#ifdef _MSC_VER
-    /* To be safe, we only allow up to five less than max double length. */
-    return len >= DBL_DIG - 5 || !exp_ok;
-#else
-    /* To be safe, we only allow up to three less than max double length. */
-    return len >= DBL_DIG - 3 || !exp_ok;
-#endif
+    /* If there are too many digits or the exponent is not OK, it might overflow. */
+    return len > FN_DBL_DIG || !exp_ok;
 }

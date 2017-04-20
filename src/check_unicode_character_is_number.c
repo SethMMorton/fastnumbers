@@ -8,21 +8,21 @@
 
 #include "unicode_handling.h"
 #include "number_handling.h"
+#include "pstdint.h"
 
+/* Ensure 64 bits are handled. */
+#ifndef INT64_MAX
+#error "fastnumbers requires that your compiler support 64 bit integers, but it appears that this compiler does not"
+#endif
 
 static bool
 numeric_unicode_is_intlike(Py_UCS4 uni)
 {
     const double val = uni_tonumeric(uni);
     /* Lowerbound of values is > -1.0.
-     * tonumeric will always return values within "long" range
-     * (or "long long" on MSVC), so no overflow risk below.
+     * Use 64-bit integer to ensure no overflow.
      */
-#ifdef _MSC_VER
-    return (val > -1.0) && val == (long long) val;
-#else
-    return (val > -1.0) && val == (long) val;
-#endif
+    return (val > -1.0) && val == (int64_t) val;
     /* return (val > -1.0) && double_is_intlike(val); */
 }
 

@@ -2,9 +2,9 @@
 # Find the build location and add that to the path
 from __future__ import print_function, division
 import sys
-import os
 import math
 from platform import python_version_tuple
+import pytest
 from pytest import raises
 import fastnumbers
 
@@ -526,3 +526,22 @@ def test_isintlike():
     assert fastnumbers.isintlike(u'⁸')
     assert not fastnumbers.isintlike(u'⅔')
     assert fastnumbers.isintlike(u'Ⅴ')
+
+
+@pytest.fixture()
+def tprint(capsys):
+    """Fixture for printing info after test, not supressed by pytest stdout/stderr capture"""
+    lines = []
+    yield lines.append
+
+    with capsys.disabled():
+        for line in lines:
+            sys.stdout.write('\n{}'.format(line))
+
+
+def test_print_limits(tprint):
+    tprint('\nFASNUMBERS NUMERICAL LIMITS FOR THIS COMPILER BEFORE PYTHON FALLBACK:')
+    tprint('MAXIMUM INTEGER LENTH: {}'.format(fastnumbers.max_int_len))
+    tprint('MAX NUMBER FLOAT DIGITS: {}'.format(fastnumbers.dig))
+    tprint('MAXIMUM FLOAT EXPONENT: {}'.format(fastnumbers.max_exp))
+    tprint('MINIMUM FLOAT EXPONENT: {}'.format(fastnumbers.min_exp))

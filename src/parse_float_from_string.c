@@ -5,7 +5,12 @@
 #include <float.h>
 #include "parsing.h"
 #include "quick_detection.h"
+#include "pstdint.h"
 
+/* Ensure 64 bits are handled. */
+#ifndef INT64_MAX
+#error "fastnumbers requires that your compiler support 64 bit integers, but it appears that this compiler does not"
+#endif
 
 static long double
 power_of_ten_scaling_factor(const int expon);
@@ -16,16 +21,12 @@ apply_power_of_ten_scaling(const long double value, const int expon);
 double
 parse_float_from_string (const char *str, const char *end, bool *error)
 {
-#if ULONG_MAX == 0xffffffffffffffff
-    register unsigned long intvalue = 0UL;
-#else
-    register unsigned long long intvalue = 0UL;
-#endif
+    register uint64_t intvalue = 0UL;
     register bool valid = false;
-    register int decimal_expon = 0;
-    register int expon = 0;
-    register const unsigned starts_with_sign = (unsigned) is_sign(str);
-    register long sign = starts_with_sign && is_negative_sign(str) ? -1L : 1L;
+    register int16_t decimal_expon = 0;
+    register int16_t expon = 0;
+    register const char starts_with_sign = (char) is_sign(str);
+    register int8_t sign = (starts_with_sign && is_negative_sign(str)) ? -1L : 1L;
     *error = true;
 
     /* If we had started with a sign, increment the pointer by one. */
@@ -65,8 +66,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
     /* Parse exponential part. */
 
     if (is_e_or_E(str) && valid) {
-        const int exp_sign = ++str &&
-                             consume_sign_and_is_negative(str) ? -1 : 1;
+        const int8_t exp_sign = (++str && consume_sign_and_is_negative(str)) ? -1 : 1;
         valid = false;
         while (is_valid_digit(str)) {
             expon *= 10;

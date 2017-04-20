@@ -10,7 +10,7 @@ string_contains_float(const char *str,
                       const bool allow_nan)
 {
     register bool valid = false;
-    register const unsigned starts_with_sign = (unsigned) is_sign(str);
+    register const char starts_with_sign = (char) is_sign(str);
 
     /* Shorten length by one if it starts with sign. */
     register const size_t len = end - str - starts_with_sign;
