@@ -3,6 +3,7 @@
 
 # Std lib imports
 import re
+import glob
 from os.path import join, abspath
 
 # Non-std lib imports
@@ -31,31 +32,8 @@ def current_version():
         raise RuntimeError(s.format(VERSIONFILE))
 
 
-# Create a list of all the source files
-sourcefiles = [
-    'check_number_is_number.c',
-    'check_object_is_number.c',
-    'check_string_is_number.c',
-    'check_unicode_character_is_number.c',
-    'convert_number_to_number.c',
-    'convert_object_to_number.c',
-    'convert_python_string_to_string.c',
-    'convert_python_unicode_to_unicode_character.c',
-    'convert_string_to_number.c',
-    'convert_unicode_character_to_number.c',
-    'parse_integer_from_string.c',
-    'parse_float_from_string.c',
-    'quick_float_might_overflow.c',
-    'string_contains_integer.c',
-    'string_contains_intlike_float.c',
-    'string_contains_float.c',
-    'fastnumbers.c',
-]
-sourcefiles = [join('src', sf) for sf in sourcefiles]
-
-
 # Extension definition
-ext = Extension('fastnumbers', sourcefiles,
+ext = Extension('fastnumbers', glob.glob('src/*.c'),
                 include_dirs=[abspath(join('include'))],
                 extra_compile_args=[])
 
