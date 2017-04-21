@@ -52,10 +52,22 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
         return RETURN_CORRECT_RESULT(NULL, options);
     }
 
-    /* Assume unicode. */
-    pyresult = PyUnicode_to_PyNumber(obj, type, options);
-    if (pyresult != Py_None)
-        return RETURN_CORRECT_RESULT(pyresult, options);
+    /* Assume unicode character. */
+    if (Options_Allow_Unicode(options)) {
+        pyresult = PyUnicode_to_PyNumber(obj, type, options);
+        if (pyresult != Py_None)
+            return RETURN_CORRECT_RESULT(pyresult, options);
+    }
+    else {
+        /* If unicode characters are not allowed, return an error. */
+        if (type == REAL || type == FLOAT) {
+            SET_ERR_INVALID_FLOAT(options);
+        }
+        else {
+            SET_ERR_INVALID_INT(options);
+        }
+        return NULL;
+    }
 
     /* Nothing worked - must be a TypeError */
     PyErr_Format(PyExc_TypeError,

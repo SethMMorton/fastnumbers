@@ -209,6 +209,69 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 
+/* Drop-in replacement for int, float */
+static PyObject *
+fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *input = NULL;
+    struct Options opts = init_Options_convert;
+    static char *keywords[] = { "x", "base", NULL };
+    static const char *format = "O|i:int";
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
+                                     &input, &opts.base))
+        return NULL;
+    Options_Set_Return_Value(opts, input, NULL, Py_True);
+    Options_Set_Disallow_Unicode(&opts);
+
+    /* Ensure the base is in a valid range. */
+    if (opts.base != INT_MIN && (opts.base == 1 || opts.base > 36 || opts.base < 0)) {
+        PyErr_SetString(PyExc_ValueError,
+                        "int() base must be >= 2 and <= 36");
+        return NULL;
+    }
+    return PyObject_to_PyNumber(input, INT, &opts);
+}
+
+
+static PyObject *
+fastnumbers_float(PyObject *self, PyObject *args)
+{
+    PyObject *input = NULL;
+    struct Options opts = init_Options_convert;
+    static const char *format = "O:float";
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTuple(args, format, &input))
+        return NULL;
+    Options_Set_Return_Value(opts, input, NULL, Py_True);
+    Options_Set_Disallow_Unicode(&opts);
+
+    return PyObject_to_PyNumber(input, FLOAT, &opts);
+}
+
+
+/* Behaves like float or int, but returns correct type. */
+static PyObject *
+fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *input = NULL;
+    struct Options opts = init_Options_convert;
+    static char *keywords[] = { "x", "coerce", NULL };
+    static const char *format = "O|O:real";
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
+                                     &input, &opts.coerce))
+        return NULL;
+    Options_Set_Return_Value(opts, input, NULL, Py_True);
+    Options_Set_Disallow_Unicode(&opts);
+
+    return PyObject_to_PyNumber(input, REAL, &opts);
+}
+
+
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
     { "fast_real",     (PyCFunction) fastnumbers_fast_real,
@@ -227,6 +290,12 @@ static PyMethodDef FastnumbersMethods[] = {
                        METH_VARARGS | METH_KEYWORDS, isint__doc__ },
     { "isintlike",     (PyCFunction) fastnumbers_isintlike,
                        METH_VARARGS | METH_KEYWORDS, isintlike__doc__ },
+    { "int",           (PyCFunction) fastnumbers_int,
+                       METH_VARARGS | METH_KEYWORDS, "" },
+    { "float",         (PyCFunction) fastnumbers_float,
+                       METH_VARARGS, "" },
+    { "real",          (PyCFunction) fastnumbers_real,
+                       METH_VARARGS | METH_KEYWORDS, "" },
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

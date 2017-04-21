@@ -3,6 +3,7 @@
 
 #include <Python.h>
 #include <limits.h>
+#include "fn_bool.h"
 
 /* This struct holds all the user options.
  * Makes adding new future options easier to manage.
@@ -16,6 +17,7 @@ struct Options {
     PyObject* coerce;
     PyObject* num_only;
     PyObject* str_only;
+    bool allow_uni;
     int base;
 };
 
@@ -28,6 +30,7 @@ struct Options {
                                .coerce = Py_True,  \
                                .num_only = NULL,   \
                                .str_only = NULL,   \
+                               .allow_uni = true,  \
                                .base = INT_MIN,    \
                                }
 #define init_Options_check { .retval = NULL,         \
@@ -38,17 +41,26 @@ struct Options {
                              .coerce = NULL,         \
                              .num_only = Py_False,   \
                              .str_only = Py_False,   \
+                             .allow_uni = true,      \
                              .base = INT_MIN,        \
                              }
 
 /* Some query MACROs. Each expects a pointer. */
 #define Options_Coerce_True(o) PyObject_IsTrue((o)->coerce)
-#define Options_Has_NaN_Sub(o) (o)->handle_nan != NULL
-#define Options_Has_INF_Sub(o) (o)->handle_inf != NULL
+#define Options_Has_NaN_Sub(o) ((o)->handle_nan != NULL)
+#define Options_Has_INF_Sub(o) ((o)->handle_inf != NULL)
 #define Options_Return_NaN_Sub(o) (Py_INCREF((o)->handle_nan), (o)->handle_nan)
 #define Options_Return_INF_Sub(o) (Py_INCREF((o)->handle_inf), (o)->handle_inf)
 #define Options_Should_Raise(o) ((o)->retval == NULL)
 #define Options_Default_Base(o) ((o)->base == INT_MIN)
+#define Options_Allow_Unicode(o) (o)->allow_uni
+
+/* Set allow unicode. */
+#define Options_Set_Disallow_Unicode(o) \
+    do {                                \
+        (o)->retval = NULL;             \
+        (o)->allow_uni = false;         \
+    } while (0)
 
 /* MACRO to return the correct result based on user-input.
  * Expects the Options struct as a pointer.

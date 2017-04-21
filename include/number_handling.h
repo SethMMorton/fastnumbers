@@ -34,20 +34,20 @@ extern "C" {
     if (Options_Should_Raise(o))                                       \
         PyErr_Format(PyExc_ValueError,                                 \
                      "invalid literal for int() with base 10: %.200R", \
-                     (o)->input);
+                     (o)->input)
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 6
 #define SET_ERR_INVALID_FLOAT(o)                            \
     if (Options_Should_Raise(o))                            \
         PyErr_Format(PyExc_ValueError,                      \
                      "invalid literal for float(): %.200R", \
-                     (o)->input);
+                     (o)->input)
 #else
 #define SET_ERR_INVALID_FLOAT(o)                                  \
     if (Options_Should_Raise(o))                                  \
         PyErr_Format(PyExc_ValueError,                            \
                      "could not convert string to float: %.200R", \
-                     (o)->input);
+                     (o)->input)
 #endif
 
 /* Declarations */
