@@ -216,12 +216,14 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "base", NULL };
-    static const char *format = "O|i:int";
+    static const char *format = "|Oi:int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.base))
         return NULL;
+    /* No arguments returns 0. */
+    if (input == NULL) return long_to_PyInt(0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_Unicode(&opts);
 
@@ -236,15 +238,18 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
-fastnumbers_float(PyObject *self, PyObject *args)
+fastnumbers_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     struct Options opts = init_Options_convert;
-    static const char *format = "O:float";
+    static char *keywords[] = { "x", NULL };
+    static const char *format = "|O:float";
 
     /* Read the function argument. */
-    if (!PyArg_ParseTuple(args, format, &input))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, &input))
         return NULL;
+    /* No arguments returns 0.0. */
+    if (input == NULL) return PyFloat_FromDouble(0.0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_Unicode(&opts);
 
@@ -259,12 +264,15 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "coerce", NULL };
-    static const char *format = "O|O:real";
+    static const char *format = "|OO:real";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.coerce))
         return NULL;
+    /* No arguments returns 0.0 or 0 depending on the state of coerce. */
+    if (input == NULL) return Options_Coerce_True(&opts) ? long_to_PyInt(0)
+                                                         : PyFloat_FromDouble(0.0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_Unicode(&opts);
 
@@ -293,7 +301,7 @@ static PyMethodDef FastnumbersMethods[] = {
     { "int",           (PyCFunction) fastnumbers_int,
                        METH_VARARGS | METH_KEYWORDS, "" },
     { "float",         (PyCFunction) fastnumbers_float,
-                       METH_VARARGS, "" },
+                       METH_VARARGS | METH_KEYWORDS, "" },
     { "real",          (PyCFunction) fastnumbers_real,
                        METH_VARARGS | METH_KEYWORDS, "" },
     {NULL, NULL, 0, NULL} /* Sentinel */
