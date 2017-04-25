@@ -144,6 +144,9 @@ handle_possible_conversion_error(const char* end, char* pend,
     consume_white_space(end);
     /* If an error occurred, clear exception (if needed) and return NULL. */
     if (val == NULL || pend != end) {
+        if (pend != end && Options_Should_Raise(options))
+            PyErr_SetString(PyExc_ValueError,
+                            "null byte in argument for int()");
         if (!Options_Should_Raise(options))
             PyErr_Clear();
         Py_XDECREF(val);  /* Probably redundant. */
