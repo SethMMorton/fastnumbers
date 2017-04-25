@@ -545,3 +545,4 @@ def test_print_limits(tprint):
     tprint('MAX NUMBER FLOAT DIGITS: {}'.format(fastnumbers.dig))
     tprint('MAXIMUM FLOAT EXPONENT: {}'.format(fastnumbers.max_exp))
     tprint('MINIMUM FLOAT EXPONENT: {}'.format(fastnumbers.min_exp))
+    tprint('')
