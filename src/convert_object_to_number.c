@@ -48,25 +48,30 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
     }
 
     /* Assume unicode character. */
-    if (Options_Allow_Unicode(options)) {
-        pyresult = PyUnicode_to_PyNumber(obj, type, options);
-        if (pyresult != Py_None)
-            return RETURN_CORRECT_RESULT(pyresult, options);
-    }
-    else {
-        /* If unicode characters are not allowed, return an error. */
-        if (type == REAL || type == FLOAT) {
-            SET_ERR_INVALID_FLOAT(options);
+    if (PyUnicode_Check(obj)) {
+        if (Options_Allow_Unicode(options)) {
+            pyresult = PyUnicode_to_PyNumber(obj, type, options);
+            if (pyresult != Py_None)
+                return RETURN_CORRECT_RESULT(pyresult, options);
         }
         else {
-            SET_ERR_INVALID_INT(options);
+            /* If unicode characters are not allowed, return an error. */
+            if (type == REAL || type == FLOAT) {
+                SET_ERR_INVALID_FLOAT(options);
+            }
+            else {
+                SET_ERR_INVALID_INT(options);
+            }
+            return NULL;
         }
-        return NULL;
     }
 
     /* Nothing worked - must be a TypeError */
     PyErr_Format(PyExc_TypeError,
-                 "expected a string or a number argument, got %.200s",
-                 options->input->ob_type->tp_name);
+                 (type == REAL || type == FLOAT) ?
+                 "float() argument must be a string or a number, not '%.200s'" :
+                 "int() argument must be a string, a bytes-like object "
+                 "or a number, not '%.200s'",
+                 Py_TYPE(options->input)->tp_name);
     return NULL;
 }
