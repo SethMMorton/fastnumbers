@@ -70,7 +70,7 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, PyObject **bytes_objec
  * If the string contains nul characters, return "\0".
  */
 const char*
-convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_object)
+convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_object, Py_buffer *view)
 {
     /* A reference to the bytes object will need to be given to the
      * caller if it was created to ensure the character array is not
@@ -78,24 +78,50 @@ convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_obje
      */
     *bytes_object = NULL;
 
+    /* If the input was in unicode format, extract as ASCII if we can.
+     */
+    if (PyUnicode_Check(input)) {
+        Py_ssize_t len = 0;
+        const char* str = PyUnicode_as_ascii_string(input, &len, bytes_object);
+        if (str == NULL) return NULL;
+        strip_whitespace(str, *end, len);
+        return str;
+    }
+
     /* If the input is already bytes, then just extract the
      * underlying data and return.
      */
-    if (PyBytes_Check(input)) {
+    else if (PyBytes_Check(input)) {
         const char *str = PyBytes_AS_STRING(input);
         const Py_ssize_t len = PyBytes_GET_SIZE(input);
         strip_whitespace(str, *end, len);
         return str;
     }
 
-    /* If the input was in unicode format, extract as ASCII if we can.
+    /* Same for byte array.
      */
-    else if (PyUnicode_Check(input)) {
-        Py_ssize_t len = 0;
-        const char* str = PyUnicode_as_ascii_string(input, &len, bytes_object);
-        if (str == NULL) return NULL;
+    else if (PyByteArray_Check(input)) {
+        const char *str = PyByteArray_AS_STRING(input);
+        const Py_ssize_t len = PyByteArray_GET_SIZE(input);
         strip_whitespace(str, *end, len);
         return str;
+    }
+
+    /* For a buffer, retrieve the bytes object then convert to bytes.
+     */
+    else if (PyObject_GetBuffer(input, view, PyBUF_SIMPLE) == 0) {
+        /* Copy to NUL-terminated buffer. */
+        *bytes_object = PyBytes_FromStringAndSize((const char *) view->buf,
+                                                  view->len);
+        if (*bytes_object == NULL) {
+            PyBuffer_Release(view);
+            return NULL;
+        }
+        {
+            const char *str = PyBytes_AS_STRING(*bytes_object);
+            strip_whitespace(str, *end, view->len);
+            return str;
+        }
     }
 
     /* Return NULL if the data type was invalid. */
