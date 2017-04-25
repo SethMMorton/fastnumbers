@@ -12,8 +12,7 @@
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan,
-                   const int base)
+                   const struct Options *options)
 {
     const char* end;
     bool result = false;
@@ -27,14 +26,14 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
         case REAL:
         case FLOAT:
             result = string_contains_float(str, end,
-                                           PyObject_IsTrue(allow_inf),
-                                           PyObject_IsTrue(allow_nan));
+                                           Options_Allow_Infinity(options),
+                                           Options_Allow_NAN(options));
             break;
         case INT:
-            if (base == INT_MIN || base == 10)
+            if (options->base == INT_MIN || options->base == 10)
                 result = string_contains_integer(str, end);
             else
-                result = string_contains_integer_arbitrary_base(str, end, base);
+                result = string_contains_integer_arbitrary_base(str, end, options->base);
             break;
         case FORCEINT:
         case INTLIKE:

@@ -14,23 +14,21 @@
 
 PyObject*
 PyObject_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan,
-                   PyObject *str_only, PyObject *num_only,
-                   const int base)
+                   const struct Options *options)
 {
     PyObject *pyresult = NULL;
 
     /* Already a number? Simple checks will work. */
     if (PyNumber_Check(obj))
-        return PyBool_from_bool(PyObject_Not(str_only) &&
+        return PyBool_from_bool(!Options_String_Only(options) &&
                                 PyNumber_is_type(obj, type));
 
     /* If we are requiring it to be a number then we must declare false now. */
-    else if (PyObject_IsTrue(num_only))
+    else if (Options_Number_Only(options))
         Py_RETURN_FALSE;
 
     /* Assume a string. */
-    pyresult = PyString_is_number(obj, type, allow_inf, allow_nan, base);
+    pyresult = PyString_is_number(obj, type, options);
     if (pyresult != Py_None)
         return pyresult;
 

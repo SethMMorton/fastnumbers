@@ -35,8 +35,7 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan,
-                   const int base);
+                   const struct Options *options);
 
 #ifdef __cplusplus
 } /* extern "C" */

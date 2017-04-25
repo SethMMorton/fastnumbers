@@ -54,6 +54,10 @@ struct Options {
 #define Options_Should_Raise(o) ((o)->retval == NULL)
 #define Options_Default_Base(o) ((o)->base == INT_MIN)
 #define Options_Allow_UnicodeCharacter(o) (o)->allow_uni
+#define Options_Allow_Infinity(o) PyObject_IsTrue((o)->handle_inf)
+#define Options_Allow_NAN(o) PyObject_IsTrue((o)->handle_nan)
+#define Options_String_Only(o) PyObject_IsTrue((o)->str_only)
+#define Options_Number_Only(o) PyObject_IsTrue((o)->num_only)
 
 /* Set allow unicode. */
 #define Options_Set_Disallow_UnicodeCharacter(o) \

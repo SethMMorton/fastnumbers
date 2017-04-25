@@ -135,23 +135,18 @@ static PyObject *
 fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *str_only = Py_False;
-    PyObject *num_only = Py_False;
-    PyObject *allow_inf = Py_False;
-    PyObject *allow_nan = Py_False;
+    struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only",
                                 "allow_inf", "allow_nan", NULL };
     static const char *format = "O|OOOO:isreal";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &str_only, &num_only,
-                                     &allow_inf, &allow_nan))
+                                     &input, &opts.str_only, &opts.num_only,
+                                     &opts.handle_inf, &opts.handle_nan))
         return NULL;
 
-    return PyObject_is_number(input, REAL,
-                              allow_inf, allow_nan,
-                              str_only, num_only, INT_MIN);
+    return PyObject_is_number(input, REAL, &opts);
 }
 
 
@@ -160,23 +155,18 @@ static PyObject *
 fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *str_only = Py_False;
-    PyObject *num_only = Py_False;
-    PyObject *allow_inf = Py_False;
-    PyObject *allow_nan = Py_False;
+    struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only",
                                 "allow_inf", "allow_nan", NULL };
     static const char *format = "O|OOOO:isfloat";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &str_only, &num_only,
-                                     &allow_inf, &allow_nan))
+                                     &input, &opts.str_only, &opts.num_only,
+                                     &opts.handle_inf, &opts.handle_nan))
         return NULL;
 
-    return PyObject_is_number(input, FLOAT,
-                              allow_inf, allow_nan,
-                              str_only, num_only, INT_MIN);
+    return PyObject_is_number(input, FLOAT, &opts);
 }
 
 
@@ -185,24 +175,18 @@ static PyObject *
 fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *str_only = Py_False;
-    PyObject *num_only = Py_False;
-    int base = INT_MIN;
+    struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only", "base", NULL };
     static const char *format = "O|OOi:isint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &str_only, &num_only, &base))
+                                     &input, &opts.str_only, &opts.num_only,
+                                     &opts.base))
         return NULL;
+    if (assess_integer_base_input(opts.base)) return NULL;
 
-    /* Ensure the base is in a valid range. */
-    if (base != INT_MIN && (base == 1 || base > 36 || base < 0)) {
-        PyErr_SetString(PyExc_ValueError,
-                        "ValueError: int() base must be >= 2 and <= 36");
-        return NULL;
-    }
-    return PyObject_is_number(input, INT, NULL, NULL, str_only, num_only, base);
+    return PyObject_is_number(input, INT, &opts);
 }
 
 
@@ -211,18 +195,16 @@ static PyObject *
 fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *str_only = Py_False;
-    PyObject *num_only = Py_False;
+    struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only", NULL };
     static const char *format = "O|OO:isintlike";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &str_only, &num_only))
+                                     &input, &opts.str_only, &opts.num_only))
         return NULL;
 
-    return PyObject_is_number(input, INTLIKE, NULL, NULL,
-                              str_only, num_only, INT_MIN);
+    return PyObject_is_number(input, INTLIKE, &opts);
 }
 
 
