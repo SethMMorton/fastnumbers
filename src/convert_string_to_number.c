@@ -223,9 +223,10 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
 {
     const char* end;
     PyObject *pyresult = Py_None;  /* None indicates TypeError, not ValueError. */
-    PyObject *bytes = NULL;  /* Keep a reference to the character array */
+    PyObject *temp = NULL;  /* Keep a reference to a temp Python object */
     Py_buffer view = {NULL, NULL}; /* Reference to a buffer object */
-    const char *str = convert_PyString_to_str(obj, &end, &bytes, &view);
+    char *temp_char = NULL;  /* Reference to a character array */
+    const char *str = convert_PyString_to_str(obj, &end, &temp, &temp_char, &view);
 
     /* If we could extract the string, convert it! */
     if (string_conversion_success(str)) {
@@ -265,6 +266,8 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
     }
 
     PyBuffer_Release(&view);
-    Py_XDECREF(bytes);
+    if (temp_char)
+        PyMem_FREE(temp_char);
+    Py_XDECREF(temp);
     return pyresult;
 }

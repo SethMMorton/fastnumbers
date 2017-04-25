@@ -249,7 +249,7 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
         return long_to_PyInt(0);
     }
     Options_Set_Return_Value(opts, input, NULL, Py_True);
-    Options_Set_Disallow_Unicode(&opts);
+    Options_Set_Disallow_UnicodeCharacter(&opts);
     return PyObject_to_PyNumber(input, INT, &opts);
 }
 
@@ -268,7 +268,7 @@ fastnumbers_float(PyObject *self, PyObject *args, PyObject *kwargs)
     /* No arguments returns 0.0. */
     if (input == NULL) return PyFloat_FromDouble(0.0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
-    Options_Set_Disallow_Unicode(&opts);
+    Options_Set_Disallow_UnicodeCharacter(&opts);
 
     return PyObject_to_PyNumber(input, FLOAT, &opts);
 }
@@ -291,7 +291,7 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
     if (input == NULL) return Options_Coerce_True(&opts) ? long_to_PyInt(0)
                                                          : PyFloat_FromDouble(0.0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
-    Options_Set_Disallow_Unicode(&opts);
+    Options_Set_Disallow_UnicodeCharacter(&opts);
 
     return PyObject_to_PyNumber(input, REAL, &opts);
 }

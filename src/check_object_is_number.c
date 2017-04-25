@@ -35,7 +35,7 @@ PyObject_is_number(PyObject *obj, const PyNumberType type,
         return pyresult;
 
     /* Assume unicode. */
-    pyresult = PyUnicode_is_number(obj, type);
+    pyresult = PyUnicodeCharacter_is_number(obj, type);
     if (pyresult != Py_None)
         return pyresult;
 

@@ -28,7 +28,7 @@ numeric_unicode_is_intlike(Py_UCS4 uni)
 
 
 PyObject*
-PyUnicode_is_number(PyObject *obj, const PyNumberType type)
+PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type)
 {
     const Py_UCS4 uni = convert_PyUnicode_to_unicode_char(obj);
     if (unicode_conversion_success(uni)) {

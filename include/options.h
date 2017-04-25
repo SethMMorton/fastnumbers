@@ -53,10 +53,10 @@ struct Options {
 #define Options_Return_INF_Sub(o) (Py_INCREF((o)->handle_inf), (o)->handle_inf)
 #define Options_Should_Raise(o) ((o)->retval == NULL)
 #define Options_Default_Base(o) ((o)->base == INT_MIN)
-#define Options_Allow_Unicode(o) (o)->allow_uni
+#define Options_Allow_UnicodeCharacter(o) (o)->allow_uni
 
 /* Set allow unicode. */
-#define Options_Set_Disallow_Unicode(o) \
+#define Options_Set_Disallow_UnicodeCharacter(o) \
     do {                                \
         (o)->retval = NULL;             \
         (o)->allow_uni = false;         \

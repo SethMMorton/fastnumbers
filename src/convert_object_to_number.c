@@ -49,8 +49,8 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
 
     /* Assume unicode character. */
     if (PyUnicode_Check(obj)) {
-        if (Options_Allow_Unicode(options)) {
-            pyresult = PyUnicode_to_PyNumber(obj, type, options);
+        if (Options_Allow_UnicodeCharacter(options)) {
+            pyresult = PyUnicodeCharacter_to_PyNumber(obj, type, options);
             if (pyresult != Py_None)
                 return RETURN_CORRECT_RESULT(pyresult, options);
         }
