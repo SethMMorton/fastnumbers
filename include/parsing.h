@@ -42,6 +42,12 @@ extern "C" {
 #define consume_python2_long_literal_lL(str) false
 #endif
 #define consume_white_space(str) while (is_white_space(str)) ++(str)
+#if PY_MAJOR_VERSION == 2
+/* For some reason, Python 2 allows space between the sign and the digits. */
+#define consume_white_space_py2_only(str) consume_white_space(str)
+#else
+#define consume_white_space_py2_only(str) do {} while (0)
+#endif
 #define consume_non_white_space(str) while (!is_white_space(str)) ++(str)
 #define consume_sign(str) (is_sign(str) && ++(str))
 #define consume_decimal(str) (is_decimal(str) && ++(str))

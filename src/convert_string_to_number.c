@@ -160,6 +160,7 @@ str_to_PyInt(const char *str, const char *end, const struct Options *options)
      * is likely an int - first and last characters must be digits.
      */
     const char* start = str + (unsigned) is_sign(str);
+    consume_white_space_py2_only(start);  /* For some reason, Python 2 allows space between the sign and the digits. */
     if (!is_likely_int(start, end)) {
         SET_ERR_INVALID_INT(options);
         return NULL;

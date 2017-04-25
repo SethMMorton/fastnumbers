@@ -28,6 +28,8 @@ string_contains_integer_arbitrary_base(const char *str, const char *end, const i
     register size_t len = 0;
 
     (void) consume_sign(str);
+    consume_white_space_py2_only(str);  /* For some reason, Python 2 allows space between the sign and the digits. */
+
     len = end - str;
 
     /* This if-block lifted from Python source code. */
