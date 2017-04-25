@@ -161,6 +161,8 @@ convert_PyString_to_str(PyObject *input, const char** end, PyObject **temp_objec
     }
 
     /* Return NULL if the data type was invalid. */
-    else
+    else {
+        PyErr_Clear();  // Protect against errors from PyObject_GetBuffer.
         return NULL;
+    }
 }

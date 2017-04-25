@@ -33,7 +33,7 @@ struct Options {
                                .allow_uni = true,  \
                                .base = INT_MIN,    \
                                }
-#define init_Options_check { .retval = NULL,         \
+#define init_Options_check { .retval = Py_None,      \
                              .input = NULL,          \
                              .key = NULL,            \
                              .handle_inf = Py_False, \
