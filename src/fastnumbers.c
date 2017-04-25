@@ -14,6 +14,27 @@
 #include "quick_detection.h"
 
 
+/* Function to handle the conversion of base to integers.
+ * 0 is success, 1 is failure.
+ */
+int
+assess_integer_base_input(const int base)
+{
+    /* Default already is OK.
+     */
+    if (base == INT_MIN) return 0;
+
+    /* Ensure valid integer in valid range.
+     */
+    if ((base != 0 && base < 2) || base > 36) {
+        PyErr_SetString(PyExc_ValueError,
+                        "int() base must be >= 2 and <= 36");
+        return 1;
+    }
+    return 0;
+}
+
+
 /* Quickly convert to an int or float, depending on value. */
 static PyObject *
 fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -55,6 +76,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &input, &default_value, &raise_on_invalid,
                                      &opts.key, &opts.handle_inf, &opts.handle_nan))
         return NULL;
+
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
     return PyObject_to_PyNumber(input, FLOAT, &opts);
@@ -79,13 +101,8 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
                                      &opts.key, &opts.base))
         return NULL;
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
+    if (assess_integer_base_input(opts.base)) return NULL;
 
-    /* Ensure the base is in a valid range. */
-    if (opts.base != INT_MIN && (opts.base == 1 || opts.base > 36 || opts.base < 0)) {
-        PyErr_SetString(PyExc_ValueError,
-                        "int() base must be >= 2 and <= 36");
-        return NULL;
-    }
     return PyObject_to_PyNumber(input, INT, &opts);
 }
 
@@ -222,17 +239,17 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.base))
         return NULL;
+    if (assess_integer_base_input(opts.base)) return NULL;
     /* No arguments returns 0. */
-    if (input == NULL) return long_to_PyInt(0);
+    if (input == NULL) {
+        if (!Options_Default_Base(&opts)) {
+            PyErr_SetString(PyExc_TypeError, "int() missing string argument");
+            return NULL;
+        }
+        return long_to_PyInt(0);
+    }
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_Unicode(&opts);
-
-    /* Ensure the base is in a valid range. */
-    if (opts.base != INT_MIN && (opts.base == 1 || opts.base > 36 || opts.base < 0)) {
-        PyErr_SetString(PyExc_ValueError,
-                        "int() base must be >= 2 and <= 36");
-        return NULL;
-    }
     return PyObject_to_PyNumber(input, INT, &opts);
 }
 

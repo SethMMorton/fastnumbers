@@ -232,8 +232,18 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
             pyresult = str_to_PyFloat(str, end, options);
             break;
         case INT:
-            if (Options_Default_Base(options) || options->base == 10)
+            /* To maintain compatibility with Python,
+             * explicit base MUST be bytes, bytearray, or unicode.
+             */
+            if (!Options_Default_Base(options)
+                    && !(PyBytes_Check(obj) || PyUnicode_Check(obj)))
+            {
+                SET_ILLEGAL_BASE_ERROR(options);
+                pyresult = NULL;
+            }
+            else if (Options_Default_Base(options) || options->base == 10) {
                 pyresult = str_to_PyInt(str, end, options);
+            }
             else {
                 char* pend = "\0";
                 pyresult = python_lib_str_to_PyInt(str, &pend, options->base);

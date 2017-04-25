@@ -50,6 +50,11 @@ extern "C" {
                      (o)->input)
 #endif
 
+#define SET_ILLEGAL_BASE_ERROR(o)        \
+    if (Options_Should_Raise(o))         \
+        PyErr_SetString(PyExc_TypeError, \
+                        "int() can't convert non-string with explicit base");
+
 /* Declarations */
 
 PyObject*

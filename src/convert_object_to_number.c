@@ -17,11 +17,6 @@
 #define RETURN_CORRECT_RESULT(ret, opt) \
     ((ret) ? (ret) : Options_Return_Correct_Result_On_Error(opt))
 
-#define SET_ILLEGAL_BASE_ERROR(o)        \
-    if (Options_Should_Raise(o))         \
-        PyErr_SetString(PyExc_TypeError, \
-                        "int() can't convert non-string with explicit base");
-
 PyObject*
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
                      const struct Options *options)
