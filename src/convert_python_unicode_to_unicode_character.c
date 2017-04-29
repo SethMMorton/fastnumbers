@@ -46,10 +46,10 @@ convert_PyUnicode_to_unicode_char(PyObject *input)
     /* For some reason, the C API does not give good access to the unicode
      * strip operation. Luckily split also strips off whitespace, so we can
      * use this fact to remove any whitespace from our input.
-     * Because we already ensured the input is unicode
-     * this will not fail.
      */
     split = PyUnicode_Split(input, NULL, -1);
+    if (split == NULL)
+        return ERR_UNI;
 
     /* Ensure that both the list and the first element have length 1. */
     if (PyList_GET_SIZE(split) != 1) {

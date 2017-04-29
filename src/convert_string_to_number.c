@@ -13,6 +13,15 @@
 #include "quick_detection.h"
 #include "options.h"
 
+#if PY_MAJOR_VERSION == 2
+#define STRING_TYPE_CHECK(o) (PyBytes_Check(o) || PyUnicode_Check(o))
+#else
+#define STRING_TYPE_CHECK(o) (PyBytes_Check(o) || \
+                              PyUnicode_Check(o) || \
+                              PyByteArray_Check(o) \
+                              )
+#endif
+
 /* Declarations for "private" static functions. */
 
 static PyObject*
@@ -61,8 +70,10 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
     else if (quick_detect_nan(start, len)) {
         if (Options_Has_NaN_Sub(options))
             return Options_Return_NaN_Sub(options);
+        else if (is_negative_sign(str))
+            return PyFloat_FromDouble(-Py_NAN);
         else
-            Py_RETURN_NAN;
+            return PyFloat_FromDouble(Py_NAN);
     }
     else if (!is_likely_float(start, end)) {
         SET_ERR_INVALID_FLOAT(options);
@@ -145,8 +156,12 @@ handle_possible_conversion_error(const char* end, char* pend,
     /* If an error occurred, clear exception (if needed) and return NULL. */
     if (val == NULL || pend != end) {
         if (pend != end && Options_Should_Raise(options))
+#if PY_MAJOR_VERSION == 2
             PyErr_SetString(PyExc_ValueError,
                             "null byte in argument for int()");
+#else
+            SET_ERR_INVALID_INT(options);
+#endif
         if (!Options_Should_Raise(options))
             PyErr_Clear();
         Py_XDECREF(val);  /* Probably redundant. */
@@ -239,10 +254,9 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
             break;
         case INT:
             /* To maintain compatibility with Python,
-             * explicit base MUST be bytes, bytearray, or unicode.
+             * explicit base MUST be a string-like type.
              */
-            if (!Options_Default_Base(options)
-                    && !(PyBytes_Check(obj) || PyUnicode_Check(obj)))
+            if (!Options_Default_Base(options) && !STRING_TYPE_CHECK(obj))
             {
                 SET_ILLEGAL_BASE_ERROR(options);
                 pyresult = NULL;

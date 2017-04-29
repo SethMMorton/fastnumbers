@@ -43,7 +43,7 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
 
     /* If the base was given explicitly, unicode should not be accepted. */
     if (!Options_Default_Base(options)) {
-        SET_ILLEGAL_BASE_ERROR(options);
+        SET_ERR_INVALID_INT(options);
         return RETURN_CORRECT_RESULT(NULL, options);
     }
 

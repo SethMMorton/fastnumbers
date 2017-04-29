@@ -1,9 +1,9 @@
+from __future__ import absolute_import
 import sys
 
 import unittest
-from test import test_support
-from test.test_support import run_unittest, have_unicode
-import math
+import builtin_tests.py27.builtin_test_support as test_support
+from builtin_tests.py27.builtin_test_support import run_unittest, have_unicode
 from fastnumbers import int
 import __builtin__
 

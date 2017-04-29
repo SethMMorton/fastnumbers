@@ -18,19 +18,31 @@
  * 0 is success, 1 is failure.
  */
 int
-assess_integer_base_input(const int base)
+assess_integer_base_input(PyObject *pybase, int *base)
 {
-    /* Default already is OK.
+    Py_ssize_t longbase = 0;
+
+    /* Default to INT_MIN.
      */
-    if (base == INT_MIN) return 0;
+    if (pybase == NULL) {
+        *base = INT_MIN;
+        return 0;
+    }
+
+    /* Convert to int and check for overflow.
+     */
+    longbase = PyNumber_AsSsize_t(pybase, NULL);
+    if (longbase == -1 && PyErr_Occurred())
+        return 1;
 
     /* Ensure valid integer in valid range.
      */
-    if ((base != 0 && base < 2) || base > 36) {
+    if ((longbase != 0 && longbase < 2) || longbase > 36) {
         PyErr_SetString(PyExc_ValueError,
                         "int() base must be >= 2 and <= 36");
         return 1;
     }
+    *base = (int) longbase;
     return 0;
 }
 
@@ -90,18 +102,19 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
+    PyObject *base = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "base", NULL };
-    static const char *format = "O|OOOi:fast_int";
+    static const char *format = "O|OOOO:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &opts.base))
+                                     &opts.key, &base))
         return NULL;
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
-    if (assess_integer_base_input(opts.base)) return NULL;
+    if (assess_integer_base_input(base, &opts.base)) return NULL;
 
     return PyObject_to_PyNumber(input, INT, &opts);
 }
@@ -175,16 +188,17 @@ static PyObject *
 fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
+    PyObject *base = NULL;
     struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only", "base", NULL };
-    static const char *format = "O|OOi:isint";
+    static const char *format = "O|OOO:isint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.str_only, &opts.num_only,
-                                     &opts.base))
+                                     &base))
         return NULL;
-    if (assess_integer_base_input(opts.base)) return NULL;
+    if (assess_integer_base_input(base, &opts.base)) return NULL;
 
     return PyObject_is_number(input, INT, &opts);
 }
@@ -213,15 +227,16 @@ static PyObject *
 fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
+    PyObject *base = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "base", NULL };
-    static const char *format = "|Oi:int";
+    static const char *format = "|OO:int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &opts.base))
+                                     &input, &base))
         return NULL;
-    if (assess_integer_base_input(opts.base)) return NULL;
+    if (assess_integer_base_input(base, &opts.base)) return NULL;
     /* No arguments returns 0. */
     if (input == NULL) {
         if (!Options_Default_Base(&opts)) {

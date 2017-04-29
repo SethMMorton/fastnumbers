@@ -81,19 +81,19 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, PyObject **tobj, char 
      * Otherwise we return the character array.
      * The temporary object will stay alive till no longer
      * needed to avoid seg-faulting when accessing the character array.
-     * The temporary chararcter array is only used in Python 2.
+     * The temporary character array is only used in Python 2.
      *
      */
      if (PyUnicode_IS_ASCII(obj)) {
         return PyUnicode_AsUTF8AndSize(obj, len);
      }
      else {
-        *bobj = _PyUnicode_TransformDecimalAndSpaceToASCII(obj);
-        if (*bobj == NULL) {
+        *tobj = _PyUnicode_TransformDecimalAndSpaceToASCII(obj);
+        if (*tobj == NULL || !PyUnicode_IS_ASCII(*tobj)) {
             PyErr_Clear();
             return NULL;
         }
-        return PyUnicode_AsUTF8AndSize(*bobj, len);
+        return PyUnicode_AsUTF8AndSize(*tobj, len);
      }
 }
 
