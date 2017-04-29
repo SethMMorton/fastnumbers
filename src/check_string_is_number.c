@@ -12,27 +12,28 @@
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan,
-                   const int base)
+                   const struct Options *options)
 {
     const char* end;
     bool result = false;
     PyObject *bytes = NULL;  /* Keep a reference to the character array */
-    const char *str = convert_PyString_to_str(obj, &end, &bytes);
+    Py_buffer view = {NULL, NULL}; /* Reference to a buffer object */
+    char *temp_char = NULL;  /* Reference to a character array */
+    const char *str = convert_PyString_to_str(obj, &end, &bytes, &temp_char, &view);
 
     if (string_conversion_success(str)) {
         switch (type) {
         case REAL:
         case FLOAT:
             result = string_contains_float(str, end,
-                                           PyObject_IsTrue(allow_inf),
-                                           PyObject_IsTrue(allow_nan));
+                                           Options_Allow_Infinity(options),
+                                           Options_Allow_NAN(options));
             break;
         case INT:
-            if (base == INT_MIN || base == 10)
+            if (options->base == INT_MIN || options->base == 10)
                 result = string_contains_integer(str, end);
             else
-                result = string_contains_integer_arbitrary_base(str, end, base);
+                result = string_contains_integer_arbitrary_base(str, end, options->base);
             break;
         case FORCEINT:
         case INTLIKE:
@@ -43,6 +44,9 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
     else
         return Py_None;  /* Not a string. */
 
+    PyBuffer_Release(&view);
+    if (temp_char)
+        PyMem_FREE(temp_char);
     Py_XDECREF(bytes);
     return PyBool_from_bool(result);
 }

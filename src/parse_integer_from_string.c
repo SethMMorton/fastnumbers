@@ -15,7 +15,11 @@ parse_integer_from_string (const char *str, const char *end, bool *error)
 
     str += starts_with_sign;
 
-    /* Convert digits, if any. Check for overflow. */
+    /* For some reason, Python 2 allows space between the sign and the digits. */
+
+    consume_white_space_py2_only(str);
+
+    /* Convert digits, if any. */
 
     while (is_valid_digit(str)) {
         value *= 10L;

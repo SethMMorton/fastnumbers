@@ -28,9 +28,7 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
 
 PyObject*
 PyObject_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan,
-                   PyObject *str_only, PyObject *num_only,
-                   const int base);
+                   const struct Options *options);
 
 #ifdef __cplusplus
 } /* extern "C" */

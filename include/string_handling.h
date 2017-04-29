@@ -27,7 +27,7 @@ extern "C" {
 /* Declarations */
 
 const char*
-convert_PyString_to_str(PyObject *input, const char** end, PyObject **bytes_object);
+convert_PyString_to_str(PyObject *input, const char** end, PyObject **temp_object, char **temp_char, Py_buffer *view);
 
 PyObject*
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
@@ -35,8 +35,7 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   PyObject *allow_inf, PyObject *allow_nan,
-                   const int base);
+                   const struct Options *options);
 
 #ifdef __cplusplus
 } /* extern "C" */
