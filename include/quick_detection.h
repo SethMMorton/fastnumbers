@@ -37,7 +37,7 @@ extern "C" {
  * To be safe, any compiler not known during fastnumbers testing will
  * use the larger numbers.
  */
-#if defined(__clang__) || defined(___GNUC__)
+#if defined(__clang__) || defined(__GNUC__)
 #define FN_DBL_DIG DBL_DIG - 4
 #define FN_MAX_EXP 99
 #define FN_MIN_EXP -98
@@ -53,7 +53,7 @@ extern "C" {
 
 /* Quickly detect if an exponent will overflow.
  */
-#if defined(__clang__) || defined(___GNUC__)
+#if defined(__clang__) || defined(__GNUC__)
 #define neg_exp_might_overflow(len, str) \
     ((len) == 1) || \
     ((len) == 2 && (*(str) <= '8' || \
