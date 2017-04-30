@@ -8,6 +8,7 @@
 #include <Python.h>
 #include <limits.h>
 #include "fn_bool.h"
+#include "parsing.h"
 #include "object_handling.h"
 #include "options.h"
 
@@ -28,6 +29,14 @@ extern "C" {
 #define long_to_PyInt(val) PyInt_FromLong(val)
 #define PyNumber_IsInt(obj) (PyInt_Check(obj) || PyLong_Check(obj))
 #define PyNumber_ToInt(obj) PyNumber_Int(obj)
+#endif
+
+/* Return NaN correctly on this system. */
+#if PY_MAJOR_VERSION >= 3 && !defined(PY_NO_SHORT_FLOAT_REPR)
+#define PyFloat_from_NaN(negative) PyFloat_FromDouble(_Py_dg_stdnan(negative));
+#else
+#define PyFloat_from_NaN(negative) (negative) ? PyFloat_FromDouble(-Py_NAN) \
+                                              : PyFloat_FromDouble(Py_NAN);
 #endif
 
 /* Quickies for raising errors. Try to mimic what Python would say. */

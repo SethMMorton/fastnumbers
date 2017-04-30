@@ -93,10 +93,8 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
     else if (quick_detect_nan(start, len)) {
         if (Options_Has_NaN_Sub(options))
             return Options_Return_NaN_Sub(options);
-        else if (is_negative_sign(str))
-            return PyFloat_FromDouble(-Py_NAN);
         else
-            return PyFloat_FromDouble(Py_NAN);
+            return PyFloat_from_NaN(is_negative_sign(str));
     }
     else if (!is_likely_float(start, end)) {
         SET_ERR_INVALID_FLOAT(options);
