@@ -313,11 +313,11 @@ static PyMethodDef FastnumbersMethods[] = {
     { "isintlike",     (PyCFunction) fastnumbers_isintlike,
                        METH_VARARGS | METH_KEYWORDS, isintlike__doc__ },
     { "int",           (PyCFunction) fastnumbers_int,
-                       METH_VARARGS | METH_KEYWORDS, "" },
+                       METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__ },
     { "float",         (PyCFunction) fastnumbers_float,
-                       METH_VARARGS | METH_KEYWORDS, "" },
+                       METH_VARARGS | METH_KEYWORDS, fastnumbers_float__doc__ },
     { "real",          (PyCFunction) fastnumbers_real,
-                       METH_VARARGS | METH_KEYWORDS, "" },
+                       METH_VARARGS | METH_KEYWORDS, fastnumbers_real__doc__ },
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

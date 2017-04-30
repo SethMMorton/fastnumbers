@@ -6,11 +6,32 @@
 fastnumbers API
 ===============
 
-The "Fast" Functions
---------------------
+The "Built-In Replacement" Functions
+------------------------------------
+
+Each of these functions acts as a faster drop-in replacement for
+the equivalent Python built-in function.
+
+:func:`~fastnumbers.float`
+++++++++++++++++++++++++++
+
+.. autofunction:: float
+
+:func:`~fastnumbers.int`
+++++++++++++++++++++++++
+
+.. autofunction:: int
+
+:func:`~fastnumbers.real`
++++++++++++++++++++++++++
+
+.. autofunction:: real
+
+The "Error-Handling" Functions
+------------------------------
 
 Each of these functions will quickly convert strings to numbers
-(and also numbers to numbers) faster than a pure Python implementation.
+(and also numbers to numbers) with fast and convenient error handling.
 They are guaranteed to return results identical to the built-in
 ``float`` or ``int`` functions.
 
@@ -38,7 +59,7 @@ The "Checking" Functions
 ------------------------
 
 These functions return a Boolean value that indicates if the input
-is a certain number type or not.
+can return a certain number type or not.
 
 :func:`~fastnumbers.isreal`
 +++++++++++++++++++++++++++
