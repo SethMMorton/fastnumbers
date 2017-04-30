@@ -10,8 +10,7 @@ from os.path import join, abspath
 from setuptools import setup, Extension
 
 
-DESCRIPTION = ("Efficiently perform string to number type "
-               "conversion with error handling.")
+DESCRIPTION = "Super-fast and clean conversions to numbers."
 try:
     with open('README.rst') as fl:
         LONG_DESCRIPTION = fl.read()

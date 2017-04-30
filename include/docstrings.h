@@ -809,7 +809,7 @@ PyDoc_STRVAR(fastnumbers_int__doc__,
 "\n"
 "    - Cannot convert from the ``__trunc__`` special method of an object.\n"
 "    - Is implemented as a function, not a class, which means it cannot be\n"
-"      sub-classed, and has no *from_bytes* classmethod."
+"      sub-classed, and has no *from_bytes* classmethod.\n"
 "\n");
 
 
@@ -820,9 +820,9 @@ PyDoc_STRVAR(fastnumbers_float__doc__,
 "Behaves identically to the built-in *float* except for the following:\n"
 "\n"
 "    - Is implemented as a function, not a class, which means it cannot be\n"
-"      sub-classed, and has no *fromhex* classmethod."
+"      sub-classed, and has no *fromhex* classmethod.\n"
 "    - A *ValueError* will be raised instead of a *UnicodeEncodeError*\n"
-"      if a partial surrogate is given as input."
+"      if a partial surrogate is given as input.\n"
 "\n");
 
 

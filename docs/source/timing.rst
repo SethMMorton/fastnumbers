@@ -6,17 +6,108 @@
 Timing 
 ======
 
-In order for you to see the benefit of ``fastnumbers``, some timings
+.. contents::
+    :local:
+
+In order for you to see the benefit of :mod:`fastnumbers`, some timings
 are collected below for comparison to equivalent python implementations.
 The numbers may change depending on the machine you are on. Feel free
 to download the source code to run all timing tests.
 
-Note that the test results are for Python 2.7. Both the ``re`` and ``try``
-results are a little bit faster on Python 3.x, but the ``fast`` results are
-still better than or equal to the Python equivalents.
+Note that the test results are for Python 2.7. The trends are the
+same for Python 3.x, but the in general Python 3.x is faster at converting
+strings to integers than Python 2.7 so rather than a 4x speedup you will
+only see a 2x speedup for integers on Python 3.x compared to Python 2.7.
+
+Additionally, because of the addition of allowing underscores in numbers
+in Python 3.6, conversions for both the Python built-in and :mod:`fastnumbers`
+are slower than earlier versions.
+
+Built-in Functions Drop-in Replacement Timing Results
+-----------------------------------------------------
+
+The following timing tests compare conversions to numbers using
+both the built-in Python *float* and *int* functions, and the
+:mod:`fastnumbers` drop-in replacement functions.
 
 Timing Runner
--------------
++++++++++++++
+
+.. code-block:: python
+
+    import sys
+    from timeit import repeat
+
+    def mean(x):
+        return sum(x) / len(x)
+
+    def time_input_against_all_functions(value, label, with_int=False):
+        """Run the given input on all function types."""
+        funcs = ('int', 'float',) if with_int else ('float',)
+        fmt = '{func}({value!r})'
+        for func in funcs:
+            print(label + ',', "fn"+func + ':', end=' ')
+            sys.stdout.flush()
+            time_results = repeat(fmt.format(func=func, value=value),
+                                  'from fastnumbers import {}'.format(func),
+                                  repeat=10)
+            time_results = mean(time_results)
+            print(time_results, 'seconds')
+            print(label + ',', func + ':', end=' ')
+            sys.stdout.flush()
+            time_results = repeat(fmt.format(func=func, value=value),
+                                  repeat=10)
+            time_results = mean(time_results)
+            print(time_results, 'seconds')
+        print()
+
+
+    print('All timing results are the average of 10 runs.')
+    print()
+    time_input_against_all_functions('-41053', 'Int String', with_int=True)
+    time_input_against_all_functions('35892482945872302493947939485729', 'Large Int String', with_int=True)
+    time_input_against_all_functions('-41053.543034e34', 'Float String')
+    time_input_against_all_functions('-41053.543028758302e256', 'Large Float String')
+    time_input_against_all_functions(-41053, 'Int', with_int=True)
+    time_input_against_all_functions(-41053.543028758302e100, 'Float')
+
+The following are the results::
+
+    All timing results are the average of 10 runs.
+
+    Int String, fnint: 0.186911249161 seconds
+    Int String, int: 0.660544228554 seconds
+    Int String, fnfloat: 0.198802471161 seconds
+    Int String, float: 0.219639778137 seconds
+
+    Large Int String, fnint: 0.574236178398 seconds
+    Large Int String, int: 0.854444551468 seconds
+    Large Int String, fnfloat: 0.681066322327 seconds
+    Large Int String, float: 0.637784719467 seconds
+
+    Float String, fnfloat: 0.252382349968 seconds
+    Float String, float: 0.542794394493 seconds
+
+    Large Float String, fnfloat: 1.09777746201 seconds
+    Large Float String, float: 0.96131811142 seconds
+
+    Int, fnint: 0.153172326088 seconds
+    Int, int: 0.191195559502 seconds
+    Int, fnfloat: 0.157608604431 seconds
+    Int, float: 0.182482266426 seconds
+
+    Float, fnfloat: 0.141705727577 seconds
+    Float, float: 0.185694789886 seconds
+
+Error-Handling and Checking Functions Timing Results
+----------------------------------------------------
+
+The following timing tests are for the functions that convert
+input to numbers but adds extra error-handing, and also the functions
+that check that an input can be converted to a number.
+
+Timing Runner
++++++++++++++
 
 The timing tests presented below use the following function to run the timings:
 
@@ -89,7 +180,7 @@ The timing tests presented below use the following function to run the timings:
             print('Int,', x, mean(repeat('{}(-41053)'.format(y[0]), y[1], repeat=10)), 'seconds')
 
 Converting Floats
------------------
++++++++++++++++++
 
 The code to perform the `float` conversion timings is given below:
 
@@ -156,7 +247,7 @@ The following are the results::
     Int, fast: 0.140902447701 seconds
 
 Converting Ints
----------------
++++++++++++++++
 
 The code to perform the `int` conversion timings is given below:
 
@@ -223,7 +314,7 @@ The following are the results::
     Int, fast: 0.130790877342 seconds
 
 Checking Floats
----------------
++++++++++++++++
 
 The code to perform the `float` checking timings is given below:
 
@@ -288,7 +379,7 @@ The following are the results::
     Int, fast: 0.138587331772 seconds
 
 Checking Ints
--------------
++++++++++++++
 
 The code to perform the `int` checking timings is given below:
 

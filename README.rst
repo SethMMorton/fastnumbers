@@ -22,61 +22,37 @@ fastnumbers
 .. image:: https://img.shields.io/pypi/l/fastnumbers.svg
     :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
 
-Efficiently perform string to number type conversion with error handling.
+Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
     - Downloads: https://pypi.python.org/pypi/fastnumbers
-    - Documentation: http://pythonhosted.org//fastnumbers/
+    - Documentation: http://fastnumbers.readthedocs.io/en/
 
-This module is a Python C extension that will convert strings to
-numbers *much* faster than can be done using pure Python; numeric types
-can also be converted to other numeric types.
+:mod:`fastnumbers` is a module with the following three objectives:
 
-Additionally, the user has control over what happens in the event that the
-input string cannot be converted to a number:
-
-    - the input can be returned as-is (this is the default behavior)
-    - the input can be passed to a user-given key function then returned
-    - a ``ValueError`` can be raised (like the built-in ``float`` or ``int``)
-    - a default value can be returned
+    #. Provide drop-in replacements for the Python built-in :func:`int` and
+       :func:`float` that on average is up to 2x faster. These functions
+       should be *identically* to the Python built-ins except for a few
+       specific corner-cases as mentioned in the
+       `API documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_.
+    #. Provide a set of convenience functions that wraps the above
+       :func:`int` and :func:`float` replacements and provides easy, concise,
+       powerful, fast and flexible error handling.
+    #. Provide a set of functions that can be used to rapidly identify if
+       an input *could* be converted to :type:`int` or :type:`float`.
 
 Examples
 --------
 
-``fastnumbers`` contains functions that are fast C implementations similar
-to the following Pure Python function:
+The below examples showcase the :func:`fast_float` function, which is
+a fast conversion functions with error-handling.
+Please see the
+`API Documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_
+for other functions that are available from :mod:`fastnumbers`.
 
 .. code-block:: python
 
-    def fast_float(input, default=None, raise_on_invalid=False, key=None, inf=None, nan=None):
-        import math
-        try:
-            x = float(input)
-        except ValueError:
-            if raise_on_invalid:
-                raise
-            elif key is not None:
-                return key(input)
-            return default if default is not None else input
-        else:
-            if inf is not None and math.isinf(x):
-                return inf
-            elif nan is not None and math.isnan(x):
-                return nan
-            else:
-                return x
-
-In addition to ``fast_float``, there are also ``fast_real``,
-``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``, ``isint``, 
-and ``isintlike`` - please see the
-`API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
-for full details.
-
-Some example usage:
-
-.. code-block:: python
-
-    >>> from fastnumbers import fast_float
+    >>> from fastnumbers import fast_float, float as fnfloat
     >>> # Convert string to a float
     >>> fast_float('56.07')
     56.07
@@ -118,8 +94,8 @@ Some example usage:
     >>> fast_float(u'\u2466')  # 7 enclosed in a circle
     7.0
 
-**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
-function of your choice to ``locale.atof``.
+**NOTE**: If you need locale-dependent conversions, supply the :mod:`fastnumbers`
+function of your choice to :func:`locale.atof`.
 
 .. code-block:: python
 
@@ -130,9 +106,10 @@ function of your choice to ``locale.atof``.
 Timing
 ------
 
-Just how much faster is ``fastnumbers`` than a pure python implementation?
-Below are the timing results for the ``*_float`` functions; please see the
-`Timing Documentation <http://pythonhosted.org//fastnumbers/timing.html>`_
+Just how much faster is :mod:`fastnumbers` than a pure python implementation?
+Below are the timing results for the :func:`fast_float` and :func:`float` function
+on Python 2.7; please see the
+`Timing Documentation <http://fastnumbers.readthedocs.io/en/stable/timing.html>`_
 for details into all timing results.
 
 .. code-block:: python
@@ -167,24 +144,33 @@ for details into all timing results.
     print("fast", timeit('fast_float("invalid")', 'from fastnumbers import fast_float'))
     print()
     print('Valid input:')
-    print("try:", timeit('float_try("56.07")', float_try))
-    print("re:", timeit('float_re("56.07")', float_re))
-    print("fast", timeit('fast_float("56.07")', 'from fastnumbers import fast_float'))
+    print("try:", timeit('float_try("56.07e14")', float_try))
+    print("re:", timeit('float_re("56.07e14")', float_re))
+    print("fast", timeit('fast_float("56.07e14")', 'from fastnumbers import fast_float'))
+    print()
+    print('Built-in float compared to fastnumbers.float:')
+    print("Built-in:", timeit('float("56.07e14")'))
+    print("fastnumbers:", timeit('float("56.07e14")', 'from fastnumbers import float'))
+    print()
 
 The results will be similar to below, but vary based on your system::
 
     Invalid input:
-    try: 2.27156710625
-    re: 0.570491075516
-    fast 0.173984050751
+    try: 2.09141492844
+    re: 0.724852085114
+    fast 0.181249141693
 
     Valid input:
-    try: 0.378665924072
-    re: 1.08740401268
-    fast 0.204708099365
+    try: 0.365114927292
+    re: 1.42145609856
+    fast 0.228940963745
 
-As you can see, in all cases ``fastnumbers`` beats the pure python
-implementations.
+    Built-in float compared to fastnumbers.float:
+    Built-in: 0.234441041946
+    fastnumbers: 0.228511810303
+
+As you can see, in all cases :mod:`fastnumbers` beats the pure python
+implementations (although not *always* significant).
 
 Author
 ------
@@ -195,7 +181,7 @@ History
 -------
 
 These are the last three entries of the changelog.  See the package documentation
-for the complete `changelog <http://pythonhosted.org//fastnumbers/changelog.html>`_.
+for the complete `changelog <http://fastnumbers.readthedocs.io/en/stable/changelog.html>`_.
 
 04-23-2016 v. 1.0.0
 '''''''''''''''''''

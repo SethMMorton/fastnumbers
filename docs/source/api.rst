@@ -6,6 +6,9 @@
 fastnumbers API
 ===============
 
+.. contents::
+    :local:
+
 The "Built-In Replacement" Functions
 ------------------------------------
 

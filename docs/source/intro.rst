@@ -4,54 +4,26 @@
 The :mod:`fastnumbers` module
 =============================
 
-Convert strings to numbers quickly.
+Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
     - Downloads: https://pypi.python.org/pypi/fastnumbers
     - Documentation: http://pythonhosted.org//fastnumbers/
 
-Please see the
-`Timing Documentation <http://pythonhosted.org//fastnumbers/timing.html>`_
-for timing details.
-Check out the `API <http://pythonhosted.org//fastnumbers/api.html>`_.
+Please see the :ref:`Timing Documentation <timing>` for timing details.
+Check out the :ref:`API <api>`.
 
 Quick Description
 -----------------
 
-:mod:`fastnumbers` contains functions that are fast C implementations similar
-to the following Pure Python function:
+The below examples showcase the :func:`fast_float` function, which is
+a fast conversion functions with error-handling.
+Please see the :ref:`API Documentation <api>`
+for other functions that are available from :mod:`fastnumbers`.
 
 .. code-block:: python
 
-    def fast_float(input, default=None, raise_on_invalid=False, key=None, inf=None, nan=None):
-        import math
-        try:
-            x = float(input)
-        except ValueError:
-            if raise_on_invalid:
-                raise
-            elif key is not None:
-                return key(input)
-            return default if default is not None else input
-        else:
-            if inf is not None and math.isinf(x):
-                return inf
-            elif nan is not None and math.isnan(x):
-                return nan
-            else:
-                return x
-
-In addition to ``fast_float``, there are also ``fast_real``,
-``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``, ``isint``, 
-and ``isintlike`` - please see the
-`API Documentation <http://pythonhosted.org//fastnumbers/api.html>`_
-for full details.
-
-Some example usage:
-
-.. code-block:: python
-
-    >>> from fastnumbers import fast_float
+    >>> from fastnumbers import fast_float, float as fnfloat
     >>> # Convert string to a float
     >>> fast_float('56.07')
     56.07
@@ -77,7 +49,7 @@ Some example usage:
     >>> fast_float('56.07', nan=0.0)
     56.07
     >>> # The default built-in float behavior can be triggered with
-    >>> # "raise_on_invalid" set to True. 
+    >>> # "raise_on_invalid" set to True.
     >>> fast_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
       ...
@@ -93,10 +65,10 @@ Some example usage:
     >>> fast_float(u'\u2466')  # 7 enclosed in a circle
     7.0
 
-**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
-function of your choice to ``locale.atof``.
+**NOTE**: If you need locale-dependent conversions, supply the :mod:`fastnumbers`
+function of your choice to :func:`locale.atof`.
 
-::
+.. code-block:: python
 
     import locale
     locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
