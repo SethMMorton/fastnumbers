@@ -53,6 +53,28 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
 
 
 static PyObject*
+python_lib_str_to_PyFloat(const char *str, Py_ssize_t len, void *options)
+{
+    char *pend = NULL, *nend = (char *) str + len;
+    double result = -10.0;
+#if PY_MAJOR_VERSION == 2
+    /* If this is a long literal, don't include the L. */
+    if (is_l_or_L(nend - 1))
+        pend = nend = (char *) nend - 1;
+#endif
+    result = python_lib_str_to_double(str, &pend);
+    if (pend == nend)
+        return PyFloat_FromDouble(result);
+    /* Clear error if we should not raise. */
+    if (Options_Should_Raise((const struct Options *) options))
+        PyErr_Clear();
+    else
+        SET_ERR_INVALID_FLOAT((const struct Options *) options);
+    return NULL;
+}
+
+
+static PyObject*
 str_to_PyFloat(const char *str, const char *end, const struct Options *options)
 {
     /* Use some simple heuristics to determine if the the string
@@ -61,6 +83,7 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
      */
     const char* start = str + (unsigned) is_sign(str);
     const unsigned len = (unsigned) (end - start);
+    const unsigned real_len = (unsigned) (end - str);
     if (quick_detect_infinity(start, len)) {
         if (Options_Has_INF_Sub(options))
             return Options_Return_INF_Sub(options);
@@ -87,13 +110,6 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
      * Python's built-in version, otherwise use the "fast" version.
      */
     else if (float_might_overflow(str, end)) {
-        char *pend = NULL, *nend = (char *) end;
-        double result = -10.0;
-#if PY_MAJOR_VERSION == 2
-        /* If this is a long literal, don't include the L. */
-        if (is_l_or_L(end - 1))
-            pend = nend = (char *) end - 1;
-#endif
         /* Building an exception takes a long time. The tiny
          * performance hit of checking that the input is a valid
          * float before converting to float is well worth it
@@ -104,13 +120,18 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
             SET_ERR_INVALID_FLOAT(options);
             return NULL;
         }
-        result = python_lib_str_to_double(str, &pend);
-        if (pend == nend)
-            return PyFloat_FromDouble(result);
-        /* Clear error if we should not raise. */
-        if (!Options_Should_Raise(options))
-            PyErr_Clear();
-        return NULL;
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6)
+        /* Python >= 3.6 made converting a string to a double obnoxious,
+         * so one must pass a wrapper function to this underscore
+         * removing function.
+         */
+        return _Py_string_to_number_with_underscores(
+            str, real_len, "float", options->input,
+            (void *) options, python_lib_str_to_PyFloat
+        );
+#else
+        return python_lib_str_to_PyFloat(str, real_len, (void *) options);
+#endif
     }
     else {
         bool error = false;

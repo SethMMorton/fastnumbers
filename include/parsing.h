@@ -34,6 +34,7 @@ extern "C" {
 #define is_positive_sign(c) (*(c) == '+')
 #define is_sign(c) (is_negative_sign(c) || is_positive_sign(c))
 #define is_non_integer_character(c) (is_decimal(c) || is_e_or_E(c))
+#define is_underscore(c) (*(c) == '_')
 
 /* Consume characters based on ID. */
 #if PY_MAJOR_VERSION == 2
@@ -55,6 +56,13 @@ extern "C" {
 #define consume_sign_and_is_negative(str) (is_negative_sign(str) ? \
 	                                      (consume_sign(str) && true) : \
 	                                      (consume_sign(str) && false))
+/* Underscores only valid for 3.6 or above. */
+#if PY_MAJOR_VERSION == 2 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 6)
+#define consume_single_underscore_before_digit_36_and_above(str) do {} while (0)
+#else
+#define consume_single_underscore_before_digit_36_and_above(str) \
+    ((is_underscore(str) && is_valid_digit(str + 1)) && ++(str))
+#endif
 
 /* A rather bold MACRO to strip whitespace from both ends. */
 #define strip_whitespace(start, end, length) \

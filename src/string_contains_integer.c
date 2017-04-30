@@ -9,6 +9,7 @@ string_contains_integer(const char *str, const char *end)
     (void) consume_sign(str);
     while (is_valid_digit(str)) {
         str++;
+        consume_single_underscore_before_digit_36_and_above(str);
         valid = true;
     }
     (void) consume_python2_long_literal_lL(str);
@@ -69,6 +70,7 @@ string_contains_integer_arbitrary_base(const char *str, const char *end, const i
     /* The rest behaves as normal. */
     while (is_valid_digit_arbitrary_base(*str, actual_base)) {
         str++;
+        consume_single_underscore_before_digit_36_and_above(str);
         valid = true;
     }
 #if PY_MAJOR_VERSION == 2

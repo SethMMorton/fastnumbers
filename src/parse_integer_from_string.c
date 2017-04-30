@@ -26,6 +26,7 @@ parse_integer_from_string (const char *str, const char *end, bool *error)
         value += ascii2long(str);
         valid = true;
         str++;
+        consume_single_underscore_before_digit_36_and_above(str);
     }
 
     (void) consume_python2_long_literal_lL(str);

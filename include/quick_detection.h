@@ -55,7 +55,7 @@ extern "C" {
  */
 #if defined(__clang__) || defined(___GNUC__)
 #define neg_exp_might_overflow(len, str) \
-    ((len) > 0 && (len) < 2) || \
+    ((len) == 1) || \
     ((len) == 2 && (*(str) <= '8' || \
                       (*(str) == '9' && *((str) + 1) <= '8') \
                    ) \
@@ -64,7 +64,7 @@ extern "C" {
 #else
 /* Same for both positive and negative. */
 #define __exp_might_overflow(len, str) \
-    ((len) > 0 && (len) < 2) || \
+    ((len) == 1) || \
     ((len) == 2 && (*(str) <= '1' || \
                       (*(str) == '2' && *((str) + 1) <= '2') \
                    ) \

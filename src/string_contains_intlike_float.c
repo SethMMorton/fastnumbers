@@ -34,6 +34,7 @@ string_contains_intlike_float (const char *str, const char *end)
         valid = true;
         pre_ndigits++;
         str++;
+        consume_single_underscore_before_digit_36_and_above(str);
     }
     pre_decimal_end = str;
 
@@ -53,6 +54,7 @@ string_contains_intlike_float (const char *str, const char *end)
             valid = true;
             post_ndigits++;
             str++;
+            consume_single_underscore_before_digit_36_and_above(str);
         }
     }
     float_end = str;
@@ -70,6 +72,7 @@ string_contains_intlike_float (const char *str, const char *end)
             expon += ascii2int(str);
             valid = true;
             str++;
+            consume_single_underscore_before_digit_36_and_above(str);
         }
     }
 
