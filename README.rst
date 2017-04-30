@@ -28,27 +28,27 @@ Super-fast and clean conversions to numbers.
     - Downloads: https://pypi.python.org/pypi/fastnumbers
     - Documentation: http://fastnumbers.readthedocs.io/en/
 
-:mod:`fastnumbers` is a module with the following three objectives:
+``fastnumbers`` is a module with the following three objectives:
 
-    #. Provide drop-in replacements for the Python built-in :func:`int` and
-       :func:`float` that on average is up to 2x faster. These functions
+    #. Provide drop-in replacements for the Python built-in ``int`` and
+       ``float`` that on average is up to 2x faster. These functions
        should be *identically* to the Python built-ins except for a few
        specific corner-cases as mentioned in the
        `API documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_.
     #. Provide a set of convenience functions that wraps the above
-       :func:`int` and :func:`float` replacements and provides easy, concise,
+       ``int`` and ``float`` replacements and provides easy, concise,
        powerful, fast and flexible error handling.
     #. Provide a set of functions that can be used to rapidly identify if
-       an input *could* be converted to :type:`int` or :type:`float`.
+       an input *could* be converted to *int* or *float*.
 
 Examples
 --------
 
-The below examples showcase the :func:`fast_float` function, which is
+The below examples showcase the ``fast_float`` function, which is
 a fast conversion functions with error-handling.
 Please see the
 `API Documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_
-for other functions that are available from :mod:`fastnumbers`.
+for other functions that are available from ``fastnumbers``.
 
 .. code-block:: python
 
@@ -94,8 +94,8 @@ for other functions that are available from :mod:`fastnumbers`.
     >>> fast_float(u'\u2466')  # 7 enclosed in a circle
     7.0
 
-**NOTE**: If you need locale-dependent conversions, supply the :mod:`fastnumbers`
-function of your choice to :func:`locale.atof`.
+**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
+function of your choice to ``locale.atof``.
 
 .. code-block:: python
 
@@ -106,8 +106,8 @@ function of your choice to :func:`locale.atof`.
 Timing
 ------
 
-Just how much faster is :mod:`fastnumbers` than a pure python implementation?
-Below are the timing results for the :func:`fast_float` and :func:`float` function
+Just how much faster is ``fastnumbers`` than a pure python implementation?
+Below are the timing results for the ``fast_float`` and ``float`` function
 on Python 2.7; please see the
 `Timing Documentation <http://fastnumbers.readthedocs.io/en/stable/timing.html>`_
 for details into all timing results.
@@ -169,7 +169,7 @@ The results will be similar to below, but vary based on your system::
     Built-in: 0.234441041946
     fastnumbers: 0.228511810303
 
-As you can see, in all cases :mod:`fastnumbers` beats the pure python
+As you can see, in all cases ``fastnumbers`` beats the pure python
 implementations (although not *always* significant).
 
 Author
