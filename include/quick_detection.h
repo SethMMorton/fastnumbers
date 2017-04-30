@@ -1,9 +1,9 @@
 #ifndef __FN_QUICK_DETECTION
 #define __FN_QUICK_DETECTION
 
+#include "parsing.h"
 #include <float.h>
 #include <limits.h>
-#include "parsing.h"
 
 #ifdef __cplusplus
 extern "C" {
