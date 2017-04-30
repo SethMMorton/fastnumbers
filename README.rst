@@ -183,6 +183,19 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://fastnumbers.readthedocs.io/en/stable/changelog.html>`_.
 
+04-30-2017 v. 2.0.0
+'''''''''''''''''''
+
+    - Dropped support for Python 2.6.
+    - Added support for Python 3.6 underscores.
+    - Added drop-in replacements for the built-in ``int()`` and ``float()`` functions.
+    - Incorporated unit tests from Python's testing library to ensure that any
+      input that Python can handle will also be handled the same way by ``fastnumbers``.
+    - Added Appveyor testing to ensure no surprises on Windows.
+    - Revamped documentation.
+    - Refactored internal mechanism for assessing overflow to be faster in the most
+      common cases.
+
 04-23-2016 v. 1.0.0
 '''''''''''''''''''
 
@@ -201,9 +214,3 @@ for the complete `changelog <http://fastnumbers.readthedocs.io/en/stable/changel
 '''''''''''''''''''
 
     - Added the "coerce" option to fast_real.
-
-03-08-2016 v. 0.7.3
-'''''''''''''''''''
-
-    - Newline is now considered to be whitespace (for consistency with
-      the builtin float and int).
