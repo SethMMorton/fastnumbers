@@ -40,8 +40,8 @@ extern "C" {
 #endif
 
 /* Quickies for raising errors. Try to mimic what Python would say. */
-#define FN_FLOAT_MSG "could not convert string to float: %.200R"
-#define FN_INT_MSG "invalid literal for int() with base %d: %.200R"
+#define FN_FLOAT_MSG "could not convert string to float: %R"
+#define FN_INT_MSG "invalid literal for int() with base %d: %R"
 
 #if PY_MAJOR_VERSION == 2
 #define SET_ERR_INVALID_INT(o)                                                       \

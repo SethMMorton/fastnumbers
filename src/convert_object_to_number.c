@@ -69,9 +69,9 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
     /* Nothing worked - must be a TypeError */
     PyErr_Format(PyExc_TypeError,
                  (type == REAL || type == FLOAT) ?
-                 "float() argument must be a string or a number, not '%.200s'" :
+                 "float() argument must be a string or a number, not '%s'" :
                  "int() argument must be a string, a bytes-like object "
-                 "or a number, not '%.200s'",
+                 "or a number, not '%s'",
                  Py_TYPE(options->input)->tp_name);
     return NULL;
 }
