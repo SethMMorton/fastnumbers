@@ -21,28 +21,30 @@ struct Options {
     int base;
 };
 
-/* Convenience for initializing. */
-#define init_Options_convert { .retval = NULL,     \
-                               .input = NULL,      \
-                               .key = NULL,        \
-                               .handle_inf = NULL, \
-                               .handle_nan = NULL, \
-                               .coerce = Py_True,  \
-                               .num_only = NULL,   \
-                               .str_only = NULL,   \
-                               .allow_uni = true,  \
-                               .base = INT_MIN,    \
+/* Convenience for initializing.
+ * Older MSVC does not like designated initializers.
+ */
+#define init_Options_convert { /*.retval =*/ NULL,     \
+                               /*.input =*/ NULL,      \
+                               /*.key =*/ NULL,        \
+                               /*.handle_inf =*/ NULL, \
+                               /*.handle_nan =*/ NULL, \
+                               /*.coerce =*/ Py_True,  \
+                               /*.num_only =*/ NULL,   \
+                               /*.str_only =*/ NULL,   \
+                               /*.allow_uni =*/ true,  \
+                               /*.base =*/ INT_MIN,    \
                                }
-#define init_Options_check { .retval = Py_None,      \
-                             .input = NULL,          \
-                             .key = NULL,            \
-                             .handle_inf = Py_False, \
-                             .handle_nan = Py_False, \
-                             .coerce = NULL,         \
-                             .num_only = Py_False,   \
-                             .str_only = Py_False,   \
-                             .allow_uni = true,      \
-                             .base = INT_MIN,        \
+#define init_Options_check { /*.retval =*/ Py_None,      \
+                             /*.input =*/ NULL,          \
+                             /*.key =*/ NULL,            \
+                             /*.handle_inf =*/ Py_False, \
+                             /*.handle_nan =*/ Py_False, \
+                             /*.coerce =*/ NULL,         \
+                             /*.num_only =*/ Py_False,   \
+                             /*.str_only =*/ Py_False,   \
+                             /*.allow_uni =*/ true,      \
+                             /*.base =*/ INT_MIN,        \
                              }
 
 /* Some query MACROs. Each expects a pointer. */
