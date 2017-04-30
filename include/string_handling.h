@@ -18,12 +18,6 @@ extern "C" {
 
 #define string_conversion_success(str) ((str) != NULL)
 
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 6
-#define python_lib_str_to_double(str, endptr) PyOS_ascii_strtod((str), (endptr))
-#else
-#define python_lib_str_to_double(str, endptr) PyOS_string_to_double((str), (endptr), NULL)
-#endif
-
 /* Declarations */
 
 const char*

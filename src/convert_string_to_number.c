@@ -62,7 +62,7 @@ python_lib_str_to_PyFloat(const char *str, Py_ssize_t len, void *options)
     if (is_l_or_L(nend - 1))
         pend = nend = (char *) nend - 1;
 #endif
-    result = python_lib_str_to_double(str, &pend);
+    result = PyOS_string_to_double(str, &pend, NULL);
     if (pend == nend)
         return PyFloat_FromDouble(result);
     /* Clear error if we should not raise. */
