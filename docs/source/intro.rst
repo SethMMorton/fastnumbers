@@ -8,7 +8,7 @@ Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
     - Downloads: https://pypi.python.org/pypi/fastnumbers
-    - Documentation: http://pythonhosted.org//fastnumbers/
+    - Documentation: http://fastnumbers.readthedocs.io/
 
 Please see the :ref:`Timing Documentation <timing>` for timing details.
 Check out the :ref:`API <api>`.

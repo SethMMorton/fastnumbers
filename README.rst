@@ -26,7 +26,7 @@ Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
     - Downloads: https://pypi.python.org/pypi/fastnumbers
-    - Documentation: http://fastnumbers.readthedocs.io/en/
+    - Documentation: http://fastnumbers.readthedocs.io/
 
 ``fastnumbers`` is a module with the following three objectives:
 
