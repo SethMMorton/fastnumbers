@@ -6,12 +6,12 @@
  * January 2017
  */
 
-#include <limits.h>
 #include "string_handling.h"
 #include "number_handling.h"
 #include "parsing.h"
 #include "quick_detection.h"
 #include "options.h"
+#include <limits.h>
 
 #if PY_MAJOR_VERSION == 2
 #define STRING_TYPE_CHECK(o) (PyBytes_Check(o) || PyUnicode_Check(o))

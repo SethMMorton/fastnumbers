@@ -6,9 +6,9 @@
  * January 2017
  */
 
-#include <limits.h>
 #include "string_handling.h"
 #include "parsing.h"
+#include <limits.h>
 
 PyObject*
 PyString_is_number(PyObject *obj, const PyNumberType type,
