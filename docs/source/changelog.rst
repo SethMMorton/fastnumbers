@@ -3,6 +3,11 @@
 Changelog
 ---------
 
+04-30-2017 v. 2.0.1
+'''''''''''''''''''
+
+    - Fixed bug in decimal digit limit on GCC.
+
 04-30-2017 v. 2.0.0
 '''''''''''''''''''
 

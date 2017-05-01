@@ -183,6 +183,11 @@ History
 These are the last three entries of the changelog.  See the package documentation
 for the complete `changelog <http://fastnumbers.readthedocs.io/en/stable/changelog.html>`_.
 
+04-30-2017 v. 2.0.1
+'''''''''''''''''''
+
+    - Fixed bug in decimal digit limit on GCC.
+
 04-30-2017 v. 2.0.0
 '''''''''''''''''''
 
