@@ -31,11 +31,11 @@ Super-fast and clean conversions to numbers.
 ``fastnumbers`` is a module with the following three objectives:
 
     #. Provide drop-in replacements for the Python built-in ``int`` and
-       ``float`` that on average is up to 2x faster. These functions
-       should be *identically* to the Python built-ins except for a few
+       ``float`` that on average are up to 2x faster. These functions
+       should behave *identically* to the Python built-ins except for a few
        specific corner-cases as mentioned in the
        `API documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_.
-    #. Provide a set of convenience functions that wraps the above
+    #. Provide a set of convenience functions that wrap the above
        ``int`` and ``float`` replacements and provides easy, concise,
        powerful, fast and flexible error handling.
     #. Provide a set of functions that can be used to rapidly identify if
@@ -45,7 +45,7 @@ Examples
 --------
 
 The below examples showcase the ``fast_float`` function, which is
-a fast conversion functions with error-handling.
+a fast conversion function with error-handling.
 Please see the
 `API Documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_
 for other functions that are available from ``fastnumbers``.
