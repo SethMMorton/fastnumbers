@@ -7,7 +7,7 @@ The :mod:`fastnumbers` module
 Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
-    - Downloads: https://pypi.python.org/pypi/fastnumbers
+    - Downloads: https://pypi.org/project/fastnumbers/
     - Documentation: http://fastnumbers.readthedocs.io/
 
 Please see the :ref:`Timing Documentation <timing>` for timing details.
@@ -88,7 +88,7 @@ or, if you have ``pip`` (preferred over ``easy_install``)::
 
 Both of the above commands will download the source for you.
 
-You can also download the source from http://pypi.python.org/pypi/fastnumbers,
+You can also download the source from https://pypi.org/project/fastnumbers/,
 or browse the git repository at https://github.com/SethMMorton/fastnumbers.
 
 If you choose to install from source (will need a C compiler and the Python headers),

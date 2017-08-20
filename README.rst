@@ -14,10 +14,10 @@ fastnumbers
     :target: https://www.codacy.com/app/SethMMorton/fastnumbers
 
 .. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
-    :target: https://pypi.python.org/pypi/fastnumbers
+    :target: https://pypi.org/project/fastnumbers/
 
 .. image:: https://img.shields.io/pypi/format/fastnumbers.svg
-    :target: https://pypi.python.org/pypi/fastnumbers
+    :target: https://pypi.org/project/fastnumbers/
 
 .. image:: https://img.shields.io/pypi/l/fastnumbers.svg
     :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
@@ -25,7 +25,7 @@ fastnumbers
 Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
-    - Downloads: https://pypi.python.org/pypi/fastnumbers
+    - Downloads: https://pypi.org/project/fastnumbers/
     - Documentation: http://fastnumbers.readthedocs.io/
 
 ``fastnumbers`` is a module with the following three objectives:
@@ -34,7 +34,7 @@ Super-fast and clean conversions to numbers.
        ``float`` that on average are up to 2x faster. These functions
        should behave *identically* to the Python built-ins except for a few
        specific corner-cases as mentioned in the
-       `API documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_.
+       `API documentation <http://fastnumbers.readthedocs.io/en/master/api.html>`_.
     #. Provide a set of convenience functions that wrap the above
        ``int`` and ``float`` replacements and provides easy, concise,
        powerful, fast and flexible error handling.
@@ -47,7 +47,7 @@ Examples
 The below examples showcase the ``fast_float`` function, which is
 a fast conversion function with error-handling.
 Please see the
-`API Documentation <http://fastnumbers.readthedocs.io/en/stable/api.html>`_
+`API Documentation <http://fastnumbers.readthedocs.io/en/master/api.html>`_
 for other functions that are available from ``fastnumbers``.
 
 .. code-block:: python
@@ -109,7 +109,7 @@ Timing
 Just how much faster is ``fastnumbers`` than a pure python implementation?
 Below are the timing results for the ``fast_float`` and ``float`` function
 on Python 2.7; please see the
-`Timing Documentation <http://fastnumbers.readthedocs.io/en/stable/timing.html>`_
+`Timing Documentation <http://fastnumbers.readthedocs.io/en/master/timing.html>`_
 for details into all timing results.
 
 .. code-block:: python
@@ -181,7 +181,7 @@ History
 -------
 
 These are the last three entries of the changelog.  See the package documentation
-for the complete `changelog <http://fastnumbers.readthedocs.io/en/stable/changelog.html>`_.
+for the complete `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
 
 04-30-2017 v. 2.0.1
 '''''''''''''''''''
