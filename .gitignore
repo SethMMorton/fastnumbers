@@ -36,3 +36,6 @@ pip-log.txt
 
 # PyCharm
 .idea
+
+# Jupyter
+.ipynb_checkpoints/
