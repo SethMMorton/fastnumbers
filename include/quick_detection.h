@@ -35,7 +35,7 @@ extern "C" {
  * fastnumbers is willing attempt to convert itself. For Clang and GNUC,
  * it is known that larger numbers work than MSVC.
  * To be safe, any compiler not known during fastnumbers testing will
- * use the larger numbers.
+ * use the smaller numbers.
  */
 #if defined(__clang__) || defined(__GNUC__)
 #define FN_DBL_DIG DBL_DIG - 4
