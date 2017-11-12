@@ -107,70 +107,11 @@ Timing
 ------
 
 Just how much faster is ``fastnumbers`` than a pure python implementation?
-Below are the timing results for the ``fast_float`` and ``float`` function
-on Python 2.7; please see the
-`Timing Documentation <http://fastnumbers.readthedocs.io/en/master/timing.html>`_
-for details into all timing results.
+Please see the following Jupyter notebooks for timing information on various Python versions.
 
-.. code-block:: python
-
-    from timeit import timeit
-    float_try = '''\
-    def float_try(input):
-        """Typical approach to this problem."""
-        try:
-            return float(input)
-        except ValueError:
-            return input
-    '''
-
-    float_re = '''\
-    import re
-    float_match = re.compile(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$').match
-    def float_re(input):
-        """Alternate approach to this problem."""
-        try:
-            if float_match(input):
-                return float(input)
-            else:
-                return input
-        except TypeError:
-            return float(input)
-    '''
-
-    print('Invalid input:')
-    print("try:", timeit('float_try("invalid")', float_try))
-    print("re:", timeit('float_re("invalid")', float_re))
-    print("fast", timeit('fast_float("invalid")', 'from fastnumbers import fast_float'))
-    print()
-    print('Valid input:')
-    print("try:", timeit('float_try("56.07e14")', float_try))
-    print("re:", timeit('float_re("56.07e14")', float_re))
-    print("fast", timeit('fast_float("56.07e14")', 'from fastnumbers import fast_float'))
-    print()
-    print('Built-in float compared to fastnumbers.float:')
-    print("Built-in:", timeit('float("56.07e14")'))
-    print("fastnumbers:", timeit('float("56.07e14")', 'from fastnumbers import float'))
-    print()
-
-The results will be similar to below, but vary based on your system::
-
-    Invalid input:
-    try: 2.09141492844
-    re: 0.724852085114
-    fast 0.181249141693
-
-    Valid input:
-    try: 0.365114927292
-    re: 1.42145609856
-    fast 0.228940963745
-
-    Built-in float compared to fastnumbers.float:
-    Built-in: 0.234441041946
-    fastnumbers: 0.228511810303
-
-As you can see, in all cases ``fastnumbers`` beats the pure python
-implementations (although not *always* significant).
+    - https://github.com/SethMMorton/fastnumbers/blob/master/TIMING_27.ipynb
+    - https://github.com/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
+    - https://github.com/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
 
 Author
 ------
