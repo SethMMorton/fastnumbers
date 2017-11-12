@@ -13,6 +13,9 @@ elif sys.version_info[0:2] == (3, 4):
 elif sys.version_info[0:2] == (3, 5):
     from builtin_tests.py35.builtin_test_float import *
     from builtin_tests.py35.builtin_test_int import *
-else:
+elif sys.version_info[0:2] == (3, 6):
     from builtin_tests.py36.builtin_test_float import *
     from builtin_tests.py36.builtin_test_int import *
+else:
+    from builtin_tests.py37.builtin_test_float import *
+    from builtin_tests.py37.builtin_test_int import *
