@@ -1,5 +1,8 @@
 include README.rst
-include CONTRIBUTING.md
+include *.md
+include *.ipynb
+include .travis.yml
+include appveyor.yml
 include LICENSE
 include setup.py
 include setup.cfg
