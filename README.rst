@@ -121,8 +121,15 @@ Seth M. Morton
 History
 -------
 
-These are the last three entries of the changelog.  See the package documentation
+These are the last three entries of the changelog. See the package documentation
 for the complete `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
+
+11-11-2017 v. 2.0.2
+'''''''''''''''''''
+
+    - Updated docstrings.
+    - Improved timing documentation.
+    - Added testing for Python 3.7.
 
 04-30-2017 v. 2.0.1
 '''''''''''''''''''
@@ -141,22 +148,3 @@ for the complete `changelog <http://fastnumbers.readthedocs.io/en/master/changel
     - Revamped documentation.
     - Refactored internal mechanism for assessing overflow to be faster in the most
       common cases.
-
-04-23-2016 v. 1.0.0
-'''''''''''''''''''
-
-    - "coerce" in ``fast_real`` now applies to any input, not just numeric;
-      the default is now *True* instead of *False*.
-    - Now all ASCII whitespace characters are stripped by fastnumbers
-    - Typechecking is now more forgiving
-    - fastnumbers now checks for errors when converting between numeric types
-    - Fixed bug where very small numbers are not converted properly
-    - Testing now includes Python 2.6.
-    - Removed ``safe_*`` functions (which were deprecated since version 0.3.0)
-    - Fixed unicode handling on Windows.
-    - Fixed Python2.6 on Windows.
-
-03-19-2016 v. 0.7.4
-'''''''''''''''''''
-
-    - Added the "coerce" option to fast_real.

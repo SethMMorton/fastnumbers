@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+11-11-2017 v. 2.0.2
+'''''''''''''''''''
+
+    - Updated docstrings.
+    - Improved timing documentation.
+    - Added testing for Python 3.7.
+
 04-30-2017 v. 2.0.1
 '''''''''''''''''''
 
