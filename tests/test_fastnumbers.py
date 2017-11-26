@@ -2,14 +2,12 @@
 # Find the build location and add that to the path
 from __future__ import print_function, division
 import re
-import sys
-import os
 import math
 import unicodedata
 from itertools import repeat
 from platform import python_version_tuple
 from pytest import raises
-from hypothesis import given, assume, example
+from hypothesis import given, example
 from hypothesis.strategies import (
     sampled_from,
     floats,
@@ -76,6 +74,18 @@ def a_number(s):
         if s in numeric:
             return True
     return False
+
+
+def not_a_number(s):
+    return not a_number(s)
+
+
+def an_integer(x):
+    return x.is_integer()
+
+
+def not_an_integer(x):
+    return not x.is_integer()
 
 
 def baseN(num, b, numerals="0123456789abcdefghijklmnopqrstuvwxyz"):
@@ -161,26 +171,22 @@ def test_fast_real_with_coerce_given_dumb_class_responds_to_internal_ValueError(
     assert fastnumbers.fast_real(x, coerce=True, default=5) == 5
 
 
-@given(floats())
+@given(floats(allow_nan=False))
 def test_fast_real_given_float_returns_float(x):
-    assume(not math.isnan(x))
     assert fastnumbers.fast_real(x, coerce=False) == x
     assert fastnumbers.fast_real(x, raise_on_invalid=True, coerce=False) == x
     assert fastnumbers.fast_real(x, None, True, coerce=False) == x
     assert isinstance(fastnumbers.fast_real(x, coerce=False), float)
 
 
-@given(floats())
+@given(floats(allow_nan=False).filter(an_integer))
 def test_fast_real_given_float_returns_int_if_intlike_with_coerce(x):
-    assume(not math.isnan(x))
-    assume(x.is_integer())
     assert fastnumbers.fast_real(x, coerce=True) == int(float(x))
     assert isinstance(fastnumbers.fast_real(x, coerce=True), (long, int))
 
 
-@given(floats())
+@given(floats(allow_nan=False))
 def test_fast_real_given_float_returns_float_or_int_with_coerce(x):
-    assume(not math.isnan(x))
     assert fastnumbers.fast_real(x, coerce=True) == int(x) if x.is_integer() else x
     assert isinstance(fastnumbers.fast_real(x, coerce=True), (int, long) if x.is_integer() else float)
 
@@ -201,10 +207,9 @@ def test_fast_real_given_inf_returns_sub_value():
     assert fastnumbers.fast_real(float('inf'), inf=1000.0) == 1000.0
 
 
-@given(floats())
+@given(floats(allow_nan=False))
 @example(5.675088586167575e-116)
 def test_fast_real_given_float_string_returns_float(x):
-    assume(not math.isnan(x))
     y = repr(x)
     assert fastnumbers.fast_real(y, coerce=False) == x
     assert fastnumbers.fast_real(y, raise_on_invalid=True, coerce=False) == x
@@ -239,9 +244,8 @@ def test_fast_real_with_inf_given_inf_string_returns_sub_value():
     assert fastnumbers.fast_real('inf', inf=10000.0) == 10000.0
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False), integers(0, 100), integers(0, 100))
 def test_fast_real_given_padded_float_strings_returns_float(x, y, z):
-    assume(not math.isnan(x))
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_real(y, coerce=False) == x
     assert isinstance(fastnumbers.fast_real(y, coerce=False), float)
@@ -318,25 +322,22 @@ def test_fast_real_given_unicode_non_numeral_returns_as_is(x):
     assert fastnumbers.fast_real(x) == x
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_fast_real_given_unicode_of_more_than_one_char_returns_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_real(x) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e8')
 @example('.')
 def test_fast_real_given_invalid_string_returns_string_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_real(x) is x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_real_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_real(x, raise_on_invalid=True)
 
@@ -347,31 +348,28 @@ def test_fast_real_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_real(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_real_returns_default_value_if_given_invalid_string(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_real(x, default=90) == 90
     assert fastnumbers.fast_real(x, 90) == 90
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_real_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_real(x, default=90, raise_on_invalid=True)
         fastnumbers.fast_real(x, 90, True)
 
 
-@given(integers() | floats())
+@given(integers() | floats(allow_nan=False))
 def test_fast_real_returns_input_as_is_if_valid_and_key_is_given(x):
-    fastnumbers.fast_real(x, key=len) == x
-    fastnumbers.fast_real(str(x), key=len) == x
+    assert fastnumbers.fast_real(x, key=len) == x
+    assert fastnumbers.fast_real(repr(x), key=len) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_real_returns_transformed_input_if_invalid_and_key_is_given(x):
-    assume(not a_number(x))
-    fastnumbers.fast_real(x, key=len) == len(x)
+    assert fastnumbers.fast_real(x, key=len) == len(x)
 
 
 ##############
@@ -387,9 +385,8 @@ def test_fast_float_given_dumb_class_responds_to_internal_ValueError():
     assert fastnumbers.fast_float(x, default=5) == 5
 
 
-@given(floats())
+@given(floats(allow_nan=False))
 def test_fast_float_given_float_returns_float(x):
-    assume(not math.isnan(x))
     assert fastnumbers.fast_float(x) == x
     assert fastnumbers.fast_float(x, None, True) == x
     assert fastnumbers.fast_float(x, raise_on_invalid=True) == x
@@ -421,11 +418,9 @@ def test_fast_float_with_range_of_exponents_correctly_parses():
         assert fastnumbers.fast_float(val) == float(val)
 
 
-@given(floats())
+@given(floats(allow_nan=False).filter(not_an_integer))
 @example(5.675088586167575e-116)
 def test_fast_float_given_float_string_returns_float(x):
-    assume(not math.isnan(x))
-    assume(not x.is_integer())
     y = repr(x)
     assert fastnumbers.fast_float(y) == x
     assert fastnumbers.fast_float(y, None, True) == x
@@ -445,10 +440,8 @@ def test_fast_float_given_inf_string_returns_inf():
     assert fastnumbers.fast_float('-infINIty') == float('-inf')
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False).filter(not_an_integer), integers(0, 100), integers(0, 100))
 def test_fast_float_given_padded_float_strings_returns_float(x, y, z):
-    assume(not math.isnan(x))
-    assume(not x.is_integer())
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_float(y) == x
     assert isinstance(fastnumbers.fast_float(y), float)
@@ -518,26 +511,23 @@ def test_fast_float_given_unicode_non_numeral_returns_as_is(x):
     assert fastnumbers.fast_float(x) == x
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_fast_float_given_unicode_of_more_than_one_char_returns_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_float(x) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_fast_float_given_invalid_string_returns_string_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_float(x) is x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_float_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_float(x, None, True)
         fastnumbers.fast_float(x, raise_on_invalid=True)
@@ -549,31 +539,28 @@ def test_fast_float_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_float(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_float_returns_default_value_if_given_invalid_string(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_float(x, default=90.0) == 90.0
     assert fastnumbers.fast_float(x, 90.0) == 90.0
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_float_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_float(x, default=90.0, raise_on_invalid=True)
         assert fastnumbers.fast_float(x, 90.0, True)
 
 
-@given(integers() | floats())
+@given(floats(allow_nan=False))
 def test_fast_float_returns_input_as_is_if_valid_and_key_is_given(x):
-    fastnumbers.fast_float(x, key=len) == x
-    fastnumbers.fast_float(str(x), key=len) == x
+    assert fastnumbers.fast_float(x, key=len) == x
+    assert fastnumbers.fast_float(repr(x), key=len) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_float_returns_transformed_input_if_invalid_and_key_is_given(x):
-    assume(not a_number(x))
-    fastnumbers.fast_float(x, key=len) == len(x)
+    assert fastnumbers.fast_float(x, key=len) == len(x)
 
 
 ############
@@ -598,10 +585,8 @@ def test_fast_int_given_invalid_base_errors_with_ValueError():
         fastnumbers.fast_int('10', base=37)
 
 
-@given(floats())
+@given(floats(allow_nan=False, allow_infinity=False))
 def test_fast_int_given_float_returns_int(x):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     assert fastnumbers.fast_int(x) == int(x)
     assert fastnumbers.fast_int(x, raise_on_invalid=True) == int(x)
     assert fastnumbers.fast_int(x, None, True) == int(x)
@@ -622,27 +607,22 @@ def test_fast_int_given_inf_raises_OverflowError():
     assert fastnumbers.fast_int(float('inf'), 'Sample') == 'Sample'
 
 
-@given(floats())
+@given(floats(allow_nan=False).filter(not_an_integer))
 def test_fast_int_given_float_string_returns_string_as_is(x):
-    assume(not math.isnan(x))
-    assume(not x.is_integer())
     y = repr(x)
     assert fastnumbers.fast_int(y) is y
 
 
-@given(floats())
+@given(floats(allow_nan=False).filter(not_an_integer))
 def test_fast_int_given_float_intlike_string_returns_string_as_is(x):
-    assume(not math.isnan(x))
-    assume(x.is_integer())
     y = repr(x)
     assert fastnumbers.fast_int(y) is y
 
 
-@given(floats())
+@given(floats().filter(not_an_integer))
 @example(float('nan'))
 @example(float('inf'))
 def test_fast_int_given_float_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not x.is_integer())
     y = repr(x)
     with raises(ValueError):
         fastnumbers.fast_int(y, None, True)
@@ -711,27 +691,24 @@ def test_fast_int_given_unicode_non_numeral_returns_as_is(x):
     assert fastnumbers.fast_int(x) == x
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_fast_int_given_unicode_of_more_than_one_char_returns_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_int(x) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_fast_int_given_invalid_string_returns_string_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_int(x) is x
     assert fastnumbers.fast_int(x, base=10) is x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_int_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_int(x, raise_on_invalid=True)
         fastnumbers.fast_int(x, None, True)
@@ -743,16 +720,14 @@ def test_fast_int_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_int(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_int_returns_default_value_if_given_invalid_string(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_int(x, default=90) == 90
     assert fastnumbers.fast_int(x, 90) == 90
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
         assert fastnumbers.fast_int(x, 90, True)
@@ -760,14 +735,13 @@ def test_fast_int_returns_raises_ValueError_if_raise_on_invalid_is_True_and_defa
 
 @given(integers())
 def test_fast_int_returns_input_as_is_if_valid_and_key_is_given(x):
-    fastnumbers.fast_int(x, key=len) == x
-    fastnumbers.fast_int(str(x), key=len) == x
+    assert fastnumbers.fast_int(x, key=len) == x
+    assert fastnumbers.fast_int(repr(x), key=len) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_int_returns_transformed_input_if_invalid_and_key_is_given(x):
-    assume(not a_number(x))
-    fastnumbers.fast_int(x, key=len) == len(x)
+    assert fastnumbers.fast_int(x, key=len) == len(x)
 
 
 #################
@@ -783,10 +757,8 @@ def test_fast_forceint_given_dumb_class_responds_to_internal_ValueError():
     assert fastnumbers.fast_forceint(x, default=5) == 5
 
 
-@given(floats())
+@given(floats(allow_nan=False, allow_infinity=False))
 def test_fast_forceint_given_float_returns_int(x):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     assert fastnumbers.fast_forceint(x) == int(x)
     assert fastnumbers.fast_forceint(x, raise_on_invalid=True) == int(x)
     assert fastnumbers.fast_forceint(x, None, True) == int(x)
@@ -807,10 +779,8 @@ def test_fast_forceint_given_inf_raises_OverflowError():
     assert fastnumbers.fast_forceint(float('inf'), 'Sample') == 'Sample'
 
 
-@given(floats())
+@given(floats(allow_nan=False, allow_infinity=False))
 def test_fast_forceint_given_float_string_returns_int(x):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     y = repr(x)
     assert fastnumbers.fast_forceint(y) == int(x)
     assert fastnumbers.fast_forceint(y, None, True) == int(x)
@@ -832,10 +802,8 @@ def test_fast_forceint_given_inf_string_raises_OverflowError_with_raise_on_inval
         fastnumbers.fast_forceint('-infinity', None, True)
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False, allow_infinity=False), integers(0, 100), integers(0, 100))
 def test_fast_forceint_given_padded_float_strings_returns_int(x, y, z):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.fast_forceint(y) == int(x)
     assert isinstance(fastnumbers.fast_forceint(y), (int, long))
@@ -897,26 +865,23 @@ def test_fast_forceint_given_unicode_non_numeral_returns_as_is(x):
     assert fastnumbers.fast_forceint(x) == x
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_fast_forceint_given_unicode_of_more_than_one_char_returns_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_int(x) == x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_fast_forceint_given_invalid_string_returns_string_as_is(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_forceint(x) is x
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_forceint_given_invalid_string_raises_ValueError_if_raise_on_invalid_is_True(x):
-    assume(not a_number(x))
     with raises(ValueError):
         fastnumbers.fast_forceint(x, raise_on_invalid=True)
         fastnumbers.fast_forceint(x, None, True)
@@ -928,33 +893,28 @@ def test_fast_forceint_given_invalid_type_raises_TypeError(x):
         fastnumbers.fast_forceint(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_forceint_returns_default_value_if_given_invalid_string(x):
-    assume(not a_number(x))
     assert fastnumbers.fast_forceint(x, default=90.0) == 90.0
     assert fastnumbers.fast_forceint(x, 90.0) == 90.0
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_forceint_returns_raises_ValueError_if_raise_on_invalid_is_True_and_default_is_given(x):
-    assume(not a_number(x))
     with raises(ValueError):
         assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
         assert fastnumbers.fast_forceint(x, 90.0, True)
 
 
-@given(integers() | floats())
+@given(integers() | floats(allow_nan=False, allow_infinity=False))
 def test_fast_forceint_returns_input_as_is_if_valid_and_key_is_given(x):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
-    fastnumbers.fast_forceint(x, key=len) == int(x)
-    fastnumbers.fast_forceint(str(x), key=len) == int(x)
+    assert fastnumbers.fast_forceint(x, key=len) == int(x)
+    assert fastnumbers.fast_forceint(repr(x), key=len) == int(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 def test_fast_forceint_returns_transformed_input_if_invalid_and_key_is_given(x):
-    assume(not a_number(x))
-    fastnumbers.fast_forceint(x, key=len) == len(x)
+    assert fastnumbers.fast_forceint(x, key=len) == len(x)
 
 
 ###########
@@ -992,10 +952,8 @@ def test_isreal_returns_True_if_given_int_string_padded_or_not(x, y, z):
     assert fastnumbers.isreal(y)
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False, allow_infinity=False), integers(0, 100), integers(0, 100))
 def test_isreal_returns_True_if_given_float_string_padded_or_not(x, y, z):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isreal(repr(x))
     assert fastnumbers.isreal(repr(x), str_only=True)
@@ -1026,20 +984,18 @@ def test_isreal_given_unicode_non_numeral_returns_False(x):
     assert not fastnumbers.isreal(x)
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_isreal_given_unicode_of_more_than_one_char_returns_False(x):
-    assume(not a_number(x))
     assert not fastnumbers.isreal(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_isreal_returns_False_if_given_non_number_string(x):
-    assume(not a_number(x))
     assert not fastnumbers.isreal(x)
 
 
@@ -1049,7 +1005,7 @@ def test_isreal_returns_False_for_nan_string_unless_allow_nan_is_True():
     assert fastnumbers.isreal('-NaN', allow_nan=True)
 
 
-def test_isreal_returns_False_for_inf_string_unless_allow_inf_is_True():
+def test_isreal_returns_False_for_inf_string_unless_allow_infinity_is_True():
     assert not fastnumbers.isreal('inf')
     assert fastnumbers.isreal('inf', allow_inf=True)
     assert fastnumbers.isreal('-INFINITY', allow_inf=True)
@@ -1091,20 +1047,16 @@ def test_isfloat_returns_True_if_given_int_string_padded_or_not(x, y, z):
     assert fastnumbers.isfloat(y)
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False, allow_infinity=False), integers(0, 100), integers(0, 100))
 def test_isfloat_returns_True_if_given_float_string_padded_or_not(x, y, z):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isfloat(repr(x))
     assert fastnumbers.isfloat(repr(x), str_only=True)
     assert fastnumbers.isfloat(y)
 
 
-@given(floats())
+@given(floats(allow_nan=False, allow_infinity=False))
 def test_isfloat_returns_False_if_given_string_and_num_only_is_True(x):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     assert not fastnumbers.isfloat(repr(x), num_only=True)
 
 
@@ -1127,20 +1079,18 @@ def test_isfloat_given_unicode_non_numeral_returns_False(x):
     assert not fastnumbers.isfloat(x)
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_isfloat_given_unicode_of_more_than_one_char_returns_False(x):
-    assume(not a_number(x))
     assert not fastnumbers.isfloat(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_isfloat_returns_False_if_given_non_number_string(x):
-    assume(not a_number(x))
     assert not fastnumbers.isfloat(x)
 
 
@@ -1150,7 +1100,7 @@ def test_isfloat_returns_False_for_nan_string_unless_allow_nan_is_True():
     assert fastnumbers.isfloat('-NaN', allow_nan=True)
 
 
-def test_isfloat_returns_False_for_inf_string_unless_allow_inf_is_True():
+def test_isfloat_returns_False_for_inf_string_unless_allow_infinity_is_True():
     assert not fastnumbers.isfloat('inf')
     assert fastnumbers.isfloat('inf', allow_inf=True)
     assert fastnumbers.isfloat('-INFINITY', allow_inf=True)
@@ -1203,10 +1153,8 @@ def test_isint_returns_True_if_given_int_string_padded_or_not(x, y, z):
     assert fastnumbers.isint(hex(x), base=0)
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False, allow_infinity=False), integers(0, 100), integers(0, 100))
 def test_isint_returns_False_if_given_float_string_padded_or_not(x, y, z):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert not fastnumbers.isint(repr(x))
     assert not fastnumbers.isint(y)
@@ -1237,20 +1185,18 @@ def test_isint_given_unicode_non_numeral_returns_False(x):
     assert not fastnumbers.isint(x)
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_isint_given_unicode_of_more_than_one_char_returns_False(x):
-    assume(not a_number(x))
     assert not fastnumbers.isint(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_isint_returns_False_if_given_non_number_string(x):
-    assume(not a_number(x))
     assert not fastnumbers.isint(x)
 
 
@@ -1270,15 +1216,13 @@ def test_isintlike_returns_True_if_given_int(x):
     assert fastnumbers.isintlike(x, num_only=True)
 
 
-@given(floats())
+@given(floats().filter(not_an_integer))
 def test_isintlike_returns_False_if_given_non_integer_float(x):
-    assume(not x.is_integer())
     assert not fastnumbers.isintlike(x)
 
 
-@given(floats())
+@given(floats().filter(an_integer))
 def test_isintlike_returns_True_if_given_integer_float(x):
-    assume(x.is_integer())
     assert fastnumbers.isintlike(x)
 
 
@@ -1287,9 +1231,8 @@ def test_isintlike_returns_False_if_given_int_and_str_only_is_True(x):
     assert not fastnumbers.isintlike(x, str_only=True)
 
 
-@given(floats())
+@given(floats().filter(an_integer))
 def test_isintlike_returns_False_if_given_integer_float_and_str_only_is_True(x):
-    assume(x.is_integer())
     assert not fastnumbers.isintlike(x, str_only=True)
 
 
@@ -1308,21 +1251,15 @@ def test_isintlike_returns_True_if_given_int_string_padded_or_not(x, y, z):
     assert fastnumbers.isintlike(y)
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False, allow_infinity=False).filter(an_integer), integers(0, 100), integers(0, 100))
 def test_isintlike_returns_True_if_given_integer_float_string_padded_or_not(x, y, z):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
-    assume(x.is_integer())
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert fastnumbers.isintlike(repr(x))
     assert fastnumbers.isintlike(y)
 
 
-@given(floats(), integers(0, 100), integers(0, 100))
+@given(floats(allow_nan=False, allow_infinity=False).filter(not_an_integer), integers(0, 100), integers(0, 100))
 def test_isintlike_returns_False_if_given_non_integer_float_string_padded_or_not(x, y, z):
-    assume(not math.isnan(x))
-    assume(not math.isinf(x))
-    assume(not x.is_integer())
     y = ''.join(repeat(' ', y)) + repr(x) + ''.join(repeat(' ', z))
     assert not fastnumbers.isintlike(repr(x))
     assert not fastnumbers.isintlike(y)
@@ -1345,9 +1282,8 @@ def test_isintlike_given_unicode_non_digit_numeral_returns_False(x):
     assert not fastnumbers.isintlike(x)
 
 
-@given(sampled_from(numeric_not_digit))
+@given(sampled_from(numeric_not_digit).filter(lambda x: an_integer(unicodedata.numeric(x))))
 def test_isintlike_given_unicode_digit_numeral_returns_False(x):
-    assume(unicodedata.numeric(x).is_integer())
     assert fastnumbers.isintlike(x)
     # Try padded as well
     assert fastnumbers.isintlike(u'   ' + x + u'   ')
@@ -1358,20 +1294,18 @@ def test_isintlike_given_unicode_non_numeral_returns_False(x):
     assert not fastnumbers.isintlike(x)
 
 
-@given(text(min_size=2))
+@given(text(min_size=2).filter(not_a_number))
 def test_isintlike_given_unicode_of_more_than_one_char_returns_False(x):
-    assume(not a_number(x))
     assert not fastnumbers.isintlike(x)
 
 
-@given(text() | binary())
+@given((text() | binary()).filter(not_a_number))
 @example('+')
 @example('-')
 @example('e')
 @example('e8')
 @example('.')
 def test_isintlike_returns_False_if_given_non_number_string(x):
-    assume(not a_number(x))
     assert not fastnumbers.isintlike(x)
 
 
