@@ -30,7 +30,7 @@ string_contains_float(const char *str,
 
     while (is_valid_digit(str)) {
         str++;
-        consume_single_underscore_before_digit_36_and_above(str);
+        (void) consume_single_underscore_before_digit_36_and_above(str);
         valid = true;
     }
 
@@ -40,7 +40,7 @@ string_contains_float(const char *str,
             str++;
             while (is_valid_digit(str)) {
                 str++;
-                consume_single_underscore_before_digit_36_and_above(str);
+                (void) consume_single_underscore_before_digit_36_and_above(str);
                 valid = true;
             }
         }
@@ -51,7 +51,7 @@ string_contains_float(const char *str,
             (void) consume_sign(str);         
             while (is_valid_digit(str)) {
                 str++;
-                consume_single_underscore_before_digit_36_and_above(str);
+                (void) consume_single_underscore_before_digit_36_and_above(str);
                 valid = true;
             }
         }

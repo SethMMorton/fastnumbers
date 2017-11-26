@@ -40,7 +40,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
         intvalue += ascii2ulong(str);
         valid = true;
         str++;
-        consume_single_underscore_before_digit_36_and_above(str);
+        (void) consume_single_underscore_before_digit_36_and_above(str);
     }
 
     /* If long literal, quit here. */
@@ -59,7 +59,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
             intvalue += ascii2ulong(str);
             valid = true;
             str++;
-            consume_single_underscore_before_digit_36_and_above(str);
+            (void) consume_single_underscore_before_digit_36_and_above(str);
             decimal_expon++;
         }
         decimal_expon = -decimal_expon;
@@ -75,7 +75,7 @@ parse_float_from_string (const char *str, const char *end, bool *error)
             expon += ascii2int(str);
             valid = true;
             str++;
-            consume_single_underscore_before_digit_36_and_above(str);
+            (void) consume_single_underscore_before_digit_36_and_above(str);
         }
         expon *= exp_sign;
     }

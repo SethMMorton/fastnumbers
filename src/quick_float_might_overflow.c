@@ -20,7 +20,7 @@ float_might_overflow(const char *str, const char *end)
         if (is_e_or_E(str))
             break;  /* Don't count digits after exponent. */
         str++;
-        consume_single_underscore_before_digit_36_and_above(str);
+        (void) consume_single_underscore_before_digit_36_and_above(str);
     }
 
     /* If an exponent was found, ensure it is within chosen range. */
