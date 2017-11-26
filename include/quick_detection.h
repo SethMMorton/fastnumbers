@@ -110,7 +110,7 @@ extern "C" {
 /* Quickly detect if a string is a float. Python2 has to handle a long literal. */
 #if PY_MAJOR_VERSION == 2
 #define is_likely_float(start, end) \
-    ((end) - (start) > 0 && \
+    (((end) - (start) > 0 && \
         ((is_valid_digit(start) || \
             (is_decimal(start) && is_valid_digit((start) + 1))) && \
          (is_valid_digit((end) - 1) || \
@@ -118,7 +118,8 @@ extern "C" {
              (end) - (start) > 1   && \
              is_valid_digit((end) - 2) \
              ) \
-         )) || \
+         )) \
+     ) || \
     ((end) - (start) == 3 && \
         ((is_i_or_I(start) || is_n_or_N(start)) && \
          (is_f_or_F((end) - 1) || is_n_or_N((end) - 1))) \
