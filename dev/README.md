@@ -2,7 +2,7 @@
 
 This file contains some files useful for development.
 
-- `testing-requirements.txt` - Contains the modules needed for testing.
+- `requirements.txt` - Contains the modules needed for testing.
   For use with [pip](https://pip.pypa.io/en/stable/reference/pip_install/#example-requirements-file).
 - `patch_doctest.py` -
   The [doctest](https://docs.python.org/3/library/doctest.html) module
