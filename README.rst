@@ -113,6 +113,38 @@ Please see the following Jupyter notebooks for timing information on various Pyt
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
 
+How to Run Tests
+----------------
+
+The recommended way to run tests with with `tox <https://tox.readthedocs.io/en/latest/>`_.
+Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
+following:
+
+.. code-block:: bash
+
+    $ tox -e py36-testing
+
+``tox`` will create virtual a virtual environment for your tests and install all the
+needed testing requirements for you.
+
+If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
+execute
+
+.. code-block:: bash
+
+    $ tox
+
+If you do not wish to use ``tox``, you can install the testing dependencies and run the
+tests manually with the following:
+
+.. code-block:: bash
+
+    $ pip install -e .  # to build fastnumbers
+    $ pip install -rdev/requirements.txt
+    $ pytest
+
+``fastnumbers`` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.
+
 Author
 ------
 

@@ -96,3 +96,35 @@ If you want to build this documentation, enter::
 
 :mod:`fastnumbers` requires python version 2.7 or greater
 (this includes python 3.x). Unit tests are only run on 2.7 and >= 3.3.
+
+How to Run Tests
+----------------
+
+The recommended way to run tests with with `tox <https://tox.readthedocs.io/en/latest/>`_.
+Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
+following:
+
+.. code-block:: bash
+
+    $ tox -e py36-testing
+
+``tox`` will create virtual a virtual environment for your tests and install all the
+needed testing requirements for you.
+
+If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
+execute
+
+.. code-block:: bash
+
+    $ tox
+
+If you do not wish to use ``tox``, you can install the testing dependencies and run the
+tests manually with the following:
+
+.. code-block:: bash
+
+    $ pip install -e .  # to build fastnumbers
+    $ pip install -rdev/requirements.txt
+    $ pytest
+
+:mod:`fastnumbers` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.
