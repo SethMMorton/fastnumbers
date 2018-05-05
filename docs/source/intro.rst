@@ -80,13 +80,7 @@ Installation
 Installation of :mod:`fastnumbers` is ultra-easy.  Simply execute from the
 command line::
 
-    easy_install fastnumbers
-
-or, if you have ``pip`` (preferred over ``easy_install``)::
-
     pip install fastnumbers
-
-Both of the above commands will download the source for you.
 
 You can also download the source from https://pypi.org/project/fastnumbers/,
 or browse the git repository at https://github.com/SethMMorton/fastnumbers.
@@ -96,13 +90,9 @@ you can unzip the source archive and enter the directory, and type::
 
     python setup.py install
 
-If you wish to run the unit tests, enter::
-
-    python setup.py test
-
 If you want to build this documentation, enter::
 
     python setup.py build_sphinx
 
-:mod:`fastnumbers` requires python version 2.6 or greater
-(this includes python 3.x). Unit tests are only run on 2.6, 2.7 and >= 3.3.
+:mod:`fastnumbers` requires python version 2.7 or greater
+(this includes python 3.x). Unit tests are only run on 2.7 and >= 3.3.
