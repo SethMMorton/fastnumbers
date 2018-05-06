@@ -1,6 +1,15 @@
 fastnumbers
 ===========
 
+.. image:: https://img.shields.io/pypi/v/fastnumbers.svg
+    :target: https://pypi.org/project/fastnumbers/
+
+.. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
+    :target: https://pypi.org/project/fastnumbers/
+
+.. image:: https://img.shields.io/pypi/l/fastnumbers.svg
+    :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
+
 .. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg?label=travis-ci
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
@@ -12,15 +21,6 @@ fastnumbers
 
 .. image:: https://api.codacy.com/project/badge/Grade/7221f3d2be3147e9a975d604f1770cfb
     :target: https://www.codacy.com/app/SethMMorton/fastnumbers
-
-.. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
-    :target: https://pypi.org/project/fastnumbers/
-
-.. image:: https://img.shields.io/pypi/v/fastnumbers.svg
-    :target: https://pypi.org/project/fastnumbers/
-
-.. image:: https://img.shields.io/pypi/l/fastnumbers.svg
-    :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
 
 Super-fast and clean conversions to numbers.
 
@@ -153,30 +153,4 @@ Seth M. Morton
 History
 -------
 
-These are the last three entries of the changelog. See the package documentation
-for the complete `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
-
-11-11-2017 v. 2.0.2
-'''''''''''''''''''
-
-    - Updated docstrings.
-    - Improved timing documentation.
-    - Added testing for Python 3.7.
-
-04-30-2017 v. 2.0.1
-'''''''''''''''''''
-
-    - Fixed bug in decimal digit limit on GCC.
-
-04-30-2017 v. 2.0.0
-'''''''''''''''''''
-
-    - Dropped support for Python 2.6.
-    - Added support for Python 3.6 underscores.
-    - Added drop-in replacements for the built-in ``int()`` and ``float()`` functions.
-    - Incorporated unit tests from Python's testing library to ensure that any
-      input that Python can handle will also be handled the same way by ``fastnumbers``.
-    - Added Appveyor testing to ensure no surprises on Windows.
-    - Revamped documentation.
-    - Refactored internal mechanism for assessing overflow to be faster in the most
-      common cases.
+Please visit the `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
