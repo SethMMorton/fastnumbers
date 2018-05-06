@@ -11,5 +11,5 @@ graft src
 graft include
 graft tests
 graft dev
+graft docs
 global-exclude *.py[cod] __pycache__ *.so
-graft docs/source
