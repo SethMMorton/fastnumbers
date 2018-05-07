@@ -3,6 +3,11 @@
 Changelog
 ---------
 
+XX-XX-XXXX v. X.X.X
+'''''''''''''''''''
+
+    - Reorganized testing and development infrastructure.
+
 11-11-2017 v. 2.0.2
 '''''''''''''''''''
 
