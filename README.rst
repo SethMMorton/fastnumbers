@@ -135,15 +135,14 @@ execute
     $ tox
 
 If you do not wish to use ``tox``, you can install the testing dependencies and run the
-tests manually with the following:
+tests manually using `pytest <https://docs.pytest.org/en/latest/>`_ - ``fastnumbers``
+contains a ``Pipfile`` for use with `pipenv <https://github.com/pypa/pipenv>_` that
+makes it easy for you to install the testing dependencies:
 
 .. code-block::
 
-    $ pip install -e .  # to build fastnumbers
-    $ pip install -rdev/requirements.txt
-    $ pytest
-
-``fastnumbers`` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.
+    $ pipenv install --dev
+    $ pipenv run pytest
 
 Author
 ------

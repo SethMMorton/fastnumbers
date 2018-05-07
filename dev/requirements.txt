@@ -1,6 +1,0 @@
-# These requirements are for testing only!
-# There are no requirements for fastnumbers itself.
-
-pytest
-pytest-faulthandler
-hypothesis
