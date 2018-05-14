@@ -126,6 +126,7 @@ makes it easy for you to install the testing dependencies:
 .. code-block::
 
     $ pipenv install --dev
+    $ pipenv install -e .
     $ pipenv run pytest
 
 :mod:`fastnumbers` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.

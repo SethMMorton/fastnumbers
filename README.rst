@@ -151,6 +151,7 @@ makes it easy for you to install the testing dependencies:
 .. code-block::
 
     $ pipenv install --dev
+    $ pipenv install -e .
     $ pipenv run pytest
 
 Author
