@@ -7,6 +7,8 @@ XX-XX-XXXX v. X.X.X
 '''''''''''''''''''
 
     - Reorganized testing and development infrastructure.
+    - Add bumpversion infrastrucutre.
+    - Development dependencies are now defined using Pipfile.
 
 11-11-2017 v. 2.0.2
 '''''''''''''''''''
