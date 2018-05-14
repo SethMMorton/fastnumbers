@@ -15,7 +15,7 @@ branches:
 
 env:
 - CC=clang
-- CC=gcc CFLAGS="--coverage -O0" PIP_BUILD=build
+- CC=gcc CFLAGS="--coverage -O0"
 
 install:
 - pip install -U pip
