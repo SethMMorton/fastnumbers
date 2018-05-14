@@ -100,6 +100,8 @@ If you want to build this documentation, enter::
 How to Run Tests
 ----------------
 
+Please note that ``fastnumbers`` is NOT set-up to support ``python setup.py test``.
+
 The recommended way to run tests with with `tox <https://tox.readthedocs.io/en/latest/>`_.
 Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
 following:

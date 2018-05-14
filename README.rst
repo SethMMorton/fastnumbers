@@ -125,6 +125,8 @@ Use ``pip``!
 How to Run Tests
 ----------------
 
+Please note that ``fastnumbers`` is NOT set-up to support ``python setup.py test``.
+
 The recommended way to run tests is with `tox <https://tox.readthedocs.io/en/latest/>`_.
 Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
 following:
