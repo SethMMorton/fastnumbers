@@ -113,6 +113,15 @@ Please see the following Jupyter notebooks for timing information on various Pyt
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
 
+Installation
+------------
+
+Use ``pip``!
+
+.. code-block::
+
+    $ pip install fastnumbers
+
 How to Run Tests
 ----------------
 
