@@ -78,21 +78,27 @@ Installation
 ------------
 
 Installation of :mod:`fastnumbers` is ultra-easy.  Simply execute from the
-command line::
+command line:
 
-    pip install fastnumbers
+.. code-block:: sh
+
+    $ pip install fastnumbers
 
 You can also download the source from https://pypi.org/project/fastnumbers/,
 or browse the git repository at https://github.com/SethMMorton/fastnumbers.
 
 If you choose to install from source (will need a C compiler and the Python headers),
-you can unzip the source archive and enter the directory, and type::
+you can unzip the source archive and enter the directory, and type:
 
-    python setup.py install
+.. code-block:: sh
 
-If you want to build this documentation, enter::
+    $ python setup.py install
 
-    python setup.py build_sphinx
+If you want to build this documentation, enter:
+
+.. code-block:: sh
+
+    $ python setup.py build_sphinx
 
 :mod:`fastnumbers` requires python version 2.7 or greater
 (this includes python 3.x). Unit tests are only run on 2.7 and >= 3.4.
@@ -106,7 +112,7 @@ The recommended way to run tests with with `tox <https://tox.readthedocs.io/en/l
 Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
 following:
 
-.. code-block::
+.. code-block:: sh
 
     $ tox -e py36-testing
 
@@ -116,7 +122,7 @@ needed testing requirements for you.
 If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
 execute
 
-.. code-block::
+.. code-block:: sh
 
     $ tox
 
@@ -125,7 +131,7 @@ tests manually using `pytest <https://docs.pytest.org/en/latest/>`_ - ``fastnumb
 contains a ``Pipfile`` for use with `pipenv <https://github.com/pypa/pipenv>`_ that
 makes it easy for you to install the testing dependencies:
 
-.. code-block::
+.. code-block:: sh
 
     $ pipenv install --dev
     $ pipenv install -e .

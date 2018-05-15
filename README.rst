@@ -131,7 +131,7 @@ The recommended way to run tests is with `tox <https://tox.readthedocs.io/en/lat
 Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
 following:
 
-.. code-block::
+.. code-block:: sh
 
     $ tox -e py36-testing
 
@@ -141,7 +141,7 @@ needed testing requirements for you.
 If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
 execute
 
-.. code-block::
+.. code-block:: sh
 
     $ tox
 
@@ -150,7 +150,7 @@ tests manually using `pytest <https://docs.pytest.org/en/latest/>`_ - ``fastnumb
 contains a ``Pipfile`` for use with `pipenv <https://github.com/pypa/pipenv>`_ that
 makes it easy for you to install the testing dependencies:
 
-.. code-block::
+.. code-block:: sh
 
     $ pipenv install --dev
     $ pipenv install -e .
