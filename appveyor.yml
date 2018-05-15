@@ -33,10 +33,6 @@ test_script:
   # tox will build for us as well.
   - "dev\\build.cmd %PYTHON%\\Scripts\\tox.exe -e pywin"
 
-artifacts:
-  # bdist_wheel puts your built wheel in the dist directory
-  - path: dist\*
-
 #on_success:
 #  You can use this step to upload your artifacts to a public website.
 #  See Appveyor's documentation for more details. Or you can simply
