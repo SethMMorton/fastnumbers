@@ -78,31 +78,63 @@ Installation
 ------------
 
 Installation of :mod:`fastnumbers` is ultra-easy.  Simply execute from the
-command line::
+command line:
 
-    easy_install fastnumbers
+.. code-block:: sh
 
-or, if you have ``pip`` (preferred over ``easy_install``)::
-
-    pip install fastnumbers
-
-Both of the above commands will download the source for you.
+    $ pip install fastnumbers
 
 You can also download the source from https://pypi.org/project/fastnumbers/,
 or browse the git repository at https://github.com/SethMMorton/fastnumbers.
 
 If you choose to install from source (will need a C compiler and the Python headers),
-you can unzip the source archive and enter the directory, and type::
+you can unzip the source archive and enter the directory, and type:
 
-    python setup.py install
+.. code-block:: sh
 
-If you wish to run the unit tests, enter::
+    $ python setup.py install
 
-    python setup.py test
+If you want to build this documentation, enter:
 
-If you want to build this documentation, enter::
+.. code-block:: sh
 
-    python setup.py build_sphinx
+    $ python setup.py build_sphinx
 
-:mod:`fastnumbers` requires python version 2.6 or greater
-(this includes python 3.x). Unit tests are only run on 2.6, 2.7 and >= 3.3.
+:mod:`fastnumbers` requires python version 2.7 or greater
+(this includes python 3.x). Unit tests are only run on 2.7 and >= 3.4.
+
+How to Run Tests
+----------------
+
+Please note that ``fastnumbers`` is NOT set-up to support ``python setup.py test``.
+
+The recommended way to run tests with with `tox <https://tox.readthedocs.io/en/latest/>`_.
+Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
+following:
+
+.. code-block:: sh
+
+    $ tox -e py36-testing
+
+``tox`` will create virtual a virtual environment for your tests and install all the
+needed testing requirements for you.
+
+If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
+execute
+
+.. code-block:: sh
+
+    $ tox
+
+If you do not wish to use ``tox``, you can install the testing dependencies and run the
+tests manually using `pytest <https://docs.pytest.org/en/latest/>`_ - ``fastnumbers``
+contains a ``Pipfile`` for use with `pipenv <https://github.com/pypa/pipenv>`_ that
+makes it easy for you to install the testing dependencies:
+
+.. code-block:: sh
+
+    $ pipenv install --dev
+    $ pipenv install -e .
+    $ pipenv run pytest
+
+:mod:`fastnumbers` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.

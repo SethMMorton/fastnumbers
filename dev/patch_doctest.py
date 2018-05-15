@@ -22,18 +22,24 @@ with open(dt_location) as fl:
     doctest_str = fl.read()
 
 # Let's add the glob module.
+# Also define a function to detect if we could import this module name.
 doctest_str = doctest_str.replace(
     'import __future__',
-    'import __future__\nimport glob'
+    'import __future__\nimport glob\n'
+    'def can_import_module(name):\n'
+    '    try:\n'
+    '        __import__(name)\n'
+    '    except ImportError:\n'
+    '        return False\n'
+    '    else:\n'
+    '        return True\n'
 )
 
 # Add a search for the .so extension when inspecting the input files
 # so that extension modules will be loaded properly.
 doctest_str = doctest_str.replace(
     'if filename.endswith(".py"):',
-    'if filename.endswith((".py", ".so", ".pyd")) or '
-    '(len(glob.glob(filename + "*.so")) and glob.glob(filename + "*.so")[0]) or '
-    '(len(glob.glob(filename + "*.pyd")) and glob.glob(filename + "*.pyd")[0]):'
+    'if filename.endswith((".py", ".so", ".pyd")) or can_import_module(filename):'
 )
 
 # inspect.isfunction does not work for functions written in C,

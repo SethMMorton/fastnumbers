@@ -1,6 +1,15 @@
 fastnumbers
 ===========
 
+.. image:: https://img.shields.io/pypi/v/fastnumbers.svg
+    :target: https://pypi.org/project/fastnumbers/
+
+.. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
+    :target: https://pypi.org/project/fastnumbers/
+
+.. image:: https://img.shields.io/pypi/l/fastnumbers.svg
+    :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
+
 .. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg?label=travis-ci
     :target: https://travis-ci.org/SethMMorton/fastnumbers
 
@@ -12,15 +21,6 @@ fastnumbers
 
 .. image:: https://api.codacy.com/project/badge/Grade/7221f3d2be3147e9a975d604f1770cfb
     :target: https://www.codacy.com/app/SethMMorton/fastnumbers
-
-.. image:: https://img.shields.io/pypi/pyversions/fastnumbers.svg
-    :target: https://pypi.org/project/fastnumbers/
-
-.. image:: https://img.shields.io/pypi/format/fastnumbers.svg
-    :target: https://pypi.org/project/fastnumbers/
-
-.. image:: https://img.shields.io/pypi/l/fastnumbers.svg
-    :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
 
 Super-fast and clean conversions to numbers.
 
@@ -113,6 +113,49 @@ Please see the following Jupyter notebooks for timing information on various Pyt
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
 
+Installation
+------------
+
+Use ``pip``!
+
+.. code-block::
+
+    $ pip install fastnumbers
+
+How to Run Tests
+----------------
+
+Please note that ``fastnumbers`` is NOT set-up to support ``python setup.py test``.
+
+The recommended way to run tests is with `tox <https://tox.readthedocs.io/en/latest/>`_.
+Suppose you want to run tests for Python 3.6 - you can run tests by simply executing the
+following:
+
+.. code-block:: sh
+
+    $ tox -e py36-testing
+
+``tox`` will create virtual a virtual environment for your tests and install all the
+needed testing requirements for you.
+
+If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
+execute
+
+.. code-block:: sh
+
+    $ tox
+
+If you do not wish to use ``tox``, you can install the testing dependencies and run the
+tests manually using `pytest <https://docs.pytest.org/en/latest/>`_ - ``fastnumbers``
+contains a ``Pipfile`` for use with `pipenv <https://github.com/pypa/pipenv>`_ that
+makes it easy for you to install the testing dependencies:
+
+.. code-block:: sh
+
+    $ pipenv install --dev
+    $ pipenv install -e .
+    $ pipenv run pytest
+
 Author
 ------
 
@@ -121,30 +164,4 @@ Seth M. Morton
 History
 -------
 
-These are the last three entries of the changelog. See the package documentation
-for the complete `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
-
-11-11-2017 v. 2.0.2
-'''''''''''''''''''
-
-    - Updated docstrings.
-    - Improved timing documentation.
-    - Added testing for Python 3.7.
-
-04-30-2017 v. 2.0.1
-'''''''''''''''''''
-
-    - Fixed bug in decimal digit limit on GCC.
-
-04-30-2017 v. 2.0.0
-'''''''''''''''''''
-
-    - Dropped support for Python 2.6.
-    - Added support for Python 3.6 underscores.
-    - Added drop-in replacements for the built-in ``int()`` and ``float()`` functions.
-    - Incorporated unit tests from Python's testing library to ensure that any
-      input that Python can handle will also be handled the same way by ``fastnumbers``.
-    - Added Appveyor testing to ensure no surprises on Windows.
-    - Revamped documentation.
-    - Refactored internal mechanism for assessing overflow to be faster in the most
-      common cases.
+Please visit the `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.

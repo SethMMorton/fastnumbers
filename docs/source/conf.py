@@ -12,22 +12,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
-import re
-
-def current_version():
-    # Read the _version.py file for the module version number
-    VERSIONFILE = os.path.join('..', '..', 'include', 'version.h')
-    with open(VERSIONFILE, "rt") as fl:
-        versionstring = fl.read()
-    m = re.search(r"#define \w+_VERSION \"(.*)\"", versionstring)
-    if m:
-        return m.group(1)
-    else:
-        s = "Unable to locate version string in {0}"
-        raise RuntimeError(s.format(VERSIONFILE))
-
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -81,7 +65,7 @@ copyright = u'2014, Seth M. Morton'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = current_version()
+release = '2.0.2'
 # The short X.Y version.
 version = '.'.join(release.split('.')[0:2])
 

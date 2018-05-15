@@ -2,8 +2,8 @@
 
 This file contains some files useful for development.
 
-- `testing-requirements.txt` - Contains the modules needed for testing.
-  For use with [pip](https://pip.pypa.io/en/stable/reference/pip_install/#example-requirements-file).
+- `clean.sh` - This file cleans most files that are created during development.
+  Run in the project home directory.
 - `patch_doctest.py` -
   The [doctest](https://docs.python.org/3/library/doctest.html) module
   from the Python standard library has an interesting limitation
