@@ -114,7 +114,7 @@ following:
 
 .. code-block:: sh
 
-    $ tox -e py36-testing
+    $ tox -e py36
 
 ``tox`` will create virtual a virtual environment for your tests and install all the
 needed testing requirements for you.
