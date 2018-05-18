@@ -12,6 +12,8 @@ from setuptools import setup, Extension
 # Define how to build the extension module.
 # All other data is in the setup.cfg file.
 setup(
+    name='fastnumbers',
+    version='2.0.3',
     ext_modules=[
         Extension(
             'fastnumbers', glob.glob('src/*.c'),
