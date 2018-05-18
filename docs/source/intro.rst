@@ -133,8 +133,8 @@ makes it easy for you to install the testing dependencies:
 
 .. code-block:: sh
 
-    $ pipenv install --dev
-    $ pipenv install -e .
+    $ pipenv install --skip-lock --dev
+    $ pipenv install --skip-lock -e .
     $ pipenv run pytest
 
 :mod:`fastnumbers` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.
