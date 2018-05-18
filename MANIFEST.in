@@ -2,7 +2,6 @@ include README.rst
 include *.md
 include *.ipynb
 include .travis.yml
-include .bumpversion.cfg
 include appveyor.yml
 include LICENSE
 include setup.py
