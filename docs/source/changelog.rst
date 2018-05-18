@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-05-18-2018 v. X.X.X
+05-18-2018 v. 2.0.4
 '''''''''''''''''''
 
     - Fix install error on old versions of setuptools.
