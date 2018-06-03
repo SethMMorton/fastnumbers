@@ -16,7 +16,7 @@ setup(
     version='2.0.4',
     ext_modules=[
         Extension(
-            'fastnumbers', glob.glob('src/*.c'),
+            'fastnumbers', sorted(glob.glob('src/*.c')),
             include_dirs=[os.path.abspath(os.path.join('include'))],
             extra_compile_args=[]
         )
