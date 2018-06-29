@@ -240,6 +240,12 @@ def test_fast_real_given_inf_string_returns_inf():
     assert fastnumbers.fast_real('-infINIty') == float('-inf')
 
 
+def test_fast_real_given_very_large_float_returns_inf_with_coerce_on_or_off():
+    assert fastnumbers.fast_real('3e106196') == float('inf')
+    assert fastnumbers.fast_real('3e106196', coerce=False) == float('inf')
+    assert fastnumbers.fast_real('3e106196', raise_on_invalid=True) == float('inf')
+
+
 def test_fast_real_with_inf_given_inf_string_returns_sub_value():
     assert fastnumbers.fast_real('inf', inf=10000.0) == 10000.0
 
