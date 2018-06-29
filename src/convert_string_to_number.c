@@ -45,8 +45,12 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
     pyresult = str_to_PyFloat(str, end, options);
     if (pyresult == NULL) return NULL;
 
-    /* Coerce to int if needed. */
-    return (Options_Coerce_True(options) && string_contains_intlike_float(str, end))
+    /* Coerce to int if needed. Don't do it for NAN or INF. */
+    return (Options_Coerce_True(options)
+            && string_contains_intlike_float(str, end)
+            && !PyNumber_IsNAN(pyresult)
+            && !PyNumber_IsINF(pyresult)
+           )
          ? PyFloat_to_PyInt(pyresult, options)
          : pyresult;
 }
