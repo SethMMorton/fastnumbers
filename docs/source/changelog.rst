@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-07-01-2018 v. X.X.X
+07-01-2018 v. 2.0.5
 '''''''''''''''''''
 
     - Fix bug in ``fast_real`` that resulted in an ``OverflowError``
