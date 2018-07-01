@@ -3,6 +3,13 @@
 Changelog
 ---------
 
+07-01-2018 v. X.X.X
+'''''''''''''''''''
+
+    - Fix bug in ``fast_real`` that resulted in an ``OverflowError``
+      when given very large int-like floats.
+    - Source files are sorted before compilation.
+
 05-18-2018 v. 2.0.4
 '''''''''''''''''''
 
