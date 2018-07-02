@@ -8,7 +8,7 @@ import pytest
 from pytest import raises
 import fastnumbers
 
-if python_version_tuple()[0] == '3':
+if python_version_tuple()[0] == "3":
     long = int
 
 
@@ -42,19 +42,19 @@ def test_fast_real():
     assert fastnumbers.fast_real("+367.3268", True) == +367.3268
     # 3. float string with exponents
     assert fastnumbers.fast_real("-367.3268e207") == -367.3268e207
-    assert fastnumbers.fast_real('1.175494351e-3810000000') == 0.0
+    assert fastnumbers.fast_real("1.175494351e-3810000000") == 0.0
     # 4. float string with padded whitespace
     assert fastnumbers.fast_real("   -367.04   ") == -367.04
     # 5. int number
     assert fastnumbers.fast_real(499) == 499
     # 6. signed int string
-    assert fastnumbers.fast_real('-499') == -499
+    assert fastnumbers.fast_real("-499") == -499
     # 7. int string with padded whitespace
-    assert fastnumbers.fast_real('   +3001   ') == 3001
+    assert fastnumbers.fast_real("   +3001   ") == 3001
     # 8. long number
     assert fastnumbers.fast_real(35892482945872302493) == 35892482945872302493
     # 9. long string
-    if python_version_tuple()[0] == '2':
+    if python_version_tuple()[0] == "2":
         assert fastnumbers.fast_real("35892482945872302493L") == 35892482945872302493
         assert fastnumbers.fast_real("35892482945872302493l") == 35892482945872302493
     assert fastnumbers.fast_real("35892482945872302493") == 35892482945872302493
@@ -69,42 +69,42 @@ def test_fast_real():
     assert isinstance(fastnumbers.fast_real("4029.0", coerce=False), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_real(['hey'])
+        fastnumbers.fast_real(["hey"])
     # 12. Invalid input string
-    assert fastnumbers.fast_real('not_a_number') == 'not_a_number'
+    assert fastnumbers.fast_real("not_a_number") == "not_a_number"
     with raises(ValueError):
-        assert fastnumbers.fast_real('not_a_number', raise_on_invalid=True)
+        assert fastnumbers.fast_real("not_a_number", raise_on_invalid=True)
     # 13. Invalid input string with numbers
-    assert fastnumbers.fast_real('26.8 lb') == '26.8 lb'
+    assert fastnumbers.fast_real("26.8 lb") == "26.8 lb"
     with raises(ValueError):
-        assert fastnumbers.fast_real('26.8 lb', None, True)
+        assert fastnumbers.fast_real("26.8 lb", None, True)
     # 14. Infinity
-    assert fastnumbers.fast_real('inf') == float('inf')
-    assert fastnumbers.fast_real('-iNFinity') == float('-inf')
-    assert fastnumbers.fast_real('-iNFinity', inf=7608) == 7608
+    assert fastnumbers.fast_real("inf") == float("inf")
+    assert fastnumbers.fast_real("-iNFinity") == float("-inf")
+    assert fastnumbers.fast_real("-iNFinity", inf=7608) == 7608
     # 15. NaN
-    assert math.isnan(fastnumbers.fast_real('nan'))
-    assert math.isnan(fastnumbers.fast_real('-NaN'))
-    assert fastnumbers.fast_real('-NaN', nan=0) == 0
+    assert math.isnan(fastnumbers.fast_real("nan"))
+    assert math.isnan(fastnumbers.fast_real("-NaN"))
+    assert fastnumbers.fast_real("-NaN", nan=0) == 0
     # 16. Sign/'e'/'.' only
-    assert fastnumbers.fast_real('+') == '+'
-    assert fastnumbers.fast_real('-') == '-'
-    assert fastnumbers.fast_real('e') == 'e'
-    assert fastnumbers.fast_real('.') == '.'
+    assert fastnumbers.fast_real("+") == "+"
+    assert fastnumbers.fast_real("-") == "-"
+    assert fastnumbers.fast_real("e") == "e"
+    assert fastnumbers.fast_real(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
-    assert fastnumbers.fast_real('invalid', default=90) == 90
-    assert fastnumbers.fast_real('invalid', default=None) is None
+    assert fastnumbers.fast_real("invalid", default=90) == 90
+    assert fastnumbers.fast_real("invalid", default=None) is None
     with raises(ValueError):
-        assert fastnumbers.fast_real('invalid', 90, True)
+        assert fastnumbers.fast_real("invalid", 90, True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_real(u'⑦') == 7
-    assert fastnumbers.fast_real(u'⁸') == 8
-    assert fastnumbers.fast_real(u'⅔') == 2.0 / 3.0
-    assert fastnumbers.fast_real(u'Ⅴ') == 5
+    assert fastnumbers.fast_real(u"⑦") == 7
+    assert fastnumbers.fast_real(u"⁸") == 8
+    assert fastnumbers.fast_real(u"⅔") == 2.0 / 3.0
+    assert fastnumbers.fast_real(u"Ⅴ") == 5
     # 19. Key function
     assert fastnumbers.fast_real(76.8, key=len) == 76.8
-    assert fastnumbers.fast_real('76.8', key=len) == 76.8
-    assert fastnumbers.fast_real('invalid', key=len) == 7
+    assert fastnumbers.fast_real("76.8", key=len) == 76.8
+    assert fastnumbers.fast_real("invalid", key=len) == 7
 
 
 def test_fast_float():
@@ -118,19 +118,19 @@ def test_fast_float():
     assert fastnumbers.fast_float("-367.3268e27") == -367.3268e27
     assert fastnumbers.fast_float("-367.3268E27") == -367.3268E27
     assert fastnumbers.fast_float("-367.3268e207") == -367.3268e207
-    assert fastnumbers.fast_float('1.175494351E-3810000000') == 0.0
+    assert fastnumbers.fast_float("1.175494351E-3810000000") == 0.0
     # 4. float string with padded whitespace
     assert fastnumbers.fast_float("   -367.04   ") == -367.04
     # 5. int number
     assert fastnumbers.fast_float(499) == 499.0
     # 6. signed int string
-    assert fastnumbers.fast_float('-499') == -499.0
+    assert fastnumbers.fast_float("-499") == -499.0
     # 7. int string with padded whitespace
-    assert fastnumbers.fast_float('   +3001   ') == 3001
+    assert fastnumbers.fast_float("   +3001   ") == 3001
     # 8. long number
     assert fastnumbers.fast_float(35892482945872302493) == 35892482945872302493.0
     # 9. long string
-    if python_version_tuple()[0] == '2':
+    if python_version_tuple()[0] == "2":
         assert fastnumbers.fast_float("35892482945872302493L") == 35892482945872302493.0
         assert fastnumbers.fast_float("35892482945872302493l") == 35892482945872302493.0
     assert fastnumbers.fast_float("35892482945872302493") == 35892482945872302493.0
@@ -139,42 +139,42 @@ def test_fast_float():
     assert isinstance(fastnumbers.fast_float("4029"), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_float(['hey'])
+        fastnumbers.fast_float(["hey"])
     # 12. Invalid input string
-    assert fastnumbers.fast_float('not_a_number') == 'not_a_number'
+    assert fastnumbers.fast_float("not_a_number") == "not_a_number"
     with raises(ValueError):
-        assert fastnumbers.fast_float('not_a_number', raise_on_invalid=True)
+        assert fastnumbers.fast_float("not_a_number", raise_on_invalid=True)
     # 13. Invalid input string with numbers
-    assert fastnumbers.fast_float('26.8 lb') == '26.8 lb'
+    assert fastnumbers.fast_float("26.8 lb") == "26.8 lb"
     with raises(ValueError):
-        assert fastnumbers.fast_float('26.8 lb', None, True)
+        assert fastnumbers.fast_float("26.8 lb", None, True)
     # 14. Infinity
-    assert fastnumbers.fast_float('inf') == float('inf')
-    assert fastnumbers.fast_float('-iNFinity') == float('-inf')
-    assert fastnumbers.fast_float('-iNFinity', inf=523) == 523
+    assert fastnumbers.fast_float("inf") == float("inf")
+    assert fastnumbers.fast_float("-iNFinity") == float("-inf")
+    assert fastnumbers.fast_float("-iNFinity", inf=523) == 523
     # 15. NaN
-    assert math.isnan(fastnumbers.fast_float('nAn'))
-    assert math.isnan(fastnumbers.fast_float('-NaN'))
-    assert fastnumbers.fast_float('-NaN', nan=0) == 0
+    assert math.isnan(fastnumbers.fast_float("nAn"))
+    assert math.isnan(fastnumbers.fast_float("-NaN"))
+    assert fastnumbers.fast_float("-NaN", nan=0) == 0
     # 16. Sign/'e'/'.' only
-    assert fastnumbers.fast_float('+') == '+'
-    assert fastnumbers.fast_float('-') == '-'
-    assert fastnumbers.fast_float('e') == 'e'
-    assert fastnumbers.fast_float('.') == '.'
+    assert fastnumbers.fast_float("+") == "+"
+    assert fastnumbers.fast_float("-") == "-"
+    assert fastnumbers.fast_float("e") == "e"
+    assert fastnumbers.fast_float(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
-    assert fastnumbers.fast_float('invalid', default=90) == 90
-    assert fastnumbers.fast_float('invalid', default=None) is None
+    assert fastnumbers.fast_float("invalid", default=90) == 90
+    assert fastnumbers.fast_float("invalid", default=None) is None
     with raises(ValueError):
-        assert fastnumbers.fast_float('invalid', 90, True)
+        assert fastnumbers.fast_float("invalid", 90, True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_float(u'⑦') == 7.0
-    assert fastnumbers.fast_float(u'⁸') == 8.0
-    assert fastnumbers.fast_float(u'⅔') == 2.0 / 3.0
-    assert fastnumbers.fast_float(u'Ⅴ') == 5.0
+    assert fastnumbers.fast_float(u"⑦") == 7.0
+    assert fastnumbers.fast_float(u"⁸") == 8.0
+    assert fastnumbers.fast_float(u"⅔") == 2.0 / 3.0
+    assert fastnumbers.fast_float(u"Ⅴ") == 5.0
     # 19. Key function
     assert fastnumbers.fast_float(76.8, key=len) == 76.8
-    assert fastnumbers.fast_float('76.8', key=len) == 76.8
-    assert fastnumbers.fast_float('invalid', key=len) == 7
+    assert fastnumbers.fast_float("76.8", key=len) == 76.8
+    assert fastnumbers.fast_float("invalid", key=len) == 7
 
 
 def test_fast_int():
@@ -192,13 +192,13 @@ def test_fast_int():
     # 5. int number
     assert fastnumbers.fast_int(499) == 499
     # 6. signed int string
-    assert fastnumbers.fast_int('-499') == -499
+    assert fastnumbers.fast_int("-499") == -499
     # 7. int string with padded whitespace
-    assert fastnumbers.fast_int('   +3001   ') == 3001
+    assert fastnumbers.fast_int("   +3001   ") == 3001
     # 8. long number
     assert fastnumbers.fast_int(35892482945872302493) == 35892482945872302493
     # 9. long string
-    if python_version_tuple()[0] == '2':
+    if python_version_tuple()[0] == "2":
         assert fastnumbers.fast_int("35892482945872302493L") == 35892482945872302493
         assert fastnumbers.fast_int("35892482945872302493l") == 35892482945872302493
     assert fastnumbers.fast_int("35892482945872302493") == 35892482945872302493
@@ -206,39 +206,39 @@ def test_fast_int():
     assert isinstance(fastnumbers.fast_int(4029.00), int)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_int(['hey'])
+        fastnumbers.fast_int(["hey"])
     # 12. Invalid input string
-    assert fastnumbers.fast_int('not_a_number') == 'not_a_number'
+    assert fastnumbers.fast_int("not_a_number") == "not_a_number"
     with raises(ValueError):
-        assert fastnumbers.fast_int('not_a_number', raise_on_invalid=True)
-   # 13. Invalid input string with numbers
-    assert fastnumbers.fast_int('26.8 lb') == '26.8 lb'
+        assert fastnumbers.fast_int("not_a_number", raise_on_invalid=True)
+    # 13. Invalid input string with numbers
+    assert fastnumbers.fast_int("26.8 lb") == "26.8 lb"
     with raises(ValueError):
-        assert fastnumbers.fast_int('26.8 lb', None, True)
+        assert fastnumbers.fast_int("26.8 lb", None, True)
     # 14. Infinity
-    assert fastnumbers.fast_int('inf') == 'inf'
+    assert fastnumbers.fast_int("inf") == "inf"
     # 15. NaN
-    assert fastnumbers.fast_int('nan') == 'nan'
+    assert fastnumbers.fast_int("nan") == "nan"
     # 16. Sign/'e'/'.' only
-    assert fastnumbers.fast_int('+') == '+'
-    assert fastnumbers.fast_int('-') == '-'
-    assert fastnumbers.fast_int('e') == 'e'
-    assert fastnumbers.fast_int('.') == '.'
+    assert fastnumbers.fast_int("+") == "+"
+    assert fastnumbers.fast_int("-") == "-"
+    assert fastnumbers.fast_int("e") == "e"
+    assert fastnumbers.fast_int(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
-    assert fastnumbers.fast_int('invalid', default=90) == 90
-    assert fastnumbers.fast_int('invalid', default=None) is None
+    assert fastnumbers.fast_int("invalid", default=90) == 90
+    assert fastnumbers.fast_int("invalid", default=None) is None
     with raises(ValueError):
-        assert fastnumbers.fast_int('invalid', 90, True)
+        assert fastnumbers.fast_int("invalid", 90, True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_int(u'⑦') == 7
-    assert fastnumbers.fast_int(u'⁸') == 8
-    assert fastnumbers.fast_int(u'⁸', base=10) == u'⁸'
-    assert fastnumbers.fast_int(u'⅔') == u'⅔'
-    assert fastnumbers.fast_int(u'Ⅴ') == u'Ⅴ'
+    assert fastnumbers.fast_int(u"⑦") == 7
+    assert fastnumbers.fast_int(u"⁸") == 8
+    assert fastnumbers.fast_int(u"⁸", base=10) == u"⁸"
+    assert fastnumbers.fast_int(u"⅔") == u"⅔"
+    assert fastnumbers.fast_int(u"Ⅴ") == u"Ⅴ"
     # 19. Key function
     assert fastnumbers.fast_int(76, key=len) == 76
-    assert fastnumbers.fast_int('76', key=len) == 76
-    assert fastnumbers.fast_int('invalid', key=len) == 7
+    assert fastnumbers.fast_int("76", key=len) == 76
+    assert fastnumbers.fast_int("invalid", key=len) == 7
 
 
 def test_fast_forceint():
@@ -255,9 +255,9 @@ def test_fast_forceint():
     # 5. int number
     assert fastnumbers.fast_forceint(499) == 499
     # 6. signed int string
-    assert fastnumbers.fast_forceint('-499') == -499
+    assert fastnumbers.fast_forceint("-499") == -499
     # 7. int string with padded whitespace
-    assert fastnumbers.fast_forceint('   +3001   ') == 3001
+    assert fastnumbers.fast_forceint("   +3001   ") == 3001
     # 8. long number
     assert fastnumbers.fast_forceint(35892482945872302493) == 35892482945872302493
     # 9. long string
@@ -267,39 +267,39 @@ def test_fast_forceint():
     assert isinstance(fastnumbers.fast_forceint("4029.00"), int)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_forceint(['hey'])
+        fastnumbers.fast_forceint(["hey"])
     # 12. Invalid input string
-    assert fastnumbers.fast_forceint('not_a_number') == 'not_a_number'
+    assert fastnumbers.fast_forceint("not_a_number") == "not_a_number"
     with raises(ValueError):
-        assert fastnumbers.fast_forceint('not_a_number', raise_on_invalid=True)
+        assert fastnumbers.fast_forceint("not_a_number", raise_on_invalid=True)
     # 13. Invalid input string with numbers
-    assert fastnumbers.fast_forceint('26.8 lb') == '26.8 lb'
+    assert fastnumbers.fast_forceint("26.8 lb") == "26.8 lb"
     with raises(ValueError):
-        assert fastnumbers.fast_forceint('26.8 lb', None, True)
+        assert fastnumbers.fast_forceint("26.8 lb", None, True)
     # 14. Infinity
-    assert fastnumbers.fast_forceint('inf') == 'inf'
-    assert fastnumbers.fast_forceint('-iNFinity') == '-iNFinity'
+    assert fastnumbers.fast_forceint("inf") == "inf"
+    assert fastnumbers.fast_forceint("-iNFinity") == "-iNFinity"
     # 15. NaN
-    assert fastnumbers.fast_forceint('nan') == 'nan'
+    assert fastnumbers.fast_forceint("nan") == "nan"
     # 16. Sign/'e'/'.' only
-    assert fastnumbers.fast_forceint('+') == '+'
-    assert fastnumbers.fast_forceint('-') == '-'
-    assert fastnumbers.fast_forceint('e') == 'e'
-    assert fastnumbers.fast_forceint('.') == '.'
+    assert fastnumbers.fast_forceint("+") == "+"
+    assert fastnumbers.fast_forceint("-") == "-"
+    assert fastnumbers.fast_forceint("e") == "e"
+    assert fastnumbers.fast_forceint(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
-    assert fastnumbers.fast_forceint('invalid', default=90) == 90
-    assert fastnumbers.fast_forceint('invalid', default=None) is None
+    assert fastnumbers.fast_forceint("invalid", default=90) == 90
+    assert fastnumbers.fast_forceint("invalid", default=None) is None
     with raises(ValueError):
-        assert fastnumbers.fast_forceint('invalid', 90, True)
+        assert fastnumbers.fast_forceint("invalid", 90, True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_forceint(u'⑦') == 7
-    assert fastnumbers.fast_forceint(u'⁸') == 8
-    assert fastnumbers.fast_forceint(u'⅔') == 0
-    assert fastnumbers.fast_forceint(u'Ⅴ') == 5
+    assert fastnumbers.fast_forceint(u"⑦") == 7
+    assert fastnumbers.fast_forceint(u"⁸") == 8
+    assert fastnumbers.fast_forceint(u"⅔") == 0
+    assert fastnumbers.fast_forceint(u"Ⅴ") == 5
     # 19. Key function
     assert fastnumbers.fast_forceint(76.8, key=len) == 76
-    assert fastnumbers.fast_forceint('76.8', key=len) == 76
-    assert fastnumbers.fast_forceint('invalid', key=len) == 7
+    assert fastnumbers.fast_forceint("76.8", key=len) == 76
+    assert fastnumbers.fast_forceint("invalid", key=len) == 7
 
 
 def test_isreal():
@@ -318,9 +318,9 @@ def test_isreal():
     # 5. int number
     assert fastnumbers.isreal(499)
     # 6. signed int string
-    assert fastnumbers.isreal('-499')
+    assert fastnumbers.isreal("-499")
     # 7. int string with padded whitespace
-    assert fastnumbers.isreal('   +3001   ')
+    assert fastnumbers.isreal("   +3001   ")
     # 8. long number
     assert fastnumbers.isreal(35892482945872302493)
     # 9. long string
@@ -332,29 +332,29 @@ def test_isreal():
     assert fastnumbers.isreal("4029", True) is True
     assert fastnumbers.isreal("hey") is False
     # 11. TypeError for invalid input
-    assert not fastnumbers.isreal(['hey'])
+    assert not fastnumbers.isreal(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isreal('not_a_number')
+    assert not fastnumbers.isreal("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isreal('26.8 lb')
+    assert not fastnumbers.isreal("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isreal('inf')
-    assert fastnumbers.isreal('inf', allow_inf=True)
-    assert fastnumbers.isreal('-iNFinity', allow_inf=True)
+    assert not fastnumbers.isreal("inf")
+    assert fastnumbers.isreal("inf", allow_inf=True)
+    assert fastnumbers.isreal("-iNFinity", allow_inf=True)
     # 15. NaN
-    assert not fastnumbers.isreal('nan')
-    assert fastnumbers.isreal('nan', allow_nan=True)
-    assert fastnumbers.isreal('-NaN', allow_nan=True)
+    assert not fastnumbers.isreal("nan")
+    assert fastnumbers.isreal("nan", allow_nan=True)
+    assert fastnumbers.isreal("-NaN", allow_nan=True)
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isreal('+')
-    assert not fastnumbers.isreal('-')
-    assert not fastnumbers.isreal('e')
-    assert not fastnumbers.isreal('.')
+    assert not fastnumbers.isreal("+")
+    assert not fastnumbers.isreal("-")
+    assert not fastnumbers.isreal("e")
+    assert not fastnumbers.isreal(".")
     # 18. Unicode numbers
-    assert fastnumbers.isreal(u'⑦')
-    assert fastnumbers.isreal(u'⁸')
-    assert fastnumbers.isreal(u'⅔')
-    assert fastnumbers.isreal(u'Ⅴ')
+    assert fastnumbers.isreal(u"⑦")
+    assert fastnumbers.isreal(u"⁸")
+    assert fastnumbers.isreal(u"⅔")
+    assert fastnumbers.isreal(u"Ⅴ")
 
 
 def test_isfloat():
@@ -373,9 +373,9 @@ def test_isfloat():
     # 5. int number
     assert not fastnumbers.isfloat(499)
     # 6. signed int string
-    assert fastnumbers.isfloat('-499')
+    assert fastnumbers.isfloat("-499")
     # 7. int string with padded whitespace
-    assert fastnumbers.isfloat('   +3001   ')
+    assert fastnumbers.isfloat("   +3001   ")
     # 8. long number
     assert not fastnumbers.isfloat(35892482945872302493)
     # 9. long string
@@ -387,30 +387,30 @@ def test_isfloat():
     assert fastnumbers.isfloat("4029") is True
     assert fastnumbers.isfloat("4029", True) is True
     # 11. TypeError for invalid input
-    assert not fastnumbers.isfloat(['hey'])
+    assert not fastnumbers.isfloat(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isfloat('not_a_number')
+    assert not fastnumbers.isfloat("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isfloat('26.8 lb')
+    assert not fastnumbers.isfloat("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isfloat('inf')
-    assert fastnumbers.isfloat('inf', allow_inf=True)
-    assert fastnumbers.isfloat('-infinity', allow_inf=True)
-    assert fastnumbers.isfloat('-INFINITY', allow_inf=True)
+    assert not fastnumbers.isfloat("inf")
+    assert fastnumbers.isfloat("inf", allow_inf=True)
+    assert fastnumbers.isfloat("-infinity", allow_inf=True)
+    assert fastnumbers.isfloat("-INFINITY", allow_inf=True)
     # 15. NaN
-    assert not fastnumbers.isfloat('nAn')
-    assert fastnumbers.isfloat('nan', allow_nan=True)
-    assert fastnumbers.isfloat('-NaN', allow_nan=True)
+    assert not fastnumbers.isfloat("nAn")
+    assert fastnumbers.isfloat("nan", allow_nan=True)
+    assert fastnumbers.isfloat("-NaN", allow_nan=True)
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isfloat('+')
-    assert not fastnumbers.isfloat('-')
-    assert not fastnumbers.isfloat('e')
-    assert not fastnumbers.isfloat('.')
+    assert not fastnumbers.isfloat("+")
+    assert not fastnumbers.isfloat("-")
+    assert not fastnumbers.isfloat("e")
+    assert not fastnumbers.isfloat(".")
     # 18. Unicode numbers
-    assert fastnumbers.isfloat(u'⑦')
-    assert fastnumbers.isfloat(u'⁸')
-    assert fastnumbers.isfloat(u'⅔')
-    assert fastnumbers.isfloat(u'Ⅴ')
+    assert fastnumbers.isfloat(u"⑦")
+    assert fastnumbers.isfloat(u"⁸")
+    assert fastnumbers.isfloat(u"⅔")
+    assert fastnumbers.isfloat(u"Ⅴ")
 
 
 def test_isint():
@@ -427,11 +427,11 @@ def test_isint():
     assert not fastnumbers.isint(499, str_only=True)
     assert fastnumbers.isint(499, num_only=True)
     # 6. signed int string
-    assert fastnumbers.isint('-499')
-    assert fastnumbers.isint('-499', True)
-    assert not fastnumbers.isint('-499', num_only=True)
+    assert fastnumbers.isint("-499")
+    assert fastnumbers.isint("-499", True)
+    assert not fastnumbers.isint("-499", num_only=True)
     # 7. int string with padded whitespace
-    assert fastnumbers.isint('   +3001   ')
+    assert fastnumbers.isint("   +3001   ")
     # 8. long number
     assert fastnumbers.isint(35892482945872302493)
     # 9. long string
@@ -444,25 +444,25 @@ def test_isint():
     assert fastnumbers.isint("4029.50") is False
     assert fastnumbers.isint(4029.50) is False
     # 11. TypeError for invalid input
-    assert not fastnumbers.isint(['hey'])
+    assert not fastnumbers.isint(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isint('not_a_number')
+    assert not fastnumbers.isint("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isint('26.8 lb')
+    assert not fastnumbers.isint("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isint('inf')
+    assert not fastnumbers.isint("inf")
     # 15. NaN
-    assert not fastnumbers.isint('nan')
+    assert not fastnumbers.isint("nan")
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isint('+')
-    assert not fastnumbers.isint('-')
-    assert not fastnumbers.isint('e')
-    assert not fastnumbers.isint('.')
+    assert not fastnumbers.isint("+")
+    assert not fastnumbers.isint("-")
+    assert not fastnumbers.isint("e")
+    assert not fastnumbers.isint(".")
     # 18. Unicode numbers
-    assert fastnumbers.isint(u'⑦')
-    assert fastnumbers.isint(u'⁸')
-    assert not fastnumbers.isint(u'⅔')
-    assert not fastnumbers.isint(u'Ⅴ')
+    assert fastnumbers.isint(u"⑦")
+    assert fastnumbers.isint(u"⁸")
+    assert not fastnumbers.isint(u"⅔")
+    assert not fastnumbers.isint(u"Ⅴ")
 
 
 def test_isintlike():
@@ -489,13 +489,13 @@ def test_isintlike():
     # 5. int number
     assert fastnumbers.isintlike(499)
     # 6. signed int string
-    assert fastnumbers.isintlike('-499')
+    assert fastnumbers.isintlike("-499")
     # 7. int string with padded whitespace
-    assert fastnumbers.isintlike('   +3001   ')
+    assert fastnumbers.isintlike("   +3001   ")
     # 8. long number
     assert fastnumbers.isintlike(35892482945872302493)
     # 9. long string
-    if python_version_tuple()[0] == '2':
+    if python_version_tuple()[0] == "2":
         assert fastnumbers.isintlike("35892482945872302493l")
         assert fastnumbers.isintlike("35892482945872302493L")
     assert fastnumbers.isintlike("35892482945872302493")
@@ -507,25 +507,25 @@ def test_isintlike():
     assert fastnumbers.isintlike("4029.50") is False
     assert fastnumbers.isintlike(4029.50) is False
     # 11. TypeError for invalid input
-    assert not fastnumbers.isintlike(['hey'])
+    assert not fastnumbers.isintlike(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isintlike('not_a_number')
+    assert not fastnumbers.isintlike("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isintlike('26.8 lb')
+    assert not fastnumbers.isintlike("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isintlike('inf')
+    assert not fastnumbers.isintlike("inf")
     # 15. NaN
-    assert not fastnumbers.isintlike('nan')
+    assert not fastnumbers.isintlike("nan")
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isintlike('+')
-    assert not fastnumbers.isintlike('-')
-    assert not fastnumbers.isintlike('e')
-    assert not fastnumbers.isintlike('.')
+    assert not fastnumbers.isintlike("+")
+    assert not fastnumbers.isintlike("-")
+    assert not fastnumbers.isintlike("e")
+    assert not fastnumbers.isintlike(".")
     # 18. Unicode numbers
-    assert fastnumbers.isintlike(u'⑦')
-    assert fastnumbers.isintlike(u'⁸')
-    assert not fastnumbers.isintlike(u'⅔')
-    assert fastnumbers.isintlike(u'Ⅴ')
+    assert fastnumbers.isintlike(u"⑦")
+    assert fastnumbers.isintlike(u"⁸")
+    assert not fastnumbers.isintlike(u"⅔")
+    assert fastnumbers.isintlike(u"Ⅴ")
 
 
 @pytest.fixture()
@@ -536,13 +536,13 @@ def tprint(capsys):
 
     with capsys.disabled():
         for line in lines:
-            sys.stdout.write('\n{}'.format(line))
+            sys.stdout.write("\n{}".format(line))
 
 
 def test_print_limits(tprint):
-    tprint('\nFASNUMBERS NUMERICAL LIMITS FOR THIS COMPILER BEFORE PYTHON FALLBACK:')
-    tprint('MAXIMUM INTEGER LENTH: {}'.format(fastnumbers.max_int_len))
-    tprint('MAX NUMBER FLOAT DIGITS: {}'.format(fastnumbers.dig))
-    tprint('MAXIMUM FLOAT EXPONENT: {}'.format(fastnumbers.max_exp))
-    tprint('MINIMUM FLOAT EXPONENT: {}'.format(fastnumbers.min_exp))
-    tprint('')
+    tprint("\nFASNUMBERS NUMERICAL LIMITS FOR THIS COMPILER BEFORE PYTHON FALLBACK:")
+    tprint("MAXIMUM INTEGER LENTH: {}".format(fastnumbers.max_int_len))
+    tprint("MAX NUMBER FLOAT DIGITS: {}".format(fastnumbers.dig))
+    tprint("MAXIMUM FLOAT EXPONENT: {}".format(fastnumbers.max_exp))
+    tprint("MINIMUM FLOAT EXPONENT: {}".format(fastnumbers.min_exp))
+    tprint("")
