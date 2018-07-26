@@ -7,27 +7,20 @@
 
 #include <Python.h>
 #include "fn_bool.h"
-#include "object_handling.h"
+#include "objects.h"
 #include "options.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* All the awesome MACROS */
-
-#define string_conversion_success(str) ((str) != NULL)
-
 /* Declarations */
 
-const char*
-convert_PyString_to_str(PyObject *input, const char** end, PyObject **temp_object, char **temp_char, Py_buffer *view);
-
-PyObject*
+PyObject *
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
                      const struct Options *options);
 
-PyObject*
+PyObject *
 PyString_is_number(PyObject *obj, const PyNumberType type,
                    const struct Options *options);
 

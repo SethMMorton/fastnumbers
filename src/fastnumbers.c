@@ -9,9 +9,9 @@
 #include "version.h"
 #include "docstrings.h"
 #include "options.h"
-#include "object_handling.h"
-#include "number_handling.h"
-#include "quick_detection.h"
+#include "objects.h"
+#include "numbers.h"
+#include "parsing.h"
 
 
 /* Function to handle the conversion of base to integers.
@@ -32,8 +32,9 @@ assess_integer_base_input(PyObject *pybase, int *base)
     /* Convert to int and check for overflow.
      */
     longbase = PyNumber_AsSsize_t(pybase, NULL);
-    if (longbase == -1 && PyErr_Occurred())
+    if (longbase == -1 && PyErr_Occurred()) {
         return 1;
+    }
 
     /* Ensure valid integer in valid range.
      */
@@ -56,15 +57,17 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "inf", "nan", "coerce", NULL };
+                                "key", "inf", "nan", "coerce", NULL
+                              };
     static const char *format = "O|OOOOOO:fast_real";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
                                      &opts.key, &opts.handle_inf, &opts.handle_nan,
-                                     &opts.coerce))
+                                     &opts.coerce)) {
         return NULL;
+    }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
     return PyObject_to_PyNumber(input, REAL, &opts);
@@ -80,14 +83,16 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "inf", "nan", NULL };
+                                "key", "inf", "nan", NULL
+                              };
     static const char *format = "O|OOOOO:fast_float";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &opts.handle_inf, &opts.handle_nan))
+                                     &opts.key, &opts.handle_inf, &opts.handle_nan)) {
         return NULL;
+    }
 
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
@@ -105,16 +110,20 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *base = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "base", NULL };
+                                "key", "base", NULL
+                              };
     static const char *format = "O|OOOO:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &base))
+                                     &opts.key, &base)) {
         return NULL;
+    }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
-    if (assess_integer_base_input(base, &opts.base)) return NULL;
+    if (assess_integer_base_input(base, &opts.base)) {
+        return NULL;
+    }
 
     return PyObject_to_PyNumber(input, INT, &opts);
 }
@@ -129,14 +138,16 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *default_value = NULL;
     struct Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", NULL };
+                                "key", NULL
+                              };
     static const char *format = "O|OOO:fast_forceint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key))
+                                     &opts.key)) {
         return NULL;
+    }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
     return PyObject_to_PyNumber(input, FORCEINT, &opts);
@@ -150,14 +161,16 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only",
-                                "allow_inf", "allow_nan", NULL };
+                                "allow_inf", "allow_nan", NULL
+                              };
     static const char *format = "O|OOOO:isreal";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.str_only, &opts.num_only,
-                                     &opts.handle_inf, &opts.handle_nan))
+                                     &opts.handle_inf, &opts.handle_nan)) {
         return NULL;
+    }
 
     return PyObject_is_number(input, REAL, &opts);
 }
@@ -170,14 +183,16 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     struct Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only",
-                                "allow_inf", "allow_nan", NULL };
+                                "allow_inf", "allow_nan", NULL
+                              };
     static const char *format = "O|OOOO:isfloat";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.str_only, &opts.num_only,
-                                     &opts.handle_inf, &opts.handle_nan))
+                                     &opts.handle_inf, &opts.handle_nan)) {
         return NULL;
+    }
 
     return PyObject_is_number(input, FLOAT, &opts);
 }
@@ -196,9 +211,12 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &opts.str_only, &opts.num_only,
-                                     &base))
+                                     &base)) {
         return NULL;
-    if (assess_integer_base_input(base, &opts.base)) return NULL;
+    }
+    if (assess_integer_base_input(base, &opts.base)) {
+        return NULL;
+    }
 
     return PyObject_is_number(input, INT, &opts);
 }
@@ -215,8 +233,9 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &opts.str_only, &opts.num_only))
+                                     &input, &opts.str_only, &opts.num_only)) {
         return NULL;
+    }
 
     return PyObject_is_number(input, INTLIKE, &opts);
 }
@@ -234,9 +253,12 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &base))
+                                     &input, &base)) {
         return NULL;
-    if (assess_integer_base_input(base, &opts.base)) return NULL;
+    }
+    if (assess_integer_base_input(base, &opts.base)) {
+        return NULL;
+    }
     /* No arguments returns 0. */
     if (input == NULL) {
         if (!Options_Default_Base(&opts)) {
@@ -260,10 +282,13 @@ fastnumbers_float(PyObject *self, PyObject *args, PyObject *kwargs)
     static const char *format = "|O:float";
 
     /* Read the function argument. */
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, &input))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, &input)) {
         return NULL;
+    }
     /* No arguments returns 0.0. */
-    if (input == NULL) return PyFloat_FromDouble(0.0);
+    if (input == NULL) {
+        return PyFloat_FromDouble(0.0);
+    }
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_UnicodeCharacter(&opts);
 
@@ -282,11 +307,13 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
-                                     &input, &opts.coerce))
+                                     &input, &opts.coerce)) {
         return NULL;
+    }
     /* No arguments returns 0.0 or 0 depending on the state of coerce. */
-    if (input == NULL) return Options_Coerce_True(&opts) ? long_to_PyInt(0)
-                                                         : PyFloat_FromDouble(0.0);
+    if (input == NULL)
+        return Options_Coerce_True(&opts) ? long_to_PyInt(0)
+               : PyFloat_FromDouble(0.0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_UnicodeCharacter(&opts);
 
@@ -296,28 +323,39 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
 
 /* This defines the methods contained in this module. */
 static PyMethodDef FastnumbersMethods[] = {
-    { "fast_real",     (PyCFunction) fastnumbers_fast_real,
-                       METH_VARARGS | METH_KEYWORDS, fast_real__doc__ },
-    { "fast_float",    (PyCFunction) fastnumbers_fast_float,
-                       METH_VARARGS | METH_KEYWORDS, fast_float__doc__ },
-    { "fast_int",      (PyCFunction) fastnumbers_fast_int,
-                       METH_VARARGS | METH_KEYWORDS, fast_int__doc__ },
-    { "fast_forceint", (PyCFunction) fastnumbers_fast_forceint,
-                       METH_VARARGS | METH_KEYWORDS, fast_forceint__doc__ },
-    { "isreal",        (PyCFunction) fastnumbers_isreal,
-                       METH_VARARGS | METH_KEYWORDS, isreal__doc__ },
-    { "isfloat",       (PyCFunction) fastnumbers_isfloat,
-                       METH_VARARGS | METH_KEYWORDS, isfloat__doc__ },
-    { "isint",         (PyCFunction) fastnumbers_isint,
-                       METH_VARARGS | METH_KEYWORDS, isint__doc__ },
-    { "isintlike",     (PyCFunction) fastnumbers_isintlike,
-                       METH_VARARGS | METH_KEYWORDS, isintlike__doc__ },
-    { "int",           (PyCFunction) fastnumbers_int,
-                       METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__ },
-    { "float",         (PyCFunction) fastnumbers_float,
-                       METH_VARARGS | METH_KEYWORDS, fastnumbers_float__doc__ },
-    { "real",          (PyCFunction) fastnumbers_real,
-                       METH_VARARGS | METH_KEYWORDS, fastnumbers_real__doc__ },
+    {   "fast_real", (PyCFunction) fastnumbers_fast_real,
+        METH_VARARGS | METH_KEYWORDS, fast_real__doc__
+    },
+    {   "fast_float", (PyCFunction) fastnumbers_fast_float,
+        METH_VARARGS | METH_KEYWORDS, fast_float__doc__
+    },
+    {   "fast_int", (PyCFunction) fastnumbers_fast_int,
+        METH_VARARGS | METH_KEYWORDS, fast_int__doc__
+    },
+    {   "fast_forceint", (PyCFunction) fastnumbers_fast_forceint,
+        METH_VARARGS | METH_KEYWORDS, fast_forceint__doc__
+    },
+    {   "isreal", (PyCFunction) fastnumbers_isreal,
+        METH_VARARGS | METH_KEYWORDS, isreal__doc__
+    },
+    {   "isfloat", (PyCFunction) fastnumbers_isfloat,
+        METH_VARARGS | METH_KEYWORDS, isfloat__doc__
+    },
+    {   "isint", (PyCFunction) fastnumbers_isint,
+        METH_VARARGS | METH_KEYWORDS, isint__doc__
+    },
+    {   "isintlike", (PyCFunction) fastnumbers_isintlike,
+        METH_VARARGS | METH_KEYWORDS, isintlike__doc__
+    },
+    {   "int", (PyCFunction) fastnumbers_int,
+        METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__
+    },
+    {   "float", (PyCFunction) fastnumbers_float,
+        METH_VARARGS | METH_KEYWORDS, fastnumbers_float__doc__
+    },
+    {   "real", (PyCFunction) fastnumbers_real,
+        METH_VARARGS | METH_KEYWORDS, fastnumbers_real__doc__
+    },
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -335,21 +373,23 @@ static PyObject *fastnumbers_FN_MIN_EXP;
 #if PY_MAJOR_VERSION >= 3
 
 static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "fastnumbers",
-        fastnumbers__doc__,
-        -1,
-        FastnumbersMethods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
+    PyModuleDef_HEAD_INIT,
+    "fastnumbers",
+    fastnumbers__doc__,
+    -1,
+    FastnumbersMethods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 PyObject *
 PyInit_fastnumbers(void)
 {
     PyObject *m = PyModule_Create(&moduledef);
-    if (m == NULL) return NULL;
+    if (m == NULL) {
+        return NULL;
+    }
 
 #else
 
@@ -359,7 +399,9 @@ initfastnumbers(void)
     PyObject *m = Py_InitModule3("fastnumbers",
                                  FastnumbersMethods,
                                  fastnumbers__doc__);
-    if (m == NULL) return;
+    if (m == NULL) {
+        return;
+    }
 
 #endif
 

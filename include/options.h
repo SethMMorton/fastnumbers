@@ -9,14 +9,14 @@
  * Makes adding new future options easier to manage.
  */
 struct Options {
-    PyObject* retval;
-    PyObject* input;
-    PyObject* key;
-    PyObject* handle_inf;
-    PyObject* handle_nan;
-    PyObject* coerce;
-    PyObject* num_only;
-    PyObject* str_only;
+    PyObject *retval;
+    PyObject *input;
+    PyObject *key;
+    PyObject *handle_inf;
+    PyObject *handle_nan;
+    PyObject *coerce;
+    PyObject *num_only;
+    PyObject *str_only;
     bool allow_uni;
     int base;
 };
@@ -24,28 +24,30 @@ struct Options {
 /* Convenience for initializing.
  * Older MSVC does not like designated initializers.
  */
-#define init_Options_convert { /*.retval =*/ NULL,     \
-                               /*.input =*/ NULL,      \
-                               /*.key =*/ NULL,        \
-                               /*.handle_inf =*/ NULL, \
-                               /*.handle_nan =*/ NULL, \
-                               /*.coerce =*/ Py_True,  \
-                               /*.num_only =*/ NULL,   \
-                               /*.str_only =*/ NULL,   \
-                               /*.allow_uni =*/ true,  \
-                               /*.base =*/ INT_MIN,    \
-                               }
-#define init_Options_check { /*.retval =*/ Py_None,      \
-                             /*.input =*/ NULL,          \
-                             /*.key =*/ NULL,            \
-                             /*.handle_inf =*/ Py_False, \
-                             /*.handle_nan =*/ Py_False, \
-                             /*.coerce =*/ NULL,         \
-                             /*.num_only =*/ Py_False,   \
-                             /*.str_only =*/ Py_False,   \
-                             /*.allow_uni =*/ true,      \
-                             /*.base =*/ INT_MIN,        \
-                             }
+#define init_Options_convert {  \
+        /*.retval =*/ NULL,     \
+        /*.input =*/ NULL,      \
+        /*.key =*/ NULL,        \
+        /*.handle_inf =*/ NULL, \
+        /*.handle_nan =*/ NULL, \
+        /*.coerce =*/ Py_True,  \
+        /*.num_only =*/ NULL,   \
+        /*.str_only =*/ NULL,   \
+        /*.allow_uni =*/ true,  \
+        /*.base =*/ INT_MIN,    \
+    }
+#define init_Options_check {        \
+        /*.retval =*/ Py_None,      \
+        /*.input =*/ NULL,          \
+        /*.key =*/ NULL,            \
+        /*.handle_inf =*/ Py_False, \
+        /*.handle_nan =*/ Py_False, \
+        /*.coerce =*/ NULL,         \
+        /*.num_only =*/ Py_False,   \
+        /*.str_only =*/ Py_False,   \
+        /*.allow_uni =*/ true,      \
+        /*.base =*/ INT_MIN,        \
+    }
 
 /* Some query MACROs. Each expects a pointer. */
 #define Options_Coerce_True(o) PyObject_IsTrue((o)->coerce)
@@ -63,21 +65,21 @@ struct Options {
 
 /* Set allow unicode. */
 #define Options_Set_Disallow_UnicodeCharacter(o) \
-    do {                                \
-        (o)->retval = NULL;             \
-        (o)->allow_uni = false;         \
+    do {                        \
+        (o)->retval = NULL;     \
+        (o)->allow_uni = false; \
     } while (0)
 
 /* MACRO to return the correct result based on user-input.
  * Expects the Options struct as a pointer.
  */
-#define Options_Return_Correct_Result_On_Error(o)                       \
-    (Options_Should_Raise(o) ?                                          \
-        NULL :                                                          \
-        ((o)->key != NULL ?                                             \
-            PyObject_CallFunctionObjArgs((o)->key, (o)->retval, NULL) : \
-            (Py_INCREF((o)->retval), (o)->retval)                       \
-         ))
+#define Options_Return_Correct_Result_On_Error(o)                 \
+    (Options_Should_Raise(o) ?                                    \
+     NULL :                                                       \
+     ((o)->key != NULL ?                                          \
+      PyObject_CallFunctionObjArgs((o)->key, (o)->retval, NULL) : \
+      (Py_INCREF((o)->retval), (o)->retval)                       \
+     ))
 
 /* MACRO to set the correct return value based on given input.
  * Expects the Options struct NOT as a pointer.
@@ -85,7 +87,7 @@ struct Options {
 #define Options_Set_Return_Value(o, input, default_value, raise) \
     (o).input = input; \
     (o).retval = PyObject_IsTrue(raise) \
-               ? NULL                              \
-               : (((o).key != NULL || default_value == NULL) ? input : default_value)
+                 ? NULL \
+                 : (((o).key != NULL || default_value == NULL) ? input : default_value)
 
 #endif /* FN_OPTIONS */
