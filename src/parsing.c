@@ -12,6 +12,8 @@
 /* Forward declarations. */
 static uint16_t
 number_trailing_zeros(const char *start, const char *end);
+static int
+detect_base(const char *str, const char *end);
 static long double
 power_of_ten_scaling_factor(const int expon);
 
@@ -66,21 +68,23 @@ string_contains_int(const char *str, const char *end, int base)
     /* For some reason, Python 2 allows space between the sign and digits. */
     consume_white_space_py2_only(str);
 
-    len = (Py_ssize_t)(end - str);
     if (base == 0) {
-        base = detect_base(str, len);
+        base = detect_base(str, end);
     }
 
     /* If base 10, take fast route. */
     if (base == 10) {
         reference = str;
-        reference = str;
         parse_integer_macro(str, {});
         (void) consume_python2_long_literal_lL(str);
         return str == end && str != reference;
     }
+    else if (base == -1) {
+        return false;
+    }
 
     /* Skip leading characters for non-base 10 ints. */
+    len = (Py_ssize_t)(end - str);
     if (len > 1 && str[0] == '0' &&
             ((base == 16 && (str[1] == 'x' || str[1] == 'X')) ||
              (base == 8  && (str[1] == 'o' || str[1] == 'O')) ||
@@ -323,13 +327,33 @@ float_might_overflow(const char *str, const char *end)
 }
 
 
+/* Given string bounds, count the number of zeros at the end. */
+static uint16_t
+number_trailing_zeros(const char *start, const char *end)
+{
+    register uint16_t n = 0;
+    for (end = end - 1; end >= start; --end) {
+        if (*end == '0') {
+            n += 1;
+        }
+        else {
+            break;
+        }
+    }
+    return n;
+}
+
+
+/* Return the base of an integer. -1 if invalid. */
 int
-detect_base(const char *str, const Py_ssize_t len)
+detect_base(const char *str, const char *end)
 {
     const char starts_with_sign = (char) is_sign(str);
+    Py_ssize_t len = 0;
     str += starts_with_sign;
     consume_white_space_py2_only(str);
 
+    len = end - str;
     if (str[0] != '0' || len == 1) {
         return 10;
     }
@@ -349,7 +373,12 @@ detect_base(const char *str, const Py_ssize_t len)
 #if PY_MAJOR_VERSION == 2
         return 8;
 #else
-        return 10;
+        if (number_trailing_zeros(str, end) == len) {
+            return 10;
+        }
+        else {
+            return -1;
+        }
 #endif
 }
 
@@ -366,23 +395,6 @@ is_valid_digit_arbitrary_base(const char c, const int base)
                (c >= 'a' && c <= 'a' + offset) ||
                (c >= 'A' && c <= 'A' + offset);
     }
-}
-
-
-/* Given string bounds, count the number of zeros at the end. */
-static uint16_t
-number_trailing_zeros(const char *start, const char *end)
-{
-    register uint16_t n = 0;
-    for (end = end - 1; end >= start; --end) {
-        if (*end == '0') {
-            n += 1;
-        }
-        else {
-            break;
-        }
-    }
-    return n;
 }
 
 

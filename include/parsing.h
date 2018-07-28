@@ -146,9 +146,6 @@ float_might_overflow(const char *start, const char *end);
 bool
 is_valid_digit_arbitrary_base(const char c, const int base);
 
-int
-detect_base(const char *str, const Py_ssize_t len);
-
 long
 parse_int(const char *str, const char *end, bool *error);
 

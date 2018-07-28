@@ -1115,11 +1115,45 @@ class TestIsInt:
         assert fastnumbers.isint(bin(x), base=0)
         assert fastnumbers.isint(oct(x), base=8)
         assert fastnumbers.isint(oct(x), base=0)
-        if python_version_tuple()[0] == "2":
-            assert fastnumbers.isint(oct(x).replace("0o", "0"), base=8)
+        assert fastnumbers.isint(oct(x).replace("0o", "0"), base=8)
+        if python_version_tuple()[0] == "2" or x == 0:
             assert fastnumbers.isint(oct(x).replace("0o", "0"), base=0)
+        else:
+            assert not fastnumbers.isint(oct(x).replace("0o", "0"), base=0)
         assert fastnumbers.isint(hex(x), base=16)
         assert fastnumbers.isint(hex(x), base=0)
+
+    def test_underscores(self):
+        if int(python_version_tuple()[0]) > 3 or (
+            int(python_version_tuple()[0]) == 3 and int(python_version_tuple()[0]) >= 6
+        ):
+            assert fastnumbers.isint("0_0_0")
+            assert fastnumbers.isint("0_0_0", base=0)
+            assert fastnumbers.isint("4_2")
+            assert fastnumbers.isint("4_2", base=0)
+            assert fastnumbers.isint("1_0000_0000")
+            assert fastnumbers.isint("1_0000_0000", base=0)
+            assert fastnumbers.isint("0b1001_0100", base=0)
+            assert fastnumbers.isint("0xffff_ffff", base=0)
+            assert fastnumbers.isint("0o5_7_7", base=0)
+            assert fastnumbers.isint("0b_0", base=0)
+            assert fastnumbers.isint("0x_f", base=0)
+            assert fastnumbers.isint("0o_5", base=0)
+
+            # Underscores in the base selector:
+            assert not fastnumbers.isint("0_b0")
+            assert not fastnumbers.isint("0_b0", base=0)
+            assert not fastnumbers.isint("0_xf")
+            assert not fastnumbers.isint("0_xf", base=0)
+            assert not fastnumbers.isint("0_o5")
+            assert not fastnumbers.isint("0_o5", base=0)
+            # Old-style octal, still disallowed:
+            assert not fastnumbers.isint("0_7")
+            assert not fastnumbers.isint("0_7", base=0)
+            assert not fastnumbers.isint("09_99")
+            assert not fastnumbers.isint("09_99", base=0)
+            assert not fastnumbers.isint("0b1001__0100", base=0)
+            assert not fastnumbers.isint("0xffff__ffff", base=0)
 
     @given(
         floats(allow_nan=False, allow_infinity=False),
