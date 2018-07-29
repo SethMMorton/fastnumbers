@@ -288,7 +288,6 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, bool *error)
     const int kind = PyUnicode_KIND(obj);  /* Unicode storage format. */
     const void *data = PyUnicode_DATA(obj);  /* Raw data */
 #endif
-    register Py_ssize_t i, j;
     char *ascii = NULL;
     *error = false;
 
@@ -306,33 +305,38 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, bool *error)
 #endif
 
     /* Allocate space for the new string. */
-    if ((ascii = calloc(*len + 1, sizeof(char *))) == NULL) {
+    if ((ascii = calloc(*len + 1, sizeof(char))) == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
+    else {
+        register Py_ssize_t i;
+        register long n;
+        register uchar c;
+        register const Py_ssize_t size = *len;
 
-    /* Convert each character. If a character is out of range then
-     * quit and set the error flag.
-     */
-    for (i = j = 0; i < *len; i++, j++) {
-        long n;
-        uchar c = UREAD(kind, data, i);
-        if (Py_UNICODE_ISSPACE(c)) {
-            ascii[j] = ' ';
+        /* Convert each character. If a character is out of range then
+         * quit and set the error flag.
+         */
+        for (i = 0; i < size; i++) {
+            c = UREAD(kind, data, i);
+            if (c < 127) {
+                ascii[i] = (char) c;
+            }
+            else if ((n = Py_UNICODE_TODECIMAL(c)) > -1) {
+                ascii[i] = '0' + (char) n;
+            }
+            else if (Py_UNICODE_ISSPACE(c)) {
+                ascii[i] = ' ';
+            }
+            else {
+                free(ascii);
+                *error = true;
+                return NULL;
+            }
         }
-        else if ((n = Py_UNICODE_TODECIMAL(c)) > -1) {
-            ascii[j] = '0' + (char) n;
-        }
-        else if (c < 127) {
-            ascii[j] = (char) c;
-        }
-        else {
-            free(ascii);
-            *error = true;
-            return NULL;
-        }
+        return ascii;
     }
-    return ascii;
 }
 
 
@@ -346,7 +350,7 @@ static const char *
 remove_valid_underscores(char *str, const char **end, char **buffer,
                          const Py_ssize_t len, const bool based)
 {
-    Py_ssize_t i, offset;
+    register Py_ssize_t i, offset;
 
     /* If a buffer has not been created, do so now and copy data to it. */
     if (*buffer == NULL) {
@@ -457,16 +461,26 @@ convert_PyString_to_str(PyObject *input, const char **end,
 
     /* If the input was in unicode format, extract as ASCII if we can. */
     if (PyUnicode_Check(input)) {
-        bool has_error = false;
-        *buffer = PyUnicode_as_ascii_string(input, &len, &has_error);
-        if (has_error) {
-            return NULL;  /* Buffer is always NULL if here. */
+#if PY_MAJOR_VERSION >= 3
+        /* Unicode in ASCII form is stored like bytes! */
+        if (PyUnicode_IS_READY(input) && PyUnicode_IS_COMPACT_ASCII(input)) {
+            str = (const char *) PyUnicode_1BYTE_DATA(input);
+            len = PyUnicode_GET_LENGTH(input);
         }
-        if (*buffer == NULL) {
-            *must_raise = true;
-            return NULL;
+        else
+#endif
+        {
+            bool has_error = false;
+            *buffer = PyUnicode_as_ascii_string(input, &len, &has_error);
+            if (has_error) {
+                return NULL;  /* Buffer is always NULL if here. */
+            }
+            if (*buffer == NULL) {
+                *must_raise = true;
+                return NULL;
+            }
+            str = *buffer;
         }
-        str = *buffer;
     }
 
     /* If the input is already bytes, then just extract the
