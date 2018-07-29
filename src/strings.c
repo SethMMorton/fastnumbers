@@ -74,6 +74,10 @@ python_lib_str_to_PyFloat(const char *str, Py_ssize_t len, void *options)
     }
 #endif
     result = PyOS_string_to_double(str, &pend, NULL);
+    /* Raise exception in the event of a memory error. */
+    if (errno == ENOMEM) {
+        return NULL;
+    }
     if (pend == nend) {
         return PyFloat_FromDouble(result);
     }
@@ -307,6 +311,7 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, bool *error)
     /* Allocate space for the new string. */
     if ((ascii = calloc(*len + 1, sizeof(char))) == NULL) {
         PyErr_NoMemory();
+        errno = ENOMEM;
         return NULL;
     }
     else {
@@ -356,6 +361,7 @@ remove_valid_underscores(char *str, const char **end, char **buffer,
     if (*buffer == NULL) {
         if ((*buffer = calloc(len + 1, sizeof(char))) == NULL) {
             PyErr_NoMemory();
+            errno = ENOMEM;
             return NULL;
         }
         memcpy(*buffer, str, len);
@@ -509,6 +515,7 @@ convert_PyString_to_str(PyObject *input, const char **end,
          */
         if ((*buffer = calloc(view.len + 1, sizeof(char))) == NULL) {
             PyErr_NoMemory();
+            errno = ENOMEM;
             *must_raise = true;
             return NULL;
         }

@@ -42,6 +42,9 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
 
     /* Assume a string. */
     pyresult = PyString_to_PyNumber(obj, type, options);
+    if (errno == ENOMEM) {
+        return NULL;  /* ALWAYS raise on out-of-memory errors. */
+    }
     if (pyresult != Py_None) {
         return RETURN_CORRECT_RESULT(pyresult, options);
     }
@@ -102,7 +105,10 @@ PyObject_is_number(PyObject *obj, const PyNumberType type,
 
     /* Assume a string. */
     pyresult = PyString_is_number(obj, type, options);
-    if (pyresult != Py_None) {
+    if (pyresult == NULL || errno == ENOMEM) {
+        return NULL; /* ALWAYS raise on out-of-memory errors. */
+    }
+    else if (pyresult != Py_None) {
         return pyresult;
     }
 
