@@ -63,9 +63,11 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
 
 
 static PyObject *
-python_lib_str_to_PyFloat(const char *str, Py_ssize_t len, void *options)
+python_lib_str_to_PyFloat(const char *str, Py_ssize_t len,
+                          const struct Options *options)
 {
-    char *pend = NULL, *nend = (char *) str + len;
+    char *nend = (char *) str + len;
+    char *pend = nend;
     double result = -10.0;
 #if PY_MAJOR_VERSION == 2
     /* If this is a long literal, don't include the L. */
@@ -81,12 +83,13 @@ python_lib_str_to_PyFloat(const char *str, Py_ssize_t len, void *options)
     if (pend == nend) {
         return PyFloat_FromDouble(result);
     }
-    /* Clear error if we should not raise. */
-    if (Options_Should_Raise((const struct Options *) options)) {
-        PyErr_Clear();
-    }
-    else {
-        SET_ERR_INVALID_FLOAT((const struct Options *) options);
+    /* Set error... The above won't because pend is non-NULL. Well, that
+     * statement isn't fully true... if not even the first digit could be
+     * converted then it would raise an error, but we are protected from
+     * that because of the is_likely_float heuristic.
+     */
+    if (Options_Should_Raise(options)) {
+        SET_ERR_INVALID_FLOAT(options);
     }
     return NULL;
 }
@@ -130,17 +133,7 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
      * Python's built-in version, otherwise use the "fast" version.
      */
     else if (float_might_overflow(str, end)) {
-        /* Building an exception takes a long time. The tiny
-         * performance hit of checking that the input is a valid
-         * float before converting to float is well worth it
-         * compared to trying and failing and then waiting for the
-         * exception to be created, only to clear it and move on.
-         */
-        if (!string_contains_float(str, end, true, true)) {
-            SET_ERR_INVALID_FLOAT(options);
-            return NULL;
-        }
-        return python_lib_str_to_PyFloat(str, real_len, (void *) options);
+        return python_lib_str_to_PyFloat(str, real_len, options);
     }
     else {
         bool error = false;
@@ -228,20 +221,22 @@ str_to_PyInt(const char *str, const char *end, const struct Options *options)
      * Python's built-in version, otherwise use the "fast" version.
      */
     else if (int_might_overflow(start, end)) {
-        PyObject *num = NULL;
-        char *pend = "\0";
-        /* Building an exception takes a long time. The tiny
-         * performance hit of checking that the input is a valid
-         * integer before converting to integer is well worth it
-         * compared to trying and failing and then waiting for the
-         * exception to be created, only to clear it and move on.
+        /* The way exception building for Python's built-in string->int
+         * conversion function is slow, because it allocates a unicode
+         * object just to put it into the traceback (rather than use the
+         * given input string, and there is no way to tell it to not
+         * build the traceback. For this reason we pre-validate to save
+         * time in the event of an error.
          */
-        if (!string_contains_int(str, end, 10)) {
+        if (string_contains_int(str, end, 10)) {
+            char *pend = end;
+            PyObject *num = python_lib_str_to_PyInt(str, &pend, 10);
+            return handle_possible_conversion_error(end, pend, num, options);
+        }
+        else {
             SET_ERR_INVALID_INT(options);
             return NULL;
         }
-        num = python_lib_str_to_PyInt(str, &pend, 10);
-        return handle_possible_conversion_error(end, pend, num, options);
     }
     else {
         bool error = false;
