@@ -63,7 +63,7 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
 
 
 static PyObject *
-python_lib_str_to_PyFloat(const char *str, Py_ssize_t len,
+python_lib_str_to_PyFloat(const char *str, const Py_ssize_t len,
                           const struct Options *options)
 {
     char *nend = (char *) str + len;
@@ -103,8 +103,8 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
      * Also quick detect NaN and INFINITY.
      */
     const char *start = str + (unsigned) is_sign(str);
-    const unsigned len = (unsigned)(end - start);
-    const unsigned real_len = (unsigned)(end - str);
+    const Py_ssize_t len = (Py_ssize_t)(end - start);
+    const Py_ssize_t real_len = (Py_ssize_t)(end - str);
     if (quick_detect_infinity(start, len)) {
         if (Options_Has_INF_Sub(options)) {
             return Options_Return_INF_Sub(options);
@@ -132,7 +132,7 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
      * and if it might stay on the safe side and go straight to
      * Python's built-in version, otherwise use the "fast" version.
      */
-    else if (float_might_overflow(str, end)) {
+    else if (float_might_overflow(str, len)) {
         return python_lib_str_to_PyFloat(str, real_len, options);
     }
     else {

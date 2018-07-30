@@ -138,7 +138,7 @@ extern "C" {
 #define int_might_overflow(start, end) ((end) - (start)) > FN_MAX_INT_LEN
 
 bool
-float_might_overflow(const char *start, const char *end);
+float_might_overflow(const char *start, const Py_ssize_t len);
 
 
 /* Declarations. */

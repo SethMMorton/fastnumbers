@@ -5,6 +5,7 @@
  * July 2018
  */
 #include <Python.h>
+#include <string.h>
 #include "pstdint.h"
 #include "parsing.h"
 
@@ -292,32 +293,46 @@ parse_float(const char *str, const char *end, bool *error)
 }
 
 
+/* Assumes sign and whitespace has already been removed from number. */
 bool
-float_might_overflow(const char *str, const char *end)
+float_might_overflow(const char *str, const Py_ssize_t len)
 {
-    register unsigned len = 0;
+    /* Locate the decimal place (if any). */
+    const char *decimal_loc = (const char *) memchr(str, '.', len);
+    const bool has_decimal = (bool) decimal_loc;
 
-    /* Scan string, collecting the count of digits. */
-    while (str < end) {
-        len += (unsigned) is_valid_digit(str);
-        if (*str == 'e' || *str == 'E') {
-            break;  /* Don't count digits after exponent. */
+    /* Find the exponent (if any) in the input.
+     * It is always after the exponent, usually close to the end, so
+     * we will start from the back. No need to include the stop
+     * location since that is either a decimal or the first digit
+     * which cannot be 'e' or 'E'.
+     */
+    register const char *ptr = NULL;
+    const char *exp = NULL;
+    const char *stop = decimal_loc ? decimal_loc : str;
+    for (ptr = str + len - 1; ptr > stop; ptr--) {
+        if (*ptr == 'e' || *ptr == 'E') {
+            exp = ptr;
+            break;
         }
-        str += 1;
     }
-    if (len > FN_DBL_DIG) {
+
+    /* If the number of pre-exponent digits is greater than the known
+     * value it might overflow.
+     */
+    if ((exp ? (exp - str) : len) - (Py_ssize_t)has_decimal > FN_DBL_DIG) {
         return true;
     }
 
     /* If an exponent was found, ensure it is within chosen range. */
-    if (str != end) {  /* If not at end, we must have broken above. */
-        bool negative = *(++str) == '-'; /* First remove exponential. */
-        len = 0;
-        if (is_sign(str)) {
-            str += 1;
+    if (exp) {
+        bool neg = *(++exp) == '-'; /* First remove 'e' or 'E'. */
+        unsigned exp_len = len - (exp - str) ;
+        if (is_sign(exp)) {
+            exp += 1;
+            exp_len -= 1;
         }
-        len = (unsigned)(end - str);
-        if (!(negative ? neg_exp_ok(len, str) : pos_exp_ok(len, str))) {
+        if (!(neg ? neg_exp_ok(exp_len, exp) : pos_exp_ok(exp_len, exp))) {
             return true;
         }
     }
