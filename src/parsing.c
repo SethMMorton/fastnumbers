@@ -9,12 +9,18 @@
 #include "pstdint.h"
 #include "parsing.h"
 
+/******************/
+/****** NOTE ******/
+/******************/
+/* All functions in this file assume whitespace has been trimmed
+ * from both sides of the string, and that the sign has been removed.
+ */
 
 /* Forward declarations. */
 static uint16_t
-number_trailing_zeros(const char *start, const char *end);
+number_trailing_zeros(register const char *start, register const char *end);
 static int
-detect_base(const char *str, const char *end);
+detect_base(register const char *str, register const char *end);
 static long double
 power_of_ten_scaling_factor(const int expon);
 
@@ -25,20 +31,21 @@ power_of_ten_scaling_factor(const int expon);
  * iteration of the parsing loop. It is recommended to put the payload
  * in a block.
  */
-#define parse_integer_macro(str, payload) \
+#define parse_integer_macro(str, valid, payload) \
     while (is_valid_digit(str)) { \
         payload; \
         (str) += 1; \
+        (valid) = true; \
     }
 
-#define parse_decimal_macro(str, payload) \
+#define parse_decimal_macro(str, valid, payload) \
     if (*(str) == '.') { \
         (str) += 1; \
-        parse_integer_macro(str, payload); \
+        parse_integer_macro(str, valid, payload); \
     }
 
-#define parse_exponent_macro(str, ref, negative_payload, payload) \
-    if ((*(str) == 'e' || *(str) == 'E') && (str) != (ref)) { \
+#define parse_exponent_macro(str, valid, negative_payload, payload) \
+    if ((*(str) == 'e' || *(str) == 'E') && (valid)) { \
         (str) += 1; \
         if (is_sign(str)) { \
             if (*(str) == '-') { \
@@ -46,28 +53,20 @@ power_of_ten_scaling_factor(const int expon);
             } \
             (str) += 1; \
         } \
-        (ref) = (str); \
+        (valid) = false; \
         while (is_valid_digit(str)) { \
             payload; \
             (str) += 1; \
+            (valid) = true; \
         } \
     }
 
-#define just_a_decimal_point(start, end, dstart, dend) \
-    ((dend) - (dstart) == 1 && (start) == (dstart) && (end) == (dend))
-
 
 bool
-string_contains_int(const char *str, const char *end, int base)
+string_contains_int(register const char *str, register const char *end,
+                    int base)
 {
-    register Py_ssize_t len = 0;
-    const char starts_with_sign = (char) is_sign(str);
-    const char *reference = str;
-
-    /* Account for sign. */
-    str += starts_with_sign;
-    /* For some reason, Python 2 allows space between the sign and digits. */
-    consume_white_space_py2_only(str);
+    register bool valid = false;
 
     if (base == 0) {
         base = detect_base(str, end);
@@ -75,54 +74,49 @@ string_contains_int(const char *str, const char *end, int base)
 
     /* If base 10, take fast route. */
     if (base == 10) {
-        reference = str;
-        parse_integer_macro(str, {});
+        parse_integer_macro(str, valid, {});
         (void) consume_python2_long_literal_lL(str);
-        return str == end && str != reference;
+        return valid && str == end;
     }
     else if (base == -1) {
         return false;
     }
+    else {
+        const register Py_ssize_t len = end - str;
 
-    /* Skip leading characters for non-base 10 ints. */
-    len = (Py_ssize_t)(end - str);
-    if (len > 1 && str[0] == '0' &&
-            ((base == 16 && (str[1] == 'x' || str[1] == 'X')) ||
-             (base == 8  && (str[1] == 'o' || str[1] == 'O')) ||
-             (base == 2  && (str[1] == 'b' || str[1] == 'B')))) {
-        str += 2;
-    }
+        /* Skip leading characters for non-base 10 ints. */
+        if (len > 1 && str[0] == '0' &&
+                ((base == 16 && (str[1] == 'x' || str[1] == 'X')) ||
+                 (base == 8  && (str[1] == 'o' || str[1] == 'O')) ||
+                 (base == 2  && (str[1] == 'b' || str[1] == 'B')))) {
+            str += 2;
+        }
 
-    /* The rest behaves as normal. */
-    reference = str;
-    while (is_valid_digit_arbitrary_base(*str, base)) {
-        str += 1;
-    }
+        /* The rest behaves as normal. */
+        while (is_valid_digit_arbitrary_base(*str, base)) {
+            str += 1;
+            valid = true;
+        }
 #if PY_MAJOR_VERSION == 2
-    if (base == 2 || base == 8 || base == 10 || base == 16) {
-        (void) consume_python2_long_literal_lL(str);
-    }
+        if (base == 2 || base == 8 || base == 10 || base == 16) {
+            (void) consume_python2_long_literal_lL(str);
+        }
 #endif
-    return str == end && str != reference;
+        return valid && str == end;
+    }
 }
 
 
 bool
-string_contains_float(const char *str,
-                      const char *end,
+string_contains_float(register const char *str,
+                      register const char *end,
                       const bool allow_inf,
                       const bool allow_nan)
 {
-    const char starts_with_sign = (char) is_sign(str);
-    const char *int_start, *decimal_start, *decimal_end;
-    const char *reference = str;
-    Py_ssize_t len = 0;
-
-    /* Account for sign. */
-    str += starts_with_sign;
+    register bool valid = false;
+    const register Py_ssize_t len = end - str;
 
     /* NAN or INF */
-    len = end - str;
     if (quick_detect_infinity(str, len)) {
         return allow_inf;
     }
@@ -130,57 +124,47 @@ string_contains_float(const char *str,
         return allow_nan;
     }
 
-    int_start = reference = str;
-    parse_integer_macro(str, {});
+    parse_integer_macro(str, valid, {});
     if (consume_python2_long_literal_lL(str)) {
-        return str == end && str != reference;
+        return valid && str == end;
     }
-    decimal_start = str;
-    parse_decimal_macro(str, {});
-    decimal_end = str;
-    parse_exponent_macro(str, reference, {}, {});
-    return str == end && str != reference &&
-           !just_a_decimal_point(int_start, end, decimal_start, decimal_end);
+    parse_decimal_macro(str, valid, {});
+    parse_exponent_macro(str, valid, {}, {});
+    return valid && str == end;
 }
 
 
 bool
-string_contains_intlike_float(const char *str, const char *end)
+string_contains_intlike_float(register const char *str,
+                              register const char *end)
 {
+    register bool valid = false;
+    register bool exp_negative = false;
     register int16_t expon = 0;
-    uint16_t int_length = 0;
-    uint16_t dec_length = 0;
-    bool exp_negative = false;
-    const char *int_start, *decimal_start, *decimal_end;
-    const char starts_with_sign = (char) is_sign(str);
-    const char *reference = str;
-    str += starts_with_sign;
+    register uint16_t int_length = 0;
+    register uint16_t dec_length = 0;
+    register const char *int_start, *decimal_start, *decimal_end;
 
     /* Before decimal. Keep track of number of digits read. */
-    int_start = reference = str;
-    parse_integer_macro(str, {});
-    int_length = (uint16_t)(str - int_start);
+    int_start = str;
+    parse_integer_macro(str, valid, { int_length += 1; });
     if (consume_python2_long_literal_lL(str)) {
-        return str == end && str != reference;
+        return valid && str == end;
     }
 
     /* Decimal part of float. Keep track of number of digits read */
     /* as well as beginning and end locations. */
     decimal_start = str;
-    parse_decimal_macro(str, {});
+    parse_decimal_macro(str, valid, { dec_length += 1; });
     decimal_end = str;
-    if (decimal_start != decimal_end) {
-        dec_length = (uint16_t)(decimal_end - decimal_start) - 1;
-    }
 
     /* Exponential part of float. Parse the magnitude. */
-    parse_exponent_macro(str, reference, { exp_negative = true; }, {
+    parse_exponent_macro(str, valid, { exp_negative = true; }, {
         expon *= 10;
         expon += ascii2int(str);
     });
 
-    if (str != end || str == reference ||
-            just_a_decimal_point(int_start, end, decimal_start, decimal_end)) {
+    if (!valid || str != end) {
         return false;
     }
     else {
@@ -208,98 +192,72 @@ string_contains_intlike_float(const char *str, const char *end)
 
 
 long
-parse_int(const char *str, const char *end, bool *error)
+parse_int(register const char *str, register const char *end, bool *error)
 {
+    register bool valid = false;
     register long value = 0L;
-    const char starts_with_sign = (char) is_sign(str);
-    bool negative = starts_with_sign && *str == '-';
-    const char *reference = str;
-
-    /* Account for sign. */
-    str += starts_with_sign;
-    /* For some reason, Python 2 allows space between the sign and digits. */
-    consume_white_space_py2_only(str);
 
     /* Convert digits, if any. */
-    reference = str;
-    parse_integer_macro(str, {
+    parse_integer_macro(str, valid, {
         value *= 10L;
         value += ascii2long(str);
     });
     (void) consume_python2_long_literal_lL(str);
 
-    *error = str != end || str == reference;
-    return negative ? -value : value;
+    *error = !valid || str != end;
+    return value;
 }
 
 
 double
-parse_float(const char *str, const char *end, bool *error)
+parse_float(register const char *str, register const char *end, bool *error)
 {
+    register bool valid = false;
     register uint64_t intvalue = 0UL;
+    register uint16_t decimal_len = 0;
     register int16_t expon = 0;
-    int16_t decimal_len = 0;
-    int16_t exp_sign = 1;
-    const char *int_start, *decimal_start, *decimal_end;
-    const char starts_with_sign = (char) is_sign(str);
-    bool negative = starts_with_sign && *str == '-';
-    const char *reference = str;
-    str += starts_with_sign;
+    register int16_t exp_sign = 1;
 
     /* Parse integer part. */
-    int_start = reference = str;
-    parse_integer_macro(str, {
+    parse_integer_macro(str, valid, {
         intvalue *= 10UL;
         intvalue += ascii2ulong(str);
     });
 
     /* If long literal, quit here. */
     if (consume_python2_long_literal_lL(str)) {
-        *error = str != end || str == reference;
-        return (long double)(negative ? -intvalue : intvalue);
+        *error = !valid || str != end;
+        return (long double)intvalue;
     }
 
     /* Parse decimal part. */
-    decimal_start = str;
-    parse_decimal_macro(str, {
+    parse_decimal_macro(str, valid, {
         intvalue *= 10UL;
         intvalue += ascii2ulong(str);
+        decimal_len += 1U;
     });
-    decimal_end = str;
-    if (decimal_start != decimal_end) {
-        decimal_len = decimal_end - decimal_start - 1;
-    }
 
     /* Parse exponential part. */
-    parse_exponent_macro(str, reference, { exp_sign = -1; }, {
+    parse_exponent_macro(str, valid, { exp_sign = -1; }, {
         expon *= 10;
         expon += ascii2int(str);
     });
     expon *= exp_sign;
     expon -= decimal_len; /* Adjust the exponent by the # of decimal places */
 
-    *error = str != end || str == reference ||
-             just_a_decimal_point(int_start, end, decimal_start, decimal_end);
-    if (negative) {
-        return -(expon < 0
-                 ? intvalue / power_of_ten_scaling_factor(abs(expon))
-                 : intvalue * power_of_ten_scaling_factor(expon));
-    }
-    else {
-        return expon < 0
-               ? intvalue / power_of_ten_scaling_factor(abs(expon))
-               : intvalue * power_of_ten_scaling_factor(expon);
-    }
+    *error = !valid || str != end;
+    return expon < 0
+           ? intvalue / power_of_ten_scaling_factor(abs(expon))
+           : intvalue * power_of_ten_scaling_factor(expon);
 }
 
 
-/* Assumes sign and whitespace has already been removed from number. */
 bool
-float_might_overflow(const char *str, const Py_ssize_t len)
+float_might_overflow(register const char *str, register const Py_ssize_t len)
 {
     /* Locate the decimal place (if any). */
-    const char *decimal_loc = (const char *) memchr(str, '.', len);
-    const bool has_decimal = (bool) decimal_loc;
+    register const char *decimal_loc = (const char *) memchr(str, '.', len);
+    register const bool has_decimal = (bool) decimal_loc;
 
     /* Find the exponent (if any) in the input.
      * It is always after the exponent, usually close to the end, so
@@ -308,8 +266,8 @@ float_might_overflow(const char *str, const Py_ssize_t len)
      * which cannot be 'e' or 'E'.
      */
     register const char *ptr = NULL;
-    const char *exp = NULL;
-    const char *stop = decimal_loc ? decimal_loc : str;
+    register const char *exp = NULL;
+    register const char *stop = decimal_loc ? decimal_loc : str;
     for (ptr = str + len - 1; ptr > stop; ptr--) {
         if (*ptr == 'e' || *ptr == 'E') {
             exp = ptr;
@@ -326,8 +284,8 @@ float_might_overflow(const char *str, const Py_ssize_t len)
 
     /* If an exponent was found, ensure it is within chosen range. */
     if (exp) {
-        bool neg = *(++exp) == '-'; /* First remove 'e' or 'E'. */
-        unsigned exp_len = len - (exp - str) ;
+        register bool neg = *(++exp) == '-'; /* First remove 'e' or 'E'. */
+        register unsigned exp_len = len - (exp - str) ;
         if (is_sign(exp)) {
             exp += 1;
             exp_len -= 1;
@@ -344,7 +302,7 @@ float_might_overflow(const char *str, const Py_ssize_t len)
 
 /* Given string bounds, count the number of zeros at the end. */
 static uint16_t
-number_trailing_zeros(const char *start, const char *end)
+number_trailing_zeros(register const char *start, register const char *end)
 {
     register uint16_t n = 0;
     for (end = end - 1; end >= start; --end) {
@@ -361,14 +319,9 @@ number_trailing_zeros(const char *start, const char *end)
 
 /* Return the base of an integer. -1 if invalid. */
 int
-detect_base(const char *str, const char *end)
+detect_base(register const char *str, register const char *end)
 {
-    const char starts_with_sign = (char) is_sign(str);
-    Py_ssize_t len = 0;
-    str += starts_with_sign;
-    consume_white_space_py2_only(str);
-
-    len = end - str;
+    register const Py_ssize_t len = end - str;
     if (str[0] != '0' || len == 1) {
         return 10;
     }
@@ -405,7 +358,7 @@ is_valid_digit_arbitrary_base(const char c, const int base)
         return c >= '0' && c <= ((int) '0' + base);
     }
     else {
-        const char offset = (char) base - 10;
+        register const char offset = (char) base - 10;
         return (c >= '0' && c <= '9') ||
                (c >= 'a' && c <= 'a' + offset) ||
                (c >= 'A' && c <= 'A' + offset);

@@ -39,9 +39,11 @@ static PyObject *
 str_to_PyInt_or_PyFloat(const char *str, const char *end,
                         const struct Options *options)
 {
+    const char *start = str;
     PyObject *pyresult = NULL;
     /* If the input contains an integer, convert to int directly. */
-    if (string_contains_int(str, end, 10)) {
+    consume_sign(start);
+    if (string_contains_int(start, end, 10)) {
         return str_to_PyInt(str, end, options);
     }
 
@@ -53,7 +55,7 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
 
     /* Coerce to int if needed. Don't do it for NAN or INF. */
     return (Options_Coerce_True(options)
-            && string_contains_intlike_float(str, end)
+            && string_contains_intlike_float(start, end)
             && !PyNumber_IsNAN(pyresult)
             && !PyNumber_IsINF(pyresult)
            )
@@ -98,19 +100,21 @@ python_lib_str_to_PyFloat(const char *str, const Py_ssize_t len,
 PyObject *
 str_to_PyFloat(const char *str, const char *end, const struct Options *options)
 {
+    const char *start = str;
+    const double sign = consume_and_return_sign(start);
+    const Py_ssize_t len = end - start;
+    const Py_ssize_t real_len = end - str;
+
     /* Use some simple heuristics to determine if the the string
      * is likely a float - first and last characters must be digits.
      * Also quick detect NaN and INFINITY.
      */
-    const char *start = str + (unsigned) is_sign(str);
-    const Py_ssize_t len = (Py_ssize_t)(end - start);
-    const Py_ssize_t real_len = (Py_ssize_t)(end - str);
     if (quick_detect_infinity(start, len)) {
         if (Options_Has_INF_Sub(options)) {
             return Options_Return_INF_Sub(options);
         }
         else {
-            Py_RETURN_INF(*str == '-' ? -1.0 : 1.0);
+            Py_RETURN_INF(sign);
         }
     }
     else if (quick_detect_nan(start, len)) {
@@ -118,7 +122,7 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
             return Options_Return_NaN_Sub(options);
         }
         else {
-            return PyFloat_from_NaN(*str == '-');
+            return PyFloat_from_NaN(sign < 0);
         }
     }
     else if (!is_likely_float(start, len)) {
@@ -132,17 +136,17 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
      * and if it might stay on the safe side and go straight to
      * Python's built-in version, otherwise use the "fast" version.
      */
-    else if (float_might_overflow(str, len)) {
+    else if (float_might_overflow(start, len)) {
         return python_lib_str_to_PyFloat(str, real_len, options);
     }
     else {
         bool error = false;
-        double result = parse_float(str, end, &error);
+        double result = parse_float(start, end, &error);
         if (error) {
             SET_ERR_INVALID_FLOAT(options);
             return NULL;
         }
-        return PyFloat_FromDouble(result);
+        return PyFloat_FromDouble(sign * result);
     }
 }
 
@@ -199,15 +203,16 @@ handle_possible_conversion_error(const char *end, char *pend,
 PyObject *
 str_to_PyInt(const char *str, const char *end, const struct Options *options)
 {
-    /* Use some simple heuristics to determine if the the string
-     * is likely an int - first and last characters must be digits.
-     */
-    const char *start = str + (unsigned) is_sign(str);
+    const char *start = str;
+    const long sign = consume_and_return_sign(start);
     Py_ssize_t len = 0;
 
     /* Python 2 allows space between the sign and digits. */
     consume_white_space_py2_only(start);
 
+    /* Use some simple heuristics to determine if the the string
+     * is likely an int - first and last characters must be digits.
+     */
     len = end - start;
     if (!is_likely_int(start, len)) {
         SET_ERR_INVALID_INT(options);
@@ -228,8 +233,8 @@ str_to_PyInt(const char *str, const char *end, const struct Options *options)
          * build the traceback. For this reason we pre-validate to save
          * time in the event of an error.
          */
-        if (string_contains_int(str, end, 10)) {
-            char *pend = end;
+        if (string_contains_int(start, end, 10)) {
+            char *pend = (char *)end;
             PyObject *num = python_lib_str_to_PyInt(str, &pend, 10);
             return handle_possible_conversion_error(end, pend, num, options);
         }
@@ -240,12 +245,12 @@ str_to_PyInt(const char *str, const char *end, const struct Options *options)
     }
     else {
         bool error = false;
-        long result = parse_int(str, end, &error);
+        long result = parse_int(start, end, &error);
         if (error) {
             SET_ERR_INVALID_INT(options);
             return NULL;
         }
-        return long_to_PyInt(result);
+        return long_to_PyInt(sign * result);
     }
 }
 
@@ -626,6 +631,8 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
     }
 
     if (str != NULL) {
+        consume_sign(str);  /* All functions require sign is stripped. */
+        consume_white_space_py2_only(str);
         switch (type) {
         case REAL:
         case FLOAT:

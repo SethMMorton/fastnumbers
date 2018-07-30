@@ -45,6 +45,10 @@ extern "C" {
 #define consume_white_space_py2_only(str) do {} while (0)
 #endif
 
+#define consume_sign(str) if (is_sign(str)) str += 1
+#define consume_and_return_sign(str) \
+    (*(str) == '-' ? ((str)++, -1) : ((*(str) == '+' && (str)++), 1))
+
 /* A rather bold macro to strip whitespace from both ends. */
 #define strip_whitespace(start, end, length) \
     do { \
@@ -138,7 +142,8 @@ extern "C" {
 #define int_might_overflow(start, end) ((end) - (start)) > FN_MAX_INT_LEN
 
 bool
-float_might_overflow(const char *start, const Py_ssize_t len);
+float_might_overflow(register const char *start,
+                     register const Py_ssize_t len);
 
 
 /* Declarations. */
@@ -147,20 +152,22 @@ bool
 is_valid_digit_arbitrary_base(const char c, const int base);
 
 long
-parse_int(const char *str, const char *end, bool *error);
+parse_int(register const char *str, register const char *end, bool *error);
 
 double
-parse_float(const char *str, const char *end, bool *error);
+parse_float(register const char *str, register const char *end, bool *error);
 
 bool
-string_contains_float(const char *str, const char *end,
+string_contains_float(register const char *str, register const char *end,
                       const bool allow_inf, const bool allow_nan);
 
 bool
-string_contains_intlike_float(const char *str, const char *end);
+string_contains_intlike_float(register const char *str,
+                              register const char *end);
 
 bool
-string_contains_int(const char *str, const char *end, const int base);
+string_contains_int(register const char *str, register const char *end,
+                    const int base);
 
 #ifdef __cplusplus
 } /* extern "C" */
