@@ -6,11 +6,15 @@ import math
 import random
 import unicodedata
 from itertools import repeat
-from platform import python_version_tuple
-from pytest import raises
+from platform import python_version_tuple, system
+from pytest import raises, mark
 from hypothesis import given, example
 from hypothesis.strategies import sampled_from, floats, integers, text, binary, lists
 import fastnumbers
+
+is_windows = system() == "Windows"
+is_27 = python_version_tuple()[:2] == ("2", "7")
+is_34 = python_version_tuple()[:2] == ("3", "4")
 
 if python_version_tuple()[0] != "2":
     long = int
@@ -186,7 +190,7 @@ def test_real_arguments():
 
 @given(floats(allow_nan=False) | integers())
 def test_real_returns_same_as_fast_real(x):
-    assert fastnumbers.real(repr(x)) == fastnumbers.fast_real(repr(x))
+    assert fastnumbers.real(x) == fastnumbers.fast_real(x)
 
 
 class TestFastReal:
@@ -233,6 +237,12 @@ class TestFastReal:
 
     @given(floats(allow_nan=False))
     @example(5.675088586167575e-116)
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_given_float_string_returns_float(self, x):
         y = repr(x)
         assert fastnumbers.fast_real(y, coerce=False) == x
@@ -241,6 +251,12 @@ class TestFastReal:
         assert isinstance(fastnumbers.fast_real(y, coerce=False), float)
 
     @given(integers())
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_given_float_string_returns_int_with_coerce_with_intlike(self, x):
         y = repr(float(x))
         assert fastnumbers.fast_real(y, coerce=True) == int(float(x))
@@ -268,6 +284,12 @@ class TestFastReal:
         assert fastnumbers.fast_real("inf", inf=10000.0) == 10000.0
 
     @given(floats(allow_nan=False), integers(0, 100), integers(0, 100))
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_given_padded_float_strings_returns_float(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_real(y, coerce=False) == x
@@ -377,6 +399,12 @@ class TestFastReal:
             fastnumbers.fast_real(x, 90, True)
 
     @given(integers() | floats(allow_nan=False))
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
         assert fastnumbers.fast_real(x, key=len) == x
         assert fastnumbers.fast_real(repr(x), key=len) == x
@@ -426,6 +454,12 @@ class TestFastFloat:
     @given(floats(allow_nan=False).filter(not_an_integer))
     @example(5.675088586167575e-116)
     @example("10." + "0" * 1050)
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_given_float_string_returns_float(self, x):
         if isinstance(x, basestring):
             y = x
@@ -451,6 +485,12 @@ class TestFastFloat:
         floats(allow_nan=False).filter(not_an_integer),
         integers(0, 100),
         integers(0, 100),
+    )
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
     )
     def test_given_padded_float_strings_returns_float(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
@@ -554,6 +594,12 @@ class TestFastFloat:
             assert fastnumbers.fast_float(x, 90.0, True)
 
     @given(floats(allow_nan=False))
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
         assert fastnumbers.fast_float(x, key=len) == x
         assert fastnumbers.fast_float(repr(x), key=len) == x
@@ -796,6 +842,12 @@ class TestFastForceInt:
         integers(0, 100),
         integers(0, 100),
     )
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_given_padded_float_strings_returns_int(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_forceint(y) == int(x)
@@ -894,6 +946,12 @@ class TestFastForceInt:
             assert fastnumbers.fast_forceint(x, 90.0, True)
 
     @given(integers() | floats(allow_nan=False, allow_infinity=False))
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
         assert fastnumbers.fast_forceint(x, key=len) == int(x)
         assert fastnumbers.fast_forceint(repr(x), key=len) == int(x)

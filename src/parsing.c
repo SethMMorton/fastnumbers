@@ -210,13 +210,15 @@ parse_int(register const char *str, register const char *end, bool *error)
 
 
 double
-parse_float(register const char *str, register const char *end, bool *error)
+parse_float(register const char *str, register const char *end, bool *error,
+            const int8_t sign)
 {
     register bool valid = false;
     register uint64_t intvalue = 0UL;
     register uint16_t decimal_len = 0;
     register int16_t expon = 0;
     register int16_t exp_sign = 1;
+    long double retval = 0;
 
     /* Parse integer part. */
     parse_integer_macro(str, valid, {
@@ -246,9 +248,13 @@ parse_float(register const char *str, register const char *end, bool *error)
     expon -= decimal_len; /* Adjust the exponent by the # of decimal places */
 
     *error = !valid || str != end;
-    return expon < 0
-           ? intvalue / power_of_ten_scaling_factor(abs(expon))
-           : intvalue * power_of_ten_scaling_factor(expon);
+    if (expon < 0) {
+        retval = (long double) intvalue / power_of_ten_scaling_factor(abs(expon));
+    }
+    else {
+        retval = (long double) intvalue * power_of_ten_scaling_factor(expon);
+    }
+    return (long double) sign * retval;
 }
 
 

@@ -9,6 +9,7 @@
 #include <Python.h>
 #include <string.h>
 #include <limits.h>
+#include "pstdint.h"
 #include "strings.h"
 #include "numbers.h"
 #include "options.h"
@@ -101,7 +102,7 @@ PyObject *
 str_to_PyFloat(const char *str, const char *end, const struct Options *options)
 {
     const char *start = str;
-    const double sign = consume_and_return_sign(start);
+    const int8_t sign = consume_and_return_sign(start);
     const Py_ssize_t len = end - start;
     const Py_ssize_t real_len = end - str;
 
@@ -141,12 +142,12 @@ str_to_PyFloat(const char *str, const char *end, const struct Options *options)
     }
     else {
         bool error = false;
-        double result = parse_float(start, end, &error);
+        double result = parse_float(start, end, &error, sign);
         if (error) {
             SET_ERR_INVALID_FLOAT(options);
             return NULL;
         }
-        return PyFloat_FromDouble(sign * result);
+        return PyFloat_FromDouble(result);
     }
 }
 

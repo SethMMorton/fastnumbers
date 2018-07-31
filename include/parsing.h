@@ -87,6 +87,7 @@ extern "C" {
  * use the smaller numbers.
  */
 #if defined(__clang__) || defined(__GNUC__)
+
 #define FN_DBL_DIG DBL_DIG - 4
 #define FN_MAX_EXP 99
 #define FN_MIN_EXP -98
@@ -95,16 +96,29 @@ extern "C" {
     ((len) == 2 && (*(str) <= '8' || \
                     (*(str) == '9' && *((str) + 1) <= '8')))
 #define pos_exp_ok(len, str) (len) > 0 && (len) <= 2
+
 #else
+
 #define FN_DBL_DIG DBL_DIG - 6
 #define FN_MAX_EXP 22
-#define FN_MIN_EXP -22
-#define __exp_ok(len, str) \
+#define pos_exp_ok(len, str) \
     ((len) == 1) || \
     ((len) == 2 && (*(str) <= '1' || \
                     (*(str) == '2' && *((str) + 1) <= '2')))
-#define neg_exp_ok(len, str) __exp_ok((len), (str))
-#define pos_exp_ok(len, str) __exp_ok((len), (str))
+
+#if PY_MAJOR_VERSION == 2 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION <= 4)
+#define FN_MIN_EXP -12 /* Old MSVC cannot handle as small of an exponent. */
+#define neg_exp_ok(len, str) \
+    ((len) == 1) || \
+    ((len) == 2 && (*(str) == '1' && *((str) + 1) <= '2'))
+#else
+#define FN_MIN_EXP -22
+#define neg_exp_ok(len, str) \
+    ((len) == 1) || \
+    ((len) == 2 && (*(str) <= '1' || \
+                    (*(str) == '2' && *((str) + 1) <= '2')))
+#endif
+
 #endif
 
 /* Quickly detect INFINITY and NAN. */
@@ -155,7 +169,8 @@ long
 parse_int(register const char *str, register const char *end, bool *error);
 
 double
-parse_float(register const char *str, register const char *end, bool *error);
+parse_float(register const char *str, register const char *end, bool *error,
+            const int8_t sign);
 
 bool
 string_contains_float(register const char *str, register const char *end,
