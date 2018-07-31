@@ -47,7 +47,7 @@ extern "C" {
 
 #define consume_sign(str) if (is_sign(str)) str += 1
 #define consume_and_return_sign(str) \
-    (*(str) == '-' ? ((str)++, -1) : ((*(str) == '+' && (str)++), 1))
+    (*(str) == '-' ? ((str)++, -1) : ((*(str) == '+') ? ((str)++, 1) : 1))
 
 /* A rather bold macro to strip whitespace from both ends. */
 #define strip_whitespace(start, end, length) \
@@ -167,7 +167,7 @@ string_contains_intlike_float(register const char *str,
 
 bool
 string_contains_int(register const char *str, register const char *end,
-                    const int base);
+                    int base);
 
 #ifdef __cplusplus
 } /* extern "C" */

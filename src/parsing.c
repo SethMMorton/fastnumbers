@@ -285,7 +285,7 @@ float_might_overflow(register const char *str, register const Py_ssize_t len)
     /* If an exponent was found, ensure it is within chosen range. */
     if (exp) {
         register bool neg = *(++exp) == '-'; /* First remove 'e' or 'E'. */
-        register unsigned exp_len = len - (exp - str) ;
+        register Py_ssize_t exp_len = len - (exp - str) ;
         if (is_sign(exp)) {
             exp += 1;
             exp_len -= 1;
