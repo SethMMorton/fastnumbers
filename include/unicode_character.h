@@ -6,7 +6,6 @@
  */
 
 #include <Python.h>
-#include "objects.h"
 #include "options.h"
 
 #ifdef __cplusplus
@@ -35,7 +34,7 @@ convert_PyUnicode_to_PyNumber(PyObject *input);
 
 PyObject *
 PyUnicodeCharacter_to_PyNumber(PyObject *obj, const PyNumberType type,
-                               const struct Options *options);
+                               const Options *options);
 
 PyObject *
 PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type);

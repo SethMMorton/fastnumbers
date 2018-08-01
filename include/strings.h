@@ -6,8 +6,6 @@
  */
 
 #include <Python.h>
-#include "fn_bool.h"
-#include "objects.h"
 #include "options.h"
 
 #ifdef __cplusplus
@@ -18,11 +16,11 @@ extern "C" {
 
 PyObject *
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     const struct Options *options);
+                     const Options *options);
 
 PyObject *
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   const struct Options *options);
+                   const Options *options);
 
 #ifdef __cplusplus
 } /* extern "C" */

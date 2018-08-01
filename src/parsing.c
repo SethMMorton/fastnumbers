@@ -6,8 +6,8 @@
  */
 #include <Python.h>
 #include <string.h>
-#include "pstdint.h"
 #include "parsing.h"
+#include "pstdint.h"
 
 /******************/
 /****** NOTE ******/

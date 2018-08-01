@@ -8,8 +8,6 @@
 #include <Python.h>
 #include <limits.h>
 #include "fn_bool.h"
-#include "parsing.h"
-#include "objects.h"
 #include "options.h"
 
 #ifdef __cplusplus
@@ -78,14 +76,14 @@ extern "C" {
 /* Declarations */
 
 PyObject *
-PyFloat_to_PyInt(PyObject *fobj, const struct Options *options);
+PyFloat_to_PyInt(PyObject *fobj, const Options *options);
 
 bool
 PyFloat_is_Intlike(PyObject *obj);
 
 PyObject *
 PyNumber_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     const struct Options *options);
+                     const Options *options);
 
 bool
 PyNumber_is_type(PyObject *obj, const PyNumberType type);

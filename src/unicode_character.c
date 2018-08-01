@@ -10,7 +10,6 @@
 #include <Python.h>
 #include "unicode_character.h"
 #include "numbers.h"
-#include "objects.h"
 #include "options.h"
 
 /* Obtain a PyLong or PyFloat from this unicode string assuming
@@ -84,7 +83,7 @@ convert_PyUnicode_to_PyNumber(PyObject *input)
  */
 PyObject *
 PyUnicodeCharacter_to_PyNumber(PyObject *obj, const PyNumberType type,
-                               const struct Options *options)
+                               const Options *options)
 {
     PyObject *number = convert_PyUnicode_to_PyNumber(obj);
     PyObject *result = NULL;
@@ -181,7 +180,12 @@ PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type)
             break;
         }
         Py_DECREF(number);
-        return PyBool_from_bool(isok);
+        if (isok) {
+            Py_RETURN_TRUE;
+        }
+        else {
+            Py_RETURN_FALSE;
+        }
     }
     else {
         return Py_None;  /* Not unicode. */

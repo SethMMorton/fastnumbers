@@ -9,13 +9,12 @@
 #include <Python.h>
 #include <string.h>
 #include <limits.h>
-#include "pstdint.h"
 #include "strings.h"
+#include "unicode_character.h"
 #include "numbers.h"
 #include "options.h"
-#include "objects.h"
-#include "unicode_character.h"
 #include "parsing.h"
+#include "pstdint.h"
 
 
 #if PY_MAJOR_VERSION == 2
@@ -30,15 +29,15 @@
 
 /* Forward declarations */
 static PyObject *
-str_to_PyInt(const char *str, const char *end, const struct Options *options);
+str_to_PyInt(const char *str, const char *end, const Options *options);
 static PyObject *
 str_to_PyFloat(const char *str, const char *end,
-               const struct Options *options);
+               const Options *options);
 
 
 static PyObject *
 str_to_PyInt_or_PyFloat(const char *str, const char *end,
-                        const struct Options *options)
+                        const Options *options)
 {
     const char *start = str;
     PyObject *pyresult = NULL;
@@ -67,7 +66,7 @@ str_to_PyInt_or_PyFloat(const char *str, const char *end,
 
 static PyObject *
 python_lib_str_to_PyFloat(const char *str, const Py_ssize_t len,
-                          const struct Options *options)
+                          const Options *options)
 {
     char *nend = (char *) str + len;
     char *pend = nend;
@@ -98,8 +97,8 @@ python_lib_str_to_PyFloat(const char *str, const Py_ssize_t len,
 }
 
 
-PyObject *
-str_to_PyFloat(const char *str, const char *end, const struct Options *options)
+static PyObject *
+str_to_PyFloat(const char *str, const char *end, const Options *options)
 {
     const char *start = str;
     const int8_t sign = consume_and_return_sign(start);
@@ -176,7 +175,7 @@ python_lib_str_to_PyInt(const char *str, char **pend, const int base)
 
 static PyObject *
 handle_possible_conversion_error(const char *end, char *pend,
-                                 PyObject *val, const struct Options *options)
+                                 PyObject *val, const Options *options)
 {
     /* If the expected end matches the parsed end, it was a success.
      * This function includes trailing whitespace in "end" definition
@@ -201,8 +200,8 @@ handle_possible_conversion_error(const char *end, char *pend,
 }
 
 
-PyObject *
-str_to_PyInt(const char *str, const char *end, const struct Options *options)
+static PyObject *
+str_to_PyInt(const char *str, const char *end, const Options *options)
 {
     const char *start = str;
     const long sign = consume_and_return_sign(start);
@@ -258,7 +257,7 @@ str_to_PyInt(const char *str, const char *end, const struct Options *options)
 
 static PyObject *
 str_to_PyInt_forced(const char *str, const char *end,
-                    const struct Options *options)
+                    const Options *options)
 {
     /* Convert the input to an int or float. */
     PyObject *pyresult = str_to_PyInt_or_PyFloat(str, end, options);
@@ -504,7 +503,7 @@ convert_PyString_to_str(PyObject *input, const char **end,
         len = PyByteArray_GET_SIZE(input);
     }
 
-    /* For a buffer, retrieve the bytes object then convert to bytes. */
+    /* For a buffer, access the raw data in the buffer directly. */
     else if (PyObject_CheckBuffer(input) &&
              PyObject_GetBuffer(input, &view, PyBUF_SIMPLE) == 0) {
         /* This buffer could be a memoryview slice. If this is the case, the
@@ -530,7 +529,7 @@ convert_PyString_to_str(PyObject *input, const char **end,
         PyBuffer_Release(&view);
     }
 
-    /* Return NULL now the data type was invalid. */
+    /* Return NULL if data type was invalid. */
     if (str == NULL) {
         return NULL;
     }
@@ -561,7 +560,7 @@ convert_PyString_to_str(PyObject *input, const char **end,
 /* Convert numbers in strings. */
 PyObject *
 PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     const struct Options *options)
+                     const Options *options)
 {
     const char *end;
     PyObject *pyresult = Py_None;  /* None indicates TypeError, not ValueError. */
@@ -618,7 +617,7 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
 /* Detect numbers in strings. */
 PyObject *
 PyString_is_number(PyObject *obj, const PyNumberType type,
-                   const struct Options *options)
+                   const Options *options)
 {
     const char *end;
     const int base = Options_Default_Base(options) ? 10 : options->base;
@@ -656,5 +655,10 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
     }
 
     free(buf);
-    return PyBool_from_bool(result);
+    if (result) {
+        Py_RETURN_TRUE;
+    }
+    else {
+        Py_RETURN_FALSE;
+    }
 }

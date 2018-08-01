@@ -22,7 +22,7 @@
 /* Attempt to convert an arbitrary PyObject to a PyNumber. */
 PyObject *
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     const struct Options *options)
+                     const Options *options)
 {
     PyObject *pyresult = NULL;
 
@@ -89,14 +89,19 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
 /* Check if an arbitrary PyObject is a PyNumber. */
 PyObject *
 PyObject_is_number(PyObject *obj, const PyNumberType type,
-                   const struct Options *options)
+                   const Options *options)
 {
     PyObject *pyresult = NULL;
 
     /* Already a number? Simple checks will work. */
-    if (PyNumber_Check(obj))
-        return PyBool_from_bool(!Options_String_Only(options) &&
-                                PyNumber_is_type(obj, type));
+    if (PyNumber_Check(obj)) {
+        if (!Options_String_Only(options) && PyNumber_is_type(obj, type)) {
+            Py_RETURN_TRUE;
+        }
+        else {
+            Py_RETURN_FALSE;
+        }
+    }
 
     /* If we are requiring it to be a number then we must declare false now. */
     else if (Options_Number_Only(options)) {

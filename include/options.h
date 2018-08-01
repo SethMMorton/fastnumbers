@@ -5,10 +5,13 @@
 #include <limits.h>
 #include "fn_bool.h"
 
+/* Selector for the type of number to check/convert. */
+typedef enum PyNumberType { REAL, FLOAT, INT, INTLIKE, FORCEINT } PyNumberType;
+
 /* This struct holds all the user options.
  * Makes adding new future options easier to manage.
  */
-struct Options {
+typedef struct Options {
     PyObject *retval;
     PyObject *input;
     PyObject *key;
@@ -19,7 +22,7 @@ struct Options {
     PyObject *str_only;
     bool allow_uni;
     int base;
-};
+} Options;
 
 /* Convenience for initializing.
  * Older MSVC does not like designated initializers.

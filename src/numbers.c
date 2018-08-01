@@ -33,7 +33,7 @@ _PyFloat_is_Intlike(PyObject *obj) {
 
 
 static PyObject *
-PyNumber_to_PyInt_or_PyFloat(PyObject *pynum, const struct Options *options)
+PyNumber_to_PyInt_or_PyFloat(PyObject *pynum, const Options *options)
 {
     if (Options_Has_NaN_Sub(options) && PyNumber_IsNAN(pynum)) {
         return Options_Return_NaN_Sub(options);
@@ -56,7 +56,7 @@ PyNumber_to_PyInt_or_PyFloat(PyObject *pynum, const struct Options *options)
 
 
 static PyObject *
-PyNumber_to_PyFloat(PyObject *pynum, const struct Options *options)
+PyNumber_to_PyFloat(PyObject *pynum, const Options *options)
 {
     if (Options_Has_NaN_Sub(options) && PyNumber_IsNAN(pynum)) {
         return Options_Return_NaN_Sub(options);
@@ -71,7 +71,7 @@ PyNumber_to_PyFloat(PyObject *pynum, const struct Options *options)
 
 
 static PyObject *
-PyNumber_to_PyInt(PyObject *pynum, const struct Options *options)
+PyNumber_to_PyInt(PyObject *pynum, const Options *options)
 {
     if (PyFloat_Check(pynum)) { /* Watch out for un-intable numbers. */
         const double d = PyFloat_AS_DOUBLE(pynum);
@@ -93,7 +93,7 @@ PyNumber_to_PyInt(PyObject *pynum, const struct Options *options)
 
 
 PyObject *
-PyFloat_to_PyInt(PyObject *fobj, const struct Options *options)
+PyFloat_to_PyInt(PyObject *fobj, const Options *options)
 {
     PyObject *tmp = PyNumber_to_PyInt(fobj, options);
     Py_DECREF(fobj);
@@ -118,7 +118,7 @@ PyFloat_is_Intlike(PyObject *obj)
 /* Convert a PyNumber to the desired PyNumber type. */
 PyObject *
 PyNumber_to_PyNumber(PyObject *pynum, const PyNumberType type,
-                     const struct Options *options)
+                     const Options *options)
 {
     PyObject *pyresult = NULL;
     switch (type) {

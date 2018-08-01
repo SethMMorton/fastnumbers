@@ -55,7 +55,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", "coerce", NULL
                               };
@@ -81,7 +81,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", NULL
                               };
@@ -108,7 +108,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
     PyObject *base = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "base", NULL
                               };
@@ -136,7 +136,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", NULL
                               };
@@ -159,7 +159,7 @@ static PyObject *
 fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    struct Options opts = init_Options_check;
+    Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only",
                                 "allow_inf", "allow_nan", NULL
                               };
@@ -181,7 +181,7 @@ static PyObject *
 fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    struct Options opts = init_Options_check;
+    Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only",
                                 "allow_inf", "allow_nan", NULL
                               };
@@ -204,7 +204,7 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *base = NULL;
-    struct Options opts = init_Options_check;
+    Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only", "base", NULL };
     static const char *format = "O|OOO:isint";
 
@@ -227,7 +227,7 @@ static PyObject *
 fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    struct Options opts = init_Options_check;
+    Options opts = init_Options_check;
     static char *keywords[] = { "x", "str_only", "num_only", NULL };
     static const char *format = "O|OO:isintlike";
 
@@ -247,7 +247,7 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *base = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", "base", NULL };
     static const char *format = "|OO:int";
 
@@ -277,7 +277,7 @@ static PyObject *
 fastnumbers_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", NULL };
     static const char *format = "|O:float";
 
@@ -301,7 +301,7 @@ static PyObject *
 fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    struct Options opts = init_Options_convert;
+    Options opts = init_Options_convert;
     static char *keywords[] = { "x", "coerce", NULL };
     static const char *format = "|OO:real";
 
