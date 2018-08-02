@@ -8,8 +8,6 @@
 #include <Python.h>
 #include <limits.h>
 #include "fn_bool.h"
-#include "parsing.h"
-#include "object_handling.h"
 #include "options.h"
 
 #ifdef __cplusplus
@@ -35,8 +33,8 @@ extern "C" {
 #if PY_MAJOR_VERSION >= 3 && !defined(PY_NO_SHORT_FLOAT_REPR)
 #define PyFloat_from_NaN(negative) PyFloat_FromDouble(_Py_dg_stdnan(negative));
 #else
-#define PyFloat_from_NaN(negative) (negative) ? PyFloat_FromDouble(-Py_NAN) \
-                                              : PyFloat_FromDouble(Py_NAN);
+#define PyFloat_from_NaN(negative) \
+    (negative) ? PyFloat_FromDouble(-Py_NAN) : PyFloat_FromDouble(Py_NAN);
 #endif
 
 /* Quickies for raising errors. Try to mimic what Python would say. */
@@ -77,20 +75,15 @@ extern "C" {
 
 /* Declarations */
 
-PyObject*
-PyFloat_to_PyInt(PyObject *fobj, const struct Options *options);
+PyObject *
+PyFloat_to_PyInt(PyObject *fobj, const Options *options);
 
 bool
 PyFloat_is_Intlike(PyObject *obj);
 
-/* Not actually used... keeping in code for posterity's sake.
-bool
-double_is_intlike(const double val);
-*/
-
-PyObject*
+PyObject *
 PyNumber_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     const struct Options *options);
+                     const Options *options);
 
 bool
 PyNumber_is_type(PyObject *obj, const PyNumberType type);

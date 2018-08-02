@@ -1,28 +1,65 @@
 language: python
-python:
-- "2.7"
-- "3.4"
-- "3.5"
-- "3.6"
+os: linux
 
-sudo: false
-os:
-- linux
+matrix:
+  include:
+    - python: 2.7
+      dist: trusty
+      sudo: false
+      env: CC=clang
+    - python: 2.7
+      dist: trusty
+      sudo: false
+      env: CC=gcc CFLAGS="--coverage -O0"
+    - python: 3.4
+      dist: trusty
+      sudo: false
+      env: CC=clang
+    - python: 3.4
+      dist: trusty
+      sudo: false
+      env: CC=gcc CFLAGS="--coverage -O0"
+    - python: 3.5
+      dist: trusty
+      sudo: false
+      env: CC=clang
+    - python: 3.5
+      dist: trusty
+      sudo: false
+      env: CC=gcc CFLAGS="--coverage -O0"
+    - python: 3.6
+      dist: trusty
+      sudo: false
+      env: CC=clang
+    - python: 3.6
+      dist: trusty
+      sudo: false
+      env: CC=gcc CFLAGS="--coverage -O0"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: CC=clang
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: CC=gcc CFLAGS="--coverage -O0"
 
 branches:
   except:
   - /^appveyor-.*$/
 
-env:
-- CC=clang
-- CC=gcc CFLAGS="--coverage -O0"
-
 install:
 - pip install -U pip
-- pip install tox-travis codecov
+- pip install codecov pipenv
+- pipenv install --dev --skip-lock
+
+before_script:
+ - python dev/patch_doctest.py
 
 script:
-- tox
+- python setup.py install
+- python -m doctest fastnumbers
+- pytest --doctest-glob=README.rst
 
 after_success:
 - (test "$CC" == "gcc" && codecov --gcov-args '-o build/temp.*/src') || echo "skipping coverage for $CC"

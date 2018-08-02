@@ -1,25 +1,28 @@
 /*
- * Functions that will convert a Python object to a number.
+ * Functions that will convert/evaluate an arbitrary Python object.
  *
  * Author: Seth M. Morton
  *
- * January 2017
+ * July 2018
  */
 
 #include <Python.h>
 #include <limits.h>
-#include "object_handling.h"
-#include "number_handling.h"
-#include "string_handling.h"
-#include "unicode_handling.h"
+#include "objects.h"
+#include "numbers.h"
+#include "strings.h"
+#include "unicode_character.h"
 #include "options.h"
+
 
 #define RETURN_CORRECT_RESULT(ret, opt) \
     ((ret) ? (ret) : Options_Return_Correct_Result_On_Error(opt))
 
-PyObject*
+
+/* Attempt to convert an arbitrary PyObject to a PyNumber. */
+PyObject *
 PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
-                     const struct Options *options)
+                     const Options *options)
 {
     PyObject *pyresult = NULL;
 
@@ -30,7 +33,8 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
         if (Options_Default_Base(options)) {
             pyresult = PyNumber_to_PyNumber(obj, type, options);
             return RETURN_CORRECT_RESULT(pyresult, options);
-        } else {
+        }
+        else {
             SET_ILLEGAL_BASE_ERROR(options);
             return RETURN_CORRECT_RESULT(NULL, options);
         }
@@ -38,8 +42,12 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
 
     /* Assume a string. */
     pyresult = PyString_to_PyNumber(obj, type, options);
-    if (pyresult != Py_None)
+    if (errno == ENOMEM) {
+        return NULL;  /* ALWAYS raise on out-of-memory errors. */
+    }
+    if (pyresult != Py_None) {
         return RETURN_CORRECT_RESULT(pyresult, options);
+    }
 
     /* If the base was given explicitly, unicode should not be accepted. */
     if (!Options_Default_Base(options)) {
@@ -51,8 +59,9 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
     if (PyUnicode_Check(obj)) {
         if (Options_Allow_UnicodeCharacter(options)) {
             pyresult = PyUnicodeCharacter_to_PyNumber(obj, type, options);
-            if (pyresult != Py_None)
+            if (pyresult != Py_None) {
                 return RETURN_CORRECT_RESULT(pyresult, options);
+            }
         }
         else {
             /* If unicode characters are not allowed, return an error. */
@@ -74,4 +83,46 @@ PyObject_to_PyNumber(PyObject *obj, const PyNumberType type,
                  "or a number, not '%s'",
                  Py_TYPE(options->input)->tp_name);
     return NULL;
+}
+
+
+/* Check if an arbitrary PyObject is a PyNumber. */
+PyObject *
+PyObject_is_number(PyObject *obj, const PyNumberType type,
+                   const Options *options)
+{
+    PyObject *pyresult = NULL;
+
+    /* Already a number? Simple checks will work. */
+    if (PyNumber_Check(obj)) {
+        if (!Options_String_Only(options) && PyNumber_is_type(obj, type)) {
+            Py_RETURN_TRUE;
+        }
+        else {
+            Py_RETURN_FALSE;
+        }
+    }
+
+    /* If we are requiring it to be a number then we must declare false now. */
+    else if (Options_Number_Only(options)) {
+        Py_RETURN_FALSE;
+    }
+
+    /* Assume a string. */
+    pyresult = PyString_is_number(obj, type, options);
+    if (pyresult == NULL || errno == ENOMEM) {
+        return NULL; /* ALWAYS raise on out-of-memory errors. */
+    }
+    else if (pyresult != Py_None) {
+        return pyresult;
+    }
+
+    /* Assume unicode. */
+    pyresult = PyUnicodeCharacter_is_number(obj, type);
+    if (pyresult != Py_None) {
+        return pyresult;
+    }
+
+    /* If we got here, the type was invalid so return False. */
+    Py_RETURN_FALSE;
 }
