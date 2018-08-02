@@ -141,13 +141,12 @@ string_contains_intlike_float(register const char *str,
     register bool valid = false;
     register bool exp_negative = false;
     register int16_t expon = 0;
-    register uint16_t int_length = 0;
     register uint16_t dec_length = 0;
     register const char *int_start, *decimal_start, *decimal_end;
 
     /* Before decimal. Keep track of number of digits read. */
     int_start = str;
-    parse_integer_macro(str, valid, { int_length += 1; });
+    parse_integer_macro(str, valid, {});
     if (consume_python2_long_literal_lL(str)) {
         return valid && str == end;
     }

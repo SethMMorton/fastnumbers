@@ -70,7 +70,7 @@ python_lib_str_to_PyFloat(const char *str, const Py_ssize_t len,
 {
     char *nend = (char *) str + len;
     char *pend = nend;
-    double result = -10.0;
+    double result;
 #if PY_MAJOR_VERSION == 2
     /* If this is a long literal, don't include the L. */
     if (*(nend - 1) == 'l' || *(nend - 1) == 'L') {
@@ -531,6 +531,7 @@ convert_PyString_to_str(PyObject *input, const char **end,
 
     /* Return NULL if data type was invalid. */
     if (str == NULL) {
+        free(*buffer);  /* Just in case */
         return NULL;
     }
 
