@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-08-03-2018 v. X.X.X
+08-03-2018 v. 2.1.0
 '''''''''''''''''''
 
     - Fix bug in converting unicode numbers on Python 3.7.
