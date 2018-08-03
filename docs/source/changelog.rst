@@ -3,6 +3,16 @@
 Changelog
 ---------
 
+08-03-2018 v. X.X.X
+'''''''''''''''''''
+
+    - Fix bug in converting unicode numbers on Python 3.7.
+    - Restructure code base, hopefully improving simplicity.
+    - Speedup of conversions of ASCII-like unicode in Python 3.
+    - Speedup of conversions for large integers and large floats -
+      fastnumbers should now be at least as fast as built-in
+      functions.
+
 07-01-2018 v. 2.0.5
 '''''''''''''''''''
 
