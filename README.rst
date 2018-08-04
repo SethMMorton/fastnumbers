@@ -113,6 +113,31 @@ Please see the following Jupyter notebooks for timing information on various Pyt
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
 
+How Is ``fastnumbers`` So Fast?
+-------------------------------
+
+CPython goes to great lengths to ensure that your string input is converted to a
+number *correctly* (you can prove this to yourself by examining the source code for
+`integer conversions <https://github.com/python/cpython/blob/e349bf23584eef20e0d1e1b2989d9b1430f15507/Objects/longobject.c#L2213>`_
+and for
+`float conversions <https://github.com/python/cpython/blob/e349bf23584eef20e0d1e1b2989d9b1430f15507/Python/dtoa.c#L1434>`_),
+but this extra effort is only needed for very large
+integers or for floats with many digits or large exponents. For integers, if the
+result could fit into a C ``long`` then a naive algorithm of < 10 lines of C code
+is sufficient. For floats, if the number does not require high precision or does not
+have a large exponent (such as "-123.45e6") then a short naive algorithm is also
+possible.
+
+These naive algorithms are quite fast, but the performance improvement comes at the
+expense of being unsafe (no protection against overflow or round-off errors).
+``fastnumbers`` uses a heuristic to determine if the input can be safely converted
+with the much faster naive algorithm. These heuristics are extremely conservative -
+if there is *any* chance that the naive result would not give *exactly* the same
+result as the built-in functions then it will fall back on CPython's conversion
+function. For this reason, ``fastnumbers`` is aways *at least as fast* as CPython's
+built-in ``float`` and ``int`` functions, and oftentimes is significantly faster
+because most real-world numbers pass the heuristic.
+
 Installation
 ------------
 
