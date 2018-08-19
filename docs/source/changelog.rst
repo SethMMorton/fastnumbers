@@ -3,7 +3,7 @@
 Changelog
 ---------
 
-08-19-2018 v. X.X.X
+08-19-2018 v. 2.1.1
 '''''''''''''''''''
 
     - Fix compile error on FreeBSD where fastnumbers' "string.h"
