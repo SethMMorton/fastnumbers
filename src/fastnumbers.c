@@ -6,12 +6,12 @@
 
 #include <Python.h>
 #include <limits.h>
-#include "version.h"
-#include "docstrings.h"
-#include "options.h"
-#include "objects.h"
-#include "numbers.h"
-#include "parsing.h"
+#include "fastnumbers/version.h"
+#include "fastnumbers/docstrings.h"
+#include "fastnumbers/options.h"
+#include "fastnumbers/objects.h"
+#include "fastnumbers/numbers.h"
+#include "fastnumbers/parsing.h"
 
 
 /* Function to handle the conversion of base to integers.

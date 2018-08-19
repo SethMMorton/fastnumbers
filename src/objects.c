@@ -8,11 +8,11 @@
 
 #include <Python.h>
 #include <limits.h>
-#include "objects.h"
-#include "numbers.h"
-#include "strings.h"
-#include "unicode_character.h"
-#include "options.h"
+#include "fastnumbers/objects.h"
+#include "fastnumbers/numbers.h"
+#include "fastnumbers/strings.h"
+#include "fastnumbers/unicode_character.h"
+#include "fastnumbers/options.h"
 
 
 #define RETURN_CORRECT_RESULT(ret, opt) \

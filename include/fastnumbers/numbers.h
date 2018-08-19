@@ -7,8 +7,8 @@
 
 #include <Python.h>
 #include <limits.h>
-#include "fn_bool.h"
-#include "options.h"
+#include "fastnumbers/fn_bool.h"
+#include "fastnumbers/options.h"
 
 #ifdef __cplusplus
 extern "C" {

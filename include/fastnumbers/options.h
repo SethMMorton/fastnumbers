@@ -3,7 +3,11 @@
 
 #include <Python.h>
 #include <limits.h>
-#include "fn_bool.h"
+#include "fastnumbers/fn_bool.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Selector for the type of number to check/convert. */
 typedef enum PyNumberType { REAL, FLOAT, INT, INTLIKE, FORCEINT } PyNumberType;
@@ -92,5 +96,9 @@ typedef struct Options {
     (o).retval = PyObject_IsTrue(raise) \
                  ? NULL \
                  : (((o).key != NULL || default_value == NULL) ? input : default_value)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* FN_OPTIONS */
