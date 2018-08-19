@@ -3,6 +3,14 @@
 Changelog
 ---------
 
+08-19-2018 v. X.X.X
+'''''''''''''''''''
+
+    - Fix compile error on FreeBSD where fastnumbers' "string.h"
+      shadowed the system "string.h".
+    - Add a high-level description of the fastnumbers algorithm
+      in the documentation.
+
 08-03-2018 v. 2.1.0
 '''''''''''''''''''
 
