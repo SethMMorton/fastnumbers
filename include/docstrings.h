@@ -8,6 +8,10 @@
  */
 #include <Python.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 PyDoc_STRVAR(fastnumbers__doc__, "Quickly convert strings to numbers.\n");
 
@@ -876,5 +880,9 @@ PyDoc_STRVAR(fastnumbers_real__doc__,
 "the decimal point, it will be returned as an *int* instead of a\n"
 "*float*.\n"
 "\n");
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __DOCSTRINGS */
