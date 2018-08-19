@@ -7,9 +7,9 @@
  */
 
 #include <Python.h>
-#include "numbers.h"
-#include "options.h"
-#include "pstdint.h"
+#include "fastnumbers/numbers.h"
+#include "fastnumbers/options.h"
+#include "fastnumbers/pstdint.h"
 
 
 /* Ensure 64 bits are handled. */

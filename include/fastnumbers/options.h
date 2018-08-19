@@ -3,7 +3,7 @@
 
 #include <Python.h>
 #include <limits.h>
-#include "fn_bool.h"
+#include "fastnumbers/fn_bool.h"
 
 #ifdef __cplusplus
 extern "C" {

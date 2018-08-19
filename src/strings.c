@@ -9,12 +9,12 @@
 #include <Python.h>
 #include <string.h>
 #include <limits.h>
-#include "strings.h"
-#include "unicode_character.h"
-#include "numbers.h"
-#include "options.h"
-#include "parsing.h"
-#include "pstdint.h"
+#include "fastnumbers/strings.h"
+#include "fastnumbers/unicode_character.h"
+#include "fastnumbers/numbers.h"
+#include "fastnumbers/options.h"
+#include "fastnumbers/parsing.h"
+#include "fastnumbers/pstdint.h"
 
 
 #if PY_MAJOR_VERSION == 2

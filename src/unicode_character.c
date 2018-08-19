@@ -8,9 +8,9 @@
  */
 
 #include <Python.h>
-#include "unicode_character.h"
-#include "numbers.h"
-#include "options.h"
+#include "fastnumbers/unicode_character.h"
+#include "fastnumbers/numbers.h"
+#include "fastnumbers/options.h"
 
 /* Obtain a PyLong or PyFloat from this unicode string assuming
  * it is a single unicode non-decimal numeric character.

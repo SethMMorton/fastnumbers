@@ -6,7 +6,7 @@
  */
 
 #include <Python.h>
-#include "options.h"
+#include "fastnumbers/options.h"
 
 #ifdef __cplusplus
 extern "C" {

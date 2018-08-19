@@ -4,8 +4,8 @@
 #include <Python.h>
 #include <float.h>
 #include <limits.h>
-#include "pstdint.h"
-#include "fn_bool.h"
+#include "fastnumbers/pstdint.h"
+#include "fastnumbers/fn_bool.h"
 
 /* Ensure 64 bits are handled. */
 #ifndef INT64_MAX
