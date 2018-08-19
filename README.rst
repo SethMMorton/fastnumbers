@@ -41,6 +41,8 @@ Super-fast and clean conversions to numbers.
     #. Provide a set of functions that can be used to rapidly identify if
        an input *could* be converted to *int* or *float*.
 
+**NOTICE**: The first major version release after Jan 1, 2020 will drop support for Python 2.7.
+
 Examples
 --------
 
