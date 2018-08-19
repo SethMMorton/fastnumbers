@@ -818,6 +818,12 @@ class TestFastForceInt:
         assert fastnumbers.fast_forceint(float("inf"), "Sample") == "Sample"
 
     @given(floats(allow_nan=False, allow_infinity=False))
+    @mark.xfail(
+        is_windows and (is_27 or is_34),
+        reason="Non-optimal floating-point handling on older VS versions "
+        "creates small errors when creating high-precision doubles.",
+        strict=False,
+    )
     def test_given_float_string_returns_int(self, x):
         y = repr(x)
         assert fastnumbers.fast_forceint(y) == int(x)
