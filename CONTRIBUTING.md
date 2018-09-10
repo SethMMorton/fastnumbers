@@ -2,12 +2,21 @@
 
 If you have an idea for how to improve `fastnumbers`, please contribute! It can
 be as simple as a bug fix or documentation update, or as complicated as a faster
-(or safer) parsing algorithm.
+(or safer) parsing algorithm. Contributions that change the public API of
+`fastnumbers` will have to ensure that the library does not become
+less usable after the contribution and is backwards-compatible (unless there is
+a good reason not to be).
 
-Located in the `dev/` folder is development collateral such as test runners and
-development `testing-requirements.txt`. The only development collateral not in the `dev/`
+Located in the `dev/` folder is development collateral such as formatting and
+patching scripts. The only development collateral not in the `dev/`
 folder are those files that are expected to exist in the the top-level directory
 (such as `setup.py`, `.travis.yml`, `appveyor.yml`, and `tox.ini`).
+`fastnumbers` uses [`pipenv`](https://github.com/pypa/pipenv) to manage dependencies
+and virtual environments - to get all your dependencies installed use the following.
+
+```
+$ pipenv install --dev --skip-lock
+```
 
 I do not have strong opinions on how one should contribute, so
 I have copy/pasted some text verbatim from the
