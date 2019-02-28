@@ -11,12 +11,13 @@ Located in the `dev/` folder is development collateral such as formatting and
 patching scripts. The only development collateral not in the `dev/`
 folder are those files that are expected to exist in the the top-level directory
 (such as `setup.py`, `.travis.yml`, `appveyor.yml`, and `tox.ini`).
-`fastnumbers` uses [`pipenv`](https://github.com/pypa/pipenv) to manage dependencies
-and virtual environments - to get all your dependencies installed use the following.
+To get all your dependencies installed use the following:
 
 ```
-$ pipenv install --dev --skip-lock
+$ pip install -r dev-requirements.txt
 ```
+
+Although, it is easier to just use ``tox``.
 
 I do not have strong opinions on how one should contribute, so
 I have copy/pasted some text verbatim from the

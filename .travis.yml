@@ -50,11 +50,11 @@ branches:
 
 install:
 - pip install -U pip
-- pip install codecov pipenv
-- pipenv install --dev --skip-lock
+- pip install codecov
+- pip install -r dev/requirements.txt
 
 before_script:
- - python dev/patch_doctest.py
+- python dev/patch_doctest.py
 
 script:
 - python setup.py install

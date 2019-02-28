@@ -14,6 +14,7 @@ This file contains some files useful for development.
   whereby it cannot run tests on extension modules. This file
   makes a local copy of `doctest.py` and patches it to be able to run
   on extension modules.
+- `requirements.txt` - Requirements to run tests
 - `run_coverage.sh` - A small shell one-liner placed into a file that
   will compile `fastnumbers`, run all tests, then run `lcov` and
   `genhtml` to create an HTML coverage report. Only tested on OSX.
