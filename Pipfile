@@ -1,4 +1,0 @@
-[dev-packages]
-pytest = "*"
-pytest-faulthandler = "*"
-hypothesis = "*"

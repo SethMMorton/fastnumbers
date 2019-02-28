@@ -20,9 +20,8 @@ environment:
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python -m pip install -U pip"
-  - "python -m pip install pipenv"
-  - "pipenv install --dev --skip-lock"
-  - "pipenv run python dev/patch_doctest.py"
+  - "python -m pip install -r dev/requirements.txt"
+  - "python dev/patch_doctest.py"
 
 build: false
 
@@ -31,9 +30,9 @@ test_script:
   # If you don't need to build C extensions on 64-bit Python 3.3 or 3.4,
   # you can remove "build.cmd" from the front of the command, as it's
   # only needed to support those cases.
-  - "dev\\build.cmd pipenv run python setup.py install"
-  - "pipenv run python -m doctest fastnumbers"
-  - "pipenv run pytest --doctest-glob=README.rst"
+  - "dev\\build.cmd python setup.py install"
+  - "python -m doctest fastnumbers"
+  - "pytest --doctest-glob=README.rst"
 
 #on_success:
 #  You can use this step to upload your artifacts to a public website.

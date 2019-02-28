@@ -151,15 +151,13 @@ execute
 
     $ tox
 
-If you do not wish to use ``tox``, you can install the testing dependencies and run the
-tests manually using `pytest <https://docs.pytest.org/en/latest/>`_ - ``fastnumbers``
-contains a ``Pipfile`` for use with `pipenv <https://github.com/pypa/pipenv>`_ that
-makes it easy for you to install the testing dependencies:
+If you do not wish to use ``tox``, you can install the testing dependencies with the
+``dev-requirements.txt`` file and then run the tests manually using
+`pytest <https://docs.pytest.org/en/latest/>`_.
 
 .. code-block:: sh
 
-    $ pipenv install --skip-lock --dev
-    $ pipenv install --skip-lock -e .
-    $ pipenv run pytest
+    $ pip install -r dev/requirements.txt
+    $ pytest
 
 :mod:`fastnumbers` uses `pytest <https://docs.pytest.org/en/latest/>`_ to run its tests.
