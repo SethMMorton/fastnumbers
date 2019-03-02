@@ -26,15 +26,6 @@ install:
 build: false
 
 test_script:
-  # Put your test command here.
-  # If you don't need to build C extensions on 64-bit Python 3.3 or 3.4,
-  # you can remove "build.cmd" from the front of the command, as it's
-  # only needed to support those cases.
   - "dev\\build.cmd python setup.py install"
   - "python -m doctest fastnumbers"
   - "pytest --doctest-glob=README.rst"
-
-#on_success:
-#  You can use this step to upload your artifacts to a public website.
-#  See Appveyor's documentation for more details. Or you can simply
-#  access your wheels from the Appveyor "artifacts" tab for your build.

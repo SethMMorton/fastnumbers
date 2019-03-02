@@ -1,48 +1,18 @@
 language: python
 os: linux
+dist: xenial
+sudo: false
 
-matrix:
-  include:
-    - python: 2.7
-      dist: trusty
-      sudo: false
-      env: CC=clang
-    - python: 2.7
-      dist: trusty
-      sudo: false
-      env: CC=gcc CFLAGS="--coverage -O0"
-    - python: 3.4
-      dist: trusty
-      sudo: false
-      env: CC=clang
-    - python: 3.4
-      dist: trusty
-      sudo: false
-      env: CC=gcc CFLAGS="--coverage -O0"
-    - python: 3.5
-      dist: trusty
-      sudo: false
-      env: CC=clang
-    - python: 3.5
-      dist: trusty
-      sudo: false
-      env: CC=gcc CFLAGS="--coverage -O0"
-    - python: 3.6
-      dist: trusty
-      sudo: false
-      env: CC=clang
-    - python: 3.6
-      dist: trusty
-      sudo: false
-      env: CC=gcc CFLAGS="--coverage -O0"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: CC=clang
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env: CC=gcc CFLAGS="--coverage -O0"
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+  - 3.7
+
+env:
+  - CC=clang
+  - CC=gcc CFLAGS="--coverage -O0"
 
 branches:
   except:
