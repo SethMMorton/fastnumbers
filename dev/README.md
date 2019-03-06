@@ -5,6 +5,9 @@ This file contains some files useful for development.
 - `astyle.cfg` - Configuration settings for [astyle](http://astyle.sourceforge.net/).
 - `build.cmd` - Used to build and run tests on Windows. Shamelessly
   stolen from https://packaging.python.org/appveyor/#support-scripts.
+- `bump.sh` - Execute `bumpversion` then post-processes the CHANGELOG to handle corner-cases
+  that `bumpversion` cannot. Requires [`bump2version`](https://github.com/c4urself/bump2version),
+  which is the maintained fork of [`bumpversion`](https://github.com/peritus/bumpversion).
 - `clean.sh` - This file cleans most files that are created during development.
   Run in the project home directory.
 - `fmt.sh` - This file executes [astyle](http://astyle.sourceforge.net/) then [black](https://black.readthedocs.io/en/stable/).
