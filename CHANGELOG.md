@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+### Changed
+ - Update CHANGELOG format to style from https://keepachangelog.com/
+
 [2.1.1] - 2018-08-19
 ---
 
