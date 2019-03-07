@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # Find the build location and add that to the path
-from __future__ import print_function, division
 import re
 import sys
 import math
 import random
 import unicodedata
 from itertools import repeat
-from platform import python_version_tuple, system
+from platform import python_version_tuple
 from pytest import raises, mark
 from hypothesis import given, example
 from hypothesis.strategies import sampled_from, floats, integers, text, binary, lists
@@ -15,15 +14,6 @@ import fastnumbers
 
 skipif = mark.skipif
 parametrize = mark.parametrize
-is_windows = system() == "Windows"
-is_27 = python_version_tuple()[:2] == ("2", "7")
-is_34 = python_version_tuple()[:2] == ("3", "4")
-
-if python_version_tuple()[0] != "2":
-    long = int
-    unichr = chr
-    basestring = (str, bytes)
-
 
 # Predefine Unicode digits, numbers, and not those.
 digits = []
@@ -31,7 +21,7 @@ numeric = []
 not_numeric = []
 for x in range(0x1FFFFF):
     try:
-        a = unichr(x)
+        a = chr(x)
     except ValueError:
         break
     try:
@@ -65,9 +55,8 @@ def a_number(s):
             return True
     else:
         return True
-    if python_version_tuple()[0] == "3":
-        if isinstance(s, bytes):
-            return False
+    if isinstance(s, bytes):
+        return False
     if re.match(r"\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$", s, re.U):
         return True
     if re.match(r"\s*([-+]?\d+[lL]?)\s*$", s, re.U):
@@ -213,14 +202,14 @@ class TestFastReal:
     @given(floats(allow_nan=False).filter(an_integer))
     def test_given_float_returns_int_if_intlike_with_coerce(self, x):
         assert fastnumbers.fast_real(x, coerce=True) == int(float(x))
-        assert isinstance(fastnumbers.fast_real(x, coerce=True), (long, int))
+        assert isinstance(fastnumbers.fast_real(x, coerce=True), int)
 
     @given(floats(allow_nan=False))
     def test_given_float_returns_float_or_int_with_coerce(self, x):
         assert fastnumbers.fast_real(x, coerce=True) == int(x) if x.is_integer() else x
         assert isinstance(
             fastnumbers.fast_real(x, coerce=True),
-            (int, long) if x.is_integer() else float,
+            int if x.is_integer() else float,
         )
 
     def test_given_nan_returns_nan(self):
@@ -237,12 +226,6 @@ class TestFastReal:
 
     @given(floats(allow_nan=False))
     @example(5.675088586167575e-116)
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_given_float_string_returns_float(self, x):
         y = repr(x)
         assert fastnumbers.fast_real(y, coerce=False) == x
@@ -251,16 +234,10 @@ class TestFastReal:
         assert isinstance(fastnumbers.fast_real(y, coerce=False), float)
 
     @given(integers())
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_given_float_string_returns_int_with_coerce_with_intlike(self, x):
         y = repr(float(x))
         assert fastnumbers.fast_real(y, coerce=True) == int(float(x))
-        assert isinstance(fastnumbers.fast_real(y, coerce=True), (long, int))
+        assert isinstance(fastnumbers.fast_real(y, coerce=True), int)
 
     def test_given_nan_string_returns_nan(self):
         assert math.isnan(fastnumbers.fast_real("nan"))
@@ -284,12 +261,6 @@ class TestFastReal:
         assert fastnumbers.fast_real("inf", inf=10000.0) == 10000.0
 
     @given(floats(allow_nan=False), integers(0, 100), integers(0, 100))
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_given_padded_float_strings_returns_float(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_real(y, coerce=False) == x
@@ -308,7 +279,7 @@ class TestFastReal:
     )
     def test_given_int_returns_int(self, x):
         assert fastnumbers.fast_real(x) == x
-        assert isinstance(fastnumbers.fast_real(x), (int, long))
+        assert isinstance(fastnumbers.fast_real(x), int)
 
     @given(integers())
     @example(
@@ -316,7 +287,7 @@ class TestFastReal:
     )
     def test_given_int_returns_int_with_coerce(self, x):
         assert fastnumbers.fast_real(x, coerce=True) == x
-        assert isinstance(fastnumbers.fast_real(x, coerce=True), (int, long))
+        assert isinstance(fastnumbers.fast_real(x, coerce=True), int)
 
     @given(integers())
     @example(40992764608243448035)
@@ -329,7 +300,7 @@ class TestFastReal:
     def test_given_int_string_returns_int(self, x):
         y = repr(x)
         assert fastnumbers.fast_real(y) == x
-        assert isinstance(fastnumbers.fast_real(y), (int, long))
+        assert isinstance(fastnumbers.fast_real(y), int)
 
     @given(integers(), integers(0, 100), integers(0, 100))
     @example(40992764608243448035, 1, 1)
@@ -342,12 +313,12 @@ class TestFastReal:
     def test_given_padded_int_string_returns_int(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_real(y) == x
-        assert isinstance(fastnumbers.fast_real(y), (int, long))
+        assert isinstance(fastnumbers.fast_real(y), int)
 
     @given(sampled_from(digits))
     def test_given_unicode_digit_returns_int(self, x):
         assert fastnumbers.fast_real(x) == unicodedata.digit(x)
-        assert isinstance(fastnumbers.fast_real(x), (int, long))
+        assert isinstance(fastnumbers.fast_real(x), int)
         # Try padded as well
         assert fastnumbers.fast_real(u"   " + x + u"   ") == unicodedata.digit(x)
 
@@ -399,12 +370,6 @@ class TestFastReal:
             fastnumbers.fast_real(x, 90, True)
 
     @given(integers() | floats(allow_nan=False))
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
         assert fastnumbers.fast_real(x, key=len) == x
         assert fastnumbers.fast_real(repr(x), key=len) == x
@@ -454,14 +419,8 @@ class TestFastFloat:
     @given(floats(allow_nan=False).filter(not_an_integer))
     @example(5.675088586167575e-116)
     @example("10." + "0" * 1050)
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_given_float_string_returns_float(self, x):
-        if isinstance(x, basestring):
+        if isinstance(x, str):
             y = x
             x = float(x)
         else:
@@ -485,12 +444,6 @@ class TestFastFloat:
         floats(allow_nan=False).filter(not_an_integer),
         integers(0, 100),
         integers(0, 100),
-    )
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
     )
     def test_given_padded_float_strings_returns_float(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
@@ -594,12 +547,6 @@ class TestFastFloat:
             assert fastnumbers.fast_float(x, 90.0, True)
 
     @given(floats(allow_nan=False))
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
         assert fastnumbers.fast_float(x, key=len) == x
         assert fastnumbers.fast_float(repr(x), key=len) == x
@@ -632,7 +579,7 @@ class TestFastInt:
         assert fastnumbers.fast_int(x) == int(x)
         assert fastnumbers.fast_int(x, raise_on_invalid=True) == int(x)
         assert fastnumbers.fast_int(x, None, True) == int(x)
-        assert isinstance(fastnumbers.fast_int(x), (int, long))
+        assert isinstance(fastnumbers.fast_int(x), int)
 
     def test_given_nan_raises_ValueError_or_returns_as_is_or_returns_default(self):
         with raises(ValueError):
@@ -671,7 +618,7 @@ class TestFastInt:
     )
     def test_given_int_returns_int(self, x):
         assert fastnumbers.fast_int(x) == x
-        assert isinstance(fastnumbers.fast_int(x), (int, long))
+        assert isinstance(fastnumbers.fast_int(x), int)
 
     @given(integers())
     @example(40992764608243448035)
@@ -685,7 +632,7 @@ class TestFastInt:
     def test_given_int_string_returns_int(self, x):
         y = repr(x)
         assert fastnumbers.fast_int(y) == x
-        assert isinstance(fastnumbers.fast_int(y), (int, long))
+        assert isinstance(fastnumbers.fast_int(y), int)
         for base in range(2, 36 + 1):
             if (
                 len(y) < 30
@@ -722,12 +669,12 @@ class TestFastInt:
     def test_given_padded_int_string_returns_int(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_int(y) == x
-        assert isinstance(fastnumbers.fast_int(y), (int, long))
+        assert isinstance(fastnumbers.fast_int(y), int)
 
     @given(sampled_from(digits))
     def test_given_unicode_digit_returns_int(self, x):
         assert fastnumbers.fast_int(x) == unicodedata.digit(x)
-        assert isinstance(fastnumbers.fast_int(x), (int, long))
+        assert isinstance(fastnumbers.fast_int(x), int)
         # Try padded as well
         assert fastnumbers.fast_int(u"   " + x + u"   ") == unicodedata.digit(x)
 
@@ -803,7 +750,7 @@ class TestFastForceInt:
         assert fastnumbers.fast_forceint(x) == int(x)
         assert fastnumbers.fast_forceint(x, raise_on_invalid=True) == int(x)
         assert fastnumbers.fast_forceint(x, None, True) == int(x)
-        assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(x), int)
 
     def test_given_nan_raises_ValueError_or_returns_as_is_or_returns_default(self):
         with raises(ValueError):
@@ -818,18 +765,12 @@ class TestFastForceInt:
         assert fastnumbers.fast_forceint(float("inf"), "Sample") == "Sample"
 
     @given(floats(allow_nan=False, allow_infinity=False))
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_given_float_string_returns_int(self, x):
         y = repr(x)
         assert fastnumbers.fast_forceint(y) == int(x)
         assert fastnumbers.fast_forceint(y, None, True) == int(x)
         assert fastnumbers.fast_forceint(y, raise_on_invalid=True) == int(x)
-        assert isinstance(fastnumbers.fast_forceint(y), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(y), int)
 
     def test_given_nan_string_raises_ValueError_with_raise_on_invalid_as_True(self):
         with raises(ValueError):
@@ -848,16 +789,10 @@ class TestFastForceInt:
         integers(0, 100),
         integers(0, 100),
     )
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_given_padded_float_strings_returns_int(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_forceint(y) == int(x)
-        assert isinstance(fastnumbers.fast_forceint(y), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(y), int)
 
     @given(integers())
     @example(
@@ -865,7 +800,7 @@ class TestFastForceInt:
     )
     def test_given_int_returns_int(self, x):
         assert fastnumbers.fast_forceint(x) == x
-        assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(x), int)
 
     @given(integers())
     @example(40992764608243448035)
@@ -878,7 +813,7 @@ class TestFastForceInt:
     def test_given_int_string_returns_int(self, x):
         y = repr(x)
         assert fastnumbers.fast_forceint(y) == x
-        assert isinstance(fastnumbers.fast_forceint(y), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(y), int)
 
     @given(integers(), integers(0, 100), integers(0, 100))
     @example(40992764608243448035, 1, 1)
@@ -891,19 +826,19 @@ class TestFastForceInt:
     def test_given_padded_int_string_returns_int(self, x, y, z):
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.fast_forceint(y) == x
-        assert isinstance(fastnumbers.fast_forceint(y), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(y), int)
 
     @given(sampled_from(digits))
     def test_given_unicode_digit_returns_int(self, x):
         assert fastnumbers.fast_forceint(x) == unicodedata.digit(x)
-        assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(x), int)
         # Try padded as well
         assert fastnumbers.fast_forceint(u"   " + x + u"   ") == unicodedata.digit(x)
 
     @given(sampled_from(numeric))
     def test_given_unicode_numeral_returns_int(self, x):
         assert fastnumbers.fast_forceint(x) == int(unicodedata.numeric(x))
-        assert isinstance(fastnumbers.fast_forceint(x), (int, long))
+        assert isinstance(fastnumbers.fast_forceint(x), int)
         # Try padded as well
         assert fastnumbers.fast_forceint(u"   " + x + u"   ") == int(
             unicodedata.numeric(x)
@@ -952,12 +887,6 @@ class TestFastForceInt:
             assert fastnumbers.fast_forceint(x, 90.0, True)
 
     @given(integers() | floats(allow_nan=False, allow_infinity=False))
-    @mark.xfail(
-        is_windows and (is_27 or is_34),
-        reason="Non-optimal floating-point handling on older VS versions "
-        "creates small errors when creating high-precision doubles.",
-        strict=False,
-    )
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
         assert fastnumbers.fast_forceint(x, key=len) == int(x)
         assert fastnumbers.fast_forceint(repr(x), key=len) == int(x)
@@ -1087,7 +1016,7 @@ class TestIsFloat:
     )
     @example("10." + "0" * 1050, 1, 1)
     def test_returns_True_if_given_float_string_padded_or_not(self, x, y, z):
-        if isinstance(x, basestring):
+        if isinstance(x, str):
             y = x
             x = float(x)
         else:
@@ -1317,7 +1246,7 @@ class TestIsIntLike:
     )
     @example("10." + "0" * 1050, 1, 1)
     def test_returns_True_if_given_integer_float_string_padded_or_not(self, x, y, z):
-        if isinstance(x, basestring):
+        if isinstance(x, str):
             x = float(x)
         y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
         assert fastnumbers.isintlike(repr(x))
