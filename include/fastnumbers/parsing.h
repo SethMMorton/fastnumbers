@@ -31,20 +31,7 @@ extern "C" {
 #define is_sign(c) (*(c) == '-' || *(c) == '+')
 
 /* Consume characters based on ID. */
-#if PY_MAJOR_VERSION == 2
-#define consume_python2_long_literal_lL(str) \
-    ((*(str) == 'l' || *(str) == 'L') && ++(str))
-#else
-#define consume_python2_long_literal_lL(str) false
-#endif
 #define consume_white_space(str) while (is_white_space(str)) ++(str)
-#if PY_MAJOR_VERSION == 2
-/* For some reason, Python 2 allows space between the sign and the digits. */
-#define consume_white_space_py2_only(str) consume_white_space(str)
-#else
-#define consume_white_space_py2_only(str) do {} while (0)
-#endif
-
 #define consume_sign(str) if (is_sign(str)) str += 1
 #define consume_and_return_sign(str) \
     (*(str) == '-' ? ((str)++, -1) : ((*(str) == '+') ? ((str)++, 1) : 1))
@@ -105,19 +92,11 @@ extern "C" {
     ((len) == 1) || \
     ((len) == 2 && (*(str) <= '1' || \
                     (*(str) == '2' && *((str) + 1) <= '2')))
-
-#if PY_MAJOR_VERSION == 2 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION <= 4)
-#define FN_MIN_EXP -12 /* Old MSVC cannot handle as small of an exponent. */
-#define neg_exp_ok(len, str) \
-    ((len) == 1) || \
-    ((len) == 2 && (*(str) == '1' && *((str) + 1) <= '2'))
-#else
 #define FN_MIN_EXP -22
 #define neg_exp_ok(len, str) \
     ((len) == 1) || \
     ((len) == 2 && (*(str) <= '1' || \
                     (*(str) == '2' && *((str) + 1) <= '2')))
-#endif
 
 #endif
 

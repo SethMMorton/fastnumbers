@@ -75,7 +75,6 @@ string_contains_int(register const char *str, register const char *end,
     /* If base 10, take fast route. */
     if (base == 10) {
         parse_integer_macro(str, valid, {});
-        (void) consume_python2_long_literal_lL(str);
         return valid && str == end;
     }
     else if (base == -1) {
@@ -97,11 +96,6 @@ string_contains_int(register const char *str, register const char *end,
             str += 1;
             valid = true;
         }
-#if PY_MAJOR_VERSION == 2
-        if (base == 2 || base == 8 || base == 10 || base == 16) {
-            (void) consume_python2_long_literal_lL(str);
-        }
-#endif
         return valid && str == end;
     }
 }
@@ -125,9 +119,6 @@ string_contains_float(register const char *str,
     }
 
     parse_integer_macro(str, valid, {});
-    if (consume_python2_long_literal_lL(str)) {
-        return valid && str == end;
-    }
     parse_decimal_macro(str, valid, {});
     parse_exponent_macro(str, valid, {}, {});
     return valid && str == end;
@@ -147,9 +138,6 @@ string_contains_intlike_float(register const char *str,
     /* Before decimal. Keep track of number of digits read. */
     int_start = str;
     parse_integer_macro(str, valid, {});
-    if (consume_python2_long_literal_lL(str)) {
-        return valid && str == end;
-    }
 
     /* Decimal part of float. Keep track of number of digits read */
     /* as well as beginning and end locations. */
@@ -201,7 +189,6 @@ parse_int(register const char *str, register const char *end, bool *error)
         value *= 10L;
         value += ascii2long(str);
     });
-    (void) consume_python2_long_literal_lL(str);
 
     *error = !valid || str != end;
     return value;
@@ -224,12 +211,6 @@ parse_float(register const char *str, register const char *end, bool *error,
         intvalue *= 10UL;
         intvalue += ascii2ulong(str);
     });
-
-    /* If long literal, quit here. */
-    if (consume_python2_long_literal_lL(str)) {
-        *error = !valid || str != end;
-        return (long double)intvalue;
-    }
 
     /* Parse decimal part. */
     parse_decimal_macro(str, valid, {
@@ -340,19 +321,13 @@ detect_base(register const char *str, register const char *end)
         return 2;
     }
     else
-        /* "old" (C-style) octal literal, still valid in
-         * 2.x, although illegal in 3.x.
-         */
-#if PY_MAJOR_VERSION == 2
-        return 8;
-#else
+        /* "old" (C-style) octal literal illegal in 3.x. */
         if (number_trailing_zeros(str, end) == len) {
             return 10;
         }
         else {
             return -1;
         }
-#endif
 }
 
 

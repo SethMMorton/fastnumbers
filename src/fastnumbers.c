@@ -280,7 +280,7 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyExc_TypeError, "int() missing string argument");
             return NULL;
         }
-        return long_to_PyInt(0);
+        return PyLong_FromLong(0);
     }
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_UnicodeCharacter(&opts);
@@ -327,7 +327,7 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
     }
     /* No arguments returns 0.0 or 0 depending on the state of coerce. */
     if (input == NULL)
-        return Options_Coerce_True(&opts) ? long_to_PyInt(0)
+        return Options_Coerce_True(&opts) ? PyLong_FromLong(0)
                : PyFloat_FromDouble(0.0);
     Options_Set_Return_Value(opts, input, NULL, Py_True);
     Options_Set_Disallow_UnicodeCharacter(&opts);
@@ -384,9 +384,7 @@ static PyObject *fastnumbers_FN_DBL_DIG;
 static PyObject *fastnumbers_FN_MAX_EXP;
 static PyObject *fastnumbers_FN_MIN_EXP;
 
-/* Define the module interface. This is different for Python2 and Python3. */
-#if PY_MAJOR_VERSION >= 3
-
+/* Define the module interface. */
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
     "fastnumbers",
@@ -398,6 +396,7 @@ static struct PyModuleDef moduledef = {
     NULL,
     NULL
 };
+
 PyObject *
 PyInit_fastnumbers(void)
 {
@@ -406,26 +405,12 @@ PyInit_fastnumbers(void)
         return NULL;
     }
 
-#else
-
-PyMODINIT_FUNC
-initfastnumbers(void)
-{
-    PyObject *m = Py_InitModule3("fastnumbers",
-                                 FastnumbersMethods,
-                                 fastnumbers__doc__);
-    if (m == NULL) {
-        return;
-    }
-
-#endif
-
     /* Add module level constants. */
     fastnumbers__version__ = PyUnicode_FromString(FASTNUMBERS_VERSION);
-    fastnumbers_FN_MAX_INT_LEN = long_to_PyInt(FN_MAX_INT_LEN);
-    fastnumbers_FN_DBL_DIG = long_to_PyInt(FN_DBL_DIG);
-    fastnumbers_FN_MAX_EXP = long_to_PyInt(FN_MAX_EXP);
-    fastnumbers_FN_MIN_EXP = long_to_PyInt(FN_MIN_EXP);
+    fastnumbers_FN_MAX_INT_LEN = PyLong_FromLong(FN_MAX_INT_LEN);
+    fastnumbers_FN_DBL_DIG = PyLong_FromLong(FN_DBL_DIG);
+    fastnumbers_FN_MAX_EXP = PyLong_FromLong(FN_MAX_EXP);
+    fastnumbers_FN_MIN_EXP = PyLong_FromLong(FN_MIN_EXP);
     Py_INCREF(fastnumbers__version__);
     Py_INCREF(fastnumbers_FN_MAX_INT_LEN);
     Py_INCREF(fastnumbers_FN_DBL_DIG);
@@ -437,8 +422,6 @@ initfastnumbers(void)
     PyModule_AddObject(m, "max_exp", fastnumbers_FN_MAX_EXP);
     PyModule_AddObject(m, "min_exp", fastnumbers_FN_MIN_EXP);
 
-#if PY_MAJOR_VERSION >= 3
     return m;
-#endif
 }
 

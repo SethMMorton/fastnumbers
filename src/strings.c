@@ -17,14 +17,10 @@
 #include "fastnumbers/pstdint.h"
 
 
-#if PY_MAJOR_VERSION == 2
-#define STRING_TYPE_CHECK(o) (PyBytes_Check(o) || PyUnicode_Check(o))
-#else
 #define STRING_TYPE_CHECK(o) (PyBytes_Check(o) || \
                               PyUnicode_Check(o) || \
                               PyByteArray_Check(o) \
                              )
-#endif
 
 
 /* Forward declarations */
@@ -68,15 +64,9 @@ static PyObject *
 python_lib_str_to_PyFloat(const char *str, const Py_ssize_t len,
                           const Options *options)
 {
-    char *nend = (char *) str + len;
-    char *pend = nend;
+    const char *nend = (char *) str + len;
+    char *pend = (char *) nend;
     double result;
-#if PY_MAJOR_VERSION == 2
-    /* If this is a long literal, don't include the L. */
-    if (*(nend - 1) == 'l' || *(nend - 1) == 'L') {
-        pend = nend = (char *) nend - 1;
-    }
-#endif
     result = PyOS_string_to_double(str, &pend, NULL);
     /* Raise exception in the event of a memory error. */
     if (errno == ENOMEM) {
@@ -151,28 +141,6 @@ str_to_PyFloat(const char *str, const char *end, const Options *options)
 }
 
 
-/* We need to take some extra care on Python 2 for the str2long conversion. */
-#if PY_MAJOR_VERSION == 2
-static PyObject *
-python_lib_str_to_PyInt(const char *str, char **pend, const int base)
-{
-    PyObject *num = PyLong_FromString((char *) str, pend, (int) base);
-    PyObject *num_swap = NULL;
-    if (num == NULL) {
-        return NULL;
-    }
-    /* Convert to int from long if possible. */
-    num_swap = num;
-    num = PyNumber_Int(num_swap);
-    Py_XDECREF(num_swap);
-    return num;
-}
-#else
-#define python_lib_str_to_PyInt(str, pend, base) \
-    PyLong_FromString((char *) (str), (pend), (int) (base))
-#endif
-
-
 static PyObject *
 handle_possible_conversion_error(const char *end, char *pend,
                                  PyObject *val, const Options *options)
@@ -183,13 +151,9 @@ handle_possible_conversion_error(const char *end, char *pend,
     consume_white_space(end);
     /* If an error occurred, clear exception (if needed) and return NULL. */
     if (val == NULL || pend != end) {
-        if (pend != end && Options_Should_Raise(options))
-#if PY_MAJOR_VERSION == 2
-            PyErr_SetString(PyExc_ValueError,
-                            "null byte in argument for int()");
-#else
+        if (pend != end && Options_Should_Raise(options)) {
             SET_ERR_INVALID_INT(options);
-#endif
+        }
         if (!Options_Should_Raise(options)) {
             PyErr_Clear();
         }
@@ -206,9 +170,6 @@ str_to_PyInt(const char *str, const char *end, const Options *options)
     const char *start = str;
     const long sign = consume_and_return_sign(start);
     Py_ssize_t len = 0;
-
-    /* Python 2 allows space between the sign and digits. */
-    consume_white_space_py2_only(start);
 
     /* Use some simple heuristics to determine if the the string
      * is likely an int - first and last characters must be digits.
@@ -235,7 +196,7 @@ str_to_PyInt(const char *str, const char *end, const Options *options)
          */
         if (string_contains_int(start, end, 10)) {
             char *pend = (char *)end;
-            PyObject *num = python_lib_str_to_PyInt(str, &pend, 10);
+            PyObject *num = PyLong_FromString((char *) str, &pend, 10);
             return handle_possible_conversion_error(end, pend, num, options);
         }
         else {
@@ -250,7 +211,7 @@ str_to_PyInt(const char *str, const char *end, const Options *options)
             SET_ERR_INVALID_INT(options);
             return NULL;
         }
-        return long_to_PyInt(sign * result);
+        return PyLong_FromLong(sign * result);
     }
 }
 
@@ -272,10 +233,7 @@ str_to_PyInt_forced(const char *str, const char *end,
 }
 
 
-/* The unicode handling methods in the C API essentially completely
- * changed starting with Python 3.3. However, with clever use of
- * typedef and the pre-processor we can make it seem like they are the
- * same. Run through the unicode and replace unicode decimals with
+/* Run through the unicode and replace unicode decimals with
  * ASCII decimals, and replace weird whitespace with ASCII whitespace.
  * The returned char * WILL need to be freed at a later time.
  * If NULL is returned then a some sort of memory error occurred or
@@ -285,28 +243,16 @@ str_to_PyInt_forced(const char *str, const char *end,
 static char *
 PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, bool *error)
 {
-#if PY_MAJOR_VERSION == 2
-#define kind 0  /* Just to have a symbol defined below. */
-    const uchar *data = PyUnicode_AS_UNICODE(obj);  /* Raw data */
-#else
     const int kind = PyUnicode_KIND(obj);  /* Unicode storage format. */
     const void *data = PyUnicode_DATA(obj);  /* Raw data */
-#endif
     char *ascii = NULL;
     *error = false;
-
-#if PY_MAJOR_VERSION == 2
-    *len = PyUnicode_GET_SIZE(obj);
-#else
     *len = PyUnicode_GET_LENGTH(obj);
-#endif
 
     /* It is assumed PyUnicode_Check has already been called. */
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 3
     if (PyUnicode_READY(obj)) {  /* If true, then not OK for conversion. */
         return NULL;
     }
-#endif
 
     /* Allocate space for the new string. */
     if ((ascii = calloc(*len + 1, sizeof(char))) == NULL) {
@@ -317,14 +263,14 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, bool *error)
     else {
         register Py_ssize_t i;
         register long n;
-        register uchar c;
+        register Py_UCS4 c;
         register const Py_ssize_t size = *len;
 
         /* Convert each character. If a character is out of range then
          * quit and set the error flag.
          */
         for (i = 0; i < size; i++) {
-            c = UREAD(kind, data, i);
+            c = PyUnicode_READ(kind, data, i);
             if (c < 127) {
                 ascii[i] = (char) c;
             }
@@ -468,14 +414,12 @@ convert_PyString_to_str(PyObject *input, const char **end,
 
     /* If the input was in unicode format, extract as ASCII if we can. */
     if (PyUnicode_Check(input)) {
-#if PY_MAJOR_VERSION >= 3
         /* Unicode in ASCII form is stored like bytes! */
         if (PyUnicode_IS_READY(input) && PyUnicode_IS_COMPACT_ASCII(input)) {
             str = (const char *) PyUnicode_1BYTE_DATA(input);
             len = PyUnicode_GET_LENGTH(input);
         }
         else
-#endif
         {
             bool has_error = false;
             *buffer = PyUnicode_as_ascii_string(input, &len, &has_error);
@@ -599,7 +543,7 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
             }
             else {
                 char *pend = "\0";
-                pyresult = python_lib_str_to_PyInt(str, &pend, options->base);
+                pyresult = PyLong_FromString((char *) str, &pend, options->base);
                 pyresult = handle_possible_conversion_error(end, pend,
                                                             pyresult,
                                                             options);
@@ -636,7 +580,6 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
 
     if (str != NULL) {
         consume_sign(str);  /* All functions require sign is stripped. */
-        consume_white_space_py2_only(str);
         switch (type) {
         case REAL:
         case FLOAT:
