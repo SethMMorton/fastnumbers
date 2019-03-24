@@ -369,7 +369,7 @@ remove_valid_underscores(char *str, const char **end, char **buffer,
     }
 
     /* The method that will be used to remove underscores is to
-     * travers the character array, and when a valid underscore
+     * traverse the character array, and when a valid underscore
      * is found all characters will be shifted one to the left in
      * order to remove that underscore. Extra characters at the
      * end of the character array will be overwritten with \0.
