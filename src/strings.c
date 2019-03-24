@@ -570,7 +570,7 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
     char *buf = NULL;
     const char *str = convert_PyString_to_str(obj, &end, &buf, &needs_raise,
                                               !Options_Default_Base(options),
-                                              true);
+                                              Options_Allow_Underscores(options));
     if (needs_raise) {
         /* Never need to free buffer if needs_raise is true. */
         return NULL;
@@ -628,7 +628,7 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
     char *buf = NULL;
     const char *str = convert_PyString_to_str(obj, &end, &buf, &needs_raise,
                                               !Options_Default_Base(options),
-                                              true);
+                                              Options_Allow_Underscores(options));
     if (needs_raise) {
         /* Never need to free buffer if needs_raise is true. */
         return NULL;
