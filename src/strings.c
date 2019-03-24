@@ -457,7 +457,8 @@ remove_valid_underscores(char *str, const char **end, char **buffer,
  */
 static const char *
 convert_PyString_to_str(PyObject *input, const char **end,
-                        char **buffer, bool *must_raise, const bool based)
+                        char **buffer, bool *must_raise, const bool based,
+                        const bool allow_underscores)
 {
     const char *str = NULL;
     Py_ssize_t len = 0;
@@ -543,7 +544,7 @@ convert_PyString_to_str(PyObject *input, const char **end,
     /* Remove all "valid" underscores from the
      * string to simplify downstream parsing.
      */
-    if (len > 0 && memchr(str, '_', len)) {
+    if (allow_underscores && len > 0 && memchr(str, '_', len)) {
         if ((str = remove_valid_underscores((char *)str,
                                             end, buffer,
                                             len, based)) == NULL) {
@@ -568,7 +569,8 @@ PyString_to_PyNumber(PyObject *obj, const PyNumberType type,
     bool needs_raise = false;
     char *buf = NULL;
     const char *str = convert_PyString_to_str(obj, &end, &buf, &needs_raise,
-                                              !Options_Default_Base(options));
+                                              !Options_Default_Base(options),
+                                              true);
     if (needs_raise) {
         /* Never need to free buffer if needs_raise is true. */
         return NULL;
@@ -625,7 +627,8 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
     bool result = false, needs_raise = false;
     char *buf = NULL;
     const char *str = convert_PyString_to_str(obj, &end, &buf, &needs_raise,
-                                              !Options_Default_Base(options));
+                                              !Options_Default_Base(options),
+                                              true);
     if (needs_raise) {
         /* Never need to free buffer if needs_raise is true. */
         return NULL;
