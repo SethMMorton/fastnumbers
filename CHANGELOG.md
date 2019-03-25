@@ -5,6 +5,8 @@ Unreleased
  - Add `allow_underscores` option to toggle whether or not underscores
    are allowed inside numbers on Python >= 3.6
  - Update CHANGELOG format to style from https://keepachangelog.com/
+ - Build system now uses pip in stead of pipenv (issue #22)
+ - Simplify tox.ini file
 
 [2.1.1] - 2018-08-19
 ---
