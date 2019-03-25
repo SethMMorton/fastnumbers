@@ -116,7 +116,7 @@ def test_fast_float():
     assert fastnumbers.fast_float("+367.3268", True) == +367.3268
     # 3. float string with exponents
     assert fastnumbers.fast_float("-367.3268e27") == -367.3268e27
-    assert fastnumbers.fast_float("-367.3268E27") == -367.3268E27
+    assert fastnumbers.fast_float("-367.3268E27") == -367.3268e27
     assert fastnumbers.fast_float("-367.3268e207") == -367.3268e207
     assert fastnumbers.fast_float("1.175494351E-3810000000") == 0.0
     # 4. float string with padded whitespace
