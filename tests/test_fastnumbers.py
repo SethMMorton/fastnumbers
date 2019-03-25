@@ -2,6 +2,7 @@
 # Find the build location and add that to the path
 from __future__ import print_function, division
 import re
+import sys
 import math
 import random
 import unicodedata
@@ -12,6 +13,7 @@ from hypothesis import given, example
 from hypothesis.strategies import sampled_from, floats, integers, text, binary, lists
 import fastnumbers
 
+skipif = mark.skipif
 parametrize = mark.parametrize
 is_windows = system() == "Windows"
 is_27 = python_version_tuple()[:2] == ("2", "7")
@@ -138,6 +140,10 @@ non_builtin_func_ids = [
     "isintlike",
 ]
 non_builtin_funcs = [getattr(fastnumbers, x) for x in non_builtin_func_ids]
+conversion_func_ids = non_builtin_func_ids[:4]
+conversion_funcs = non_builtin_funcs[:4]
+identification_func_ids = non_builtin_func_ids[4:]
+identification_funcs = non_builtin_funcs[4:]
 
 
 @parametrize(
@@ -161,6 +167,30 @@ def test_real_no_arguments_returns_0():
 @given(floats(allow_nan=False) | integers())
 def test_real_returns_same_as_fast_real(x):
     assert fastnumbers.real(x) == fastnumbers.fast_real(x)
+
+
+@skipif(
+    sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
+)
+@parametrize("func", conversion_funcs, ids=conversion_func_ids)
+def test_numbers_with_underscores_converted_according_to_allow_underscores_option(func):
+    x = "1_234_567"
+    assert func(x) in (float(x), int(x))
+    assert func(x, allow_underscores=True) in (float(x), int(x))
+    assert func(x, allow_underscores=False) == x
+
+
+@skipif(
+    sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
+)
+@parametrize("func", identification_funcs, ids=identification_func_ids)
+def test_numbers_with_underscores_identified_according_to_allow_underscores_option(
+    func
+):
+    x = "1_234_567"
+    assert func(x)
+    assert func(x, allow_underscores=True)
+    assert not func(x, allow_underscores=False)
 
 
 class TestFastReal:
