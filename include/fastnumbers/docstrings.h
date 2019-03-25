@@ -17,7 +17,7 @@ PyDoc_STRVAR(fastnumbers__doc__, "Quickly convert strings to numbers.\n");
 
 
 PyDoc_STRVAR(fast_real__doc__, 
-"fast_real(x, default=None, raise_on_invalid=False, key=None, nan=None, inf=None, coerce=True)\n"
+"fast_real(x, default=None, raise_on_invalid=False, key=None, nan=None, inf=None, coerce=True, allow_underscores=True)\n"
 "Quickly convert input to an `int` or `float` depending on value.\n"
 "\n"
 "Any input that is valid for the built-in `float` or `int` functions will\n"
@@ -155,7 +155,7 @@ PyDoc_STRVAR(fast_real__doc__,
 
 
 PyDoc_STRVAR(fast_float__doc__, 
-"fast_float(x, default=None, raise_on_invalid=False, key=None, nan=None, inf=None)\n"
+"fast_float(x, default=None, raise_on_invalid=False, key=None, nan=None, inf=None, allow_underscores=True)\n"
 "Quickly convert input to a `float`.\n"
 "\n"
 "Any input that is valid for the built-in `float` function will\n"
@@ -280,7 +280,7 @@ PyDoc_STRVAR(fast_float__doc__,
 
 
 PyDoc_STRVAR(fast_int__doc__, 
-"fast_int(x, default=None, raise_on_invalid=False, key=None, base=10)\n"
+"fast_int(x, default=None, raise_on_invalid=False, key=None, base=10, allow_underscores=True)\n"
 "Quickly convert input to an `int`.\n"
 "\n"
 "Any input that is valid for the built-in `int` (or `long` on Python2)\n"
@@ -389,7 +389,7 @@ PyDoc_STRVAR(fast_int__doc__,
 
 
 PyDoc_STRVAR(fast_forceint__doc__, 
-"fast_forceint(x, default=None, raise_on_invalid=False, key=None)\n"
+"fast_forceint(x, default=None, raise_on_invalid=False, key=None, allow_underscores=True)\n"
 "Quickly convert input to an `int`, truncating if is a `float`.\n"
 "\n"
 "Any input that is valid for the built-in `int` (or `long` on Python2)\n"
@@ -502,7 +502,7 @@ PyDoc_STRVAR(fast_forceint__doc__,
 
 
 PyDoc_STRVAR(isreal__doc__, 
-"isreal(x, str_only=False, num_only=False, allow_inf=False, allow_nan=False)\n"
+"isreal(x, str_only=False, num_only=False, allow_inf=False, allow_nan=False, allow_underscores=True)\n"
 "Quickly determine if a string is a real number.\n"
 "\n"
 "Returns *True* if the input is valid input for the built-in `float` or\n"
@@ -596,7 +596,7 @@ PyDoc_STRVAR(isreal__doc__,
 
 
 PyDoc_STRVAR(isfloat__doc__, 
-"isfloat(x, str_only=False, num_only=False, allow_inf=False, allow_nan=False)\n"
+"isfloat(x, str_only=False, num_only=False, allow_inf=False, allow_nan=False, allow_underscores=True)\n"
 "Quickly determine if a string is a `float`.\n"
 "\n"
 "Returns *True* if the input is valid input for the built-in `float`\n"
@@ -691,7 +691,7 @@ PyDoc_STRVAR(isfloat__doc__,
 
 
 PyDoc_STRVAR(isint__doc__, 
-"isint(x, str_only=False, num_only=False)\n"
+"isint(x, str_only=False, num_only=False, allow_underscores=True)\n"
 "Quickly determine if a string is an `int`.\n"
 "\n"
 "Returns *True* if the input is valid input for the built-in `int`\n"
@@ -766,7 +766,7 @@ PyDoc_STRVAR(isint__doc__,
 
 
 PyDoc_STRVAR(isintlike__doc__, 
-"isintlike(x, str_only=False, num_only=False)\n"
+"isintlike(x, str_only=False, num_only=False, allow_underscores=True)\n"
 "Quickly determine if a string (or object) is an `int` or `int`-like.\n"
 "\n"
 "Returns *True* if the input is valid input for the built-in `int`\n"
