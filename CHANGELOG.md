@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[2.2.0] - 2019-03-24
+---
+
 ### Changed
  - Add `allow_underscores` option to toggle whether or not underscores
    are allowed inside numbers on Python >= 3.6
@@ -280,6 +283,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[2.2.0]: https://github.com/SethMMorton/fastnumbers/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/SethMMorton/fastnumbers/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/SethMMorton/fastnumbers/compare/2.0.5...2.1.0
 [2.0.5]: https://github.com/SethMMorton/fastnumbers/compare/2.0.4...2.0.5
