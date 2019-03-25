@@ -24,6 +24,7 @@ typedef struct Options {
     PyObject *coerce;
     PyObject *num_only;
     PyObject *str_only;
+    PyObject *allow_underscores;
     bool allow_uni;
     int base;
 } Options;
@@ -31,29 +32,31 @@ typedef struct Options {
 /* Convenience for initializing.
  * Older MSVC does not like designated initializers.
  */
-#define init_Options_convert {  \
-        /*.retval =*/ NULL,     \
-        /*.input =*/ NULL,      \
-        /*.key =*/ NULL,        \
-        /*.handle_inf =*/ NULL, \
-        /*.handle_nan =*/ NULL, \
-        /*.coerce =*/ Py_True,  \
-        /*.num_only =*/ NULL,   \
-        /*.str_only =*/ NULL,   \
-        /*.allow_uni =*/ true,  \
-        /*.base =*/ INT_MIN,    \
+#define init_Options_convert {            \
+        /*.retval =*/ NULL,               \
+        /*.input =*/ NULL,                \
+        /*.key =*/ NULL,                  \
+        /*.handle_inf =*/ NULL,           \
+        /*.handle_nan =*/ NULL,           \
+        /*.coerce =*/ Py_True,            \
+        /*.num_only =*/ NULL,             \
+        /*.str_only =*/ NULL,             \
+        /* allow_underscores =*/ Py_True, \
+        /*.allow_uni =*/ true,            \
+        /*.base =*/ INT_MIN,              \
     }
-#define init_Options_check {        \
-        /*.retval =*/ Py_None,      \
-        /*.input =*/ NULL,          \
-        /*.key =*/ NULL,            \
-        /*.handle_inf =*/ Py_False, \
-        /*.handle_nan =*/ Py_False, \
-        /*.coerce =*/ NULL,         \
-        /*.num_only =*/ Py_False,   \
-        /*.str_only =*/ Py_False,   \
-        /*.allow_uni =*/ true,      \
-        /*.base =*/ INT_MIN,        \
+#define init_Options_check {              \
+        /*.retval =*/ Py_None,            \
+        /*.input =*/ NULL,                \
+        /*.key =*/ NULL,                  \
+        /*.handle_inf =*/ Py_False,       \
+        /*.handle_nan =*/ Py_False,       \
+        /*.coerce =*/ NULL,               \
+        /*.num_only =*/ Py_False,         \
+        /*.str_only =*/ Py_False,         \
+        /* allow_underscores =*/ Py_True, \
+        /*.allow_uni =*/ true,            \
+        /*.base =*/ INT_MIN,              \
     }
 
 /* Some query MACROs. Each expects a pointer. */
@@ -67,6 +70,7 @@ typedef struct Options {
 #define Options_Allow_UnicodeCharacter(o) (o)->allow_uni
 #define Options_Allow_Infinity(o) PyObject_IsTrue((o)->handle_inf)
 #define Options_Allow_NAN(o) PyObject_IsTrue((o)->handle_nan)
+#define Options_Allow_Underscores(o) PyObject_IsTrue((o)->allow_underscores)
 #define Options_String_Only(o) PyObject_IsTrue((o)->str_only)
 #define Options_Number_Only(o) PyObject_IsTrue((o)->num_only)
 
