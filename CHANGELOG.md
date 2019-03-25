@@ -2,6 +2,8 @@ Unreleased
 ---
 
 ### Changed
+ - Add `allow_underscores` option to toggle whether or not underscores
+   are allowed inside numbers on Python >= 3.6
  - Update CHANGELOG format to style from https://keepachangelog.com/
 
 [2.1.1] - 2018-08-19
