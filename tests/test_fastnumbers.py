@@ -12,6 +12,7 @@ from hypothesis import given, example
 from hypothesis.strategies import sampled_from, floats, integers, text, binary, lists
 import fastnumbers
 
+parametrize = mark.parametrize
 is_windows = system() == "Windows"
 is_27 = python_version_tuple()[:2] == ("2", "7")
 is_34 = python_version_tuple()[:2] == ("3", "4")
@@ -126,65 +127,34 @@ def test_version():
 #################
 
 
-def test_fast_real_arguments():
-    with raises(TypeError):
-        fastnumbers.fast_real(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.fast_real()
+non_builtin_func_ids = [
+    "fast_real",
+    "fast_float",
+    "fast_int",
+    "fast_forceint",
+    "isreal",
+    "isfloat",
+    "isint",
+    "isintlike",
+]
+non_builtin_funcs = [getattr(fastnumbers, x) for x in non_builtin_func_ids]
 
 
-def test_fast_float_arguments():
+@parametrize(
+    "func", non_builtin_funcs + [fastnumbers.real], ids=non_builtin_func_ids + ["real"]
+)
+def test_invalid_argument_raises_type_error(func):
     with raises(TypeError):
-        fastnumbers.fast_float(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.fast_float()
+        func(5, invalid="dummy")
 
 
-def test_fast_int_arguments():
+@parametrize("func", non_builtin_funcs, ids=non_builtin_func_ids)
+def test_no_arguments_raises_type_error(func):
     with raises(TypeError):
-        fastnumbers.fast_int(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.fast_int()
+        func()
 
 
-def test_fast_forceint_arguments():
-    with raises(TypeError):
-        fastnumbers.fast_forceint(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.fast_forceint()
-
-
-def test_isreal_arguments():
-    with raises(TypeError):
-        fastnumbers.isreal(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.isreal()
-
-
-def test_isfloat_arguments():
-    with raises(TypeError):
-        fastnumbers.isfloat(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.isfloat()
-
-
-def test_isint_arguments():
-    with raises(TypeError):
-        fastnumbers.isint(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.isint()
-
-
-def test_isintlike_arguments():
-    with raises(TypeError):
-        fastnumbers.isintlike(5, invalid="dummy")
-    with raises(TypeError):
-        fastnumbers.isintlike()
-
-
-def test_real_arguments():
-    with raises(TypeError):
-        fastnumbers.isintlike(5, invalid="dummy")
+def test_real_no_arguments_returns_0():
     assert fastnumbers.real() == 0
 
 
