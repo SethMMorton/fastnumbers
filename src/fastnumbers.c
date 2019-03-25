@@ -53,14 +53,14 @@ static PyObject *
 fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
+    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", "coerce",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OOOOOOO:fast_real";
+    static const char *format = "O|OpOOOpp:fast_real";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -80,14 +80,14 @@ static PyObject *
 fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
+    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OOOOOO:fast_float";
+    static const char *format = "O|OpOOOp:fast_float";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -108,16 +108,16 @@ static PyObject *
 fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
     PyObject *base = NULL;
+    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "base",
                                 "allow_underscores", NULL
 
                               };
-    static const char *format = "O|OOOOO:fast_int";
+    static const char *format = "O|OpOOp:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -140,13 +140,13 @@ static PyObject *
 fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
-    PyObject *raise_on_invalid = Py_False;
     PyObject *default_value = NULL;
+    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "allow_underscores", NULL
                               };
-    static const char *format = "O|OOOO:fast_forceint";
+    static const char *format = "O|OpOp:fast_forceint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -170,7 +170,7 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "allow_inf", "allow_nan",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OOOOO:isreal";
+    static const char *format = "O|ppOOp:isreal";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -194,7 +194,7 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "allow_inf", "allow_nan",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OOOOO:isfloat";
+    static const char *format = "O|ppOOp:isfloat";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -218,7 +218,7 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     static char *keywords[] = { "x", "str_only", "num_only", "base",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OOOO:isint";
+    static const char *format = "O|ppOp:isint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -243,7 +243,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     static char *keywords[] = { "x", "str_only", "num_only",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OOO:isintlike";
+    static const char *format = "O|ppp:isintlike";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -282,8 +282,9 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
         }
         return PyLong_FromLong(0);
     }
-    Options_Set_Return_Value(opts, input, NULL, Py_True);
+    Options_Set_Return_Value(opts, input, NULL, true);
     Options_Set_Disallow_UnicodeCharacter(&opts);
+
     return PyObject_to_PyNumber(input, INT, &opts);
 }
 
@@ -304,7 +305,7 @@ fastnumbers_float(PyObject *self, PyObject *args, PyObject *kwargs)
     if (input == NULL) {
         return PyFloat_FromDouble(0.0);
     }
-    Options_Set_Return_Value(opts, input, NULL, Py_True);
+    Options_Set_Return_Value(opts, input, NULL, true);
     Options_Set_Disallow_UnicodeCharacter(&opts);
 
     return PyObject_to_PyNumber(input, FLOAT, &opts);
@@ -329,7 +330,7 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
     if (input == NULL)
         return Options_Coerce_True(&opts) ? PyLong_FromLong(0)
                : PyFloat_FromDouble(0.0);
-    Options_Set_Return_Value(opts, input, NULL, Py_True);
+    Options_Set_Return_Value(opts, input, NULL, true);
     Options_Set_Disallow_UnicodeCharacter(&opts);
 
     return PyObject_to_PyNumber(input, REAL, &opts);
