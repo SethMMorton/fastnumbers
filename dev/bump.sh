@@ -12,6 +12,6 @@ bump2version "${1}"
 URL="https://github.com/SethMMorton/fastnumbers/compare"
 sed -E "s|(<!---Comparison links-->)|\1\n[${new_version}]: ${URL}/${current_version}...${new_version}|" -i.bak CHANGELOG.md
 rm CHANGELOG.md.bak  # Remove backup created by in-place sed
-git add CHANGELOG.mp
+git add CHANGELOG.md
 git amend --no-edit
 git tag -f "${new_version}" HEAD
