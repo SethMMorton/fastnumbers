@@ -12,4 +12,5 @@ graft include
 graft tests
 graft dev
 graft docs
+graft .github
 global-exclude *.py[cod] __pycache__ *.so
