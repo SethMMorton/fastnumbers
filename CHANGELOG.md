@@ -1,6 +1,10 @@
 Unreleased
 ---
 
+### Fixed
+ - Formatting docstring
+ - Package metadata
+
 [2.2.0] - 2019-03-24
 ---
 
