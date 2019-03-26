@@ -55,7 +55,7 @@ PyDoc_STRVAR(fast_real__doc__,
 "    If the input can be converted to an `int` without loss of precision\n"
 "    (even if the input was a `float` or float-containing `str`)\n"
 "    coerce to an *int* rather than returning a `float`.\n"
-" allow_underscores : bool, optional\n"
+"allow_underscores : bool, optional\n"
 "    Starting with Python 3.6, underscores are allowed in numeric literals\n"
 "    and in strings passed to `int` or `float` (see PEP 515 for details on\n"
 "    what is and is not allowed). You can disable that behavior by setting\n"
