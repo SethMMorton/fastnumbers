@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[2.2.1] - 2019-03-25
+---
+
 ### Fixed
  - Formatting docstring
  - Package metadata
@@ -287,6 +290,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[2.2.1]: https://github.com/SethMMorton/fastnumbers/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/SethMMorton/fastnumbers/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/SethMMorton/fastnumbers/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/SethMMorton/fastnumbers/compare/2.0.5...2.1.0
