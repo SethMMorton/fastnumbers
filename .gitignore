@@ -42,3 +42,6 @@ pip-log.txt
 
 # Jupyter
 .ipynb_checkpoints/
+
+# VSCode
+.vscode
