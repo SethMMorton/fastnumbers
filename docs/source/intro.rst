@@ -60,9 +60,9 @@ for other functions that are available from :mod:`fastnumbers`.
     >>> fast_float(54, key=len)
     54.0
     >>> # Single unicode characters can be converted.
-    >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
+    >>> fast_float('\u2164')  # Roman numeral 5 (V)
     5.0
-    >>> fast_float(u'\u2466')  # 7 enclosed in a circle
+    >>> fast_float('\u2466')  # 7 enclosed in a circle
     7.0
 
 **NOTE**: If you need locale-dependent conversions, supply the :mod:`fastnumbers`

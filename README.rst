@@ -91,9 +91,9 @@ for other functions that are available from ``fastnumbers``.
     >>> fast_float(54, key=len)
     54.0
     >>> # Single unicode characters can be converted.
-    >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
+    >>> fast_float('\u2164')  # Roman numeral 5 (V)
     5.0
-    >>> fast_float(u'\u2466')  # 7 enclosed in a circle
+    >>> fast_float('\u2466')  # 7 enclosed in a circle
     7.0
 
 **NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
@@ -113,6 +113,7 @@ Please see the following Jupyter notebooks for timing information on various Pyt
 
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
+    - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_37.ipynb
 
 How Is ``fastnumbers`` So Fast?
 -------------------------------
