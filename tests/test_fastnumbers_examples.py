@@ -530,7 +530,9 @@ def test_isintlike():
 
 @pytest.fixture()
 def tprint(capsys):
-    """Fixture for printing info after test, not supressed by pytest stdout/stderr capture"""
+    """
+    Fixture for printing info after test, not supressed by pytest stdout/stderr capture
+    """
     lines = []
     yield lines.append
 
