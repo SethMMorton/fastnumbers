@@ -54,7 +54,8 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *default_value = NULL;
-    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
+    int raise_on_invalid =
+        false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan", "coerce",
@@ -81,7 +82,8 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *default_value = NULL;
-    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
+    int raise_on_invalid =
+        false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "inf", "nan",
@@ -110,7 +112,8 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *default_value = NULL;
     PyObject *base = NULL;
-    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
+    int raise_on_invalid =
+        false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "base",
@@ -141,7 +144,8 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *default_value = NULL;
-    int raise_on_invalid = false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
+    int raise_on_invalid =
+        false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "allow_underscores", NULL
