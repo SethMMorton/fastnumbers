@@ -1,4 +1,3 @@
-pytest >= 3.5
-pytest-faulthandler
-hypothesis <=4.13.0
+pytest <= 4.6.6
+hypothesis <= 4.13.0
 more-itertools <= 5.0
