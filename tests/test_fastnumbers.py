@@ -36,8 +36,6 @@ for x in range(0x1FFFFF):
         numeric.append(a)
     except ValueError:
         not_numeric.append(a)
-not_numeric = sampled_from(not_numeric)
-not_numeric = [not_numeric.example() for _ in range(1000)]  # This is too big otherwise
 numeric_not_digit = [x for x in numeric if x not in digits]
 numeric_not_digit_not_int = [
     x for x in numeric_not_digit if not unicodedata.numeric(x).is_integer()
