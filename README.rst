@@ -165,7 +165,7 @@ following:
 ``tox`` will create virtual a virtual environment for your tests and install all the
 needed testing requirements for you.
 
-If you want to run testing on all of Python 3.5, 3.6, and 3.7 you can simply
+If you want to run testing on all of Python 3.5, 3.6, 3.7, and 3.8 you can simply
 execute
 
 .. code-block:: sh

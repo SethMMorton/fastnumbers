@@ -7,6 +7,9 @@ if sys.version_info[0:2] == (3, 5):
 elif sys.version_info[0:2] == (3, 6):
     from builtin_tests.py36.builtin_test_float import *
     from builtin_tests.py36.builtin_test_int import *
-else:
+elif sys.version_info[0:2] == (3, 7):
     from builtin_tests.py37.builtin_test_float import *
     from builtin_tests.py37.builtin_test_int import *
+else:
+    from builtin_tests.py38.builtin_test_float import *
+    from builtin_tests.py38.builtin_test_int import *
