@@ -1,6 +1,15 @@
 Unreleased
 ---
 
+### Added
+ - Support/Tests for Python 3.8
+
+### Fixed
+ - Improved testing reproducibility by pinning all test dependencies
+
+### Removed
+ - Support for Python 2.7 and Python 3.4
+
 [2.2.1] - 2019-03-25
 ---
 
