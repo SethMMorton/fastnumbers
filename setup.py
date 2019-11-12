@@ -14,6 +14,7 @@ from setuptools import setup, Extension
 setup(
     name='fastnumbers',
     version='2.2.1',
+    python_requires=">=3.5",
     ext_modules=[
         Extension(
             'fastnumbers', sorted(glob.glob('src/*.c')),

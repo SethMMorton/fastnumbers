@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 # Find the build location and add that to the path
-from __future__ import print_function, division
 import sys
 import math
-from platform import python_version_tuple
 import pytest
 from pytest import raises
 import fastnumbers
-
-if python_version_tuple()[0] == "3":
-    long = int
-
 
 # Each conversion test should test the following
 # 1. float number
@@ -54,9 +48,6 @@ def test_fast_real():
     # 8. long number
     assert fastnumbers.fast_real(35892482945872302493) == 35892482945872302493
     # 9. long string
-    if python_version_tuple()[0] == "2":
-        assert fastnumbers.fast_real("35892482945872302493L") == 35892482945872302493
-        assert fastnumbers.fast_real("35892482945872302493l") == 35892482945872302493
     assert fastnumbers.fast_real("35892482945872302493") == 35892482945872302493
     # 10. return type
     assert isinstance(fastnumbers.fast_real(4029), int)
@@ -130,9 +121,6 @@ def test_fast_float():
     # 8. long number
     assert fastnumbers.fast_float(35892482945872302493) == 35892482945872302493.0
     # 9. long string
-    if python_version_tuple()[0] == "2":
-        assert fastnumbers.fast_float("35892482945872302493L") == 35892482945872302493.0
-        assert fastnumbers.fast_float("35892482945872302493l") == 35892482945872302493.0
     assert fastnumbers.fast_float("35892482945872302493") == 35892482945872302493.0
     # 10. return type
     assert isinstance(fastnumbers.fast_float(4029), float)
@@ -198,9 +186,6 @@ def test_fast_int():
     # 8. long number
     assert fastnumbers.fast_int(35892482945872302493) == 35892482945872302493
     # 9. long string
-    if python_version_tuple()[0] == "2":
-        assert fastnumbers.fast_int("35892482945872302493L") == 35892482945872302493
-        assert fastnumbers.fast_int("35892482945872302493l") == 35892482945872302493
     assert fastnumbers.fast_int("35892482945872302493") == 35892482945872302493
     # 10. return type
     assert isinstance(fastnumbers.fast_int(4029.00), int)
@@ -249,7 +234,7 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint("+367.3268") == 367
     assert fastnumbers.fast_forceint("+367.3268", raise_on_invalid=True) == 367
     # 3. float string with exponents
-    assert fastnumbers.fast_forceint("-367.3268e207") == long(-367.3268e207)
+    assert fastnumbers.fast_forceint("-367.3268e207") == int(-367.3268e207)
     # 4. float string with padded whitespace
     assert fastnumbers.fast_forceint("   -367.04   ") == -367
     # 5. int number
@@ -495,9 +480,6 @@ def test_isintlike():
     # 8. long number
     assert fastnumbers.isintlike(35892482945872302493)
     # 9. long string
-    if python_version_tuple()[0] == "2":
-        assert fastnumbers.isintlike("35892482945872302493l")
-        assert fastnumbers.isintlike("35892482945872302493L")
     assert fastnumbers.isintlike("35892482945872302493")
     # 10. return type
     assert fastnumbers.isintlike(4029) is True

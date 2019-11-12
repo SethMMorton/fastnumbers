@@ -60,8 +60,8 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 # General information about the project.
-project = u'fastnumbers'
-copyright = u'2014, Seth M. Morton'
+project = 'fastnumbers'
+copyright = '2014, Seth M. Morton'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -223,8 +223,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'fastnumbers.tex', u'fastnumbers Documentation',
-   u'Seth M. Morton', 'manual'),
+  ('index', 'fastnumbers.tex', 'fastnumbers Documentation',
+   'Seth M. Morton', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -253,8 +253,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'fastnumbers', u'fastnumbers Documentation',
-     [u'Seth M. Morton'], 1)
+    ('index', 'fastnumbers', 'fastnumbers Documentation',
+     ['Seth M. Morton'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -267,8 +267,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'fastnumbers', u'fastnumbers Documentation',
-   u'Seth M. Morton', 'fastnumbers', 'One line description of project.',
+  ('index', 'fastnumbers', 'fastnumbers Documentation',
+   'Seth M. Morton', 'fastnumbers', 'One line description of project.',
    'Miscellaneous'),
 ]
 

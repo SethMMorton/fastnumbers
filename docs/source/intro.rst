@@ -60,9 +60,9 @@ for other functions that are available from :mod:`fastnumbers`.
     >>> fast_float(54, key=len)
     54.0
     >>> # Single unicode characters can be converted.
-    >>> fast_float(u'\u2164')  # Roman numeral 5 (V)
+    >>> fast_float('\u2164')  # Roman numeral 5 (V)
     5.0
-    >>> fast_float(u'\u2466')  # 7 enclosed in a circle
+    >>> fast_float('\u2466')  # 7 enclosed in a circle
     7.0
 
 **NOTE**: If you need locale-dependent conversions, supply the :mod:`fastnumbers`
@@ -125,8 +125,7 @@ If you want to build this documentation, enter:
 
     $ python setup.py build_sphinx
 
-:mod:`fastnumbers` requires python version 2.7 or greater
-(this includes python 3.x). Unit tests are only run on 2.7 and >= 3.4.
+:mod:`fastnumbers` requires python version 3.5 or greater.
 
 How to Run Tests
 ----------------
@@ -144,7 +143,7 @@ following:
 ``tox`` will create virtual a virtual environment for your tests and install all the
 needed testing requirements for you.
 
-If you want to run testing on all of Python 2.7, 3.4, 3.5, 3.6, and 3.7 you can simply
+If you want to run testing on all of Python 3.5, 3.6, and 3.7 you can simply
 execute
 
 .. code-block:: sh

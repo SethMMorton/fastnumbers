@@ -21,10 +21,10 @@ typedef struct Options {
     PyObject *key;
     PyObject *handle_inf;
     PyObject *handle_nan;
-    PyObject *coerce;
-    PyObject *num_only;
-    PyObject *str_only;
-    PyObject *allow_underscores;
+    int coerce;             /* use int instead of bool because   */
+    int num_only;           /* PyArg_ParseTupleAndKeywords       */
+    int str_only;           /* does not support 'bool' type with */
+    int allow_underscores;  /* the "p" converter.                */
     bool allow_uni;
     int base;
 } Options;
@@ -32,35 +32,35 @@ typedef struct Options {
 /* Convenience for initializing.
  * Older MSVC does not like designated initializers.
  */
-#define init_Options_convert {            \
-        /*.retval =*/ NULL,               \
-        /*.input =*/ NULL,                \
-        /*.key =*/ NULL,                  \
-        /*.handle_inf =*/ NULL,           \
-        /*.handle_nan =*/ NULL,           \
-        /*.coerce =*/ Py_True,            \
-        /*.num_only =*/ NULL,             \
-        /*.str_only =*/ NULL,             \
-        /* allow_underscores =*/ Py_True, \
-        /*.allow_uni =*/ true,            \
-        /*.base =*/ INT_MIN,              \
+#define init_Options_convert {         \
+        /*.retval =*/ NULL,            \
+        /*.input =*/ NULL,             \
+        /*.key =*/ NULL,               \
+        /*.handle_inf =*/ NULL,        \
+        /*.handle_nan =*/ NULL,        \
+        /*.coerce =*/ true,            \
+        /*.num_only =*/ false,         \
+        /*.str_only =*/ false,         \
+        /* allow_underscores =*/ true, \
+        /*.allow_uni =*/ true,         \
+        /*.base =*/ INT_MIN,           \
     }
-#define init_Options_check {              \
-        /*.retval =*/ Py_None,            \
-        /*.input =*/ NULL,                \
-        /*.key =*/ NULL,                  \
-        /*.handle_inf =*/ Py_False,       \
-        /*.handle_nan =*/ Py_False,       \
-        /*.coerce =*/ NULL,               \
-        /*.num_only =*/ Py_False,         \
-        /*.str_only =*/ Py_False,         \
-        /* allow_underscores =*/ Py_True, \
-        /*.allow_uni =*/ true,            \
-        /*.base =*/ INT_MIN,              \
+#define init_Options_check {           \
+        /*.retval =*/ Py_None,         \
+        /*.input =*/ NULL,             \
+        /*.key =*/ NULL,               \
+        /*.handle_inf =*/ Py_False,    \
+        /*.handle_nan =*/ Py_False,    \
+        /*.coerce =*/ true,            \
+        /*.num_only =*/ false,         \
+        /*.str_only =*/ false,         \
+        /* allow_underscores =*/ true, \
+        /*.allow_uni =*/ true,         \
+        /*.base =*/ INT_MIN,           \
     }
 
 /* Some query MACROs. Each expects a pointer. */
-#define Options_Coerce_True(o) PyObject_IsTrue((o)->coerce)
+#define Options_Coerce_True(o) ((o)->coerce)
 #define Options_Has_NaN_Sub(o) ((o)->handle_nan != NULL)
 #define Options_Has_INF_Sub(o) ((o)->handle_inf != NULL)
 #define Options_Return_NaN_Sub(o) (Py_INCREF((o)->handle_nan), (o)->handle_nan)
@@ -70,9 +70,9 @@ typedef struct Options {
 #define Options_Allow_UnicodeCharacter(o) (o)->allow_uni
 #define Options_Allow_Infinity(o) PyObject_IsTrue((o)->handle_inf)
 #define Options_Allow_NAN(o) PyObject_IsTrue((o)->handle_nan)
-#define Options_Allow_Underscores(o) PyObject_IsTrue((o)->allow_underscores)
-#define Options_String_Only(o) PyObject_IsTrue((o)->str_only)
-#define Options_Number_Only(o) PyObject_IsTrue((o)->num_only)
+#define Options_Allow_Underscores(o) ((o)->allow_underscores)
+#define Options_String_Only(o) ((o)->str_only)
+#define Options_Number_Only(o) ((o)->num_only)
 
 /* Set allow unicode. */
 #define Options_Set_Disallow_UnicodeCharacter(o) \
@@ -96,8 +96,8 @@ typedef struct Options {
  * Expects the Options struct NOT as a pointer.
  */
 #define Options_Set_Return_Value(o, input, default_value, raise) \
-    (o).input = input; \
-    (o).retval = PyObject_IsTrue(raise) \
+    (o).input = (input); \
+    (o).retval = (raise) \
                  ? NULL \
                  : (((o).key != NULL || default_value == NULL) ? input : default_value)
 

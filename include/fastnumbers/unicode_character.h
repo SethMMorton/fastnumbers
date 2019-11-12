@@ -12,21 +12,6 @@
 extern "C" {
 #endif
 
-/* Unicode handling is different between Python 2 and Python 3. */
-#if PY_MAJOR_VERSION == 2
-typedef Py_UNICODE uchar;
-
-/* Extract character from the data. */
-#define UREAD(kind, data, index) (((const uchar *) (data))[(index)])
-
-#else
-typedef Py_UCS4 uchar;
-
-/* Short for PyUnicode_READ. */
-#define UREAD(kind, data, index) PyUnicode_READ((kind), (data), (index))
-
-#endif
-
 /* Declarations */
 
 PyObject *

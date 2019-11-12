@@ -42,8 +42,8 @@ PyNumber_to_PyInt_or_PyFloat(PyObject *pynum, const Options *options)
         return Options_Return_INF_Sub(options);
     }
     else if (Options_Coerce_True(options)) {
-        if (PyNumber_IsInt(pynum) || PyFloat_is_Intlike(pynum)) {
-            return PyNumber_ToInt(pynum);
+        if (PyLong_Check(pynum) || PyFloat_is_Intlike(pynum)) {
+            return PyNumber_Long(pynum);
         }
         else {
             return PyNumber_Float(pynum);
@@ -88,7 +88,7 @@ PyNumber_to_PyInt(PyObject *pynum, const Options *options)
             return NULL;
         }
     }
-    return PyNumber_ToInt(pynum);
+    return PyNumber_Long(pynum);
 }
 
 
@@ -157,11 +157,11 @@ PyNumber_is_type(PyObject *obj, const PyNumberType type)
         result = PyFloat_Check(obj);
         break;
     case INT:
-        result = PyNumber_IsInt(obj);
+        result = PyLong_Check(obj);
         break;
     case INTLIKE:
     case FORCEINT:
-        result = PyNumber_IsInt(obj) || PyFloat_is_Intlike(obj);
+        result = PyLong_Check(obj) || PyFloat_is_Intlike(obj);
         break;
     }
     return result;
