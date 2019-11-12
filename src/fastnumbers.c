@@ -267,10 +267,17 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *base = NULL;
     Options opts = init_Options_convert;
-    static char *keywords[] = { "x", "base", NULL };
     static const char *format = "|OO:int";
 
-    /* Read the function argument. */
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
+    /* Do not accept number as a keyword argument. */
+    static char *keywords[] = { "", "base", NULL };
+#else
+    /* Do accept number as a keyword argument. */
+    static char *keywords[] = { "x", "base", NULL };
+#endif
+
+    /* Read the function argument */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &base)) {
         return NULL;
@@ -294,17 +301,30 @@ fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
+fastnumbers_float(PyObject *self, PyObject *args)
+#else
 fastnumbers_float(PyObject *self, PyObject *args, PyObject *kwargs)
+#endif
 {
     PyObject *input = NULL;
     Options opts = init_Options_convert;
-    static char *keywords[] = { "x", NULL };
     static const char *format = "|O:float";
 
-    /* Read the function argument. */
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
+    /* Read the function argument - do not accept it as a keyword argument. */
+    if (!PyArg_ParseTuple(args, format, &input)) {
+        return NULL;
+    }
+#else
+    static char *keywords[] = { "x", NULL };
+
+    /* Read the function argument - accept it as a keyword argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, &input)) {
         return NULL;
     }
+#endif
+
     /* No arguments returns 0.0. */
     if (input == NULL) {
         return PyFloat_FromDouble(0.0);
@@ -322,8 +342,15 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     Options opts = init_Options_convert;
-    static char *keywords[] = { "x", "coerce", NULL };
     static const char *format = "|OO:real";
+
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
+    /* Do not accept number as a keyword argument. */
+    static char *keywords[] = { "", "coerce", NULL };
+#else
+    /* Do accept number as a keyword argument. */
+    static char *keywords[] = { "x", "coerce", NULL };
+#endif
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -371,7 +398,11 @@ static PyMethodDef FastnumbersMethods[] = {
         METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__
     },
     {   "float", (PyCFunction) fastnumbers_float,
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
+        METH_VARARGS, fastnumbers_float__doc__
+#else
         METH_VARARGS | METH_KEYWORDS, fastnumbers_float__doc__
+#endif
     },
     {   "real", (PyCFunction) fastnumbers_real,
         METH_VARARGS | METH_KEYWORDS, fastnumbers_real__doc__
