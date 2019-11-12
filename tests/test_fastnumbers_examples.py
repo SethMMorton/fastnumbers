@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 # Find the build location and add that to the path
-import sys
 import math
+import sys
+
 import pytest
 from pytest import raises
+
 import fastnumbers
 
 # Each conversion test should test the following
