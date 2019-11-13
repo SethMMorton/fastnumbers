@@ -58,7 +58,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "inf", "nan", "coerce",
+                                "on_fail", "inf", "nan", "coerce",
                                 "allow_underscores", NULL
                               };
     static const char *format = "O|O$pOOOpp:fast_real";
@@ -66,7 +66,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &opts.handle_inf, &opts.handle_nan,
+                                     &opts.on_fail, &opts.handle_inf, &opts.handle_nan,
                                      &opts.coerce, &opts.allow_underscores)) {
         return NULL;
     }
@@ -86,7 +86,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "inf", "nan",
+                                "on_fail", "inf", "nan",
                                 "allow_underscores", NULL
                               };
     static const char *format = "O|O$pOOOp:fast_float";
@@ -94,7 +94,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &opts.handle_inf, &opts.handle_nan,
+                                     &opts.on_fail, &opts.handle_inf, &opts.handle_nan,
                                      &opts.allow_underscores)) {
         return NULL;
     }
@@ -116,7 +116,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "base",
+                                "on_fail", "base",
                                 "allow_underscores", NULL
 
                               };
@@ -125,7 +125,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &base,
+                                     &opts.on_fail, &base,
                                      &opts.allow_underscores)) {
         return NULL;
     }
@@ -148,14 +148,14 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "key", "allow_underscores", NULL
+                                "on_fail", "allow_underscores", NULL
                               };
     static const char *format = "O|O$pOp:fast_forceint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.key, &opts.allow_underscores)) {
+                                     &opts.on_fail, &opts.allow_underscores)) {
         return NULL;
     }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);

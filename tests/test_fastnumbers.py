@@ -363,13 +363,13 @@ class TestFastReal:
             fastnumbers.fast_real(x, 90, True)
 
     @given(integers() | floats(allow_nan=False))
-    def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
-        assert fastnumbers.fast_real(x, key=len) == x
-        assert fastnumbers.fast_real(repr(x), key=len) == x
+    def test_returns_input_as_is_if_valid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_real(x, on_fail=len) == x
+        assert fastnumbers.fast_real(repr(x), on_fail=len) == x
 
     @given((text() | binary()).filter(not_a_number))
-    def test_returns_transformed_input_if_invalid_and_key_is_given(self, x):
-        assert fastnumbers.fast_real(x, key=len) == len(x)
+    def test_returns_transformed_input_if_invalid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_real(x, on_fail=len) == len(x)
 
 
 class TestFastFloat:
@@ -537,13 +537,13 @@ class TestFastFloat:
             assert fastnumbers.fast_float(x, 90.0, True)
 
     @given(floats(allow_nan=False))
-    def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
-        assert fastnumbers.fast_float(x, key=len) == x
-        assert fastnumbers.fast_float(repr(x), key=len) == x
+    def test_returns_input_as_is_if_valid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_float(x, on_fail=len) == x
+        assert fastnumbers.fast_float(repr(x), on_fail=len) == x
 
     @given((text() | binary()).filter(not_a_number))
-    def test_returns_transformed_input_if_invalid_and_key_is_given(self, x):
-        assert fastnumbers.fast_float(x, key=len) == len(x)
+    def test_returns_transformed_input_if_invalid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_float(x, on_fail=len) == len(x)
 
 
 class TestFastInt:
@@ -711,13 +711,13 @@ class TestFastInt:
             assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
 
     @given(integers())
-    def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
-        assert fastnumbers.fast_int(x, key=len) == x
-        assert fastnumbers.fast_int(repr(x), key=len) == x
+    def test_returns_input_as_is_if_valid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_int(x, on_fail=len) == x
+        assert fastnumbers.fast_int(repr(x), on_fail=len) == x
 
     @given((text() | binary()).filter(not_a_number))
-    def test_returns_transformed_input_if_invalid_and_key_is_given(self, x):
-        assert fastnumbers.fast_int(x, key=len) == len(x)
+    def test_returns_transformed_input_if_invalid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_int(x, on_fail=len) == len(x)
 
 
 class TestFastForceInt:
@@ -863,13 +863,13 @@ class TestFastForceInt:
             assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
 
     @given(integers() | floats(allow_nan=False, allow_infinity=False))
-    def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
-        assert fastnumbers.fast_forceint(x, key=len) == int(x)
-        assert fastnumbers.fast_forceint(repr(x), key=len) == int(x)
+    def test_returns_input_as_is_if_valid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_forceint(x, on_fail=len) == int(x)
+        assert fastnumbers.fast_forceint(repr(x), on_fail=len) == int(x)
 
     @given((text() | binary()).filter(not_a_number))
-    def test_returns_transformed_input_if_invalid_and_key_is_given(self, x):
-        assert fastnumbers.fast_forceint(x, key=len) == len(x)
+    def test_returns_transformed_input_if_invalid_and_on_fail_is_given(self, x):
+        assert fastnumbers.fast_forceint(x, on_fail=len) == len(x)
 
 
 class TestIsReal:
