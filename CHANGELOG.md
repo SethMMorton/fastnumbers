@@ -3,6 +3,14 @@ Unreleased
 
 ### Added
  - Support/Tests for Python 3.8
+ - Text to highlight that `fastnumbers` is not always faster that native Python
+
+### Changed
+ - Cleaned up all test code so that it no longer includes unused code
+   and also conformes to flake8/black
+ - Near-complete re-write of the README, hopefully to make the functionality
+   of `fastnumbers` clearer, to support better navigation, and to better
+   highlight caveats.
 
 ### Fixed
  - Improved testing reproducibility by pinning all test dependencies
