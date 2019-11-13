@@ -644,7 +644,7 @@ PyDoc_STRVAR(isfloat__doc__,
 "    True\n"
 "    >>> isfloat('56.07')\n"
 "    True\n"
-"    >>> isreal('56.07', num_only=True)\n"
+"    >>> isfloat('56.07', num_only=True)\n"
 "    False\n"
 "    >>> isfloat('56.07 lb')\n"
 "    False\n"

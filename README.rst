@@ -148,7 +148,7 @@ Error-Handling Functions
     >>>
     >>> # The sister function fast_forceint always returns an integer,
     >>> # othewise it behaves the same
-    >>> from fastnubmers import fast_forceint
+    >>> from fastnumbers import fast_forceint
     >>> fast_forceint('56')
     56
     >>> fast_forceint('56.0')
@@ -183,7 +183,7 @@ Checking Functions
     >>> # Specify if only strings or only numbers are allowed
     >>> isfloat(56.07, str_only=True)
     False
-    >>> isreal('56.07', num_only=True)
+    >>> isfloat('56.07', num_only=True)
     False
     >>>
     >>> # Customize handling for nan or inf
