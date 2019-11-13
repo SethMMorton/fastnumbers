@@ -342,7 +342,7 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     Options opts = init_Options_convert;
-    static const char *format = "|OO:real";
+    static const char *format = "|Op:real";
 
 #if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
     /* Do not accept number as a keyword argument. */
