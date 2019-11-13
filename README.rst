@@ -26,39 +26,60 @@ Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
     - Downloads: https://pypi.org/project/fastnumbers/
-    - Documentation: http://fastnumbers.readthedocs.io/
+    - Documentation: https://fastnumbers.readthedocs.io/
+    - `Quick Start`_
+    - `Timing`_
+    - `High-level Algorithm`_
+    - `How To Run Tests`_
+    - `History`_
 
-``fastnumbers`` is a module with the following three objectives:
+``fastnumbers`` is a module with the following three objectives (in order
+of decreasing importance as to why the module was created):
 
-    #. Provide drop-in replacements for the Python built-in ``int`` and
-       ``float`` that on average are up to 2x faster. These functions
-       should behave *identically* to the Python built-ins except for a few
-       specific corner-cases as mentioned in the
-       `API documentation <http://fastnumbers.readthedocs.io/en/master/api.html>`_.
     #. Provide a set of convenience functions that wrap the above
        ``int`` and ``float`` replacements and provides easy, concise,
        powerful, fast and flexible error handling.
     #. Provide a set of functions that can be used to rapidly identify if
        an input *could* be converted to *int* or *float*.
+    #. Provide drop-in replacements for the Python built-in ``int`` and
+       ``float`` that on average are *up to* 2x faster. These functions
+       should behave *identically* to the Python built-ins except for a few
+       specific corner-cases as mentioned in the
+       `API documentation for those functions <https://fastnumbers.readthedocs.io/en/master/api.html#the-built-in-replacement-functions>`_.
+
+       - **PLEASE** read the quick start for these functions to fully
+         understand the caveats before using them.
 
 **NOTICE**: As of ``fastnumbers`` version 3.0.0, only Python >= 3.5 is
 supported.
 
-Examples
---------
+Quick Start
+-----------
 
-The below examples showcase the ``fast_float`` function, which is
-a fast conversion function with error-handling.
-Please see the
-`API Documentation <http://fastnumbers.readthedocs.io/en/master/api.html>`_
-for other functions that are available from ``fastnumbers``.
+- `Error-handling Functions`_
+- `Checking Functions`_
+- `Drop-in Replacement Functions`_
+
+There are three broad categories of functions exposed by ``fastnumbers``.
+The below quick start will demonstrate each of these categories. The
+quick start is "by example", and will show a sample interactive session
+using the ``fastnumbers`` API.
+
+Error-Handling Functions
+++++++++++++++++++++++++
+
+- `Error-handling function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-error-handling-functions>`_
 
 .. code-block:: python
 
-    >>> from fastnumbers import fast_float, float as fnfloat
+    >>> from fastnumbers import fast_float
     >>> # Convert string to a float
     >>> fast_float('56.07')
     56.07
+    >>> # Integers are converted to floats
+    >>> fast_float(54)
+    54.0
+    >>>
     >>> # Unconvertable string returned as-is by default
     >>> fast_float('bad input')
     'bad input'
@@ -68,9 +89,7 @@ for other functions that are available from ``fastnumbers``.
     >>> # 'default' is also the first optional positional arg
     >>> fast_float('bad input', 0)
     0
-    >>> # Integers are converted to floats
-    >>> fast_float(54)
-    54.0
+    >>>
     >>> # One can ask inf or nan to be substituted with another value
     >>> fast_float('nan')
     nan
@@ -80,31 +99,180 @@ for other functions that are available from ``fastnumbers``.
     0.0
     >>> fast_float('56.07', nan=0.0)
     56.07
+    >>>
     >>> # The default built-in float behavior can be triggered with
     >>> # "raise_on_invalid" set to True.
     >>> fast_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
+    >>>
     >>> # A key function can be used to return an alternate value for invalid input
     >>> fast_float('bad input', key=len)
     9
     >>> fast_float(54, key=len)
     54.0
+    >>>
     >>> # Single unicode characters can be converted.
     >>> fast_float('\u2164')  # Roman numeral 5 (V)
     5.0
     >>> fast_float('\u2466')  # 7 enclosed in a circle
     7.0
+    >>>
+    >>>
+    >>> # The sister function fast_int behaves similarly
+    >>> from fastnumbers import fast_int
+    >>> fast_int('1234')
+    1234
+    >>> fast_int('\u2466')
+    7
+    >>>
+    >>> # The sister function fast_real returns either a
+    >>> # float or int depending on if there is any fractional component,
+    >>> # othewise it behaves the same
+    >>> from fastnumbers import fast_real
+    >>> fast_real('56')
+    56
+    >>> fast_real('56.0')
+    56
+    >>> fast_real('56.0', coerce=False)
+    56.0
+    >>> fast_real('56.07')
+    56.07
+    >>> fast_real(56.07)
+    56.07
+    >>> fast_real(56.0)
+    56
+    >>> fast_real(56.0, coerce=False)
+    56.0
+    >>>
+    >>> # The sister function fast_forceint always returns an integer,
+    >>> # othewise it behaves the same
+    >>> from fastnubmers import fast_forceint
+    >>> fast_forceint('56')
+    56
+    >>> fast_forceint('56.0')
+    56
+    >>> fast_forceint('56.07')
+    56
+    >>> fast_forceint(56.07)
+    56
 
-**NOTE**: If you need locale-dependent conversions, supply the ``fastnumbers``
-function of your choice to ``locale.atof``.
+Checking Functions
+++++++++++++++++++
 
-.. code-block:: python
+- `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
 
-    import locale
-    locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
-    print(atof('468,5', func=fast_float))  # Prints 468.5
+.. code-block:: pycon
+
+    >>> from fastnumbers import isfloat
+    >>> # Check that a string can be converted to a float
+    >>> isfloat('56')
+    True
+    >>> isfloat('56.07')
+    True
+    >>> isfloat('56.07 lb')
+    False
+    >>>
+    >>> # Check if a given number is a float
+    >>> isfloat(56.07)
+    True
+    >>> isfloat(56)
+    False
+    >>>
+    >>> # Specify if only strings or only numbers are allowed
+    >>> isfloat(56.07, str_only=True)
+    False
+    >>> isreal('56.07', num_only=True)
+    False
+    >>>
+    >>> # Customize handling for nan or inf
+    >>> isfloat('nan')
+    False
+    >>> isfloat('nan', allow_nan=True)
+    True
+    >>>
+    >>>
+    >>> # The sister function isint works the same, and has similar customization
+    >>> from fastnumbers import isint
+    >>> isint('56')
+    True
+    >>> isint(56)
+    True
+    >>> isint('56.0')
+    False
+    >>> isint(56.0)
+    False
+    >>>
+    >>>
+    >>> # The sister function isreal is very permissive - any number will do
+    >>> # It has all the options that isfloat has
+    >>> from fastnumbers import isreal
+    >>> isreal('56.0')
+    True
+    >>> isreal('56')
+    True
+    >>> isreal(56.0)
+    True
+    >>> isreal(56)
+    True
+    >>>
+    >>>
+    >>> # The sister function isintlike checks if a number is "int-like",
+    >>> # e.g. if it has no fractional component.
+    >>> from fastnumbers import isintlike
+    >>> isintlike('56.0')
+    True
+    >>> isintlike('56.7')
+    False
+    >>> isintlike(56.0)
+    True
+    >>> isintlike(56.7)
+    False
+
+Drop-in Replacement Functions
++++++++++++++++++++++++++++++
+
+- `Drop-in replacement function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-built-in-replacement-functions>`_
+
+**PLEASE** do not take it for granted that these functions will provide you
+with a speedup - they may not. Every platform, compiler, and data-set is
+different, and you should perform a timing test on your system with your data
+to evaluate if you will see a benefit. As you can see from the data linked in
+the `Timing`_ section, the amount of speedup you will get particularly
+data-dependent.
+
+**NOTE**: in the below examples, we use ``from fastnumbers import int`` instead
+of ``import fastnumbers``. This is because calling ``fastnumbers.int()`` is a
+bit slower than just ``int()`` because Python has to first find ``fastnumbers``
+in your namespace, then find ``int`` in the ``fastnumbers`` namespace, instead
+of just finding ``int`` in your namespace - this will slow down the function
+call and defeat the purpose of using ``fastnumbers``. If you do not want to
+actually shadow the built-in ``int`` function, you can do
+``from fastnumbers import int as fn_int`` or something like that.
+
+.. code-block:: pycon
+
+    >>> # Use is identical to the built-in functions
+    >>> from fastnumbers import float, int
+    >>> float('10')
+    10.0
+    >>> int('10')
+    10
+    >>> float('bad input') #doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid literal for float(): bad input
+    >>>
+    >>> # real is provided to give a float or int depending
+    >>> # on the fractional component of the input
+    >>> from fastnumbers import real
+    >>> real('56.0')
+    56
+    >>> real('56.7')
+    56.7
+    >>> real('56.0', coerce=False)
+    56.0
 
 Timing
 ------
@@ -117,8 +285,8 @@ Python versions.
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
     - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_37.ipynb
 
-How Is ``fastnumbers`` So Fast?
--------------------------------
+High-Level Algorithm
+--------------------
 
 CPython goes to great lengths to ensure that your string input is converted to a
 number *correctly* (you can prove this to yourself by examining the source code
@@ -195,4 +363,5 @@ Seth M. Morton
 History
 -------
 
-Please visit the `changelog <http://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
+Please visit the changelog `on GitHub <https://github.com/SethMMorton/fastnumbers/blob/master/CHANGELOG.md>`_
+or `in the documentation <https://fastnumbers.readthedocs.io/en/master/changelog.html>`_.

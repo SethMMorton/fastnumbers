@@ -12,8 +12,10 @@ fastnumbers API
 The "Built-In Replacement" Functions
 ------------------------------------
 
-Each of these functions acts as a faster drop-in replacement for
-the equivalent Python built-in function.
+Each of these functions acts as a (potentially) faster drop-in replacement
+for the equivalent Python built-in function. Please perform timing tests on
+your platform with your data to determine if these functions will actually
+provide you with a speed-up.
 
 :func:`~fastnumbers.float`
 ++++++++++++++++++++++++++
