@@ -196,7 +196,6 @@ class TestFastReal:
     def test_given_float_returns_float(self, x):
         assert fastnumbers.fast_real(x, coerce=False) == x
         assert fastnumbers.fast_real(x, raise_on_invalid=True, coerce=False) == x
-        assert fastnumbers.fast_real(x, None, True, coerce=False) == x
         assert isinstance(fastnumbers.fast_real(x, coerce=False), float)
 
     @given(floats(allow_nan=False).filter(an_integer))
@@ -229,7 +228,6 @@ class TestFastReal:
         y = repr(x)
         assert fastnumbers.fast_real(y, coerce=False) == x
         assert fastnumbers.fast_real(y, raise_on_invalid=True, coerce=False) == x
-        assert fastnumbers.fast_real(y, None, True, coerce=False) == x
         assert isinstance(fastnumbers.fast_real(y, coerce=False), float)
 
     @given(integers())
@@ -387,7 +385,6 @@ class TestFastFloat:
     @given(floats(allow_nan=False))
     def test_given_float_returns_float(self, x):
         assert fastnumbers.fast_float(x) == x
-        assert fastnumbers.fast_float(x, None, True) == x
         assert fastnumbers.fast_float(x, raise_on_invalid=True) == x
         assert isinstance(fastnumbers.fast_float(x), float)
 
@@ -421,7 +418,6 @@ class TestFastFloat:
         else:
             y = repr(x)
         assert fastnumbers.fast_float(y) == x
-        assert fastnumbers.fast_float(y, None, True) == x
         assert fastnumbers.fast_float(y, raise_on_invalid=True) == x
         assert isinstance(fastnumbers.fast_float(y), float)
 
@@ -522,7 +518,6 @@ class TestFastFloat:
         self, x
     ):
         with raises(ValueError):
-            fastnumbers.fast_float(x, None, True)
             fastnumbers.fast_float(x, raise_on_invalid=True)
 
     @given(lists(integers()))
@@ -573,7 +568,6 @@ class TestFastInt:
     def test_given_float_returns_int(self, x):
         assert fastnumbers.fast_int(x) == int(x)
         assert fastnumbers.fast_int(x, raise_on_invalid=True) == int(x)
-        assert fastnumbers.fast_int(x, None, True) == int(x)
         assert isinstance(fastnumbers.fast_int(x), int)
 
     def test_given_nan_raises_valueerror_or_returns_as_is_or_returns_default(self):
@@ -604,7 +598,6 @@ class TestFastInt:
     def test_given_float_string_raises_valueerror_if_raise_on_invalid_is_true(self, x):
         y = repr(x)
         with raises(ValueError):
-            fastnumbers.fast_int(y, None, True)
             fastnumbers.fast_int(y, raise_on_invalid=True)
 
     @given(integers())
@@ -716,7 +709,6 @@ class TestFastInt:
     def test_raises_valueerror_if_raise_on_invalid_is_true_with_default(self, x):
         with raises(ValueError):
             assert fastnumbers.fast_int(x, default=90, raise_on_invalid=True)
-            assert fastnumbers.fast_int(x, 90, True)
 
     @given(integers())
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
@@ -742,7 +734,6 @@ class TestFastForceInt:
     def test_given_float_returns_int(self, x):
         assert fastnumbers.fast_forceint(x) == int(x)
         assert fastnumbers.fast_forceint(x, raise_on_invalid=True) == int(x)
-        assert fastnumbers.fast_forceint(x, None, True) == int(x)
         assert isinstance(fastnumbers.fast_forceint(x), int)
 
     def test_given_nan_raises_valueerror_or_returns_as_is_or_returns_default(self):
@@ -761,21 +752,17 @@ class TestFastForceInt:
     def test_given_float_string_returns_int(self, x):
         y = repr(x)
         assert fastnumbers.fast_forceint(y) == int(x)
-        assert fastnumbers.fast_forceint(y, None, True) == int(x)
         assert fastnumbers.fast_forceint(y, raise_on_invalid=True) == int(x)
         assert isinstance(fastnumbers.fast_forceint(y), int)
 
     def test_given_nan_string_raises_valueerror_with_raise_on_invalid_as_true(self):
         with raises(ValueError):
             fastnumbers.fast_forceint("nan", raise_on_invalid=True)
-            fastnumbers.fast_forceint("nan", None, True)
 
     def test_given_inf_string_raises_overflowerror_with_raise_on_invalid_as_true(self):
         with raises(OverflowError):
             fastnumbers.fast_forceint("inf", raise_on_invalid=True)
             fastnumbers.fast_forceint("-infinity", raise_on_invalid=True)
-            fastnumbers.fast_forceint("inf", None, True)
-            fastnumbers.fast_forceint("-infinity", None, True)
 
     @given(
         floats(allow_nan=False, allow_infinity=False),
@@ -859,7 +846,6 @@ class TestFastForceInt:
     ):
         with raises(ValueError):
             fastnumbers.fast_forceint(x, raise_on_invalid=True)
-            fastnumbers.fast_forceint(x, None, True)
 
     @given(lists(integers()))
     def test_given_invalid_type_raises_typeerror(self, x):
@@ -875,7 +861,6 @@ class TestFastForceInt:
     def test_raises_valueerror_if_raise_on_invalid_is_true_with_default(self, x):
         with raises(ValueError):
             assert fastnumbers.fast_forceint(x, default=90.0, raise_on_invalid=True)
-            assert fastnumbers.fast_forceint(x, 90.0, True)
 
     @given(integers() | floats(allow_nan=False, allow_infinity=False))
     def test_returns_input_as_is_if_valid_and_key_is_given(self, x):
