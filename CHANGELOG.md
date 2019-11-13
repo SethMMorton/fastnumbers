@@ -2,7 +2,7 @@ Unreleased
 ---
 
 ### Added
- - Support/Tests for Python 3.8
+ - Support and tests for Python 3.8
  - Text to highlight that `fastnumbers` is not always faster that native Python
 
 ### Changed
@@ -13,6 +13,7 @@ Unreleased
    highlight caveats.
 
 ### Fixed
+ - Bug where the `coerce` option of `real()` was ignored
  - Improved testing reproducibility by pinning all test dependencies
 
 ### Removed
