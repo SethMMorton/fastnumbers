@@ -61,7 +61,7 @@ fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "key", "inf", "nan", "coerce",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OpOOOpp:fast_real";
+    static const char *format = "O|O$pOOOpp:fast_real";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -89,7 +89,7 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "key", "inf", "nan",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|OpOOOp:fast_float";
+    static const char *format = "O|O$pOOOp:fast_float";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -120,7 +120,7 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "allow_underscores", NULL
 
                               };
-    static const char *format = "O|OpOOp:fast_int";
+    static const char *format = "O|O$pOOp:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -150,7 +150,7 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "key", "allow_underscores", NULL
                               };
-    static const char *format = "O|OpOp:fast_forceint";
+    static const char *format = "O|O$pOp:fast_forceint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -174,7 +174,7 @@ fastnumbers_isreal(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "allow_inf", "allow_nan",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|ppOOp:isreal";
+    static const char *format = "O|$ppOOp:isreal";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -198,7 +198,7 @@ fastnumbers_isfloat(PyObject *self, PyObject *args, PyObject *kwargs)
                                 "allow_inf", "allow_nan",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|ppOOp:isfloat";
+    static const char *format = "O|$ppOOp:isfloat";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -222,7 +222,7 @@ fastnumbers_isint(PyObject *self, PyObject *args, PyObject *kwargs)
     static char *keywords[] = { "x", "str_only", "num_only", "base",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|ppOp:isint";
+    static const char *format = "O|$ppOp:isint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -247,7 +247,7 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
     static char *keywords[] = { "x", "str_only", "num_only",
                                 "allow_underscores", NULL
                               };
-    static const char *format = "O|ppp:isintlike";
+    static const char *format = "O|$ppp:isintlike";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
@@ -342,7 +342,7 @@ fastnumbers_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     Options opts = init_Options_convert;
-    static const char *format = "|Op:real";
+    static const char *format = "|O$p:real";
 
 #if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
     /* Do not accept number as a keyword argument. */
