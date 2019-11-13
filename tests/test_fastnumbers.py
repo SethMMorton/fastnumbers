@@ -149,6 +149,14 @@ def test_no_arguments_raises_type_error(func):
         func()
 
 
+@parametrize("func", conversion_funcs, ids=conversion_func_ids)
+def test_key_backwards_compatibility(func):
+    with raises(ValueError, match=r"^Cannot set both on_fail and key$"):
+        func("dummy", key=len, on_fail=len)
+    assert func("dummy", key=len) == 5
+    assert func("dummy", key=len) == func("dummy", on_fail=len)
+
+
 def test_real_no_arguments_returns_0():
     assert fastnumbers.real() == 0
 

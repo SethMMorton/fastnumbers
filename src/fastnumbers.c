@@ -48,26 +48,48 @@ assess_integer_base_input(PyObject *pybase, int *base)
 }
 
 
+/* If key is defined, move the value to on_fail.
+ * If both were defined, error.
+ */
+int
+handle_key_backwards_compatibility(PyObject **on_fail, PyObject **key)
+{
+    if (*key != NULL) {
+        if (*on_fail != NULL) {
+            PyErr_SetString(PyExc_ValueError, "Cannot set both on_fail and key");
+            return 1;
+        }
+        *on_fail = *key;
+        *key = NULL;
+    }
+    return 0;
+}
+
+
 /* Quickly convert to an int or float, depending on value. */
 static PyObject *
 fastnumbers_fast_real(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *default_value = NULL;
+    PyObject *key = NULL;
     int raise_on_invalid =
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "on_fail", "inf", "nan", "coerce",
-                                "allow_underscores", NULL
+                                "allow_underscores", "key", NULL
                               };
-    static const char *format = "O|O$pOOOpp:fast_real";
+    static const char *format = "O|O$pOOOppO:fast_real";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
                                      &opts.on_fail, &opts.handle_inf, &opts.handle_nan,
-                                     &opts.coerce, &opts.allow_underscores)) {
+                                     &opts.coerce, &opts.allow_underscores, &key)) {
+        return NULL;
+    }
+    if (handle_key_backwards_compatibility(&opts.on_fail, &key)) {
         return NULL;
     }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
@@ -82,23 +104,26 @@ fastnumbers_fast_float(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *default_value = NULL;
+    PyObject *key = NULL;
     int raise_on_invalid =
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "on_fail", "inf", "nan",
-                                "allow_underscores", NULL
+                                "allow_underscores", "key", NULL
                               };
-    static const char *format = "O|O$pOOOp:fast_float";
+    static const char *format = "O|O$pOOOpO:fast_float";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
                                      &opts.on_fail, &opts.handle_inf, &opts.handle_nan,
-                                     &opts.allow_underscores)) {
+                                     &opts.allow_underscores, &key)) {
         return NULL;
     }
-
+    if (handle_key_backwards_compatibility(&opts.on_fail, &key)) {
+        return NULL;
+    }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
 
     return PyObject_to_PyNumber(input, FLOAT, &opts);
@@ -112,21 +137,25 @@ fastnumbers_fast_int(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input = NULL;
     PyObject *default_value = NULL;
     PyObject *base = NULL;
+    PyObject *key = NULL;
     int raise_on_invalid =
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
                                 "on_fail", "base",
-                                "allow_underscores", NULL
+                                "allow_underscores", "key", NULL
 
                               };
-    static const char *format = "O|O$pOOp:fast_int";
+    static const char *format = "O|O$pOOpO:fast_int";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
                                      &opts.on_fail, &base,
-                                     &opts.allow_underscores)) {
+                                     &opts.allow_underscores, &key)) {
+        return NULL;
+    }
+    if (handle_key_backwards_compatibility(&opts.on_fail, &key)) {
         return NULL;
     }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
@@ -144,18 +173,22 @@ fastnumbers_fast_forceint(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     PyObject *default_value = NULL;
+    PyObject *key = NULL;
     int raise_on_invalid =
         false;  /* cannot use bool with PyArg_ParseTupleAndKeywords */
     Options opts = init_Options_convert;
     static char *keywords[] = { "x", "default", "raise_on_invalid",
-                                "on_fail", "allow_underscores", NULL
+                                "on_fail", "allow_underscores", "key", NULL
                               };
-    static const char *format = "O|O$pOp:fast_forceint";
+    static const char *format = "O|O$pOpO:fast_forceint";
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
                                      &input, &default_value, &raise_on_invalid,
-                                     &opts.on_fail, &opts.allow_underscores)) {
+                                     &opts.on_fail, &opts.allow_underscores, &key)) {
+        return NULL;
+    }
+    if (handle_key_backwards_compatibility(&opts.on_fail, &key)) {
         return NULL;
     }
     Options_Set_Return_Value(opts, input, default_value, raise_on_invalid);
