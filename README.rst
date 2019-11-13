@@ -127,6 +127,7 @@ Error-Handling Functions
     >>> fast_int('\u2466')
     7
     >>>
+    >>>
     >>> # The sister function fast_real returns either a
     >>> # float or int depending on if there is any fractional component,
     >>> # othewise it behaves the same
@@ -146,6 +147,7 @@ Error-Handling Functions
     >>> fast_real(56.0, coerce=False)
     56.0
     >>>
+    >>>
     >>> # The sister function fast_forceint always returns an integer,
     >>> # othewise it behaves the same
     >>> from fastnumbers import fast_forceint
@@ -163,7 +165,7 @@ Checking Functions
 
 - `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> from fastnumbers import isfloat
     >>> # Check that a string can be converted to a float
@@ -251,7 +253,7 @@ call and defeat the purpose of using ``fastnumbers``. If you do not want to
 actually shadow the built-in ``int`` function, you can do
 ``from fastnumbers import int as fn_int`` or something like that.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> # Use is identical to the built-in functions
     >>> from fastnumbers import float, int
@@ -263,6 +265,7 @@ actually shadow the built-in ``int`` function, you can do
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
+    >>>
     >>>
     >>> # real is provided to give a float or int depending
     >>> # on the fractional component of the input
