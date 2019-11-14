@@ -160,6 +160,51 @@ Error-Handling Functions
     >>> fast_forceint(56.07)
     56
 
+About the ``on_fail`` option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``on_fail`` option is a way for you to do *anything* in the event that
+the given input cannot be converted to a number. Here are a couple of ideas
+to get you thinking.
+
+.. code-block:: python
+
+    >>> from fastnumbers import fast_float
+    >>> # Simple case, send the input through some function to generate a number.
+    >>> fast_float('invalid input', on_fail=lambda x: float(x.count('i')))  # count the 'i's
+    3.0
+    >>>
+    >>> # Suppose we know that our input could either be a number, or if not
+    >>> # then we know we just have to strip off parens to get to the number
+    >>> # e.g. the input could be '45' or '(45)'. Also, suppose that if it
+    >>> # still cannot be converted to a number we want to raise an exception.
+    >>> def strip_parens_and_try_again(x):
+    ...     return fast_float(x.strip('()'), raise_on_invalid=True)
+    ...
+    >>> fast_float('45', on_fail=strip_parens_and_try_again)
+    45.0
+    >>> fast_float('(45)', on_fail=strip_parens_and_try_again)
+    45.0
+    >>> fast_float('invalid input', on_fail=strip_parens_and_try_again) #doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid literal for float(): invalid input
+    >>>
+    >>> # Suppose that whenever an invalid input is given, it needs to be
+    >>> # logged and then a default value is returned.
+    >>> def log_and_default(x, log_method=print, default=0.0):
+    ...     log_method("The input {!r} is not valid!".format(x))
+    ...     return default
+    ...
+    >>> fast_float('45', on_fail=log_and_default)
+    45.0
+    >>> fast_float('invalid input', on_fail=log_and_default)
+    The input 'invalid input' is not valid!
+    0.0
+    >>> fast_float('invalid input', on_fail=lambda x: log_and_default(x, default=float('nan')))
+    The input 'invalid input' is not valid!
+    nan
+
 Checking Functions
 ++++++++++++++++++
 
