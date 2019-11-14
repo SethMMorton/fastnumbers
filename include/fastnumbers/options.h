@@ -18,7 +18,7 @@ typedef enum PyNumberType { REAL, FLOAT, INT, INTLIKE, FORCEINT } PyNumberType;
 typedef struct Options {
     PyObject *retval;
     PyObject *input;
-    PyObject *key;
+    PyObject *on_fail;
     PyObject *handle_inf;
     PyObject *handle_nan;
     int coerce;             /* use int instead of bool because   */
@@ -35,7 +35,7 @@ typedef struct Options {
 #define init_Options_convert {         \
         /*.retval =*/ NULL,            \
         /*.input =*/ NULL,             \
-        /*.key =*/ NULL,               \
+        /*.on_fail =*/ NULL,           \
         /*.handle_inf =*/ NULL,        \
         /*.handle_nan =*/ NULL,        \
         /*.coerce =*/ true,            \
@@ -48,7 +48,7 @@ typedef struct Options {
 #define init_Options_check {           \
         /*.retval =*/ Py_None,         \
         /*.input =*/ NULL,             \
-        /*.key =*/ NULL,               \
+        /*.on_fail =*/ NULL,           \
         /*.handle_inf =*/ Py_False,    \
         /*.handle_nan =*/ Py_False,    \
         /*.coerce =*/ true,            \
@@ -84,12 +84,12 @@ typedef struct Options {
 /* MACRO to return the correct result based on user-input.
  * Expects the Options struct as a pointer.
  */
-#define Options_Return_Correct_Result_On_Error(o)                 \
-    (Options_Should_Raise(o) ?                                    \
-     NULL :                                                       \
-     ((o)->key != NULL ?                                          \
-      PyObject_CallFunctionObjArgs((o)->key, (o)->retval, NULL) : \
-      (Py_INCREF((o)->retval), (o)->retval)                       \
+#define Options_Return_Correct_Result_On_Error(o)                     \
+    (Options_Should_Raise(o) ?                                        \
+     NULL :                                                           \
+     ((o)->on_fail != NULL ?                                          \
+      PyObject_CallFunctionObjArgs((o)->on_fail, (o)->retval, NULL) : \
+      (Py_INCREF((o)->retval), (o)->retval)                           \
      ))
 
 /* MACRO to set the correct return value based on given input.
@@ -99,7 +99,7 @@ typedef struct Options {
     (o).input = (input); \
     (o).retval = (raise) \
                  ? NULL \
-                 : (((o).key != NULL || default_value == NULL) ? input : default_value)
+                 : (((o).on_fail != NULL || default_value == NULL) ? input : default_value)
 
 #ifdef __cplusplus
 } /* extern "C" */

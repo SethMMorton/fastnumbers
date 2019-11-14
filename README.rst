@@ -107,10 +107,10 @@ Error-Handling Functions
       ...
     ValueError: invalid literal for float(): bad input
     >>>
-    >>> # A key function can be used to return an alternate value for invalid input
-    >>> fast_float('bad input', key=len)
+    >>> # A function can be used to return an alternate value for invalid input
+    >>> fast_float('bad input', on_fail=len)
     9
-    >>> fast_float(54, key=len)
+    >>> fast_float(54, on_fail=len)
     54.0
     >>>
     >>> # Single unicode characters can be converted.
