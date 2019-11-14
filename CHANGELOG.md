@@ -4,6 +4,7 @@ Unreleased
 ### Added
  - Support and tests for Python 3.8
  - Text to highlight that `fastnumbers` is not always faster that native Python
+ - `on_fail` option that is identical to `key`, but has a more descriptive name
 
 ### Changed
  - Cleaned up all test code so that it no longer includes unused code
@@ -11,6 +12,11 @@ Unreleased
  - Near-complete re-write of the README, hopefully to make the functionality
    of `fastnumbers` clearer, to support better navigation, and to better
    highlight caveats.
+ - Made all named options keyword-only except for `default`
+
+### Deprecated
+ - `key` function (it will forever remain allowed, but is "hidden" and cannot
+   be given with `on_fail`)
 
 ### Fixed
  - Bug where the `coerce` option of `real()` was ignored
