@@ -14,11 +14,15 @@ env:
 
 jobs:
   include:
-    # Windows tests!
+    # Windows and MacOS tests!
     - {env: PYTHON_VERSION=3.5.4, os: windows, language: sh}
+    - {env: PYTHON_VERSION=3.5.4, os: osx,     language: sh}
     - {env: PYTHON_VERSION=3.6.8, os: windows, language: sh}
+    - {env: PYTHON_VERSION=3.6.8, os: osx,     language: sh}
     - {env: PYTHON_VERSION=3.7.4, os: windows, language: sh}
+    - {env: PYTHON_VERSION=3.7.4, os: osx,     language: sh}
     - {env: PYTHON_VERSION=3.8.0, os: windows, language: sh}
+    - {env: PYTHON_VERSION=3.8.0, os: osx,     language: sh}
 
     # Deployment! This needs to be run once for each major OS,
     # as well as once more to deploy the source distribution.
@@ -53,13 +57,10 @@ jobs:
       services: docker
       install: skip
       before_script: skip
-      script: skip
       after_success: skip
       deploy:
         provider: script
-        script:
-          - source dev/ci-update-path.bash
-          - bash dev/ci-wheel-deploy.bash
+        script: bash dev/ci-wheel-deploy.bash
         on:
           repo: SethMMorton/fastnumbers
           branch: master
@@ -68,15 +69,13 @@ jobs:
       os: osx
       env: PYTHON_VERSION=3.6.8
       language: sh
+      before_install: skip
       install: skip
       before_script: skip
-      script: skip
       after_success: skip
       deploy:
         provider: script
-        script:
-          - source dev/ci-update-path.bash
-          - bash dev/ci-wheel-deploy.bash
+        script: bash dev/ci-wheel-deploy.bash
         on:
           repo: SethMMorton/fastnumbers
           branch: master
@@ -87,32 +86,27 @@ jobs:
       language: sh
       install: skip
       before_script: skip
-      script: skip
       after_success: skip
       deploy:
         provider: script
-        script:
-          - source dev/ci-update-path.bash
-          - bash dev/ci-wheel-deploy.bash
+        script: bash dev/ci-wheel-deploy.bash
         on:
           repo: SethMMorton/fastnumbers
           branch: master
 
 before_install:
-- bash dev/ci-prepare-environment.bash
+- bash dev/ci-install-python.bash
+- source dev/ci-update-path.bash
 
 install:
-- source dev/ci-update-path.bash
 - python -m pip install -U pip
 - python -m pip install codecov
 - python -m pip install -r dev/requirements.txt
 
 before_script:
-- source dev/ci-update-path.bash
 - python dev/patch_doctest.py
 
 script:
-- source dev/ci-update-path.bash
 - python setup.py install
 - python -m doctest fastnumbers
 - pytest --doctest-glob=README.rst
