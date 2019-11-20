@@ -14,15 +14,11 @@ env:
 
 jobs:
   include:
-    # Windows and MacOS tests!
-    - {env: PYTHON_VERSION=3.5.4, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.5.4, os: osx,     language: sh}
-    - {env: PYTHON_VERSION=3.6.8, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.6.8, os: osx,     language: sh}
-    - {env: PYTHON_VERSION=3.7.4, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.7.4, os: osx,     language: sh}
-    - {env: PYTHON_VERSION=3.8.0, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.8.0, os: osx,     language: sh}
+    # Windows tests!
+    - {python: 3.5, os: windows, env: PYTHON_VERSION=3.5.4, language: sh}
+    - {python: 3.6, os: windows, env: PYTHON_VERSION=3.6.8, language: sh}
+    - {python: 3.7, os: windows, env: PYTHON_VERSION=3.7.4, language: sh}
+    - {python: 3.8, os: windows, env: PYTHON_VERSION=3.8.0, language: sh}
 
     # Deployment! This needs to be run once for each major OS,
     # as well as once more to deploy the source distribution.
