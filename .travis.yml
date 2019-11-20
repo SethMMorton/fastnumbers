@@ -12,10 +12,6 @@ env:
   - CC=clang
   - CC=gcc CFLAGS="--coverage -O0"
 
-branches:
-  except:
-  - /^appveyor-.*$/
-
 jobs:
   include:
     # Windows tests!
