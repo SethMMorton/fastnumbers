@@ -20,6 +20,84 @@ jobs:
     - {env: PYTHON_VERSION=3.7.4, os: windows, language: sh}
     - {env: PYTHON_VERSION=3.8.0, os: windows, language: sh}
 
+    # Deployment! This needs to be run once for each major OS,
+    # as well as once more to deploy the source distribution.
+    - stage: deploy
+      name: "Deploy Source Distribution"
+      python: 3.6
+      install: skip
+      before_script: skip
+      script: skip
+      after_success: skip
+      deploy:
+        - provider: pypi
+          server: https://test.pypi.org/legacy/
+          user: SethMMorton
+          distributions: sdist --format=gztar
+          skip_existing: true
+          on:
+            tags: false
+            repo: SethMMorton/fastnumbers
+            branch: master
+        - provider: pypi
+          user: SethMMorton
+          distributions: sdist --format=gztar
+          skip_existing: true
+          on:
+            tags: true
+            repo: SethMMorton/fastnumbers
+            branch: master
+    - stage: deploy
+      name: "Build and Deploy Linux Wheels"
+      python: 3.6
+      services: docker
+      install: skip
+      before_script: skip
+      script: skip
+      after_success: skip
+      deploy:
+        provider: script
+        script:
+          - source dev/ci-update-path.bash
+          - bash dev/ci-wheel-deploy.bash
+        on:
+          repo: SethMMorton/fastnumbers
+          branch: master
+    - stage: deploy
+      name: "Build and Deploy MacOS Wheels"
+      os: osx
+      env: PYTHON_VERSION=3.6.8
+      language: sh
+      install: skip
+      before_script: skip
+      script: skip
+      after_success: skip
+      deploy:
+        provider: script
+        script:
+          - source dev/ci-update-path.bash
+          - bash dev/ci-wheel-deploy.bash
+        on:
+          repo: SethMMorton/fastnumbers
+          branch: master
+    - stage: deploy
+      name: "Build and Deploy Windows Wheels"
+      os: windows
+      env: PYTHON_VERSION=3.6.8
+      language: sh
+      install: skip
+      before_script: skip
+      script: skip
+      after_success: skip
+      deploy:
+        provider: script
+        script:
+          - source dev/ci-update-path.bash
+          - bash dev/ci-wheel-deploy.bash
+        on:
+          repo: SethMMorton/fastnumbers
+          branch: master
+
 before_install:
 - bash dev/ci-prepare-environment.bash
 
@@ -41,6 +119,11 @@ script:
 
 after_success:
 - (test "$CC" == "gcc" && codecov --gcov-args '-o build/temp.*/src') || echo "skipping coverage!"
+
+stages:
+- test
+- name: deploy
+  if: branch = master AND repo = SethMMorton/fastnumbers
 
 cache:
   - pip
