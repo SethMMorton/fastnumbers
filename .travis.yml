@@ -14,15 +14,11 @@ env:
 
 jobs:
   include:
-    # Windows and MacOS tests!
-    - {env: PYTHON_VERSION=3.5.4, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.5.4, os: osx,     language: sh}
-    - {env: PYTHON_VERSION=3.6.8, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.6.8, os: osx,     language: sh}
-    - {env: PYTHON_VERSION=3.7.4, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.7.4, os: osx,     language: sh}
-    - {env: PYTHON_VERSION=3.8.0, os: windows, language: sh}
-    - {env: PYTHON_VERSION=3.8.0, os: osx,     language: sh}
+    # Windows tests!
+    - {python: 3.5, os: windows, env: PYTHON_VERSION=3.5.4, language: sh}
+    - {python: 3.6, os: windows, env: PYTHON_VERSION=3.6.8, language: sh}
+    - {python: 3.7, os: windows, env: PYTHON_VERSION=3.7.4, language: sh}
+    - {python: 3.8, os: windows, env: PYTHON_VERSION=3.8.0, language: sh}
 
     # Deployment! This needs to be run once for each major OS,
     # as well as once more to deploy the source distribution.
@@ -55,15 +51,11 @@ jobs:
       name: "Build and Deploy Linux Wheels"
       python: 3.6
       services: docker
+      before_install: skip
       install: skip
       before_script: skip
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
-      deploy:
-        provider: script
-        script: bash dev/ci-wheel-deploy.bash
-        on:
-          repo: SethMMorton/fastnumbers
-          branch: master
     - stage: deploy
       name: "Build and Deploy MacOS Wheels"
       os: osx
@@ -72,13 +64,8 @@ jobs:
       before_install: skip
       install: skip
       before_script: skip
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
-      deploy:
-        provider: script
-        script: bash dev/ci-wheel-deploy.bash
-        on:
-          repo: SethMMorton/fastnumbers
-          branch: master
     - stage: deploy
       name: "Build and Deploy Windows Wheels"
       os: windows
@@ -86,13 +73,8 @@ jobs:
       language: sh
       install: skip
       before_script: skip
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
-      deploy:
-        provider: script
-        script: bash dev/ci-wheel-deploy.bash
-        on:
-          repo: SethMMorton/fastnumbers
-          branch: master
 
 before_install:
 - bash dev/ci-install-python.bash
@@ -109,7 +91,7 @@ before_script:
 script:
 - python setup.py install
 - python -m doctest fastnumbers
-- pytest --doctest-glob=README.rst
+- pytest --hypothesis-profile=slow-tests --doctest-glob=README.rst
 
 after_success:
 - (test "$CC" == "gcc" && codecov --gcov-args '-o build/temp.*/src') || echo "skipping coverage!"
