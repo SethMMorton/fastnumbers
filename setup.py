@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # Std lib imports
-import os
 import glob
+import os
 
 # Non-std lib imports
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 
 
 # Define how to build the extension module.

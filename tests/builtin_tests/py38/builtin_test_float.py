@@ -176,7 +176,7 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertEqual(float("  25.e-1  "), 2.5)
         self.assertAlmostEqual(float("  .25e-1  "), 0.025)
 
-    def test_floatconversion(self):
+    def test_floatconversion(self):  # noqa: C901
         # Make sure that calls to __float__() work properly
         class Foo1(object):
             def __float__(self):

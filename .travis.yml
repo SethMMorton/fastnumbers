@@ -20,6 +20,37 @@ jobs:
     - {python: 3.7, os: windows, env: PYTHON_VERSION=3.7.4, language: sh}
     - {python: 3.8, os: windows, env: PYTHON_VERSION=3.8.0, language: sh}
 
+    # This "code quality" stage does static analysis and formatting checks.
+    # Platform- and Python-version-independent.
+    # No python version specified, will use the first listed in the python: list.
+    - stage: code quality
+      python: 3.6  # black requires >= 3.6
+      name: "Formatting"
+      install: pip install black
+      before_script: skip
+      script:
+      # Check that python code is formatted
+      - black --quiet --check --diff .
+      # Check that C code is formatted
+      - astyle --recursive --options=dev/astyle.cfg --suffix=none \
+               --dry-run "src/*.c" | awk '/^Formatted/ { exit 1 }'
+      - astyle --recursive --options=dev/astyle.cfg --suffix=none \
+               --exclude=docstrings.h --exclude=fn_bool.h --exclude=pstdint.h \
+               --dry-run "include/fastnumbers/*.h" | awk '/^Formatted/ { exit 1 }'
+    - stage: code quality
+      name: "Static Analysis"
+      install: pip install flake8 flake8-import-order flake8-bugbear pep8-naming
+      before_script: skip
+      script: flake8
+    - stage: code quality
+      name: "Package Validation"
+      install: pip install twine check-manifest
+      before_script: skip
+      script:
+      - check-manifest
+      - python setup.py sdist
+      - twine check dist/*
+
     # Deployment! This needs to be run once for each major OS,
     # as well as once more to deploy the source distribution.
     - stage: deploy
@@ -95,6 +126,7 @@ after_success:
 - (test "$CC" == "gcc" && codecov --gcov-args '-o build/temp.*/src') || echo "skipping coverage!"
 
 stages:
+- code quality
 - test
 - name: deploy
   if: branch = master AND repo = SethMMorton/fastnumbers

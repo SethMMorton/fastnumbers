@@ -59,13 +59,10 @@ def a_number(s):
         return False
     if re.match(r"\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$", s, re.U):
         return True
-    if re.match(r"\s*([-+]?\d+[lL]?)\s*$", s, re.U):
-        return True
     if re.match(r"\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$", s, re.U):
         return True
-    if int(python_version_tuple()[0]) >= 3 or not isinstance(s, str):
-        if s.strip().lstrip("[-+]") in numeric:
-            return True
+    if s.strip().lstrip("[-+]") in numeric:
+        return True
     return False
 
 
