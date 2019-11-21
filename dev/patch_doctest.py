@@ -65,7 +65,7 @@ if sys.version[0] == "3":
 else:
     doctest_str = doctest_str.replace(
         "m = __import__(filename[:-3])",
-        'm = __import__(filename[:-3] '
+        "m = __import__(filename[:-3] "
         'if filename.endswith((".py", ".so", ".pyd")) else filename)',
     )
 
