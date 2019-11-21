@@ -5,7 +5,7 @@ set -ex
 
 # Configure the environment
 python -m pip install -U pip
-python -m pip install -U wheel twine cibuildwheel==1.0.0
+python -m pip install twine cibuildwheel==1.0.0
 
 # Install and execute the builder.
 export CIBW_SKIP="cp27-*"
