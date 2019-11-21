@@ -99,10 +99,11 @@ jobs:
     - stage: deploy
       name: "Build and Deploy Windows Wheels"
       os: windows
+      env: PYTHON_VERSION=3.6.8
       language: sh
       install: skip
       before_script: skip
-      script: PYTHON_VERSION=3.6.8 bash dev/ci-wheel-deploy.bash
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
 
 before_install:
