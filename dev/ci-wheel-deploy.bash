@@ -16,13 +16,13 @@ python -m cibuildwheel --output-dir wheelhouse
 # shellcheck disable=SC2086
 if [ -z $TRAVIS_TAG ]
 then
-    echo python -m twine upload \
+    python -m twine upload \
         --user SethMMorton \
         --skip-existing \
         --repository-url https://test.pypi.org/legacy/ \
         wheelhouse/*.whl
 else
-    echo python -m twine upload \
+    python -m twine upload \
         --user SethMMorton \
         --skip-existing \
         wheelhouse/*.whl

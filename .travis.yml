@@ -51,29 +51,21 @@ jobs:
       name: "Build and Deploy Linux Wheels"
       python: 3.6
       services: docker
+      before_install: skip
       install: skip
       before_script: skip
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
-      deploy:
-        provider: script
-        script: bash dev/ci-wheel-deploy.bash
-        on:
-          repo: SethMMorton/fastnumbers
-          branch: master
     - stage: deploy
       name: "Build and Deploy MacOS Wheels"
       os: osx
       env: PYTHON_VERSION=3.6.8
       language: sh
+      before_install: skip
       install: skip
       before_script: skip
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
-      deploy:
-        provider: script
-        script: bash dev/ci-wheel-deploy.bash
-        on:
-          repo: SethMMorton/fastnumbers
-          branch: master
     - stage: deploy
       name: "Build and Deploy Windows Wheels"
       os: windows
@@ -81,13 +73,8 @@ jobs:
       language: sh
       install: skip
       before_script: skip
+      script: bash dev/ci-wheel-deploy.bash
       after_success: skip
-      deploy:
-        provider: script
-        script: bash dev/ci-wheel-deploy.bash
-        on:
-          repo: SethMMorton/fastnumbers
-          branch: master
 
 before_install:
 - bash dev/ci-install-python.bash
