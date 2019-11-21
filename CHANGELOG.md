@@ -5,6 +5,10 @@ Unreleased
  - Support and tests for Python 3.8
  - Text to highlight that `fastnumbers` is not always faster that native Python
  - `on_fail` option that is identical to `key`, but has a more descriptive name
+ - Windows testing to Travis-CI
+ - Code quality checks to Travis-CI
+ - Deployment from Travis-CI
+ - RELEASING.md
 
 ### Changed
  - Cleaned up all test code so that it no longer includes unused code
@@ -24,6 +28,7 @@ Unreleased
 
 ### Removed
  - Support for Python 2.7 and Python 3.4
+ - Appveyor service
 
 [2.2.1] - 2019-03-25
 ---
