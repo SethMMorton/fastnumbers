@@ -65,7 +65,6 @@ jobs:
       os: osx
       env: PYTHON_VERSION=3.6.8
       language: sh
-      before_install: skip
       install: skip
       before_script: skip
       after_success: skip
