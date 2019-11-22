@@ -10,8 +10,6 @@ This file contains some files useful for development.
 - `ci-install-python.bash` - Code to install Python on Windows in Travis-CI.
 - `ci-update-path.bash` - Sourcing this file in Travis-CI will ensure Python is
   on the PATH in Windows.
-- `ci-wheel-deploy.bash` - Code to install `cibuildwheel` and deploy with `twine`
-  on Travis-CI.
 - `clean.py` - This file cleans most files that are created during development.
   Run in the project home directory.
   Not intended to be called directly, but rather by `tox -e clean`.

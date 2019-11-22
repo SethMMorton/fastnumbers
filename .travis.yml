@@ -56,37 +56,39 @@ jobs:
     - stage: deploy
       name: "Deploy Source Distribution"
       before_install: skip
-      install: skip
-      before_script: skip
-      script: bash dev/ci-source-deploy.bash
-      after_success: skip
+      install: python -m pip install twine
+      before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
+      script: python setup.py sdist --format=gztar
+      after_success: python -m twine upload --user SethMMorton --skip-existing dist/fastnumbers*.tar.gz
     - stage: deploy
       name: "Build and Deploy Linux Wheels"
       python: 3.6
       services: docker
+      env: CIBW_SKIP="cp27-*"
       before_install: skip
-      install: skip
-      before_script: skip
-      script: bash dev/ci-wheel-deploy.bash
-      after_success: skip
+      install: python -m pip install twine cibuildwheel==1.0.0
+      before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
+      script: python -m cibuildwheel --output-dir wheelhouse
+      after_success: python -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
     - stage: deploy
       name: "Build and Deploy MacOS Wheels"
       os: osx
+      env: CIBW_SKIP="cp27-*"
       language: sh
       before_install: skip
-      install: skip
-      before_script: skip
-      script: bash dev/ci-wheel-deploy.bash
-      after_success: skip
+      install: python -m pip install twine cibuildwheel==1.0.0
+      before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
+      script: python -m cibuildwheel --output-dir wheelhouse
+      after_success: python -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
     - stage: deploy
       name: "Build and Deploy Windows Wheels"
       os: windows
-      env: PYTHON_VERSION=3.6.8
+      env: [PYTHON_VERSION=3.6.8, CIBW_SKIP="cp27-*"]
       language: sh
-      install: skip
-      before_script: skip
-      script: bash dev/ci-wheel-deploy.bash
-      after_success: skip
+      install: python -m pip install twine cibuildwheel==1.0.0
+      before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
+      script: python -m cibuildwheel --output-dir wheelhouse
+      after_success: python -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
 
 before_install:
 - bash dev/ci-install-python.bash
