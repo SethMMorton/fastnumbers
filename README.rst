@@ -67,6 +67,9 @@ Error-Handling Functions
 
 - `Error-handling function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-error-handling-functions>`_
 
+``fast_float`` will be used to demonstrate the functionality of the
+``fast_*`` functions.
+
 .. code-block:: python
 
     >>> from fastnumbers import fast_float
@@ -115,19 +118,22 @@ Error-Handling Functions
     5.0
     >>> fast_float('\u2466')  # 7 enclosed in a circle
     7.0
-    >>>
-    >>>
-    >>> # The sister function fast_int behaves similarly
+
+``fast_int`` behaves the same as ``fast_float``, but for integers.
+
+.. code-block:: python
+
     >>> from fastnumbers import fast_int
     >>> fast_int('1234')
     1234
     >>> fast_int('\u2466')
     7
-    >>>
-    >>>
-    >>> # The sister function fast_real returns either a
-    >>> # float or int depending on if there is any fractional component,
-    >>> # othewise it behaves the same
+
+``fast_real`` is like ``fast_float`` or ``fast_int`` depending
+on if there is any fractional component of thi return value.
+
+.. code-block:: python
+
     >>> from fastnumbers import fast_real
     >>> fast_real('56')
     56
@@ -145,8 +151,11 @@ Error-Handling Functions
     56.0
     >>>
     >>>
-    >>> # The sister function fast_forceint always returns an integer,
-    >>> # othewise it behaves the same
+
+``fast_forceint`` always returns an integer.
+
+.. code-block:: python
+
     >>> from fastnumbers import fast_forceint
     >>> fast_forceint('56')
     56
@@ -171,6 +180,8 @@ to get you thinking.
     >>> fast_float('invalid input', on_fail=lambda x: float(x.count('i')))  # count the 'i's
     3.0
     >>>
+    >>>
+    >>>
     >>> # Suppose we know that our input could either be a number, or if not
     >>> # then we know we just have to strip off parens to get to the number
     >>> # e.g. the input could be '45' or '(45)'. Also, suppose that if it
@@ -186,6 +197,8 @@ to get you thinking.
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): invalid input
+    >>>
+    >>>
     >>>
     >>> # Suppose that whenever an invalid input is given, it needs to be
     >>> # logged and then a default value is returned.
@@ -206,6 +219,9 @@ Checking Functions
 ++++++++++++++++++
 
 - `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
+
+``isfloat`` will be used to demonstrate the functionality of the
+``is*`` functions.
 
 .. code-block:: python
 
@@ -235,9 +251,11 @@ Checking Functions
     False
     >>> isfloat('nan', allow_nan=True)
     True
-    >>>
-    >>>
-    >>> # The sister function isint works the same, and has similar customization
+
+``isint`` works the same as ``isfloat``, but for integers.
+
+.. code-block:: python
+
     >>> from fastnumbers import isint
     >>> isint('56')
     True
@@ -247,10 +265,11 @@ Checking Functions
     False
     >>> isint(56.0)
     False
-    >>>
-    >>>
-    >>> # The sister function isreal is very permissive - any number will do
-    >>> # It has all the options that isfloat has
+
+``isreal`` is very permissive - any float or integer is accepted.
+
+.. code-block:: python
+
     >>> from fastnumbers import isreal
     >>> isreal('56.0')
     True
@@ -260,10 +279,12 @@ Checking Functions
     True
     >>> isreal(56)
     True
-    >>>
-    >>>
-    >>> # The sister function isintlike checks if a number is "int-like",
-    >>> # e.g. if it has no fractional component.
+
+``isintlike`` checks if a number is "int-like", if it has no
+fractional component.
+
+.. code-block::
+
     >>> from fastnumbers import isintlike
     >>> isintlike('56.0')
     True
@@ -307,10 +328,12 @@ actually shadow the built-in ``int`` function, you can do
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
-    >>>
-    >>>
-    >>> # real is provided to give a float or int depending
-    >>> # on the fractional component of the input
+
+``real`` is is provided to give a float or int depending
+on the fractional component of the input.
+
+.. code-block:: python
+
     >>> from fastnumbers import real
     >>> real('56.0')
     56
