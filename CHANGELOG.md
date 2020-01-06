@@ -24,6 +24,7 @@ Unreleased
 
 ### Fixed
  - Bug where the `coerce` option of `real()` was ignored
+ - Improved testing reproducibility by pinning all test dependencies
 
 ### Removed
  - Support for Python 2.7 and Python 3.4
