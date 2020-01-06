@@ -11,7 +11,7 @@ fastnumbers
     :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
 
 .. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg?label=travis-ci
-    :target: https://travis-ci.org/SethMMorton/fastnumbers
+    :target: https://travis-ci.com/SethMMorton/fastnumbers
 
 .. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/SethMMorton/fastnumbers
