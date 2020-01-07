@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[3.0.0] - 2020-01-06
+---
+
 ### Added
  - Support and tests for Python 3.8
  - Text to highlight that `fastnumbers` is not always faster that native Python
@@ -319,6 +322,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[3.0.0]: https://github.com/SethMMorton/fastnumbers/compare/2.2.1...3.0.0
 [2.2.1]: https://github.com/SethMMorton/fastnumbers/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/SethMMorton/fastnumbers/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/SethMMorton/fastnumbers/compare/2.1.0...2.1.1
