@@ -114,7 +114,7 @@ stages:
 - code quality
 - test
 - name: deploy
-  if: branch = master AND repo = SethMMorton/fastnumbers
+  if: (branch = master OR tag IS present) AND repo = SethMMorton/fastnumbers
 
 cache:
   - pip
