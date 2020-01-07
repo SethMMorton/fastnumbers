@@ -304,7 +304,7 @@ Drop-in Replacement Functions
 with a speedup - they may not. Every platform, compiler, and data-set is
 different, and you should perform a timing test on your system with your data
 to evaluate if you will see a benefit. As you can see from the data linked in
-the `Timing`_ section, the amount of speedup you will get particularly
+the `Timing`_ section, the amount of speedup you will get is particularly
 data-dependent.
 
 **NOTE**: in the below examples, we use ``from fastnumbers import int`` instead
