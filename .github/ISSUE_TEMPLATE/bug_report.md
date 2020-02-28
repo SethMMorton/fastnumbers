@@ -11,6 +11,7 @@ A clear and concise description of what the bug is.
 A clear and concise description of what you expected to happen.
 
 **Environment (please complete the following information):**
+ - fastnumbers version: 
  - Python Version: [e.g. 3.6]
  - OS [e.g. Windows, Fedora]
  - Compiler (if known): [e.g. gcc]
