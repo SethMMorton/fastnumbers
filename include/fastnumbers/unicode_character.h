@@ -24,6 +24,9 @@ PyUnicodeCharacter_to_PyNumber(PyObject *obj, const PyNumberType type,
 PyObject *
 PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type);
 
+PyObject *
+PyUnicodeCharacter_contains_type(PyObject *obj);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

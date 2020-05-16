@@ -293,6 +293,33 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 
+/* Quickly detect the type. */
+static PyObject *
+fastnumbers_query_type(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *input = NULL;
+    Options opts = init_Options_check;
+    bool return_none_on_invalid = false;
+    static char *keywords[] = { "x", "allow_inf", "allow_nan", "coerce",
+                                "raise_on_invalid", "allow_underscores", NULL
+                              };
+    static const char *format = "O|$OOpp:type";
+
+    /* Coerce is false by default here. */
+    opts.coerce = false;
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
+                                     &input, &opts.handle_inf, &opts.handle_nan,
+                                     &opts.coerce, &return_none_on_invalid,
+                                     &opts.allow_underscores)) {
+        return NULL;
+    }
+
+    return PyObject_contains_type(input, &opts);
+}
+
+
 /* Drop-in replacement for int, float */
 static PyObject *
 fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -426,6 +453,9 @@ static PyMethodDef FastnumbersMethods[] = {
     },
     {   "isintlike", (PyCFunction) fastnumbers_isintlike,
         METH_VARARGS | METH_KEYWORDS, isintlike__doc__
+    },
+    {   "query_type", (PyCFunction) fastnumbers_query_type,
+        METH_VARARGS | METH_KEYWORDS, "hello\n"
     },
     {   "int", (PyCFunction) fastnumbers_int,
         METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__

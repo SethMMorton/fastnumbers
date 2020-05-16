@@ -126,3 +126,34 @@ PyObject_is_number(PyObject *obj, const PyNumberType type,
     /* If we got here, the type was invalid so return False. */
     Py_RETURN_FALSE;
 }
+
+
+/* Return the type contained the object. */
+PyObject *
+PyObject_contains_type(PyObject *obj, const Options *options)
+{
+    PyObject *pyresult = NULL;
+
+    /* Already a number? Just return the type directly. */
+    if (PyNumber_Check(obj)) {
+        return PyObject_Type(obj);
+    }
+
+    /* Assume a string. */
+    pyresult = PyString_contains_type(obj, options);
+    if (pyresult == NULL || errno == ENOMEM) {
+        return NULL; /* ALWAYS raise on out-of-memory errors. */
+    }
+    else if (pyresult != Py_None) {
+        return pyresult;
+    }
+
+    /* Assume unicode. */
+    pyresult = PyUnicodeCharacter_contains_type(obj);
+    if (pyresult != Py_None) {
+        return pyresult;
+    }
+
+    /* If we got here, the type was invalid. */
+    return PyObject_Type(obj);
+}

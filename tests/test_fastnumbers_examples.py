@@ -516,6 +516,15 @@ def test_isintlike():
     assert fastnumbers.isintlike(u"Ⅴ")
 
 
+def test_type():
+    assert fastnumbers.query_type("1") == int
+    assert fastnumbers.query_type(1) == int
+    assert fastnumbers.query_type("1.0") == float
+    assert fastnumbers.query_type(1.0) == float
+    assert fastnumbers.query_type("hello") == str
+    assert fastnumbers.query_type([1]) == list
+
+
 @pytest.fixture()
 def tprint(capsys):
     """

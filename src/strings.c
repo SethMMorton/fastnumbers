@@ -609,3 +609,53 @@ PyString_is_number(PyObject *obj, const PyNumberType type,
         Py_RETURN_FALSE;
     }
 }
+
+
+/* Return the type contained the string. */
+PyObject *
+PyString_contains_type(PyObject *obj, const Options *options)
+{
+    const char *end;
+    const int base = Options_Default_Base(options) ? 10 : options->base;
+    PyObject *result = NULL;
+    bool needs_raise = false;
+    char *buf = NULL;
+    const char *str = convert_PyString_to_str(obj, &end, &buf, &needs_raise,
+                                              !Options_Default_Base(options),
+                                              Options_Allow_Underscores(options));
+    if (needs_raise) {
+        /* Never need to free buffer if needs_raise is true. */
+        return NULL;
+    }
+
+    if (str != NULL) {
+        consume_sign(str);  /* All functions require sign is stripped. */
+        if (string_contains_int(str, end, base)) {
+            result = (PyObject *) &PyLong_Type;
+            Py_INCREF(result);
+        }
+        else if (Options_Coerce_True(options) &&
+                 string_contains_intlike_float(str, end))
+        {
+            result = (PyObject *) &PyLong_Type;
+            Py_INCREF(result);
+        }
+        else if (string_contains_float(str, end,
+                                       Options_Allow_Infinity(options),
+                                       Options_Allow_NAN(options)))
+        {
+            result = (PyObject *) &PyFloat_Type;
+            Py_INCREF(result);
+        }
+        else {
+            result = PyObject_Type(obj);
+        }
+    }
+    else {
+        /* Not a string. Never need to free if str was NULL. */
+        return Py_None;
+    }
+
+    free(buf);
+    return result;
+}
