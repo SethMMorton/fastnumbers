@@ -517,12 +517,14 @@ def test_isintlike():
 
 
 def test_type():
-    assert fastnumbers.query_type("1") == int
-    assert fastnumbers.query_type(1) == int
-    assert fastnumbers.query_type("1.0") == float
-    assert fastnumbers.query_type(1.0) == float
-    assert fastnumbers.query_type("hello") == str
-    assert fastnumbers.query_type([1]) == list
+    assert fastnumbers.query_type("1") is int
+    assert fastnumbers.query_type(1) is int
+    assert fastnumbers.query_type("1.0") is float
+    assert fastnumbers.query_type(1.0) is float
+    assert fastnumbers.query_type("hello") is str
+    assert fastnumbers.query_type([1]) is list
+    assert fastnumbers.query_type([1], allowed_types=(int, float)) is None
+    assert fastnumbers.query_type("1", allowed_types=(int, float)) is int
 
 
 @pytest.fixture()
