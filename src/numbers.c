@@ -7,6 +7,7 @@
  */
 
 #include <Python.h>
+#include <float.h>
 #include "fastnumbers/numbers.h"
 #include "fastnumbers/options.h"
 #include "fastnumbers/pstdint.h"
@@ -20,15 +21,24 @@
 
 static bool
 _PyFloat_is_Intlike(PyObject *obj) {
-    PyObject *py_is_intlike = PyObject_CallMethod(obj, "is_integer", NULL);
-    if (py_is_intlike == NULL) { /* Unlikely. */
+    /* NOTE: This code copy/pasted with modification from the CPython source.
+             They did not expose it as public for some reason.
+     */
+    bool retval = false;
+    const double x = PyFloat_AsDouble(obj);
+
+    if (x == -1.0 && PyErr_Occurred()) {
         return PyErr_Clear(), false;
     }
-    else {
-        const bool is_intlike = PyObject_IsTrue(py_is_intlike);
-        Py_DECREF(py_is_intlike);
-        return is_intlike;
+    if (!Py_IS_FINITE(x)) {
+        return false;
     }
+    errno = 0;
+    retval = (floor(x) == x) ? true : false;
+    if (errno != 0) {
+        return false;
+    }
+    return retval;
 }
 
 
