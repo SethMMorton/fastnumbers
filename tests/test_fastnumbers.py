@@ -187,6 +187,16 @@ def test_numbers_with_underscores_identified_according_to_allow_underscores_opti
     assert not func(x, allow_underscores=False)
 
 
+@skipif(
+    sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
+)
+def test_type_with_underscores_identified_according_to_allow_underscores_option():
+    x = "1_234_567"
+    assert fastnumbers.query_type(x) is int
+    assert fastnumbers.query_type(x, allow_underscores=True) is int
+    assert fastnumbers.query_type(x, allow_underscores=False) is str
+
+
 class TestFastReal:
     """Tests for the fast_real function."""
 
@@ -1290,3 +1300,109 @@ class TestIsIntLike:
     def test_returns_false_for_nan_or_inf_string(self):
         assert not fastnumbers.isintlike("nan")
         assert not fastnumbers.isintlike("inf")
+
+
+class TestQueryType:
+    """Tests for the query_type function."""
+
+    @given(integers())
+    def test_returns_int_if_given_int(self, x):
+        assert fastnumbers.query_type(x) is int
+
+    @given(floats())
+    def test_returns_float_if_given_float(self, x):
+        assert fastnumbers.query_type(x) is float
+
+    @given(integers())
+    def test_returns_none_if_given_int_and_int_is_not_allowed(self, x):
+        assert fastnumbers.query_type(x, allowed_types=(float,)) is None
+
+    @given(floats())
+    def test_returns_none_if_given_float_and_float_is_not_allowed(self, x):
+        assert fastnumbers.query_type(x, allowed_types=(int,)) is None
+
+    @given(integers(), integers(0, 100), integers(0, 100))
+    def test_returns_int_if_given_int_string_padded_or_not(self, x, y, z):
+        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
+        assert fastnumbers.query_type(repr(x)) is int
+        assert fastnumbers.query_type(y) is int
+
+    @given(
+        floats(allow_nan=False, allow_infinity=False),
+        integers(0, 100),
+        integers(0, 100),
+    )
+    def test_returns_float_if_given_float_string_padded_or_not(self, x, y, z):
+        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
+        assert fastnumbers.query_type(repr(x)) is float
+        assert fastnumbers.query_type(y) is float
+
+    @given(integers())
+    def test_returns_none_if_given_int_string_and_int_is_not_allowed(self, x):
+        assert fastnumbers.query_type(repr(x), allowed_types=(float, str)) is None
+
+    @given(sampled_from(digits))
+    def test_given_unicode_digit_returns_int(self, x):
+        assert fastnumbers.query_type(x) is int
+        # Try padded as well
+        assert fastnumbers.query_type(u"   " + x + u"   ") is int
+
+    @given(sampled_from(numeric_not_digit_not_int))
+    def test_given_unicode_numeral_returns_float(self, x):
+        assert fastnumbers.query_type(x) is float
+        # Try padded as well
+        assert fastnumbers.query_type(u"   " + x + u"   ") is float
+
+    @given(sampled_from(not_numeric))
+    def test_given_unicode_non_numeral_returns_str_or_none_if_str_not_allowed(self, x):
+        assert fastnumbers.query_type(x) is str
+        assert fastnumbers.query_type(x, allowed_types=(int, float)) is None
+
+    @given(text(min_size=2).filter(not_a_number))
+    def test_given_unicode_of_more_than_one_char_returns_str(self, x):
+        assert fastnumbers.query_type(x) is str
+
+    @given(text().filter(not_a_number))
+    @example("+")
+    @example("-")
+    @example("e")
+    @example("e8")
+    @example(".")
+    def test_returns_str_if_given_non_number_string(self, x):
+        assert fastnumbers.query_type(x) is str
+
+    @given(text().filter(not_a_number))
+    def test_returns_none_if_given_non_number_string_and_str_is_not_allowed(self, x):
+        assert fastnumbers.query_type(x, allowed_types=(int, float)) is None
+
+    @given(binary().filter(not_a_number))
+    def test_returns_bytes_if_given_non_number_string(self, x):
+        assert fastnumbers.query_type(x) is bytes
+
+    @given(binary().filter(not_a_number))
+    def test_returns_none_if_given_non_number_bytes_and_bytes_is_not_allowed(self, x):
+        assert fastnumbers.query_type(x, allowed_types=(int, float)) is None
+
+    def test_returns_str_for_nan_string_unless_allow_nan_is_true(self):
+        assert fastnumbers.query_type("nan") is str
+        assert fastnumbers.query_type("nan", allow_nan=True) is float
+        assert fastnumbers.query_type("-NaN", allow_nan=True) is float
+
+    def test_returns_str_for_inf_string_unless_allow_infinity_is_true(self):
+        assert fastnumbers.query_type("inf") is str
+        assert fastnumbers.query_type("inf", allow_inf=True) is float
+        assert fastnumbers.query_type("-INFINITY", allow_inf=True) is float
+
+    def test_given_nan_returns_float(self):
+        assert fastnumbers.query_type(float("nan")) is float
+
+    def test_given_inf_returns_float(self):
+        assert fastnumbers.query_type(float("inf")) is float
+
+    @given(floats(allow_nan=False).filter(an_integer))
+    def test_given_float_returns_int_if_intlike_with_coerce(self, x):
+        assert fastnumbers.query_type(x, coerce=True) == int
+
+    @given(floats(allow_nan=False))
+    def test_given_float_returns_float_or_int_with_coerce(self, x):
+        assert fastnumbers.query_type(x, coerce=True) == int if x.is_integer() else float
