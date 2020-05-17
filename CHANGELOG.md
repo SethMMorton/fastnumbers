@@ -1,6 +1,10 @@
 Unreleased
 ---
 
+### Added
+- `query_type` function to determine what as type `fastnumbers` will interpret
+  a given input
+
 [3.0.0] - 2020-01-06
 ---
 
