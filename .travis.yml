@@ -37,10 +37,10 @@ jobs:
       - black --quiet --check --diff .
       # Check that C code is formatted
       - astyle --recursive --options=dev/astyle.cfg --suffix=none \
-               --dry-run '"src/*.c"' | awk '/^Formatted/ { exit 1 }'
+               --dry-run \"src/*.c\" | awk '/^Formatted/ { exit 1 }'
       - astyle --recursive --options=dev/astyle.cfg --suffix=none \
                --exclude=docstrings.h --exclude=fn_bool.h --exclude=pstdint.h \
-               --dry-run '"include/fastnumbers/*.h"' | awk '/^Formatted/ { exit 1 }'
+               --dry-run \"include/fastnumbers/*.h\" | awk '/^Formatted/ { exit 1 }'
     - stage: code quality
       name: "Static Analysis"
       install: pip install flake8 flake8-import-order flake8-bugbear pep8-naming
