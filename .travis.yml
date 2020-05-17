@@ -25,6 +25,10 @@ jobs:
     # No python version specified, will use the first listed in the python: list.
     - stage: code quality
       python: 3.6  # black requires >= 3.6
+      addons:
+        apt:
+          packages:
+          - astyle
       name: "Formatting"
       install: pip install black
       before_script: skip
