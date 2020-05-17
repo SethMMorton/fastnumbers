@@ -485,7 +485,7 @@ static PyMethodDef FastnumbersMethods[] = {
         METH_VARARGS | METH_KEYWORDS, isintlike__doc__
     },
     {   "query_type", (PyCFunction) fastnumbers_query_type,
-        METH_VARARGS | METH_KEYWORDS, "hello\n"
+        METH_VARARGS | METH_KEYWORDS, query_type__doc__
     },
     {   "int", (PyCFunction) fastnumbers_int,
         METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__

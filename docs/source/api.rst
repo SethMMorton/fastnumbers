@@ -85,3 +85,8 @@ can return a certain number type or not.
 ++++++++++++++++++++++++++++++
 
 .. autofunction:: isintlike
+
+:func:`~fastnumbers.query_type`
++++++++++++++++++++++++++++++++
+
+.. autofunction:: query_type
