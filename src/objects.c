@@ -135,13 +135,14 @@ PyObject_contains_type(PyObject *obj, const Options *options)
     PyObject *pyresult = NULL;
 
     /* Already a number? Just return the type directly. */
-    if (PyLong_Check(obj) || (Options_Coerce_True(options) && PyFloat_is_Intlike(obj))) {
-        pyresult = (PyObject*) &PyLong_Type;
+    if (PyLong_Check(obj) || (Options_Coerce_True(options) &&
+                              PyFloat_is_Intlike(obj))) {
+        pyresult = (PyObject *) &PyLong_Type;
         Py_INCREF(pyresult);
         return pyresult;
     }
     else if (PyFloat_Check(obj)) {
-        pyresult = (PyObject*) &PyFloat_Type;
+        pyresult = (PyObject *) &PyFloat_Type;
         Py_INCREF(pyresult);
         return pyresult;
     }
