@@ -25,7 +25,7 @@ astyle = [
 astyle_c = astyle + ["src/*.c"]
 print(*map(shlex.quote, astyle_c))
 astyle_c_ret = subprocess.run(
-    astyle_c, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    astyle_c, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
 )
 print(astyle_c_ret.stdout)
 
@@ -38,7 +38,7 @@ astyle_h = astyle + [
 ]
 print(*map(shlex.quote, astyle_h))
 astyle_h_ret = subprocess.run(
-    astyle_h, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    astyle_h, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
 )
 print(astyle_h_ret.stdout)
 
