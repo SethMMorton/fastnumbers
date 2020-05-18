@@ -1405,4 +1405,6 @@ class TestQueryType:
 
     @given(floats(allow_nan=False))
     def test_given_float_returns_float_or_int_with_coerce(self, x):
-        assert fastnumbers.query_type(x, coerce=True) == int if x.is_integer() else float
+        assert (
+            fastnumbers.query_type(x, coerce=True) == int if x.is_integer() else float
+        )
