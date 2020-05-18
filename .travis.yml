@@ -24,23 +24,16 @@ jobs:
     # Platform- and Python-version-independent.
     # No python version specified, will use the first listed in the python: list.
     - stage: code quality
+      name: "Formatting"
       python: 3.6  # black requires >= 3.6
       addons:
         apt:
           packages:
           - astyle
-      name: "Formatting"
       install: pip install black
       before_script: skip
       script:
-      # Check that python code is formatted
-      - black --quiet --check --diff .
-      # Check that C code is formatted
-      - astyle --recursive --options=dev/astyle.cfg --suffix=none \
-               --dry-run \"src/*.c\" | awk '/^Formatted/ { exit 1 }'
-      - astyle --recursive --options=dev/astyle.cfg --suffix=none \
-               --exclude=docstrings.h --exclude=fn_bool.h --exclude=pstdint.h \
-               --dry-run \"include/fastnumbers/*.h\" | awk '/^Formatted/ { exit 1 }'
+      - python dev/check-formatting.py
     - stage: code quality
       name: "Static Analysis"
       install: pip install flake8 flake8-import-order flake8-bugbear pep8-naming
