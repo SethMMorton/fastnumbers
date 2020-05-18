@@ -44,10 +44,10 @@ print(astyle_h_ret.stdout)
 
 # Did any C files get formatted?
 any_c_formatting = any(
-    l.startswith("Formatted") for l in astyle_c_ret.stdout.splitlines()
+    line.startswith("Formatted") for line in astyle_c_ret.stdout.splitlines()
 )
 any_h_formatting = any(
-    l.startswith("Formatted") for l in astyle_h_ret.stdout.splitlines()
+    line.startswith("Formatted") for line in astyle_h_ret.stdout.splitlines()
 )
 
 # "Roll up" what happened into a single exit code.
