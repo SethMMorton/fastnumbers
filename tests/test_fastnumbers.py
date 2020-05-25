@@ -9,7 +9,18 @@ from itertools import repeat
 from platform import python_version_tuple
 
 from hypothesis import example, given
-from hypothesis.strategies import binary, floats, integers, lists, sampled_from, text
+from hypothesis.strategies import (
+    binary,
+    dictionaries,
+    floats,
+    integers,
+    iterables,
+    lists,
+    sampled_from,
+    sets,
+    text,
+    tuples,
+)
 from pytest import mark, raises
 
 import fastnumbers
@@ -1408,3 +1419,14 @@ class TestQueryType:
         assert (
             fastnumbers.query_type(x, coerce=True) == int if x.is_integer() else float
         )
+
+    @given(
+        lists(floats())
+        | tuples(floats())
+        | dictionaries(floats(), floats())
+        | sets(floats())
+        | iterables(floats())
+    )
+    def test_containers_returns_container_type(self, x):
+        assert fastnumbers.query_type(x) is type(x)
+        assert fastnumbers.query_type(x, allowed_types=(float, int, str)) is None
