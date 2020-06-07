@@ -293,6 +293,63 @@ fastnumbers_isintlike(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 
+/* Quickly detect the type. */
+static PyObject *
+fastnumbers_query_type(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *input = NULL;
+    PyObject *allowed_types = NULL;
+    PyObject *result = NULL;
+    Options opts = init_Options_check;
+    static char *keywords[] = { "x", "allow_inf", "allow_nan", "coerce",
+                                "allowed_types", "allow_underscores", NULL
+                              };
+    static const char *format = "O|$OOOOp:type";
+
+    /* Coerce is false by default here. */
+    opts.coerce = false;
+
+    /* Read the function argument. */
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords,
+                                     &input, &opts.handle_inf, &opts.handle_nan,
+                                     &opts.coerce, &allowed_types,
+                                     &opts.allow_underscores)) {
+        return NULL;
+    }
+    // Allowed types must be a non-empty sequence.
+    if (allowed_types != NULL) {
+        if (!PySequence_Check(allowed_types)) {
+            PyErr_Format(
+                PyExc_TypeError,
+                "allowed_type is not a sequence type: %R",
+                allowed_types
+            );
+            return NULL;
+        }
+        if (PySequence_Length(allowed_types) < 1) {
+            PyErr_SetString(
+                PyExc_ValueError,
+                "allowed_type must not be an empty sequence"
+            );
+            return NULL;
+        }
+    }
+
+    result = PyObject_contains_type(input, &opts);
+
+    /* If the result is not one of the allowed types, return None instead */
+    if (result != NULL && allowed_types != NULL &&
+            !PySequence_Contains(allowed_types, result))
+    {
+        Py_DECREF(result);
+        Py_RETURN_NONE;
+    }
+    else {
+        return result;
+    }
+}
+
+
 /* Drop-in replacement for int, float */
 static PyObject *
 fastnumbers_int(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -426,6 +483,9 @@ static PyMethodDef FastnumbersMethods[] = {
     },
     {   "isintlike", (PyCFunction) fastnumbers_isintlike,
         METH_VARARGS | METH_KEYWORDS, isintlike__doc__
+    },
+    {   "query_type", (PyCFunction) fastnumbers_query_type,
+        METH_VARARGS | METH_KEYWORDS, query_type__doc__
     },
     {   "int", (PyCFunction) fastnumbers_int,
         METH_VARARGS | METH_KEYWORDS, fastnumbers_int__doc__

@@ -221,7 +221,7 @@ Checking Functions
 - `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
 
 ``isfloat`` will be used to demonstrate the functionality of the
-``is*`` functions.
+``is*`` functions, as well as the ``query_type`` function.
 
 .. code-block:: python
 
@@ -294,6 +294,29 @@ fractional component.
     True
     >>> isintlike(56.7)
     False
+
+The ``query_type`` function can be used if you need to determine if
+a value is one of many types, rather than whether or not it is one specific
+type.
+
+.. code-block::
+
+    >>> from fastnumbers import query_type
+    >>> query_type('56.0')
+    <class 'float'>
+    >>> query_type('56')
+    <class 'int'>
+    >>> query_type(56.0)
+    <class 'float'>
+    >>> query_type(56)
+    <class 'int'>
+    >>> query_type(56.0, coerce=True)
+    <class 'int'>
+    >>> query_type('56.0', allowed_types=(float, int))
+    <class 'float'>
+    >>> query_type('hey')
+    <class 'str'>
+    >>> query_type('hey', allowed_types=(float, int))  # returns None
 
 Drop-in Replacement Functions
 +++++++++++++++++++++++++++++

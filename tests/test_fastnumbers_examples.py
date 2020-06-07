@@ -516,6 +516,58 @@ def test_isintlike():
     assert fastnumbers.isintlike(u"Ⅴ")
 
 
+def test_type():
+    # 1. float number
+    assert fastnumbers.query_type(-367.3268) is float
+    # 2. signed float string
+    assert fastnumbers.query_type("+367.3268") is float
+    # 3. float string with exponents
+    assert fastnumbers.query_type("-367.3268e207") is float
+    # 4. float string with padded whitespace
+    assert fastnumbers.query_type("   -367.04   ") is float
+    # 5. int number
+    assert fastnumbers.query_type(499) is int
+    # 6. signed int string
+    assert fastnumbers.query_type("-499") is int
+    # 7. int string with padded whitespace
+    assert fastnumbers.query_type("   +3001   ") is int
+    # 8. long number
+    assert fastnumbers.query_type(35892482945872302493) is int
+    # 9. long string
+    assert fastnumbers.query_type("35892482945872302493") is int
+    # 10. coerced type
+    assert fastnumbers.query_type(4029.0) is float
+    assert fastnumbers.query_type("4029.0") is float
+    assert fastnumbers.query_type(4029.0, coerce=True) is int
+    assert fastnumbers.query_type("4029.0", coerce=True) is int
+    # 11. Invalid type
+    assert fastnumbers.query_type(["hey"]) is list
+    # 12. Invalid input string
+    assert fastnumbers.query_type("not_a_number") is str
+    assert fastnumbers.query_type("not_a_number", allowed_types=(float, int)) is None
+    # 13. Invalid input string with numbers
+    assert fastnumbers.query_type("26.8 lb") is str
+    assert fastnumbers.query_type("26.8 lb", allowed_types=(float, int)) is None
+    # 14. Infinity
+    assert fastnumbers.query_type("inf") is str
+    assert fastnumbers.query_type("inf", allow_inf=True) is float
+    assert fastnumbers.query_type("-iNFinity", allow_inf=True) is float
+    # 15. NaN
+    assert fastnumbers.query_type("nan") is str
+    assert fastnumbers.query_type("nan", allow_nan=True) is float
+    assert fastnumbers.query_type("-NaN", allow_nan=True) is float
+    # 16. Sign/'e'/'.' only
+    assert fastnumbers.query_type("+") is str
+    assert fastnumbers.query_type("-") is str
+    assert fastnumbers.query_type("e") is str
+    assert fastnumbers.query_type(".") is str
+    # 18. Unicode numbers
+    assert fastnumbers.query_type(u"⑦") is int
+    assert fastnumbers.query_type(u"⁸") is int
+    assert fastnumbers.query_type(u"⅔") is float
+    assert fastnumbers.query_type(u"Ⅴ") is float
+
+
 @pytest.fixture()
 def tprint(capsys):
     """

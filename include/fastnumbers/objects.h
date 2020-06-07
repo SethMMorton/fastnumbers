@@ -22,6 +22,9 @@ PyObject *
 PyObject_is_number(PyObject *obj, const PyNumberType type,
                    const Options *options);
 
+PyObject *
+PyObject_contains_type(PyObject *obj, const Options *options);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

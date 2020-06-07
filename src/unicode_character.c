@@ -183,3 +183,23 @@ PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type)
         return Py_None;  /* Not unicode. */
     }
 }
+
+
+PyObject *
+PyUnicodeCharacter_contains_type(PyObject *obj)
+{
+    PyObject *number = convert_PyUnicode_to_PyNumber(obj);
+    PyObject *retval = NULL;
+
+    if (number == NULL) {
+        return PyObject_Type(obj);
+    }
+    else if (number != Py_None) {
+        retval = PyObject_Type(number);
+        Py_DECREF(number);
+        return retval;
+    }
+    else {
+        return Py_None;  /* Not unicode. */
+    }
+}
