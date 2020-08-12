@@ -21,6 +21,14 @@ PyObject** FN_NEG_INFINITY_PTR = &NEG_INFINITY;
 PyObject** FN_POS_NAN_PTR = &POS_NAN;
 PyObject** FN_NEG_NAN_PTR = &NEG_NAN;
 
+// Selectors for user options
+static PyObject* fastnumbers_ALLOWED;
+static PyObject* fastnumbers_DISALLOWED;
+static PyObject* fastnumbers_INPUT;
+static PyObject* fastnumbers_RAISE;
+static PyObject* fastnumbers_STRING_ONLY;
+static PyObject* fastnumbers_NUMBER_ONLY;
+
 /**
  * \brief Function to handle the conversion of base to integers.
  *
@@ -729,15 +737,6 @@ static PyMethodDef FastnumbersMethods[] = {
     { nullptr, nullptr, 0, nullptr } /* Sentinel */
 };
 
-// We want a module-level variable that is the version.
-static PyObject* fastnumbers__version__;
-
-// Some constants that may be useful for debugging.
-static PyObject* fastnumbers_FN_MAX_INT_LEN;
-static PyObject* fastnumbers_FN_DBL_DIG;
-static PyObject* fastnumbers_FN_MAX_EXP;
-static PyObject* fastnumbers_FN_MIN_EXP;
-
 /* Define the module interface. */
 static struct PyModuleDef moduledef = { PyModuleDef_HEAD_INIT,
                                         "fastnumbers",
@@ -757,21 +756,25 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     }
 
     // Add module level constants.
-    fastnumbers__version__ = PyUnicode_FromString(FASTNUMBERS_VERSION);
-    fastnumbers_FN_MAX_INT_LEN = PyLong_FromLong(FN_MAX_INT_LEN);
-    fastnumbers_FN_DBL_DIG = PyLong_FromLong(FN_DBL_DIG);
-    fastnumbers_FN_MAX_EXP = PyLong_FromLong(FN_MAX_EXP);
-    fastnumbers_FN_MIN_EXP = PyLong_FromLong(FN_MIN_EXP);
-    Py_INCREF(fastnumbers__version__);
-    Py_INCREF(fastnumbers_FN_MAX_INT_LEN);
-    Py_INCREF(fastnumbers_FN_DBL_DIG);
-    Py_INCREF(fastnumbers_FN_MAX_EXP);
-    Py_INCREF(fastnumbers_FN_MIN_EXP);
-    PyModule_AddObject(m, "__version__", fastnumbers__version__);
-    PyModule_AddObject(m, "max_int_len", fastnumbers_FN_MAX_INT_LEN);
-    PyModule_AddObject(m, "dig", fastnumbers_FN_DBL_DIG);
-    PyModule_AddObject(m, "max_exp", fastnumbers_FN_MAX_EXP);
-    PyModule_AddObject(m, "min_exp", fastnumbers_FN_MIN_EXP);
+    PyModule_AddStringConstant(m, "__version__", FASTNUMBERS_VERSION);
+    PyModule_AddIntConstant(m, "max_int_len", FN_MAX_INT_LEN);
+    PyModule_AddIntConstant(m, "dig", FN_DBL_DIG);
+    PyModule_AddIntConstant(m, "max_exp", FN_MAX_EXP);
+    PyModule_AddIntConstant(m, "min_exp", FN_MIN_EXP);
+
+    // Selectors
+    fastnumbers_ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
+    fastnumbers_DISALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
+    fastnumbers_INPUT = PyObject_New(PyObject, &PyBaseObject_Type);
+    fastnumbers_RAISE = PyObject_New(PyObject, &PyBaseObject_Type);
+    fastnumbers_STRING_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
+    fastnumbers_NUMBER_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
+    PyModule_AddObject(m, "ALLOWED", fastnumbers_ALLOWED);
+    PyModule_AddObject(m, "DISALLOWED", fastnumbers_DISALLOWED);
+    PyModule_AddObject(m, "INPUT", fastnumbers_INPUT);
+    PyModule_AddObject(m, "RAISE", fastnumbers_RAISE);
+    PyModule_AddObject(m, "STRING_ONLY", fastnumbers_STRING_ONLY);
+    PyModule_AddObject(m, "NUMBER_ONLY", fastnumbers_NUMBER_ONLY);
 
     // Constants cached for internal use
     PyObject* pos_inf_str = PyBytes_FromString("+infinity");

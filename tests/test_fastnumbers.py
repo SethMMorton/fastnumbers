@@ -5,6 +5,7 @@ import random
 import re
 import unicodedata
 from functools import partial
+from itertools import combinations
 from typing import (
     Any,
     Callable,
@@ -334,6 +335,27 @@ class TestArguments:
     def test_no_arguments_raises_type_error(self, func: NonBuiltinFuncs) -> None:
         with raises(TypeError):
             func()  # type: ignore
+
+
+class TestSelectors:
+    """Ensure that the mode selectors behave as expected"""
+
+    selectors = [
+        fastnumbers.ALLOWED,
+        fastnumbers.DISALLOWED,
+        fastnumbers.INPUT,
+        fastnumbers.RAISE,
+        fastnumbers.STRING_ONLY,
+        fastnumbers.NUMBER_ONLY,
+    ]
+
+    @mark.parametrize("x", selectors)
+    def test_selectors_have_no_type(self, x):
+        assert type(x) is object
+
+    @mark.parametrize("a, b", combinations(selectors, 2))
+    def test_selectors_are_mutually_exclusive(self, a, b):
+        assert a is not b
 
 
 class TestBackwardsCompatibility:

@@ -1,4 +1,10 @@
 from .fastnumbers import (
+    ALLOWED,
+    DISALLOWED,
+    INPUT,
+    RAISE,
+    STRING_ONLY,
+    NUMBER_ONLY,
     __version__,
     dig,
     fast_float,
@@ -19,6 +25,12 @@ from .fastnumbers import (
 )
 
 __all__ = [
+    "ALLOWED",
+    "DISALLOWED",
+    "INPUT",
+    "RAISE",
+    "STRING_ONLY",
+    "NUMBER_ONLY",
     "__version__",
     "dig",
     "fast_float",
