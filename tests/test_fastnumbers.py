@@ -177,35 +177,32 @@ def test_real_returns_same_as_fast_real(x):
 @skipif(
     sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
 )
-@parametrize("func", conversion_funcs, ids=conversion_func_ids)
-def test_numbers_with_underscores_converted_according_to_allow_underscores_option(func):
-    x = "1_234_567"
-    assert func(x) in (float(x), int(x))
-    assert func(x, allow_underscores=True) in (float(x), int(x))
-    assert func(x, allow_underscores=False) == x
+class TestUnderscores:
+    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    def test_numbers_with_underscores_converted_according_to_allow_underscores_option(
+        self, func
+    ):
+        x = "1_234_567"
+        assert func(x) in (float(x), int(x))
+        assert func(x, allow_underscores=True) in (float(x), int(x))
+        assert func(x, allow_underscores=False) == x
 
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_numbers_with_underscores_identified_according_to_allow_underscores_option(
+        self, func,
+    ):
+        x = "1_234_567"
+        assert func(x)
+        assert func(x, allow_underscores=True)
+        assert not func(x, allow_underscores=False)
 
-@skipif(
-    sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
-)
-@parametrize("func", identification_funcs, ids=identification_func_ids)
-def test_numbers_with_underscores_identified_according_to_allow_underscores_option(
-    func,
-):
-    x = "1_234_567"
-    assert func(x)
-    assert func(x, allow_underscores=True)
-    assert not func(x, allow_underscores=False)
-
-
-@skipif(
-    sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
-)
-def test_type_with_underscores_identified_according_to_allow_underscores_option():
-    x = "1_234_567"
-    assert fastnumbers.query_type(x) is int
-    assert fastnumbers.query_type(x, allow_underscores=True) is int
-    assert fastnumbers.query_type(x, allow_underscores=False) is str
+    def test_type_with_underscores_identified_according_to_allow_underscores_option(
+        self,
+    ):
+        x = "1_234_567"
+        assert fastnumbers.query_type(x) is int
+        assert fastnumbers.query_type(x, allow_underscores=True) is int
+        assert fastnumbers.query_type(x, allow_underscores=False) is str
 
 
 class TestFastReal:
