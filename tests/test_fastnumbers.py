@@ -5,7 +5,6 @@ import random
 import re
 import sys
 import unicodedata
-from collections import OrderedDict
 from functools import partial
 from itertools import repeat
 from platform import python_version_tuple
@@ -128,63 +127,35 @@ def test_version():
     assert hasattr(fastnumbers, "__version__")
 
 
-func_mapping = OrderedDict(
-    [
-        ("fast_real", fastnumbers.fast_real),
-        ("fast_float", fastnumbers.fast_float),
-        ("fast_int", fastnumbers.fast_int),
-        ("fast_forceint", fastnumbers.fast_forceint),
-        ("isreal", fastnumbers.isreal),
-        ("isfloat", fastnumbers.isfloat),
-        ("isint", fastnumbers.isint),
-        ("isintlike", fastnumbers.isintlike),
-    ],
-)
-non_builtin_func_ids = list(func_mapping.keys())
-non_builtin_funcs = list(func_mapping.values())
-conversion_func_ids = non_builtin_func_ids[:4]
-conversion_funcs = non_builtin_funcs[:4]
-identification_func_ids = non_builtin_func_ids[4:]
-identification_funcs = non_builtin_funcs[4:]
-func_mapping["fast_real_coerce_true"] = partial(fastnumbers.fast_real, coerce=True)
-func_mapping["fast_real_coerce_false"] = partial(fastnumbers.fast_real, coerce=False)
+# Map function names to the actual functions,
+# for dymamic declaration of which functions test below.
+func_mapping = {
+    "fast_real": fastnumbers.fast_real,
+    "fast_real_coerce_true": partial(fastnumbers.fast_real, coerce=True),
+    "fast_real_coerce_false": partial(fastnumbers.fast_real, coerce=False),
+    "fast_float": fastnumbers.fast_float,
+    "fast_int": fastnumbers.fast_int,
+    "fast_forceint": fastnumbers.fast_forceint,
+    "isreal": fastnumbers.isreal,
+    "isfloat": fastnumbers.isfloat,
+    "isint": fastnumbers.isint,
+    "isintlike": fastnumbers.isintlike,
+}
 
-# For testing fast_real and fast_float only
-real_float_id = ["fast_real", "fast_float"]
-real_float_func = [func_mapping[x] for x in real_float_id]
 
-# Like the above, but with coerce given explicitly
-real_with_coerce_float_id = ["fast_real_coerce_true", "fast_float"]
-real_with_coerce_float_func = [func_mapping[x] for x in real_with_coerce_float_id]
-real_no_coerce_float_id = ["fast_real_coerce_false", "fast_float"]
-real_no_coerce_float_func = [func_mapping[x] for x in real_no_coerce_float_id]
+def get_funcs(function_names):
+    """Given a list of function names, return the associated functions"""
+    return [func_mapping[x] for x in function_names]
 
-# For testing fast_real, fast_int, and fast_forceint
-real_int_forceint_id = ["fast_real", "fast_int", "fast_forceint"]
-real_int_forceint_func = [func_mapping[x] for x in real_int_forceint_id]
 
-# Like above, but with coerce given explictly
-real_with_coerce_int_forceint_id = [
-    "fast_real_coerce_true",
-    "fast_int",
-    "fast_forceint",
-]
-real_with_coerce_int_forceint_func = [
-    func_mapping[x] for x in real_with_coerce_int_forceint_id
-]
-real_with_and_without_coerce_int_forceint_id = [
-    "fast_real_coerce_true",
-    "fast_real_coerce_false",
-    "fast_int",
-    "fast_forceint",
-]
-real_with_and_without_coerce_int_forceint_func = [
-    func_mapping[x] for x in real_with_and_without_coerce_int_forceint_id
-]
+# Common convenience functiom collections
+conversion_func_ids = ["fast_real", "fast_float", "fast_int", "fast_forceint"]
+identification_func_ids = ["isreal", "isfloat", "isint", "isintlike"]
+non_builtin_func_ids = conversion_func_ids + identification_func_ids
+conversion_funcs = get_funcs(conversion_func_ids)
+identification_funcs = get_funcs(identification_func_ids)
+non_builtin_funcs = get_funcs(non_builtin_func_ids)
 
-# For testing fast_int and fast_forceint
-int_forceint_id = ["fast_int", "fast_forceint"]
-int_forceint_func = [func_mapping[x] for x in int_forceint_id]
 
 # All ways to spell NaN, and most ways to spell infinity and negative infinity
 all_nan = ["nan", "Nan", "nAn", "naN", "NAn", "NaN", "nAN", "NAN"]
@@ -269,68 +240,65 @@ class TestErrorHandlingConversionFunctionsSuccessful:
 
     # NaN and Infinity handling.
     # First float representation as input, then string.
+    # All deal with fast_real and fast_float only.
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    funcs = ["fast_real", "fast_float"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_nan_returns_nan(self, func):
         assert math.isnan(func(float("nan")))
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", all_nan + [pad("nan"), pad("NAN")])
     def test_given_nan_string_returns_nan(self, func, x):
         assert math.isnan(func(x))
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_nan_returns_sub_value(self, func):
         assert func(float("nan"), nan=0) == 0
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_with_nan_given_nan_string_returns_sub_value(self, func):
         assert func("nan", nan=0.0) == 0.0
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_inf_returns_inf(self, func):
         assert math.isinf(func(float("inf")))
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", most_inf + [pad("inf"), pad("+INFINITY")])
     def test_given_inf_string_returns_inf(self, func, x):
         assert func(x) == float("inf")
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", neg_inf + [pad("-inf"), pad("-INFINITY")])
     def test_given_negative_inf_string_returns_negative_inf(self, func, x):
         assert func(x) == float("-inf")
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_inf_returns_sub_value(self, func):
         assert func(float("inf"), inf=1000.0) == 1000.0
 
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_with_inf_given_inf_string_returns_sub_value(self, func):
         assert func("inf", inf=10000.0) == 10000.0
         assert func("-inf", inf=10000.0) == 10000.0
 
     # Float handling - both actual float input and strings containing floats.
 
+    funcs = ["fast_real_coerce_false", "fast_float"]
+
     @given(floats(allow_nan=False))
-    @parametrize("func", real_no_coerce_float_func, ids=real_no_coerce_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_float_returns_float(self, func, x):
         result = func(x)
         assert result == x
         assert isinstance(result, float)
 
-    @given(floats(allow_nan=False, allow_infinity=False))
-    @parametrize("func", int_forceint_func, ids=int_forceint_id)
-    def test_given_float_returns_int(self, func, x):
-        expected = int(x)
-        result = func(x)
-        assert result == expected
-        assert isinstance(result, int)
-
     @given(floats(allow_nan=False).map(repr))
     @example("5.675088586167575e-116")
     @example("10." + "0" * 1050)  # absurdly large number of zeros
-    @parametrize("func", real_no_coerce_float_func, ids=real_no_coerce_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_float_string_returns_float(self, func, x):
         expected = float(x)
         result = func(x)
@@ -338,15 +306,28 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert isinstance(result, float)
         assert func(pad(x)) == expected  # Accepts padding as well
 
+    funcs = ["fast_int", "fast_forceint"]
+
+    @given(floats(allow_nan=False, allow_infinity=False))
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_given_float_returns_int(self, func, x):
+        expected = int(x)
+        result = func(x)
+        assert result == expected
+        assert isinstance(result, int)
+
     # Integer handling - both actual integer input and strings containing integers.
+
+    funcs = [
+        "fast_real_coerce_true",
+        "fast_real_coerce_false",
+        "fast_int",
+        "fast_forceint",
+    ]
 
     @given(integers())
     @example(int(10 * 300))
-    @parametrize(
-        "func",
-        real_with_and_without_coerce_int_forceint_func,
-        ids=real_with_and_without_coerce_int_forceint_id,
-    )
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_int_returns_int(self, func, x):
         result = func(x)
         assert result == x
@@ -360,11 +341,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @example("-121799354242674784350540853922878239740762834")
     @example("32718704454132572934419741118153895444518280065843028297496525078")
     @example("33684944745210074227862907273261282807602986571245071790093633147269")
-    @parametrize(
-        "func",
-        real_with_and_without_coerce_int_forceint_func,
-        ids=real_with_and_without_coerce_int_forceint_id,
-    )
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_int_string_returns_int(self, func, x):
         expected = int(x)
         result = func(x)
@@ -374,12 +351,15 @@ class TestErrorHandlingConversionFunctionsSuccessful:
 
     # Special unicode character handling.
 
+    funcs = [
+        "fast_real_coerce_true",
+        "fast_real_coerce_false",
+        "fast_int",
+        "fast_forceint",
+    ]
+
     @given(sampled_from(digits))
-    @parametrize(
-        "func",
-        real_with_and_without_coerce_int_forceint_func,
-        ids=real_with_and_without_coerce_int_forceint_id,
-    )
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_digit_returns_int(self, func, x):
         expected = unicodedata.digit(x)
         result = func(x)
@@ -387,8 +367,10 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert isinstance(result, int)
         assert func(pad(x)) == expected  # Accepts padding as well
 
+    funcs = ["fast_real", "fast_float"]
+
     @given(sampled_from(numeric_not_digit_not_int))
-    @parametrize("func", real_float_func, ids=real_float_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_float(self, func, x):
         expected = unicodedata.numeric(x)
         result = func(x)
@@ -430,7 +412,9 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     # Handle custom classes with weird behavior.
 
-    @parametrize("func", real_with_coerce_float_func, ids=real_with_coerce_float_id)
+    funcs = ["fast_real_coerce_true", "fast_float"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_dumb_float_class_responds_to_internal_valueerror(self, func):
         x = DumbFloatClass()
         assert func(x) is x
@@ -438,7 +422,9 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
             func(x, raise_on_invalid=True)
         assert func(x, default=5.0) == 5.0
 
-    @parametrize("func", int_forceint_func, ids=int_forceint_id)
+    funcs = ["fast_int", "fast_forceint"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_dumb_int_class_responds_to_internal_valueerror(self, func):
         x = DumbIntClass()
         assert func(x) is x
@@ -478,12 +464,14 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
         with raises(TypeError):
             func([1])
 
-    @parametrize("func", int_forceint_func, ids=int_forceint_id)
+    funcs = ["fast_int", "fast_forceint"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_nan_raises_valueerror_for_int_funcions(self, func):
         with raises(ValueError):
             func(float("nan"), raise_on_invalid=True)
 
-    @parametrize("func", int_forceint_func, ids=int_forceint_id)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_inf_raises_overflowerror_for_int_funcions(self, func):
         with raises(OverflowError):
             func(float("inf"), raise_on_invalid=True)
