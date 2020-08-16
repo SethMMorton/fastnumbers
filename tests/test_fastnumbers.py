@@ -7,7 +7,6 @@ import sys
 import unicodedata
 from functools import partial
 from itertools import repeat
-from platform import python_version_tuple
 
 from hypothesis import example, given
 from hypothesis.strategies import (
@@ -598,6 +597,7 @@ class TestFastInt:
         assert fastnumbers.fast_int(bin(x), base=0) == x
         assert fastnumbers.fast_int(oct(x), base=8) == x
         assert fastnumbers.fast_int(oct(x), base=0) == x
+        assert fastnumbers.fast_int(oct(x).replace("0o", "0"), base=8) == x
         assert fastnumbers.fast_int(hex(x), base=16) == x
         assert fastnumbers.fast_int(hex(x), base=0) == x
         # Force unicode path
@@ -635,68 +635,106 @@ class TestFastForceInt:
         assert fastnumbers.fast_forceint(pad(x)) == expected  # Accepts padding
 
 
-class TestIsReal:
-    """Tests for the isreal function."""
+class TestCheckingFunctions:
+    """
+    Test the successful execution of the "checking" functions, e.g.:
+
+    - isreal
+    - isfloat
+    - isint
+    - isintlike
+
+    """
+
+    # Handling of NaN and infinity
+
+    funcs = ["isreal", "isfloat"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize("x", [float("nan"), float("inf"), float("-inf")])
+    def test_returns_true_for_nan_and_inf(self, func, x):
+        assert func(x)
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize("x", all_nan + [pad("nan"), pad("-NAN")])
+    def test_returns_false_for_nan_string_unless_allow_nan_is_true(self, func, x):
+        assert not func(x)
+        assert func(x, allow_nan=True)
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize("x", most_inf + neg_inf + [pad("-inf"), pad("+INFINITY")])
+    def test_returns_false_for_inf_string_unless_allow_infinity_is_true(self, func, x):
+        assert not func(x)
+        assert func(x, allow_inf=True)
+
+    # Handling of numeric objects as input
+
+    funcs = ["isreal", "isint", "isintlike"]
 
     @given(integers())
-    def test_returns_true_if_given_int(self, x):
-        assert fastnumbers.isreal(x)
-        assert fastnumbers.isreal(x, num_only=True)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_returns_true_if_given_int(self, func, x):
+        assert func(x)
+        assert func(x, num_only=True)
+
+    funcs = ["isreal", "isfloat"]
 
     @given(floats())
-    def test_returns_true_if_given_float(self, x):
-        assert fastnumbers.isreal(x)
-        assert fastnumbers.isreal(x, num_only=True)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_returns_true_if_given_float(self, func, x):
+        assert func(x)
+        assert func(x, num_only=True)
 
-    @given(integers())
-    def test_returns_false_if_given_int_and_str_only_is_true(self, x):
+    @given(integers() | floats())
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_returns_false_if_given_number_and_str_only_is_true(self, func, x):
         assert not fastnumbers.isreal(x, str_only=True)
 
-    @given(floats())
-    def test_returns_false_if_given_float_and_str_only_is_true(self, x):
-        assert not fastnumbers.isreal(x, str_only=True)
+    # Handling of strings containing numbers as input
 
-    @given(integers(), integers(0, 100), integers(0, 100))
-    def test_returns_true_if_given_int_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isreal(repr(x))
-        assert fastnumbers.isreal(repr(x), str_only=True)
-        assert fastnumbers.isreal(y)
+    @given(integers().map(repr))
+    @example("40992764608243448035")
+    @example("-41538374848935286698640072416676709")
+    @example("240278958776173358420034462324117625982")
+    @example("1609422692302207451978552816956662956486")
+    @example("-121799354242674784350540853922878239740762834")
+    @example("32718704454132572934419741118153895444518280065843028297496525078")
+    @example("33684944745210074227862907273261282807602986571245071790093633147269")
+    @example("1" + "0" * 1050)
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_returns_true_if_given_int_string(self, func, x):
+        assert func(x)
+        assert func(pad(x))  # Accepts padding
 
-    @given(
-        floats(allow_nan=False, allow_infinity=False),
-        integers(0, 100),
-        integers(0, 100),
-    )
-    def test_returns_true_if_given_float_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isreal(repr(x))
-        assert fastnumbers.isreal(repr(x), str_only=True)
-        assert fastnumbers.isreal(y)
+    funcs = ["isreal", "isfloat"]
 
-    @given(integers())
-    def test_returns_false_if_given_string_and_num_only_is_true(self, x):
-        assert not fastnumbers.isreal(repr(x), num_only=True)
+    @given(floats(allow_nan=False, allow_infinity=False).map(repr))
+    @example("10." + "0" * 1050)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_returns_true_if_given_float_string(self, func, x):
+        assert func(x)
+        assert func(pad(x))  # Accepts padding
+
+    @given((integers() | floats(allow_nan=False, allow_infinity=False)).map(repr))
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_returns_false_if_given_string_and_num_only_is_true(self, func, x):
+        assert not func(x, num_only=True)
 
     @given(sampled_from(digits))
-    def test_given_unicode_digit_returns_true(self, x):
-        assert fastnumbers.isreal(x)
-        # Try padded as well
-        assert fastnumbers.isreal(u"   " + x + u"   ")
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_given_unicode_digit_returns_true(self, func, x):
+        assert func(x)
+        assert func(pad(x))  # Accepts padding
 
-    @given(sampled_from(numeric_not_digit_not_int))
-    def test_given_unicode_numeral_returns_true(self, x):
-        assert fastnumbers.isreal(x)
-        # Try padded as well
-        assert fastnumbers.isreal(u"   " + x + u"   ")
+    funcs = ["isreal", "isfloat"]
 
-    @given(sampled_from(not_numeric))
-    def test_given_unicode_non_numeral_returns_false(self, x):
-        assert not fastnumbers.isreal(x)
+    @given(sampled_from(numeric_not_digit_not_int))t
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_given_unicode_numeral_returns_true(self, func, x):
+        assert func(x)
+        assert func(pad(x))  # Accepts padding
 
-    @given(text(min_size=2).filter(not_a_number))
-    def test_given_unicode_of_more_than_one_char_returns_false(self, x):
-        assert not fastnumbers.isreal(x)
+    # Handling of invalid input
 
     @given((text() | binary()).filter(not_a_number))
     @example("+")
@@ -704,248 +742,111 @@ class TestIsReal:
     @example("e")
     @example("e8")
     @example(".")
-    def test_returns_false_if_given_non_number_string(self, x):
-        assert not fastnumbers.isreal(x)
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_returns_false_if_given_non_number_string(self, func, x):
+        assert not func(x)
 
-    def test_returns_false_for_nan_string_unless_allow_nan_is_true(self):
-        assert not fastnumbers.isreal("nan")
-        assert fastnumbers.isreal("nan", allow_nan=True)
-        assert fastnumbers.isreal("-NaN", allow_nan=True)
+    @given(sampled_from(not_numeric))
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_given_unicode_non_numeral_returns_false(self, func, x):
+        assert not func(x)
 
-    def test_returns_false_for_inf_string_unless_allow_infinity_is_true(self):
-        assert not fastnumbers.isreal("inf")
-        assert fastnumbers.isreal("inf", allow_inf=True)
-        assert fastnumbers.isreal("-INFINITY", allow_inf=True)
+    @given(text(min_size=2).filter(not_a_number))
+    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    def test_given_unicode_of_more_than_one_char_returns_false(self, func, x):
+        assert not func(x)
+
+    funcs = ["isint", "isintlike"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_returns_false_for_nan_or_inf_string(self, func):
+        assert not func("nan")
+        assert not func("inf")
 
 
 class TestIsFloat:
-    """Tests for the isfloat function."""
+    """Tests for the isfloat function that are too specific for the generalized tests."""
 
     @given(integers())
     def test_returns_false_if_given_int(self, x):
         assert not fastnumbers.isfloat(x)
 
-    @given(floats())
-    def test_returns_true_if_given_float(self, x):
-        assert fastnumbers.isfloat(x)
-        assert fastnumbers.isfloat(x, num_only=True)
-
-    @given(floats())
-    def test_returns_false_if_given_float_and_str_only_is_true(self, x):
-        assert not fastnumbers.isfloat(x, str_only=True)
-
-    @given(integers(), integers(0, 100), integers(0, 100))
-    @example(40992764608243448035, 1, 1)
-    @example(-41538374848935286698640072416676709, 1, 1)
-    @example(240278958776173358420034462324117625982, 1, 1)
-    @example(1609422692302207451978552816956662956486, 1, 1)
-    @example(-121799354242674784350540853922878239740762834, 1, 1)
-    @example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
-    @example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
-    def test_returns_true_if_given_int_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isfloat(repr(x))
-        assert fastnumbers.isfloat(repr(x), str_only=True)
-        assert fastnumbers.isfloat(y)
-
-    @given(
-        floats(allow_nan=False, allow_infinity=False),
-        integers(0, 100),
-        integers(0, 100),
-    )
-    @example("10." + "0" * 1050, 1, 1)
-    def test_returns_true_if_given_float_string_padded_or_not(self, x, y, z):
-        if isinstance(x, str):
-            y = x
-            x = float(x)
-        else:
-            y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isfloat(repr(x))
-        assert fastnumbers.isfloat(repr(x), str_only=True)
-        assert fastnumbers.isfloat(y)
-
-    @given(floats(allow_nan=False, allow_infinity=False))
-    def test_returns_false_if_given_string_and_num_only_is_true(self, x):
-        assert not fastnumbers.isfloat(repr(x), num_only=True)
-
-    @given(sampled_from(digits))
-    def test_given_unicode_digit_returns_true(self, x):
-        assert fastnumbers.isfloat(x)
-        # Try padded as well
-        assert fastnumbers.isfloat(u"   " + x + u"   ")
-
-    @given(sampled_from(numeric_not_digit_not_int))
-    def test_given_unicode_numeral_returns_true(self, x):
-        assert fastnumbers.isfloat(x)
-        # Try padded as well
-        assert fastnumbers.isfloat(u"   " + x + u"   ")
-
-    @given(sampled_from(not_numeric))
-    def test_given_unicode_non_numeral_returns_false(self, x):
-        assert not fastnumbers.isfloat(x)
-
-    @given(text(min_size=2).filter(not_a_number))
-    def test_given_unicode_of_more_than_one_char_returns_false(self, x):
-        assert not fastnumbers.isfloat(x)
-
-    @given((text() | binary()).filter(not_a_number))
-    @example("+")
-    @example("-")
-    @example("e")
-    @example("e8")
-    @example(".")
-    @example("a" * 1050)
-    def test_returns_false_if_given_non_number_string(self, x):
-        assert not fastnumbers.isfloat(x)
-
-    def test_returns_false_for_nan_string_unless_allow_nan_is_true(self):
-        assert not fastnumbers.isfloat("nan")
-        assert fastnumbers.isfloat("nan", allow_nan=True)
-        assert fastnumbers.isfloat("-NaN", allow_nan=True)
-
-    def test_returns_false_for_inf_string_unless_allow_infinity_is_true(self):
-        assert not fastnumbers.isfloat("inf")
-        assert fastnumbers.isfloat("inf", allow_inf=True)
-        assert fastnumbers.isfloat("-INFINITY", allow_inf=True)
-
 
 class TestIsInt:
-    """Tests for the isint function."""
-
-    @given(integers())
-    def test_returns_true_if_given_int(self, x):
-        assert fastnumbers.isint(x, num_only=True)
+    """Tests for the isint function that are too specific for the generalized tests."""
 
     @given(floats())
     def test_returns_false_if_given_float(self, x):
         assert not fastnumbers.isint(x)
 
     @given(integers())
-    def test_returns_false_if_given_int_and_str_only_is_true(self, x):
-        assert not fastnumbers.isint(x, str_only=True)
-
-    @given(integers(), integers(0, 100), integers(0, 100))
-    @example(40992764608243448035, 1, 1)
-    @example(-41538374848935286698640072416676709, 1, 1)
-    @example(240278958776173358420034462324117625982, 1, 1)
-    @example(1609422692302207451978552816956662956486, 1, 1)
-    @example(-121799354242674784350540853922878239740762834, 1, 1)
-    @example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
-    @example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
-    @example(int("1" + "0" * 1050), 1, 1)
-    def test_returns_true_if_given_int_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isint(repr(x)) is True
-        assert fastnumbers.isint(repr(x), str_only=True)
-        assert fastnumbers.isint(y)
+    def test_returns_true_if_given_int_string_with_non_base_10(self, x):
         for base in range(2, 36 + 1):
-            if (
-                len(repr(x)) < 30
-            ):  # Avoid recursion error because of overly simple baseN function.
+            # Avoid recursion error because of overly simple baseN function.
+            if len(repr(x)) < 30:
                 assert fastnumbers.isint(base_n(x, base), base=base)
         assert fastnumbers.isint(bin(x), base=2)
         assert fastnumbers.isint(bin(x), base=0)
         assert fastnumbers.isint(oct(x), base=8)
         assert fastnumbers.isint(oct(x), base=0)
         assert fastnumbers.isint(oct(x).replace("0o", "0"), base=8)
-        if python_version_tuple()[0] == "2" or x == 0:
-            assert fastnumbers.isint(oct(x).replace("0o", "0"), base=0)
-        else:
+        if x != 0:
             assert not fastnumbers.isint(oct(x).replace("0o", "0"), base=0)
         assert fastnumbers.isint(hex(x), base=16)
         assert fastnumbers.isint(hex(x), base=0)
+        # Force unicode path
+        assert fastnumbers.isint(hex(x).replace("0", u"\uFF10"), base=0)
 
-    def test_underscores(self):
-        if int(python_version_tuple()[0]) > 3 or (
-            int(python_version_tuple()[0]) == 3 and int(python_version_tuple()[0]) >= 6
-        ):
-            assert fastnumbers.isint("0_0_0")
-            assert fastnumbers.isint("0_0_0", base=0)
-            assert fastnumbers.isint("4_2")
-            assert fastnumbers.isint("4_2", base=0)
-            assert fastnumbers.isint("1_0000_0000")
-            assert fastnumbers.isint("1_0000_0000", base=0)
-            assert fastnumbers.isint("0b1001_0100", base=0)
-            assert fastnumbers.isint("0xffff_ffff", base=0)
-            assert fastnumbers.isint("0o5_7_7", base=0)
-            assert fastnumbers.isint("0b_0", base=0)
-            assert fastnumbers.isint("0x_f", base=0)
-            assert fastnumbers.isint("0o_5", base=0)
-
-            # Underscores in the base selector:
-            assert not fastnumbers.isint("0_b0")
-            assert not fastnumbers.isint("0_b0", base=0)
-            assert not fastnumbers.isint("0_xf")
-            assert not fastnumbers.isint("0_xf", base=0)
-            assert not fastnumbers.isint("0_o5")
-            assert not fastnumbers.isint("0_o5", base=0)
-            # Old-style octal, still disallowed:
-            assert not fastnumbers.isint("0_7")
-            assert not fastnumbers.isint("0_7", base=0)
-            assert not fastnumbers.isint("09_99")
-            assert not fastnumbers.isint("09_99", base=0)
-            assert not fastnumbers.isint("0b1001__0100", base=0)
-            assert not fastnumbers.isint("0xffff__ffff", base=0)
-
-    @given(
-        floats(allow_nan=False, allow_infinity=False),
-        integers(0, 100),
-        integers(0, 100),
+    @skipif(
+        sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
     )
-    def test_returns_false_if_given_float_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert not fastnumbers.isint(repr(x))
-        assert not fastnumbers.isint(y)
+    def test_underscores(self):
+        assert fastnumbers.isint("0_0_0")
+        assert fastnumbers.isint("0_0_0", base=0)
+        assert fastnumbers.isint("4_2")
+        assert fastnumbers.isint("4_2", base=0)
+        assert fastnumbers.isint("1_0000_0000")
+        assert fastnumbers.isint("1_0000_0000", base=0)
+        assert fastnumbers.isint("0b1001_0100", base=0)
+        assert fastnumbers.isint("0xffff_ffff", base=0)
+        assert fastnumbers.isint("0o5_7_7", base=0)
+        assert fastnumbers.isint("0b_0", base=0)
+        assert fastnumbers.isint("0x_f", base=0)
+        assert fastnumbers.isint("0o_5", base=0)
+
+        # Underscores in the base selector:
+        assert not fastnumbers.isint("0_b0")
+        assert not fastnumbers.isint("0_b0", base=0)
+        assert not fastnumbers.isint("0_xf")
+        assert not fastnumbers.isint("0_xf", base=0)
+        assert not fastnumbers.isint("0_o5")
+        assert not fastnumbers.isint("0_o5", base=0)
+
+        # Old-style octal, still disallowed if base guess is needed:
+        assert not fastnumbers.isint("0_7", base=0)
+        assert not fastnumbers.isint("09_99", base=0)
+
+        # Two underscores:
+        assert not fastnumbers.isint("0b1001__0100", base=0)
+        assert not fastnumbers.isint("0xffff__ffff", base=0)
+
+    @given(floats(allow_nan=False, allow_infinity=False).map(repr))
+    def test_returns_false_if_given_float_string(self, x):
+        assert not fastnumbers.isint(x)
+        assert not fastnumbers.isint(pad(x))
         for base in range(2, 36 + 1):
-            if (
-                len(y) < 30
-            ):  # Avoid recursion error because of overly simple baseN function.
-                assert not fastnumbers.isint(y, base=base)
-
-    @given(integers())
-    def test_returns_false_if_given_string_and_num_only_is_true(self, x):
-        assert not fastnumbers.isint(repr(x), num_only=True)
-
-    @given(sampled_from(digits))
-    def test_given_unicode_digit_returns_true(self, x):
-        assert fastnumbers.isint(x)
-        # Try padded as well
-        assert fastnumbers.isint(u"   " + x + u"   ")
+            if len(x) < 30:
+                assert not fastnumbers.isint(x, base=base)
 
     @given(sampled_from(numeric_not_digit_not_int))
     def test_given_unicode_numeral_returns_false(self, x):
         assert not fastnumbers.isint(x)
 
-    @given(sampled_from(not_numeric))
-    def test_given_unicode_non_numeral_returns_false(self, x):
-        assert not fastnumbers.isint(x)
-
-    @given(text(min_size=2).filter(not_a_number))
-    def test_given_unicode_of_more_than_one_char_returns_false(self, x):
-        assert not fastnumbers.isint(x)
-
-    @given((text() | binary()).filter(not_a_number))
-    @example("+")
-    @example("-")
-    @example("e")
-    @example("e8")
-    @example(".")
-    @example("a" * 1050)
-    def test_returns_false_if_given_non_number_string(self, x):
-        assert not fastnumbers.isint(x)
-
-    def test_returns_false_for_nan_or_inf_string(self):
-        assert not fastnumbers.isint("nan")
-        assert not fastnumbers.isint("inf")
-
 
 class TestIsIntLike:
-    """Tests for the isintlike function."""
-
-    @given(integers())
-    def test_returns_true_if_given_int(self, x):
-        assert fastnumbers.isintlike(x)
-        assert fastnumbers.isintlike(x, num_only=True)
+    """
+    Tests for the isintlike function that are too specific for the generalized tests.
+    """
 
     @given(floats().filter(not_an_integer))
     def test_returns_false_if_given_non_integer_float(self, x):
@@ -955,63 +856,12 @@ class TestIsIntLike:
     def test_returns_true_if_given_integer_float(self, x):
         assert fastnumbers.isintlike(x)
 
-    @given(integers())
-    def test_returns_false_if_given_int_and_str_only_is_true(self, x):
-        assert not fastnumbers.isintlike(x, str_only=True)
-
-    @given(floats().filter(an_integer))
-    def test_returns_false_if_given_integer_float_and_str_only_is_true(self, x):
-        assert not fastnumbers.isintlike(x, str_only=True)
-
-    @given(integers(), integers(0, 100), integers(0, 100))
-    @example(40992764608243448035, 1, 1)
-    @example(-41538374848935286698640072416676709, 1, 1)
-    @example(240278958776173358420034462324117625982, 1, 1)
-    @example(1609422692302207451978552816956662956486, 1, 1)
-    @example(-121799354242674784350540853922878239740762834, 1, 1)
-    @example(32718704454132572934419741118153895444518280065843028297496525078, 1, 1)
-    @example(33684944745210074227862907273261282807602986571245071790093633147269, 1, 1)
-    @example(int("1" + "0" * 1050), 1, 1)
-    def test_returns_true_if_given_int_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isintlike(repr(x))
-        assert fastnumbers.isintlike(repr(x), str_only=True)
-        assert fastnumbers.isintlike(y)
-
     @given(
-        floats(allow_nan=False, allow_infinity=False).filter(an_integer),
-        integers(0, 100),
-        integers(0, 100),
+        floats(allow_nan=False, allow_infinity=False).filter(not_an_integer).map(repr)
     )
-    @example("10." + "0" * 1050, 1, 1)
-    def test_returns_true_if_given_integer_float_string_padded_or_not(self, x, y, z):
-        if isinstance(x, str):
-            x = float(x)
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.isintlike(repr(x))
-        assert fastnumbers.isintlike(y)
-
-    @given(
-        floats(allow_nan=False, allow_infinity=False).filter(not_an_integer),
-        integers(0, 100),
-        integers(0, 100),
-    )
-    def test_returns_false_if_given_non_integer_float_string_padded_or_not(
-        self, x, y, z
-    ):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert not fastnumbers.isintlike(repr(x))
-        assert not fastnumbers.isintlike(y)
-
-    @given(integers())
-    def test_returns_false_if_given_string_and_num_only_is_true(self, x):
-        assert not fastnumbers.isintlike(repr(x), num_only=True)
-
-    @given(sampled_from(digits))
-    def test_given_unicode_digit_returns_true(self, x):
-        assert fastnumbers.isintlike(x)
-        # Try padded as well
-        assert fastnumbers.isintlike(u"   " + x + u"   ")
+    def test_returns_false_if_given_non_integer_float_string(self, x):
+        assert not fastnumbers.isintlike(x)
+        assert not fastnumbers.isintlike(pad(x))  # Accepts padding
 
     @given(sampled_from(numeric_not_digit_not_int))
     def test_given_unicode_non_digit_numeral_returns_false(self, x):
@@ -1022,32 +872,9 @@ class TestIsIntLike:
             lambda x: an_integer(unicodedata.numeric(x))
         )
     )
-    def test_given_unicode_digit_numeral_returns_false(self, x):
+    def test_given_unicode_digit_numeral_returns_true(self, x):
         assert fastnumbers.isintlike(x)
-        # Try padded as well
-        assert fastnumbers.isintlike(u"   " + x + u"   ")
-
-    @given(sampled_from(not_numeric))
-    def test_given_unicode_non_numeral_returns_false(self, x):
-        assert not fastnumbers.isintlike(x)
-
-    @given(text(min_size=2).filter(not_a_number))
-    def test_given_unicode_of_more_than_one_char_returns_false(self, x):
-        assert not fastnumbers.isintlike(x)
-
-    @given((text() | binary()).filter(not_a_number))
-    @example("+")
-    @example("-")
-    @example("e")
-    @example("e8")
-    @example(".")
-    @example("a" * 1050)
-    def test_returns_false_if_given_non_number_string(self, x):
-        assert not fastnumbers.isintlike(x)
-
-    def test_returns_false_for_nan_or_inf_string(self):
-        assert not fastnumbers.isintlike("nan")
-        assert not fastnumbers.isintlike("inf")
+        assert fastnumbers.isintlike(pad(x))  # Accepts padding
 
 
 class TestQueryType:
