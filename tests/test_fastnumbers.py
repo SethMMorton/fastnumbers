@@ -6,7 +6,6 @@ import re
 import sys
 import unicodedata
 from functools import partial
-from itertools import repeat
 
 from hypothesis import example, given
 from hypothesis.strategies import (
@@ -920,37 +919,29 @@ class TestQueryType:
     def test_returns_none_if_given_float_and_float_is_not_allowed(self, x):
         assert fastnumbers.query_type(x, allowed_types=(int,)) is None
 
-    @given(integers(), integers(0, 100), integers(0, 100))
-    def test_returns_int_if_given_int_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.query_type(repr(x)) is int
-        assert fastnumbers.query_type(y) is int
+    @given(integers().map(repr))
+    def test_returns_int_if_given_int_string(self, x):
+        assert fastnumbers.query_type(x) is int
+        assert fastnumbers.query_type(pad(x)) is int  # Accepts padding
 
-    @given(
-        floats(allow_nan=False, allow_infinity=False),
-        integers(0, 100),
-        integers(0, 100),
-    )
-    def test_returns_float_if_given_float_string_padded_or_not(self, x, y, z):
-        y = "".join(repeat(space(), y)) + repr(x) + "".join(repeat(space(), z))
-        assert fastnumbers.query_type(repr(x)) is float
-        assert fastnumbers.query_type(y) is float
+    @given(floats(allow_nan=False, allow_infinity=False).map(repr))
+    def test_returns_float_if_given_float_string_padded_or_not(self, x):
+        assert fastnumbers.query_type(x) is float
+        assert fastnumbers.query_type(pad(x)) is float  # Accpets padding
 
-    @given(integers())
+    @given(integers().map(repr))
     def test_returns_none_if_given_int_string_and_int_is_not_allowed(self, x):
-        assert fastnumbers.query_type(repr(x), allowed_types=(float, str)) is None
+        assert fastnumbers.query_type(x, allowed_types=(float, str)) is None
 
     @given(sampled_from(digits))
     def test_given_unicode_digit_returns_int(self, x):
         assert fastnumbers.query_type(x) is int
-        # Try padded as well
-        assert fastnumbers.query_type(u"   " + x + u"   ") is int
+        assert fastnumbers.query_type(pad(x)) is int  # Accepts padding
 
     @given(sampled_from(numeric_not_digit_not_int))
     def test_given_unicode_numeral_returns_float(self, x):
         assert fastnumbers.query_type(x) is float
-        # Try padded as well
-        assert fastnumbers.query_type(u"   " + x + u"   ") is float
+        assert fastnumbers.query_type(pad(x)) is float  # Accepts padding
 
     @given(sampled_from(not_numeric))
     def test_given_unicode_non_numeral_returns_str_or_none_if_str_not_allowed(self, x):
@@ -982,15 +973,15 @@ class TestQueryType:
     def test_returns_none_if_given_non_number_bytes_and_bytes_is_not_allowed(self, x):
         assert fastnumbers.query_type(x, allowed_types=(int, float)) is None
 
-    def test_returns_str_for_nan_string_unless_allow_nan_is_true(self):
-        assert fastnumbers.query_type("nan") is str
-        assert fastnumbers.query_type("nan", allow_nan=True) is float
-        assert fastnumbers.query_type("-NaN", allow_nan=True) is float
+    @parametrize("x", all_nan + [pad("+nan"), pad("-NAN")])
+    def test_returns_str_for_nan_string_unless_allow_nan_is_true(self, x):
+        assert fastnumbers.query_type(x) is str
+        assert fastnumbers.query_type(x, allow_nan=True) is float
 
-    def test_returns_str_for_inf_string_unless_allow_infinity_is_true(self):
-        assert fastnumbers.query_type("inf") is str
-        assert fastnumbers.query_type("inf", allow_inf=True) is float
-        assert fastnumbers.query_type("-INFINITY", allow_inf=True) is float
+    @parametrize("x", most_inf + neg_inf + [pad("+inf"), pad("-INFINITY")])
+    def test_returns_str_for_inf_string_unless_allow_infinity_is_true(self, x):
+        assert fastnumbers.query_type(x) is str
+        assert fastnumbers.query_type(x, allow_inf=True) is float
 
     def test_given_nan_returns_float(self):
         assert fastnumbers.query_type(float("nan")) is float
