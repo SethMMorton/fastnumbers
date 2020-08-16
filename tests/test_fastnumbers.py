@@ -159,6 +159,7 @@ non_builtin_funcs = get_funcs(non_builtin_func_ids)
 
 # All ways to spell NaN, and most ways to spell infinity and negative infinity
 all_nan = ["nan", "Nan", "nAn", "naN", "NAn", "NaN", "nAN", "NAN"]
+all_nan += ["+" + x for x in all_nan] + ["-" + x for x in all_nan]
 most_inf = ["inf", "Inf", "iNf", "inF", "INf", "InF", "iNF", "INF"]
 most_inf += ["infinity", "INFINITY", "iNfInItY", "InFiNiTy", "inFINIty"]
 neg_inf = ["-" + x for x in most_inf]
@@ -249,7 +250,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert math.isnan(func(float("nan")))
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", all_nan + [pad("nan"), pad("NAN")])
+    @parametrize("x", all_nan + [pad("nan"), pad("-NAN")])
     def test_given_nan_string_returns_nan(self, func, x):
         assert math.isnan(func(x))
 
