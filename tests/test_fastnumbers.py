@@ -122,10 +122,6 @@ class DumbIntClass(object):
         raise ValueError("something here might go wrong")
 
 
-def test_version():
-    assert hasattr(fastnumbers, "__version__")
-
-
 # Map function names to the actual functions,
 # for dymamic declaration of which functions test below.
 func_mapping = {
@@ -139,6 +135,7 @@ func_mapping = {
     "isfloat": fastnumbers.isfloat,
     "isint": fastnumbers.isint,
     "isintlike": fastnumbers.isintlike,
+    "real": fastnumbers.real,
 }
 
 
@@ -148,13 +145,9 @@ def get_funcs(function_names):
 
 
 # Common convenience functiom collections
-conversion_func_ids = ["fast_real", "fast_float", "fast_int", "fast_forceint"]
-identification_func_ids = ["isreal", "isfloat", "isint", "isintlike"]
-non_builtin_func_ids = conversion_func_ids + identification_func_ids
-conversion_funcs = get_funcs(conversion_func_ids)
-identification_funcs = get_funcs(identification_func_ids)
-non_builtin_funcs = get_funcs(non_builtin_func_ids)
-
+conversion_funcs = ["fast_real", "fast_float", "fast_int", "fast_forceint"]
+identification_funcs = ["isreal", "isfloat", "isint", "isintlike"]
+non_builtin_funcs = conversion_funcs + identification_funcs
 
 # All ways to spell NaN, and most ways to spell infinity and negative infinity
 all_nan = ["nan", "Nan", "nAn", "naN", "NAn", "NaN", "nAN", "NAN"]
@@ -169,22 +162,8 @@ most_inf += ["+" + x for x in most_inf]
 #################
 
 
-@parametrize(
-    "func", non_builtin_funcs + [fastnumbers.real], ids=non_builtin_func_ids + ["real"]
-)
-def test_invalid_argument_raises_type_error(func):
-    with raises(TypeError):
-        func(5, invalid="dummy")
-
-
-@parametrize("func", non_builtin_funcs, ids=non_builtin_func_ids)
-def test_no_arguments_raises_type_error(func):
-    with raises(TypeError):
-        func()
-
-
-def test_real_no_arguments_returns_0():
-    assert fastnumbers.real() == 0
+def test_version():
+    assert hasattr(fastnumbers, "__version__")
 
 
 @given(floats(allow_nan=False) | integers())
@@ -192,12 +171,37 @@ def test_real_returns_same_as_fast_real(x):
     assert fastnumbers.real(x) == fastnumbers.fast_real(x)
 
 
-@parametrize("func", conversion_funcs, ids=conversion_func_ids)
-def test_key_backwards_compatibility(func):
-    with raises(ValueError, match=r"^Cannot set both on_fail and key$"):
-        func("dummy", key=len, on_fail=len)
-    assert func("dummy", key=len) == 5
-    assert func("dummy", key=len) == func("dummy", on_fail=len)
+class TestArguments:
+    """Tests that high-level argument handling is as expected"""
+
+    def test_real_no_arguments_returns_0(self):
+        assert fastnumbers.real() == 0
+
+    funcs = non_builtin_funcs + ["real"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_invalid_argument_raises_type_error(self, func):
+        with raises(TypeError):
+            func(5, invalid="dummy")
+
+    funcs = non_builtin_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_no_arguments_raises_type_error(self, func):
+        with raises(TypeError):
+            func()
+
+
+class TestBackwardsCompatibility:
+
+    funcs = conversion_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_key(self, func):
+        with raises(ValueError, match=r"^Cannot set both on_fail and key$"):
+            func("dummy", key=len, on_fail=len)
+        assert func("dummy", key=len) == 5
+        assert func("dummy", key=len) == func("dummy", on_fail=len)
 
 
 @skipif(
@@ -206,14 +210,18 @@ def test_key_backwards_compatibility(func):
 class TestUnderscores:
     """Tests to make sure underscores are well handled in >= 3.6."""
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    funcs = conversion_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_numbers_with_underscores_converted_toggled(self, func):
         x = "1_234_567"
         assert func(x) in (float(x), int(x))
         assert func(x, allow_underscores=True) in (float(x), int(x))
         assert func(x, allow_underscores=False) == x
 
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    funcs = identification_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_numbers_with_underscores_identified_toggled(self, func):
         x = "1_234_567"
         assert func(x)
@@ -380,19 +388,21 @@ class TestErrorHandlingConversionFunctionsSuccessful:
 
     # Tests to ensure correct evaluation is always the first priority.
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    funcs = conversion_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_evaluates_valid_even_when_on_fail_given(self, func):
         x = "7"
         expected = 7
         assert func(x, on_fail=len) == expected
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_evaluates_valid_even_when_raise_on_invalid_given(self, func):
         x = "7"
         expected = 7
         assert func(x, raise_on_invalid=True) == expected
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_evaluates_valid_even_when_default_given(self, func):
         x = "7"
         expected = 7
@@ -434,6 +444,8 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     # Handle invalid text input
 
+    funcs = conversion_funcs
+
     @given((text() | binary()).filter(not_a_number))
     @example("+")
     @example("-")
@@ -441,25 +453,29 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
     @example("e8")
     @example(".")
     @example("a" * 1050)
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_invalid_string_returns_string_as_is(self, func, x):
         assert func(x) is x
 
     # Handle invalid unicode character input
 
+    funcs = conversion_funcs
+
     @given(sampled_from(not_numeric))
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_non_numeral_returns_as_is(self, func, x):
         assert func(x) == x
 
     @given(text(min_size=2).filter(not_a_number))
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_of_more_than_one_char_returns_as_is(self, func, x):
         assert func(x) == x
 
     # Handle other invalid input
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    funcs = conversion_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_invalid_type_raises_typeerror(self, func):
         with raises(TypeError):
             func([1])
@@ -478,21 +494,23 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     # Demonstrate that the error handling options kick in on invalid input
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    funcs = conversion_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_invalid_raises_valueerror_if_raise_on_invalid_is_true(self, func):
         with raises(ValueError):
             func("this is invalid", raise_on_invalid=True)
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_default_value_if_given_invalid_string(self, func):
         assert func("this is invalid", default=90) == 90
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_raise_on_invalid_takes_precedence_over_default(self, func):
         with raises(ValueError):
             func("this is invalid", default=90, raise_on_invalid=True)
 
-    @parametrize("func", conversion_funcs, ids=conversion_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_transformed_input_if_invalid_and_on_fail_is_given(self, func):
         x = "this is invalid"
         expected = len(x)
@@ -685,26 +703,14 @@ class TestCheckingFunctions:
         assert func(x)
         assert func(x, num_only=True)
 
+    funcs = identification_funcs
+
     @given(integers() | floats())
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_if_given_number_and_str_only_is_true(self, func, x):
         assert not fastnumbers.isreal(x, str_only=True)
 
     # Handling of strings containing numbers as input
-
-    @given(integers().map(repr))
-    @example("40992764608243448035")
-    @example("-41538374848935286698640072416676709")
-    @example("240278958776173358420034462324117625982")
-    @example("1609422692302207451978552816956662956486")
-    @example("-121799354242674784350540853922878239740762834")
-    @example("32718704454132572934419741118153895444518280065843028297496525078")
-    @example("33684944745210074227862907273261282807602986571245071790093633147269")
-    @example("1" + "0" * 1050)
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
-    def test_returns_true_if_given_int_string(self, func, x):
-        assert func(x)
-        assert func(pad(x))  # Accepts padding
 
     funcs = ["isreal", "isfloat"]
 
@@ -715,20 +721,36 @@ class TestCheckingFunctions:
         assert func(x)
         assert func(pad(x))  # Accepts padding
 
+    funcs = identification_funcs
+
+    @given(integers().map(repr))
+    @example("40992764608243448035")
+    @example("-41538374848935286698640072416676709")
+    @example("240278958776173358420034462324117625982")
+    @example("1609422692302207451978552816956662956486")
+    @example("-121799354242674784350540853922878239740762834")
+    @example("32718704454132572934419741118153895444518280065843028297496525078")
+    @example("33684944745210074227862907273261282807602986571245071790093633147269")
+    @example("1" + "0" * 1050)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_returns_true_if_given_int_string(self, func, x):
+        assert func(x)
+        assert func(pad(x))  # Accepts padding
+
     @given((integers() | floats(allow_nan=False, allow_infinity=False)).map(repr))
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_if_given_string_and_num_only_is_true(self, func, x):
         assert not func(x, num_only=True)
 
     @given(sampled_from(digits))
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_digit_returns_true(self, func, x):
         assert func(x)
         assert func(pad(x))  # Accepts padding
 
     funcs = ["isreal", "isfloat"]
 
-    @given(sampled_from(numeric_not_digit_not_int))t
+    @given(sampled_from(numeric_not_digit_not_int))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_true(self, func, x):
         assert func(x)
@@ -736,23 +758,25 @@ class TestCheckingFunctions:
 
     # Handling of invalid input
 
+    funcs = identification_funcs
+
     @given((text() | binary()).filter(not_a_number))
     @example("+")
     @example("-")
     @example("e")
     @example("e8")
     @example(".")
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_if_given_non_number_string(self, func, x):
         assert not func(x)
 
     @given(sampled_from(not_numeric))
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_non_numeral_returns_false(self, func, x):
         assert not func(x)
 
     @given(text(min_size=2).filter(not_a_number))
-    @parametrize("func", identification_funcs, ids=identification_func_ids)
+    @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_of_more_than_one_char_returns_false(self, func, x):
         assert not func(x)
 
