@@ -4,8 +4,8 @@ import time
 import unittest
 from math import copysign, isinf, isnan
 
-from builtin_tests.py36 import support
-from builtin_tests.py36.builtin_test_grammar import (
+import builtin_support as support
+from builtin_grammar import (
     INVALID_UNDERSCORE_LITERALS,
     VALID_UNDERSCORE_LITERALS,
 )
@@ -49,7 +49,8 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertRaises(TypeError, float, {})
         self.assertRaisesRegex(TypeError, "not 'dict'", float, {})
         # Lone surrogate
-        # self.assertRaises(UnicodeEncodeError, float, '\uD8F0')
+        if sys.version_info >= (3, 7):
+            self.assertRaises(ValueError, float, "\uD8F0")
         # check that we don't accept alternate exponent markers
         self.assertRaises(ValueError, float, "-1.7d29")
         self.assertRaises(ValueError, float, "3D-14")
@@ -58,7 +59,14 @@ class GeneralFloatCases(unittest.TestCase):
         # extra long strings should not be a problem
         float(b"." + b"1" * 1000)
         float("." + "1" * 1000)
+        if sys.version_info >= (3, 7):
+            # Invalid unicode string
+            # See bpo-34087
+            self.assertRaises(ValueError, float, "\u3053\u3093\u306b\u3061\u306f")
 
+    @unittest.skipUnless(
+        sys.version_info >= (3, 6), "Underscores introduced in Python 3.6"
+    )
     def test_underscores(self):
         for lit in VALID_UNDERSCORE_LITERALS:
             if not any(ch in lit for ch in "jJxXoObB"):
@@ -121,7 +129,8 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertEqual(float(memoryview(b"12.3A")[1:4]), 2.3)
         self.assertEqual(float(memoryview(b"12.34")[1:4]), 2.3)
 
-    def test_error_message(self):
+    @unittest.skipIf(sys.version_info >= (3, 7), "Messages changed in Python 3.7")
+    def test_error_message_old(self):
         testlist = ("\xbd", "123\xbd", "  123 456  ")
         for s in testlist:
             try:
@@ -130,6 +139,31 @@ class GeneralFloatCases(unittest.TestCase):
                 self.assertIn(s.strip(), e.args[0])
             else:
                 self.fail("Expected int(%r) to raise a ValueError", s)
+
+    @unittest.skipUnless(sys.version_info >= (3, 7), "Messages changed in Python 3.7")
+    def test_error_message(self):
+        def check(s):
+            with self.assertRaises(ValueError, msg="float(%r)" % (s,)) as cm:
+                float(s)
+            self.assertEqual(
+                str(cm.exception), "could not convert string to float: %r" % (s,)
+            )
+
+        check("\xbd")
+        check("123\xbd")
+        check("  123 456  ")
+        check(b"  123 456  ")
+
+        # non-ascii digits (error came from non-digit '!')
+        check("\u0663\u0661\u0664!")
+        # embedded NUL
+        check("123\x00")
+        check("123\x00 245")
+        check("123\x00245")
+        # byte string with embedded NUL
+        check(b"123\x00")
+        # non-UTF-8 byte string
+        check(b"123\xa0")
 
     @support.run_with_locale("LC_NUMERIC", "fr_FR", "de_DE")
     def test_float_with_comma(self):
@@ -159,7 +193,7 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertEqual(float("  25.e-1  "), 2.5)
         self.assertAlmostEqual(float("  .25e-1  "), 0.025)
 
-    def test_floatconversion(self):
+    def test_floatconversion(self):  # noqa: C901
         # Make sure that calls to __float__() work properly
         class Foo1(object):
             def __float__(self):
@@ -186,12 +220,18 @@ class GeneralFloatCases(unittest.TestCase):
             def __float__(self):
                 return float(str(self)) + 1
 
-        self.assertEqual(float(Foo1()), 42.0)
-        self.assertEqual(float(Foo2()), 42.0)
-        with self.assertWarns(DeprecationWarning):
-            self.assertEqual(float(Foo3(21)), 42.0)
+        if sys.version_info >= (3, 6):
+            self.assertEqual(float(Foo1()), 42.0)
+            self.assertEqual(float(Foo2()), 42.0)
+            with self.assertWarns(DeprecationWarning):
+                self.assertEqual(float(Foo3(21)), 42.0)
+            self.assertEqual(float(FooStr("8")), 9.0)
+        else:
+            self.assertAlmostEqual(float(Foo1()), 42.0)
+            self.assertAlmostEqual(float(Foo2()), 42.0)
+            self.assertAlmostEqual(float(Foo3(21)), 42.0)
+            self.assertAlmostEqual(float(FooStr("8")), 9.0)
         self.assertRaises(TypeError, float, Foo4(42))
-        self.assertEqual(float(FooStr("8")), 9.0)
 
         class Foo5:
             def __float__(self):
@@ -204,14 +244,45 @@ class GeneralFloatCases(unittest.TestCase):
             def __float__(self):
                 return OtherFloatSubclass(42.0)
 
-        with self.assertWarns(DeprecationWarning):
-            self.assertEqual(float(F()), 42.0)
-        with self.assertWarns(DeprecationWarning):
-            self.assertIs(type(float(F())), builtins.float)
-        with self.assertWarns(DeprecationWarning):
-            self.assertEqual(FloatSubclass(F()), 42.0)
-        with self.assertWarns(DeprecationWarning):
+        if sys.version_info >= (3, 6):
+            with self.assertWarns(DeprecationWarning):
+                self.assertEqual(float(F()), 42.0)
+            with self.assertWarns(DeprecationWarning):
+                self.assertIs(type(float(F())), builtins.float)
+            with self.assertWarns(DeprecationWarning):
+                self.assertEqual(FloatSubclass(F()), 42.0)
+            with self.assertWarns(DeprecationWarning):
+                self.assertIs(type(FloatSubclass(F())), FloatSubclass)
+        else:
+            self.assertAlmostEqual(float(F()), 42.0)
+            self.assertIs(type(float(F())), OtherFloatSubclass)
+            self.assertAlmostEqual(FloatSubclass(F()), 42.0)
             self.assertIs(type(FloatSubclass(F())), FloatSubclass)
+
+        if sys.version_info >= (3, 8):
+
+            class MyIndex:
+                def __init__(self, value):
+                    self.value = value
+
+                def __index__(self):
+                    return self.value
+
+            self.assertEqual(float(MyIndex(42)), 42.0)
+            self.assertRaises(OverflowError, float, MyIndex(2 ** 2000))
+
+            class MyInt:
+                def __int__(self):
+                    return 42
+
+            self.assertRaises(TypeError, float, MyInt())
+
+    @unittest.skipUnless(
+        sys.version_info >= (3, 7), "Keyword arguments disallowed as of Python 3.7"
+    )
+    def test_keyword_args(self):
+        with self.assertRaisesRegex(TypeError, "keyword argument"):
+            float(x="3.14")
 
 
 # Beginning with Python 2.6 float has cross platform compatible
