@@ -30,33 +30,32 @@ typedef struct Options {
 } Options;
 
 /* Convenience for initializing.
- * Older MSVC does not like designated initializers.
  */
-#define init_Options_convert {         \
-        /*.retval =*/ NULL,            \
-        /*.input =*/ NULL,             \
-        /*.on_fail =*/ NULL,           \
-        /*.handle_inf =*/ NULL,        \
-        /*.handle_nan =*/ NULL,        \
-        /*.coerce =*/ true,            \
-        /*.num_only =*/ false,         \
-        /*.str_only =*/ false,         \
-        /* allow_underscores =*/ true, \
-        /*.allow_uni =*/ true,         \
-        /*.base =*/ INT_MIN,           \
+#define init_Options_convert {     \
+        .retval = NULL,            \
+        .input = NULL,             \
+        .on_fail = NULL,           \
+        .handle_inf = NULL,        \
+        .handle_nan = NULL,        \
+        .coerce = true,            \
+        .num_only = false,         \
+        .str_only = false,         \
+        .allow_underscores = true, \
+        .allow_uni = true,         \
+        .base = INT_MIN,           \
     }
-#define init_Options_check {           \
-        /*.retval =*/ Py_None,         \
-        /*.input =*/ NULL,             \
-        /*.on_fail =*/ NULL,           \
-        /*.handle_inf =*/ Py_False,    \
-        /*.handle_nan =*/ Py_False,    \
-        /*.coerce =*/ true,            \
-        /*.num_only =*/ false,         \
-        /*.str_only =*/ false,         \
-        /* allow_underscores =*/ true, \
-        /*.allow_uni =*/ true,         \
-        /*.base =*/ INT_MIN,           \
+#define init_Options_check {       \
+        .retval = Py_None,         \
+        .input = NULL,             \
+        .on_fail = NULL,           \
+        .handle_inf = Py_False,    \
+        .handle_nan = Py_False,    \
+        .coerce = true,            \
+        .num_only = false,         \
+        .str_only = false,         \
+        .allow_underscores = true, \
+        .allow_uni = true,         \
+        .base = INT_MIN,           \
     }
 
 /* Some query MACROs. Each expects a pointer. */
