@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[3.1.0] - 2020-11-21
+---
+
 ### Added
 - `query_type` function to determine what as type `fastnumbers` will interpret
   a given input
@@ -330,6 +333,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[3.1.0]: https://github.com/SethMMorton/fastnumbers/compare/3.0.0...3.1.0
 [3.0.0]: https://github.com/SethMMorton/fastnumbers/compare/2.2.1...3.0.0
 [2.2.1]: https://github.com/SethMMorton/fastnumbers/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/SethMMorton/fastnumbers/compare/2.1.1...2.2.0
