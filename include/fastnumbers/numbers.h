@@ -14,6 +14,13 @@
 extern "C" {
 #endif
 
+/*
+ * Copy of _Py_dg_stdnan from the Python code base.
+ * Needed to generate NaN on Windows.
+ */
+double
+compat_generate_nan(int sign);
+
 /* All the awesome MACROS */
 
 #define PyNumber_IsNAN(pynum) (PyFloat_Check(pynum) && Py_IS_NAN(PyFloat_AS_DOUBLE(pynum)))
@@ -21,7 +28,7 @@ extern "C" {
 
 /* Return NaN correctly on this system. */
 #if !defined(PY_NO_SHORT_FLOAT_REPR)
-#define PyFloat_from_NaN(negative) PyFloat_FromDouble(_Py_dg_stdnan(negative));
+#define PyFloat_from_NaN(negative) PyFloat_FromDouble(compat_generate_nan(negative));
 #else
 #define PyFloat_from_NaN(negative) \
     (negative) ? PyFloat_FromDouble(-Py_NAN) : PyFloat_FromDouble(Py_NAN);

@@ -19,6 +19,38 @@
 #endif
 
 
+/*
+ * Copy of _Py_dg_stdnan from the Python code base.
+ * Dynamically generate an NaN. Needed for Windows.
+ * I hate copy/pasting code, but this seems like the only way.
+ */
+typedef union {
+    double d;
+    uint32_t L[2];
+} U;
+#ifdef DOUBLE_IS_LITTLE_ENDIAN_IEEE754
+#define word0(x) (x)->L[1]
+#define word1(x) (x)->L[0]
+#else
+#define word0(x) (x)->L[0]
+#define word1(x) (x)->L[1]
+#endif
+#define dval(x) (x)->d
+#define NAN_WORD0 0x7ff80000
+#define NAN_WORD1 0
+#define Sign_bit 0x80000000
+double
+compat_generate_nan(int sign) {
+    U rv;
+    word0(&rv) = NAN_WORD0;
+    word1(&rv) = NAN_WORD1;
+    if (sign) {
+        word0(&rv) |= Sign_bit;
+    }
+    return dval(&rv);
+}
+
+
 static bool
 _PyFloat_is_Intlike(PyObject *obj) {
     /* NOTE: This code copy/pasted with modification from the CPython source.

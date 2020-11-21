@@ -33,6 +33,7 @@ print(astyle_c_ret.stdout)
 astyle_h = astyle + [
     "--exclude=docstrings.h",
     "--exclude=fn_bool.h",
+    "--exclude=options.h",
     "--exclude=pstdint.h",
     "include/fastnumbers/*.h",
 ]
