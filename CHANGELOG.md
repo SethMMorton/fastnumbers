@@ -5,6 +5,10 @@ Unreleased
 - `query_type` function to determine what as type `fastnumbers` will interpret
   a given input
 
+### Fixed
+- Support for Python 3.9 (eliminate use of private Python C function that is now
+  hidden in 3.9) (issue #43)
+
 [3.0.0] - 2020-01-06
 ---
 
