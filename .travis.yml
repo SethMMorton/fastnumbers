@@ -7,6 +7,7 @@ python:
   - 3.6
   - 3.7
   - 3.8
+  - 3.9
 
 env:
   - CC=clang
@@ -17,8 +18,9 @@ jobs:
     # Windows tests!
     - {python: 3.5, os: windows, env: PYTHON_VERSION=3.5.4, language: sh}
     - {python: 3.6, os: windows, env: PYTHON_VERSION=3.6.8, language: sh}
-    - {python: 3.7, os: windows, env: PYTHON_VERSION=3.7.4, language: sh}
-    - {python: 3.8, os: windows, env: PYTHON_VERSION=3.8.0, language: sh}
+    - {python: 3.7, os: windows, env: PYTHON_VERSION=3.7.9, language: sh}
+    - {python: 3.8, os: windows, env: PYTHON_VERSION=3.8.6, language: sh}
+    #- {python: 3.9, os: windows, env: PYTHON_VERSION=3.9.0, language: sh}
 
     # This "code quality" stage does static analysis and formatting checks.
     # Platform- and Python-version-independent.
@@ -61,28 +63,28 @@ jobs:
       name: "Build and Deploy Linux Wheels"
       python: 3.6
       services: docker
-      env: CIBW_SKIP="cp27-*"
+      env: CIBW_BUILD="cp3*"
       before_install: skip
-      install: python -m pip install twine cibuildwheel==1.0.0
+      install: python -m pip install twine cibuildwheel==1.6.4
       before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success: python -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
     - stage: deploy
       name: "Build and Deploy MacOS Wheels"
       os: osx
-      env: CIBW_SKIP="cp27-*"
+      env: CIBW_BUILD="cp3*"
       language: sh
       before_install: skip
-      install: python -m pip install twine cibuildwheel==1.0.0
+      install: python3 -m pip install twine cibuildwheel==1.6.4
       before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
-      script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
+      script: python3 -m cibuildwheel --output-dir wheelhouse
+      after_success: python3 -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
     - stage: deploy
       name: "Build and Deploy Windows Wheels"
       os: windows
-      env: [PYTHON_VERSION=3.6.8, CIBW_SKIP="cp27-*"]
+      env: [PYTHON_VERSION=3.6.8, CIBW_BUILD="cp3*"]
       language: sh
-      install: python -m pip install twine cibuildwheel==1.0.0
+      install: python -m pip install twine cibuildwheel==1.6.4
       before_script: if [ -z $TRAVIS_TAG ]; then export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/; fi
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success: python -m twine upload --user SethMMorton --skip-existing wheelhouse/*.whl
@@ -121,3 +123,4 @@ cache:
     - /c/Python36
     - /c/Python37
     - /c/Python38
+    - /c/Python39
