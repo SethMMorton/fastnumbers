@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
+        # Note, clang is used on macos, even though it says gcc
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
@@ -30,15 +31,15 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install codecov
           python -m pip install --requirement dev/requirements.txt
 
       - name: Patch Doctests
         run: python dev/patch_doctest.py
 
-      - name: Set Extras Environment
-        if: matrix.extras
-        run: echo WITH_EXTRAS=fast,icu >> $GITHUB_ENV
+      - name: Set CFLAGS
+        if: matrix.os == 'ubuntu-latest'
+        # Need no optimization for code coverage
+        run: echo CFLAGS="--coverage -O0" >> $GITHUB_ENV
 
       - name: Run Tests
         run: |
@@ -46,8 +47,6 @@ jobs:
           python -m doctest fastnumbers
           pytest --hypothesis-profile=slow-tests --doctest-glob=README.rst
 
-      # - name: Generate Coverage Report
-      #   run: codecov xml --gcov-args '-o build/temp.*/src'
-
-      # - name: Upload to CodeCov
-      #   uses: codecov/codecov-action@v1
+      - name: Upload to CodeCov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v1
