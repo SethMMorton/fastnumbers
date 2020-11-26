@@ -10,14 +10,11 @@ fastnumbers
 .. image:: https://img.shields.io/pypi/l/fastnumbers.svg
     :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
 
-.. image:: https://img.shields.io/travis/SethMMorton/fastnumbers/master.svg?label=travis-ci
-    :target: https://travis-ci.com/SethMMorton/fastnumbers
+.. image:: https://github.com/SethMMorton/fastnumbers/workflows/Tests/badge.svg
+    :target: https://github.com/SethMMorton/fastnumbers/workflows
 
 .. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/SethMMorton/fastnumbers
-
-.. image:: https://api.codacy.com/project/badge/Grade/7221f3d2be3147e9a975d604f1770cfb
-    :target: https://www.codacy.com/app/SethMMorton/fastnumbers
 
 Super-fast and clean conversions to numbers.
 
