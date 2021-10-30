@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+### Added
+- Support for Python 3.10
+
 [3.1.0] - 2020-11-21
 ---
 
