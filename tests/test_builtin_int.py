@@ -1,6 +1,7 @@
 import builtins
 import sys
 import unittest
+from typing import Callable, List, Optional, Union
 
 import builtin_support as support
 from builtin_grammar import (
@@ -37,7 +38,7 @@ class IntSubclass(builtins.int):
 
 
 class IntTestCases(unittest.TestCase):
-    def test_basic(self):
+    def test_basic(self) -> None:
         self.assertEqual(int(314), 314)
         self.assertEqual(int(3.14), 3)
         # Check that conversion from float truncates towards zero
@@ -58,7 +59,7 @@ class IntTestCases(unittest.TestCase):
                     ss = prefix + sign + s
                     vv = v
                     if sign == "-" and v is not ValueError:
-                        vv = -v
+                        vv = -v  # type: ignore
                     try:
                         self.assertEqual(int(ss), vv)
                     except ValueError:
@@ -221,7 +222,7 @@ class IntTestCases(unittest.TestCase):
     @unittest.skipUnless(
         sys.version_info >= (3, 6), "Underscores introduced in Python 3.6"
     )
-    def test_underscores(self):
+    def test_underscores(self) -> None:
         for lit in VALID_UNDERSCORE_LITERALS:
             if any(ch in lit for ch in ".eEjJ"):
                 continue
@@ -241,17 +242,17 @@ class IntTestCases(unittest.TestCase):
         self.assertRaises(ValueError, int, "100_")
 
     @support.cpython_only
-    def test_small_ints(self):
+    def test_small_ints(self) -> None:
         # Bug #3236: Return small longs from PyLong_FromString
         self.assertIs(int("10"), 10)
         self.assertIs(int("-1"), -1)
         self.assertIs(int(b"10"), 10)
         self.assertIs(int(b"-1"), -1)
 
-    def test_no_args(self):
+    def test_no_args(self) -> None:
         self.assertEqual(int(), 0)
 
-    def test_keyword_args(self):
+    def test_keyword_args(self) -> None:
         # Test invoking int() using keyword arguments.
         self.assertEqual(int("100", base=2), 4)
         if sys.version_info >= (3, 7):
@@ -265,7 +266,7 @@ class IntTestCases(unittest.TestCase):
         self.assertRaises(TypeError, int, base=10)
         self.assertRaises(TypeError, int, base=0)
 
-    def test_int_base_limits(self):
+    def test_int_base_limits(self) -> None:
         """Testing the supported limits of the int() base parameter."""
         self.assertEqual(int("0", 5), 0)
         with self.assertRaises(ValueError):
@@ -282,19 +283,19 @@ class IntTestCases(unittest.TestCase):
         for base in range(2, 37):
             self.assertEqual(int("0", base=base), 0)
 
-    def test_int_base_bad_types(self):
+    def test_int_base_bad_types(self) -> None:
         """Not integer types are not valid bases; issue16772."""
         with self.assertRaises(TypeError):
-            int("0", 5.5)
+            int("0", 5.5)  # type: ignore
         with self.assertRaises(TypeError):
-            int("0", 5.0)
+            int("0", 5.0)  # type: ignore
 
-    def test_int_base_indexable(self):
+    def test_int_base_indexable(self) -> None:
         class MyIndexable(object):
-            def __init__(self, value):
+            def __init__(self, value: builtins.int) -> None:
                 self.value = value
 
-            def __index__(self):
+            def __index__(self) -> builtins.int:
                 return self.value
 
         # Check out of range bases.
@@ -307,7 +308,7 @@ class IntTestCases(unittest.TestCase):
         self.assertEqual(int("101", base=MyIndexable(10)), 101)
         self.assertEqual(int("101", base=MyIndexable(36)), 1 + 36 ** 2)
 
-    def test_non_numeric_input_types(self):
+    def test_non_numeric_input_types(self) -> None:
         # Test possible non-numeric types for the argument x, including
         # subclasses of the explicitly documented accepted types.
         class CustomStr(str):
@@ -319,7 +320,7 @@ class IntTestCases(unittest.TestCase):
         class CustomByteArray(bytearray):
             pass
 
-        factories = [
+        factories: List[Callable[[bytes], Union[bytes, bytearray, str]]] = [
             bytes,
             bytearray,
             lambda b: CustomStr(b.decode()),
@@ -332,7 +333,7 @@ class IntTestCases(unittest.TestCase):
         except ImportError:
             pass
         else:
-            factories.append(lambda b: array("B", b))
+            factories.append(lambda b: array("B", b))  # type: ignore
 
         for f in factories:
             x = f(b"100")
@@ -347,17 +348,17 @@ class IntTestCases(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "invalid literal"):
                     int(f(b"A" * 0x10))
 
-    def test_int_memoryview(self):
+    def test_int_memoryview(self) -> None:
         self.assertEqual(int(memoryview(b"123")[1:3]), 23)
         self.assertEqual(int(memoryview(b"123\x00")[1:3]), 23)
         self.assertEqual(int(memoryview(b"123 ")[1:3]), 23)
         self.assertEqual(int(memoryview(b"123A")[1:3]), 23)
         self.assertEqual(int(memoryview(b"1234")[1:3]), 23)
 
-    def test_string_float(self):
+    def test_string_float(self) -> None:
         self.assertRaises(ValueError, int, "1.2")
 
-    def test_intconversion(self):
+    def test_intconversion(self) -> None:
         # Test __int__()
         class ClassicMissingMethods:
             pass
@@ -370,7 +371,7 @@ class IntTestCases(unittest.TestCase):
         self.assertRaises(TypeError, int, MissingMethods())
 
         class Foo0:
-            def __int__(self):
+            def __int__(self) -> builtins.int:
                 return 42
 
         self.assertEqual(int(Foo0()), 42)
@@ -380,23 +381,23 @@ class IntTestCases(unittest.TestCase):
 
         for base in (object, Classic):
 
-            class IntOverridesTrunc(base):
-                def __int__(self):
+            class IntOverridesTrunc(base):  # type: ignore
+                def __int__(self) -> builtins.int:
                     return 42
 
-                def __trunc__(self):
+                def __trunc__(self) -> builtins.int:
                     return -12
 
             self.assertEqual(int(IntOverridesTrunc()), 42)
 
     @unittest.skipUnless(sys.version_info >= (3, 8), "Test introduced in Python 3.8")
-    def test_int_subclass_with_index(self):
+    def test_int_subclass_with_index(self) -> None:
         class MyIndex(builtins.int):
-            def __index__(self):
+            def __index__(self) -> builtins.int:
                 return 42
 
         class BadIndex(builtins.int):
-            def __index__(self):
+            def __index__(self) -> builtins.float:  # type: ignore
                 return 42.0
 
         my_int = MyIndex(7)
@@ -405,13 +406,13 @@ class IntTestCases(unittest.TestCase):
 
         self.assertEqual(int(BadIndex()), 0)
 
-    def test_int_subclass_with_int(self):
+    def test_int_subclass_with_int(self) -> None:
         class MyInt(builtins.int):
-            def __int__(self):
+            def __int__(self) -> builtins.int:
                 return 42
 
         class BadInt(builtins.int):
-            def __int__(self):
+            def __int__(self) -> builtins.float:  # type: ignore
                 return 42.0
 
         my_int = MyInt(7)
@@ -425,21 +426,21 @@ class IntTestCases(unittest.TestCase):
         else:
             self.assertRaises(TypeError, int, BadInt())
 
-    def test_int_returns_int_subclass(self):
+    def test_int_returns_int_subclass(self) -> None:
         class BadIndex:
-            def __index__(self):
+            def __index__(self) -> bool:
                 return True
 
         class BadIndex2(builtins.int):
-            def __index__(self):
+            def __index__(self) -> bool:
                 return True
 
         class BadInt:
-            def __int__(self):
+            def __int__(self) -> bool:
                 return True
 
         class BadInt2(builtins.int):
-            def __int__(self):
+            def __int__(self) -> bool:
                 return True
 
         if sys.version_info >= (3, 8):
@@ -461,15 +462,15 @@ class IntTestCases(unittest.TestCase):
         if sys.version_info >= (3, 6):
             self.assertIs(type(n), builtins.int)
 
-        bad_int = BadInt2()
+        bad_int2 = BadInt2()
         with self.assertWarns(DeprecationWarning):
-            n = int(bad_int)
+            n = int(bad_int2)
         self.assertEqual(n, 1)
         if sys.version_info >= (3, 6):
             self.assertIs(type(n), builtins.int)
 
-    def test_error_message(self):
-        def check(s, base=None):
+    def test_error_message(self) -> None:
+        def check(s: Union[str, bytes], base: Optional[builtins.int] = None) -> None:
             with self.assertRaises(ValueError, msg="int(%r, %r)" % (s, base)) as cm:
                 if base is None:
                     int(s)
@@ -503,7 +504,7 @@ class IntTestCases(unittest.TestCase):
         check("123\ud800", 10)
 
     @unittest.skipUnless(sys.version_info >= (3, 7), "Test introduced in Python 3.7")
-    def test_issue31619(self):
+    def test_issue31619(self) -> None:
         self.assertEqual(
             int("1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1", 2),
             0b1010101010101010101010101010101,

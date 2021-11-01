@@ -9,12 +9,26 @@ dig: pyint
 max_exp: pyint
 min_exp: pyint
 
+class HasIndex(Protocol):
+    def __index__(self) -> pyint: ...
+
+class HasInt(Protocol):
+    def __int__(self) -> pyint: ...
+
 class ItWillFloat(Protocol):
     def __float__(self) -> pyfloat: ...
 
-InputType = Union[pyint, pyfloat, ItWillFloat, str, bytes, bytearray]
+InputType = Union[pyint, pyfloat, ItWillFloat, HasIndex, HasInt, str, bytes, bytearray]
 FastInputType = TypeVar(
-    "FastInputType", pyint, pyfloat, ItWillFloat, str, bytes, bytearray
+    "FastInputType",
+    pyint,
+    pyfloat,
+    ItWillFloat,
+    HasIndex,
+    HasInt,
+    str,
+    bytes,
+    bytearray,
 )
 QueryInputType = TypeVar("QueryInputType")
 Default = TypeVar("Default")
@@ -335,7 +349,7 @@ def fast_int(
     x: FastInputType,
     *,
     raise_on_invalid: bool = False,
-    base: pyint,
+    base: Union[pyint, HasIndex],
     allow_underscores: bool = True,
 ) -> Union[FastInputType, pyint]: ...
 @overload
@@ -352,7 +366,7 @@ def fast_int(
     default: Default,
     *,
     raise_on_invalid: bool = False,
-    base: pyint,
+    base: Union[pyint, HasIndex],
     allow_underscores: bool = True,
 ) -> Union[Default, pyint]: ...
 @overload
@@ -369,7 +383,7 @@ def fast_int(
     *,
     raise_on_invalid: bool = False,
     on_fail: Callable[[FastInputType], TransformType],
-    base: pyint,
+    base: Union[pyint, HasIndex],
     allow_underscores: bool = True,
 ) -> Union[TransformType, pyint]: ...
 @overload
@@ -385,7 +399,7 @@ def fast_int(
     x: FastInputType,
     *,
     raise_on_invalid: bool = False,
-    base: pyint,
+    base: Union[pyint, HasIndex],
     allow_underscores: bool = True,
     key: Callable[[FastInputType], TransformType],
 ) -> Union[TransformType, pyint]: ...
@@ -448,7 +462,7 @@ def isint(
     *,
     str_only: bool = False,
     num_only: bool = False,
-    base: pyint = 0,
+    base: Union[pyint, HasIndex] = 0,
     allow_underscores: bool = True,
 ) -> bool: ...
 def isintlike(
@@ -484,6 +498,6 @@ def query_type(
 @overload
 def int(x: InputType = 0) -> pyint: ...
 @overload
-def int(x: InputType = 0, *, base: pyint) -> pyint: ...
+def int(x: InputType, base: Union[pyint, HasIndex]) -> pyint: ...
 def float(x: InputType = 0.0) -> pyfloat: ...
 def real(x: InputType = 0.0, *, coerce: bool = True) -> Union[pyint, pyfloat]: ...
