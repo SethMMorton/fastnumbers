@@ -2,6 +2,7 @@
 
 import platform
 import unittest
+from typing import Any, Callable, Dict, Optional, Tuple
 
 __all__ = [
     "run_with_locale",
@@ -14,9 +15,9 @@ __all__ = [
 # it afterwards.
 
 
-def run_with_locale(catstr, *locales):
-    def decorator(func):
-        def inner(*args, **kwds):
+def run_with_locale(catstr: str, *locales: str) -> Callable[..., Any]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def inner(*args: Any, **kwds: Any) -> Any:
             try:
                 import locale
 
@@ -27,7 +28,7 @@ def run_with_locale(catstr, *locales):
                 raise
             except:  # noqa
                 # cannot retrieve original locale, so do nothing
-                locale = orig_locale = None
+                locale = orig_locale = None  # type: ignore
             else:
                 for loc in locales:
                     try:
@@ -54,18 +55,18 @@ def run_with_locale(catstr, *locales):
 # unittest integration.
 
 
-def _id(obj):
+def _id(obj: Any) -> Any:
     return obj
 
 
-def cpython_only(test):
+def cpython_only(test: Any) -> Any:
     """
     Decorator for tests only applicable on CPython.
     """
     return impl_detail(cpython=True)(test)
 
 
-def impl_detail(msg=None, **guards):
+def impl_detail(msg: Optional[str] = None, **guards: bool) -> Callable[[Any], Any]:
     if check_impl_detail(**guards):
         return _id
     if msg is None:
@@ -74,12 +75,11 @@ def impl_detail(msg=None, **guards):
             msg = "implementation detail not available on {0}"
         else:
             msg = "implementation detail specific to {0}"
-        guardnames = sorted(guardnames.keys())
-        msg = msg.format(" or ".join(guardnames))
+        msg = msg.format(" or ".join(sorted(guardnames.keys())))
     return unittest.skip(msg)
 
 
-def _parse_guards(guards):
+def _parse_guards(guards: Dict[str, bool]) -> Tuple[Dict[str, bool], bool]:
     # Returns a tuple ({platform_name: run_me}, default_value)
     if not guards:
         return ({"cpython": True}, False)
@@ -90,7 +90,7 @@ def _parse_guards(guards):
 
 # Use the following check to guard CPython's implementation-specific tests --
 # or to run them only on the implementation(s) guarded by the arguments.
-def check_impl_detail(**guards):
+def check_impl_detail(**guards: bool) -> bool:
     """This function returns True or False depending on the host platform.
     Examples:
        if check_impl_detail():               # only on CPython (default)

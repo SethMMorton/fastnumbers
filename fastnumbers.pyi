@@ -1,14 +1,21 @@
 from builtins import float as pyfloat, int as pyint
 from typing import Any, Callable, Optional, Sequence, Type, TypeVar, Union, overload
 
+from typing_extensions import Protocol
+
 __version__: str
 max_int_len: pyint
 dig: pyint
 max_exp: pyint
 min_exp: pyint
 
-InputType = Union[pyint, pyfloat, str, bytes, bytearray]
-FastInputType = TypeVar("FastInputType", pyint, pyfloat, str, bytes, bytearray)
+class ItWillFloat(Protocol):
+    def __float__(self) -> pyfloat: ...
+
+InputType = Union[pyint, pyfloat, ItWillFloat, str, bytes, bytearray]
+FastInputType = TypeVar(
+    "FastInputType", pyint, pyfloat, ItWillFloat, str, bytes, bytearray
+)
 QueryInputType = TypeVar("QueryInputType")
 Default = TypeVar("Default")
 Inf = TypeVar("Inf")

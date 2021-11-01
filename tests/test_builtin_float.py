@@ -3,6 +3,7 @@ import sys
 import time
 import unittest
 from math import copysign, isinf, isnan
+from typing import Callable, List, Union
 
 import builtin_support as support
 from builtin_grammar import (
@@ -31,7 +32,7 @@ class OtherFloatSubclass(builtins.float):
 
 
 class GeneralFloatCases(unittest.TestCase):
-    def test_float(self):
+    def test_float(self) -> None:
         self.assertEqual(float(3.14), 3.14)
         self.assertEqual(float(314), 314.0)
         self.assertEqual(float("  3.14  "), 3.14)
@@ -67,7 +68,7 @@ class GeneralFloatCases(unittest.TestCase):
     @unittest.skipUnless(
         sys.version_info >= (3, 6), "Underscores introduced in Python 3.6"
     )
-    def test_underscores(self):
+    def test_underscores(self) -> None:
         for lit in VALID_UNDERSCORE_LITERALS:
             if not any(ch in lit for ch in "jJxXoObB"):
                 self.assertEqual(float(lit), eval(lit))
@@ -88,7 +89,7 @@ class GeneralFloatCases(unittest.TestCase):
         # Check that we handle bytes values correctly.
         self.assertRaises(ValueError, float, b"0_.\xff9")
 
-    def test_non_numeric_input_types(self):
+    def test_non_numeric_input_types(self) -> None:
         # Test possible non-numeric types for the argument x, including
         # subclasses of the explicitly documented accepted types.
         class CustomStr(str):
@@ -100,7 +101,7 @@ class GeneralFloatCases(unittest.TestCase):
         class CustomByteArray(bytearray):
             pass
 
-        factories = [
+        factories: List[Callable[[bytes], Union[bytes, bytearray, str]]] = [
             bytes,
             bytearray,
             lambda b: CustomStr(b.decode()),
@@ -113,7 +114,7 @@ class GeneralFloatCases(unittest.TestCase):
         except ImportError:
             pass
         else:
-            factories.append(lambda b: array("B", b))
+            factories.append(lambda b: array("B", b))  # type: ignore
 
         for f in factories:
             x = f(b" 3.14  ")
@@ -122,7 +123,7 @@ class GeneralFloatCases(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "could not convert"):
                     float(f(b"A" * 0x10))
 
-    def test_float_memoryview(self):
+    def test_float_memoryview(self) -> None:
         self.assertEqual(float(memoryview(b"12.3")[1:4]), 2.3)
         self.assertEqual(float(memoryview(b"12.3\x00")[1:4]), 2.3)
         self.assertEqual(float(memoryview(b"12.3 ")[1:4]), 2.3)
@@ -130,7 +131,7 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertEqual(float(memoryview(b"12.34")[1:4]), 2.3)
 
     @unittest.skipIf(sys.version_info >= (3, 7), "Messages changed in Python 3.7")
-    def test_error_message_old(self):
+    def test_error_message_old(self) -> None:
         testlist = ("\xbd", "123\xbd", "  123 456  ")
         for s in testlist:
             try:
@@ -138,11 +139,11 @@ class GeneralFloatCases(unittest.TestCase):
             except ValueError as e:
                 self.assertIn(s.strip(), e.args[0])
             else:
-                self.fail("Expected int(%r) to raise a ValueError", s)
+                self.fail("Expected int(%r) to raise a ValueError" % s)
 
     @unittest.skipUnless(sys.version_info >= (3, 7), "Messages changed in Python 3.7")
-    def test_error_message(self):
-        def check(s):
+    def test_error_message(self) -> None:
+        def check(s: Union[str, bytes]) -> None:
             with self.assertRaises(ValueError, msg="float(%r)" % (s,)) as cm:
                 float(s)
             self.assertEqual(
@@ -166,7 +167,7 @@ class GeneralFloatCases(unittest.TestCase):
         check(b"123\xa0")
 
     @support.run_with_locale("LC_NUMERIC", "fr_FR", "de_DE")
-    def test_float_with_comma(self):
+    def test_float_with_comma(self) -> None:
         # set locale to something that doesn't use '.' for the decimal point
         # float must not accept the locale specific decimal point but
         # it still has to accept the normal python syntax
@@ -193,31 +194,31 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertEqual(float("  25.e-1  "), 2.5)
         self.assertAlmostEqual(float("  .25e-1  "), 0.025)
 
-    def test_floatconversion(self):  # noqa: C901
+    def test_floatconversion(self) -> None:  # noqa: C901
         # Make sure that calls to __float__() work properly
         class Foo1(object):
-            def __float__(self):
+            def __float__(self) -> builtins.float:
                 return 42.0
 
         class Foo2(builtins.float):
-            def __float__(self):
+            def __float__(self) -> builtins.float:
                 return 42.0
 
         class Foo3(builtins.float):
-            def __new__(cls, value=0.0):
+            def __new__(cls, value: builtins.float = 0.0) -> "Foo3":
                 return builtins.float.__new__(cls, 2 * value)
 
-            def __float__(self):
+            def __float__(self) -> builtins.float:
                 return self
 
         class Foo4(builtins.float):
-            def __float__(self):
+            def __float__(self) -> int:
                 return 42
 
         # Issue 5759: __float__ not called on str subclasses (though it is on
         # unicode subclasses).
         class FooStr(str):
-            def __float__(self):
+            def __float__(self) -> builtins.float:
                 return float(str(self)) + 1
 
         if sys.version_info >= (3, 6):
@@ -234,14 +235,14 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertRaises(TypeError, float, Foo4(42))
 
         class Foo5:
-            def __float__(self):
+            def __float__(self) -> str:
                 return ""
 
         self.assertRaises(TypeError, time.sleep, Foo5())
 
         # Issue #24731
         class F:
-            def __float__(self):
+            def __float__(self) -> builtins.float:
                 return OtherFloatSubclass(42.0)
 
         if sys.version_info >= (3, 6):
@@ -262,17 +263,17 @@ class GeneralFloatCases(unittest.TestCase):
         if sys.version_info >= (3, 8):
 
             class MyIndex:
-                def __init__(self, value):
+                def __init__(self, value: int) -> None:
                     self.value = value
 
-                def __index__(self):
+                def __index__(self) -> int:
                     return self.value
 
             self.assertEqual(float(MyIndex(42)), 42.0)
             self.assertRaises(OverflowError, float, MyIndex(2 ** 2000))
 
             class MyInt:
-                def __int__(self):
+                def __int__(self) -> int:
                     return 42
 
             self.assertRaises(TypeError, float, MyInt())
@@ -280,7 +281,7 @@ class GeneralFloatCases(unittest.TestCase):
     @unittest.skipUnless(
         sys.version_info >= (3, 7), "Keyword arguments disallowed as of Python 3.7"
     )
-    def test_keyword_args(self):
+    def test_keyword_args(self) -> None:
         with self.assertRaisesRegex(TypeError, "keyword argument"):
             float(x="3.14")
 
@@ -288,7 +289,7 @@ class GeneralFloatCases(unittest.TestCase):
 # Beginning with Python 2.6 float has cross platform compatible
 # ways to create and represent inf and nan
 class InfNanTest(unittest.TestCase):
-    def test_inf_from_str(self):
+    def test_inf_from_str(self) -> None:
         self.assertTrue(isinf(float("inf")))
         self.assertTrue(isinf(float("+inf")))
         self.assertTrue(isinf(float("-inf")))
@@ -333,14 +334,14 @@ class InfNanTest(unittest.TestCase):
         self.assertRaises(ValueError, float, "+-infinity")
         self.assertRaises(ValueError, float, "--Infinity")
 
-    def test_inf_as_str(self):
+    def test_inf_as_str(self) -> None:
         self.assertEqual(repr(1e300 * 1e300), "inf")
         self.assertEqual(repr(-1e300 * 1e300), "-inf")
 
         self.assertEqual(str(1e300 * 1e300), "inf")
         self.assertEqual(str(-1e300 * 1e300), "-inf")
 
-    def test_nan_from_str(self):
+    def test_nan_from_str(self) -> None:
         self.assertTrue(isnan(float("nan")))
         self.assertTrue(isnan(float("+nan")))
         self.assertTrue(isnan(float("-nan")))
@@ -369,14 +370,14 @@ class InfNanTest(unittest.TestCase):
         self.assertRaises(ValueError, float, "+-NaN")
         self.assertRaises(ValueError, float, "--nAn")
 
-    def test_nan_as_str(self):
+    def test_nan_as_str(self) -> None:
         self.assertEqual(repr(1e300 * 1e300 * 0), "nan")
         self.assertEqual(repr(-1e300 * 1e300 * 0), "nan")
 
         self.assertEqual(str(1e300 * 1e300 * 0), "nan")
         self.assertEqual(str(-1e300 * 1e300 * 0), "nan")
 
-    def test_inf_signs(self):
+    def test_inf_signs(self) -> None:
         self.assertEqual(copysign(1.0, float("inf")), 1.0)
         self.assertEqual(copysign(1.0, float("-inf")), -1.0)
 
@@ -384,7 +385,7 @@ class InfNanTest(unittest.TestCase):
         getattr(sys, "float_repr_style", "") == "short",
         "applies only when using short float repr style",
     )
-    def test_nan_signs(self):
+    def test_nan_signs(self) -> None:
         # When using the dtoa.c code, the sign of float('nan') should
         # be predictable.
         self.assertEqual(copysign(1.0, float("nan")), 1.0)
