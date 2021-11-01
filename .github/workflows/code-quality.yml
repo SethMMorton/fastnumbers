@@ -61,7 +61,7 @@ jobs:
           python-version: '3.6'
 
       - name: Install MyPy
-        run: pip install mypy hypothesis pytest
+        run: pip install mypy hypothesis pytest, typing_extensions
 
       - name: Run MyPy
         run: mypy --strict tests
