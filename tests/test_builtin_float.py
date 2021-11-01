@@ -65,6 +65,9 @@ class GeneralFloatCases(unittest.TestCase):
             # See bpo-34087
             self.assertRaises(ValueError, float, "\u3053\u3093\u306b\u3061\u306f")
 
+    def test_noargs(self) -> None:
+        self.assertEqual(float(), 0.0)
+
     @unittest.skipUnless(
         sys.version_info >= (3, 6), "Underscores introduced in Python 3.6"
     )
