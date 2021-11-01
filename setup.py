@@ -14,7 +14,7 @@ from setuptools import Extension, setup
 setup(
     name="fastnumbers",
     version="3.1.0",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     ext_modules=[
         Extension(
             "fastnumbers",

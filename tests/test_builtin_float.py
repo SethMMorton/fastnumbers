@@ -221,17 +221,11 @@ class GeneralFloatCases(unittest.TestCase):
             def __float__(self) -> builtins.float:
                 return float(str(self)) + 1
 
-        if sys.version_info >= (3, 6):
-            self.assertEqual(float(Foo1()), 42.0)
-            self.assertEqual(float(Foo2()), 42.0)
-            with self.assertWarns(DeprecationWarning):
-                self.assertEqual(float(Foo3(21)), 42.0)
-            self.assertEqual(float(FooStr("8")), 9.0)
-        else:
-            self.assertAlmostEqual(float(Foo1()), 42.0)
-            self.assertAlmostEqual(float(Foo2()), 42.0)
-            self.assertAlmostEqual(float(Foo3(21)), 42.0)
-            self.assertAlmostEqual(float(FooStr("8")), 9.0)
+        self.assertEqual(float(Foo1()), 42.0)
+        self.assertEqual(float(Foo2()), 42.0)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(float(Foo3(21)), 42.0)
+        self.assertEqual(float(FooStr("8")), 9.0)
         self.assertRaises(TypeError, float, Foo4(42))
 
         class Foo5:
@@ -245,19 +239,13 @@ class GeneralFloatCases(unittest.TestCase):
             def __float__(self) -> builtins.float:
                 return OtherFloatSubclass(42.0)
 
-        if sys.version_info >= (3, 6):
-            with self.assertWarns(DeprecationWarning):
-                self.assertEqual(float(F()), 42.0)
-            with self.assertWarns(DeprecationWarning):
-                self.assertIs(type(float(F())), builtins.float)
-            with self.assertWarns(DeprecationWarning):
-                self.assertEqual(FloatSubclass(F()), 42.0)
-            with self.assertWarns(DeprecationWarning):
-                self.assertIs(type(FloatSubclass(F())), FloatSubclass)
-        else:
-            self.assertAlmostEqual(float(F()), 42.0)
-            self.assertIs(type(float(F())), OtherFloatSubclass)
-            self.assertAlmostEqual(FloatSubclass(F()), 42.0)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(float(F()), 42.0)
+        with self.assertWarns(DeprecationWarning):
+            self.assertIs(type(float(F())), builtins.float)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(FloatSubclass(F()), 42.0)
+        with self.assertWarns(DeprecationWarning):
             self.assertIs(type(FloatSubclass(F())), FloatSubclass)
 
         if sys.version_info >= (3, 8):

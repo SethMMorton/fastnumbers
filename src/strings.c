@@ -291,7 +291,6 @@ PyUnicode_as_ascii_string(PyObject *obj, Py_ssize_t *len, bool *error)
 }
 
 
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6)
 /* In a generic number, valid underscores are between two digits.
  * A "based" number is necessarily an int, and in those cases the
  * definition of a valid underscore is a bit less well-defined.
@@ -394,7 +393,6 @@ remove_valid_underscores(char *str, const char **end, char **buffer,
     }
     return str;
 }
-#endif /* Python >= 3.6 */
 
 
 /* Try to convert the Python object to bytes (i.e. char*).
@@ -484,7 +482,6 @@ convert_PyString_to_str(PyObject *input, const char **end,
     strip_whitespace(str, *end, len);
     len = *end - str;
 
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6)
     /* Remove all "valid" underscores from the
      * string to simplify downstream parsing.
      */
@@ -497,7 +494,6 @@ convert_PyString_to_str(PyObject *input, const char **end,
             return NULL;
         }
     }
-#endif
 
     return str;
 }

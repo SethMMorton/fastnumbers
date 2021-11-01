@@ -219,9 +219,6 @@ class IntTestCases(unittest.TestCase):
         self.assertEqual(int("2br45qc", 35), 4294967297)
         self.assertEqual(int("1z141z5", 36), 4294967297)
 
-    @unittest.skipUnless(
-        sys.version_info >= (3, 6), "Underscores introduced in Python 3.6"
-    )
     def test_underscores(self) -> None:
         for lit in VALID_UNDERSCORE_LITERALS:
             if any(ch in lit for ch in ".eEjJ"):
@@ -459,15 +456,13 @@ class IntTestCases(unittest.TestCase):
         with self.assertWarns(DeprecationWarning):
             n = int(bad_int)
         self.assertEqual(n, 1)
-        if sys.version_info >= (3, 6):
-            self.assertIs(type(n), builtins.int)
+        self.assertIs(type(n), builtins.int)
 
         bad_int2 = BadInt2()
         with self.assertWarns(DeprecationWarning):
             n = int(bad_int2)
         self.assertEqual(n, 1)
-        if sys.version_info >= (3, 6):
-            self.assertIs(type(n), builtins.int)
+        self.assertIs(type(n), builtins.int)
 
     def test_error_message(self) -> None:
         def check(s: Union[str, bytes], base: Optional[builtins.int] = None) -> None:

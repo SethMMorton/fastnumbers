@@ -350,9 +350,6 @@ class TestBackwardsCompatibility:
         assert func("dummy", key=len) == func("dummy", on_fail=len)
 
 
-@skipif(
-    sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
-)
 class TestUnderscores:
     """Tests to make sure underscores are well handled in >= 3.6."""
 

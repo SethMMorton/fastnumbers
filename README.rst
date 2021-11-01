@@ -395,7 +395,7 @@ errors). ``fastnumbers`` uses a heuristic to determine if the input can be
 safely converted with the much faster naive algorithm. These heuristics are
 extremely conservative - if there is *any* chance that the naive result would
 not give *exactly* the same result as the built-in functions then it will fall
-back on CPython's conversionfunction. For this reason, ``fastnumbers`` is aways
+back on CPython's conversion function. For this reason, ``fastnumbers`` is aways
 *at least as fast* as CPython's built-in ``float`` and ``int`` functions, and
 oftentimes is significantly faster because most real-world numbers pass the
 heuristic.
