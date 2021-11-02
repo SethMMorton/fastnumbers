@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[3.2.0] - 2021-11-01
+---
+
 ### Added
 - Support for Python 3.10
 - Full coverage of mypy type-checking
@@ -340,6 +343,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[3.2.0]: https://github.com/SethMMorton/fastnumbers/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/SethMMorton/fastnumbers/compare/3.0.0...3.1.0
 [3.0.0]: https://github.com/SethMMorton/fastnumbers/compare/2.2.1...3.0.0
 [2.2.1]: https://github.com/SethMMorton/fastnumbers/compare/2.2.0...2.2.1

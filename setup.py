@@ -13,7 +13,7 @@ from setuptools import Extension, find_packages, setup
 # All other data is in the setup.cfg file.
 setup(
     name="fastnumbers",
-    version="3.1.0",
+    version="3.2.0",
     python_requires=">=3.6",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
