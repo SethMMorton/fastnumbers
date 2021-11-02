@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[3.2.1] - 2021-11-02
+---
+
 - No changes - needed a new release to fix a deployment issue
 
 [3.2.0] - 2021-11-01
@@ -345,6 +348,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[3.2.1]: https://github.com/SethMMorton/fastnumbers/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/SethMMorton/fastnumbers/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/SethMMorton/fastnumbers/compare/3.0.0...3.1.0
 [3.0.0]: https://github.com/SethMMorton/fastnumbers/compare/2.2.1...3.0.0
