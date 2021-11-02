@@ -64,7 +64,9 @@ jobs:
         run: pip install mypy hypothesis pytest typing_extensions
 
       - name: Run MyPy
-        run: mypy --strict tests
+        run: |
+          python setup.py install
+          mypy --strict tests
 
   package-validation:
     name: Package Validation

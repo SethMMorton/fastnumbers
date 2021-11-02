@@ -78,7 +78,7 @@ jobs:
           source .env/bin/activate && \
           echo -e "\e[1;34m Install Dependencies \e[0m" && \
           python -m pip install --upgrade pip && \
-          python -m pip install pytest pytest-faulthandler hypothesis && \
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions && \
           echo -e "\e[1;34m Patch Doctests \e[0m" && \
           python dev/patch_doctest.py && \
           echo -e "\e[1;34m Set CFLAGS \e[0m" && \
