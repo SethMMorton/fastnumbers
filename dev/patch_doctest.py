@@ -69,6 +69,9 @@ else:
         'if filename.endswith((".py", ".so", ".pyd")) else filename)',
     )
 
+# To silence mypy
+doctest_str = "# type: ignore\n" + doctest_str
+
 # Open up the new output file and write the modified input to it.
 with open("doctest.py", "w") as fl:
     print(doctest_str, file=fl, end="")

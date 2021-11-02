@@ -7,6 +7,7 @@ include LICENSE
 include setup.py
 include setup.cfg
 include tox.ini
+include *.pyi
 graft src
 graft include
 graft tests

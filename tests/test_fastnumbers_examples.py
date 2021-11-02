@@ -2,6 +2,7 @@
 # Find the build location and add that to the path
 import math
 import sys
+from typing import Callable, Iterator, List, cast
 
 import pytest
 from pytest import raises
@@ -29,7 +30,7 @@ import fastnumbers
 # 18. Unicode numbers
 
 
-def test_fast_real():
+def test_fast_real() -> None:
     # 1. float number
     assert fastnumbers.fast_real(-367.3268) == -367.3268
     assert fastnumbers.fast_real(-367.3268, raise_on_invalid=True) == -367.3268
@@ -62,7 +63,7 @@ def test_fast_real():
     assert isinstance(fastnumbers.fast_real("4029.0", coerce=False), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_real(["hey"])
+        fastnumbers.fast_real(["hey"])  # type: ignore
     # 12. Invalid input string
     assert fastnumbers.fast_real("not_a_number") == "not_a_number"
     with raises(ValueError):
@@ -76,8 +77,8 @@ def test_fast_real():
     assert fastnumbers.fast_real("-iNFinity") == float("-inf")
     assert fastnumbers.fast_real("-iNFinity", inf=7608) == 7608
     # 15. NaN
-    assert math.isnan(fastnumbers.fast_real("nan"))
-    assert math.isnan(fastnumbers.fast_real("-NaN"))
+    assert math.isnan(cast(float, fastnumbers.fast_real("nan")))
+    assert math.isnan(cast(float, fastnumbers.fast_real("-NaN")))
     assert fastnumbers.fast_real("-NaN", nan=0) == 0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_real("+") == "+"
@@ -96,12 +97,11 @@ def test_fast_real():
     assert fastnumbers.fast_real(u"⅔") == 2.0 / 3.0
     assert fastnumbers.fast_real(u"Ⅴ") == 5
     # 19. Function to execute on failure to convert
-    assert fastnumbers.fast_real(76.8, on_fail=len) == 76.8
     assert fastnumbers.fast_real("76.8", on_fail=len) == 76.8
     assert fastnumbers.fast_real("invalid", on_fail=len) == 7
 
 
-def test_fast_float():
+def test_fast_float() -> None:
     # 1. float number
     assert fastnumbers.fast_float(-367.3268) == -367.3268
     assert fastnumbers.fast_float(-367.3268, raise_on_invalid=True) == -367.3268
@@ -130,7 +130,7 @@ def test_fast_float():
     assert isinstance(fastnumbers.fast_float("4029"), float)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_float(["hey"])
+        fastnumbers.fast_float(["hey"])  # type: ignore
     # 12. Invalid input string
     assert fastnumbers.fast_float("not_a_number") == "not_a_number"
     with raises(ValueError):
@@ -144,8 +144,8 @@ def test_fast_float():
     assert fastnumbers.fast_float("-iNFinity") == float("-inf")
     assert fastnumbers.fast_float("-iNFinity", inf=523) == 523
     # 15. NaN
-    assert math.isnan(fastnumbers.fast_float("nAn"))
-    assert math.isnan(fastnumbers.fast_float("-NaN"))
+    assert math.isnan(cast(float, fastnumbers.fast_float("nAn")))
+    assert math.isnan(cast(float, fastnumbers.fast_float("-NaN")))
     assert fastnumbers.fast_float("-NaN", nan=0) == 0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.fast_float("+") == "+"
@@ -164,12 +164,11 @@ def test_fast_float():
     assert fastnumbers.fast_float(u"⅔") == 2.0 / 3.0
     assert fastnumbers.fast_float(u"Ⅴ") == 5.0
     # 19. Function to execute on failure to convert
-    assert fastnumbers.fast_float(76.8, on_fail=len) == 76.8
     assert fastnumbers.fast_float("76.8", on_fail=len) == 76.8
     assert fastnumbers.fast_float("invalid", on_fail=len) == 7
 
 
-def test_fast_int():
+def test_fast_int() -> None:
     # 1. float number
     assert fastnumbers.fast_int(-367.3268) == -367
     assert fastnumbers.fast_int(-367.3268, raise_on_invalid=True) == -367
@@ -195,7 +194,7 @@ def test_fast_int():
     assert isinstance(fastnumbers.fast_int(4029.00), int)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_int(["hey"])
+        fastnumbers.fast_int(["hey"])  # type: ignore
     # 12. Invalid input string
     assert fastnumbers.fast_int("not_a_number") == "not_a_number"
     with raises(ValueError):
@@ -226,12 +225,11 @@ def test_fast_int():
     assert fastnumbers.fast_int(u"⅔") == u"⅔"
     assert fastnumbers.fast_int(u"Ⅴ") == u"Ⅴ"
     # 19. Function to execute on failure to convert
-    assert fastnumbers.fast_int(76, on_fail=len) == 76
     assert fastnumbers.fast_int("76", on_fail=len) == 76
     assert fastnumbers.fast_int("invalid", on_fail=len) == 7
 
 
-def test_fast_forceint():
+def test_fast_forceint() -> None:
     # 1. float number
     assert fastnumbers.fast_forceint(-367.3268) == -367
     assert fastnumbers.fast_forceint(-367.3268, raise_on_invalid=True) == -367
@@ -257,7 +255,7 @@ def test_fast_forceint():
     assert isinstance(fastnumbers.fast_forceint("4029.00"), int)
     # 11. TypeError for invalid input
     with raises(TypeError):
-        fastnumbers.fast_forceint(["hey"])
+        fastnumbers.fast_forceint(["hey"])  # type: ignore
     # 12. Invalid input string
     assert fastnumbers.fast_forceint("not_a_number") == "not_a_number"
     with raises(ValueError):
@@ -288,12 +286,11 @@ def test_fast_forceint():
     assert fastnumbers.fast_forceint(u"⅔") == 0
     assert fastnumbers.fast_forceint(u"Ⅴ") == 5
     # 19. Function to execute on failure to convert
-    assert fastnumbers.fast_forceint(76.8, on_fail=len) == 76
     assert fastnumbers.fast_forceint("76.8", on_fail=len) == 76
     assert fastnumbers.fast_forceint("invalid", on_fail=len) == 7
 
 
-def test_isreal():
+def test_isreal() -> None:
     # 1. float number
     assert fastnumbers.isreal(-367.3268)
     assert not fastnumbers.isreal(-367.3268, str_only=True)
@@ -348,7 +345,7 @@ def test_isreal():
     assert fastnumbers.isreal(u"Ⅴ")
 
 
-def test_isfloat():
+def test_isfloat() -> None:
     # 1. float number
     assert fastnumbers.isfloat(-367.3268)
     assert not fastnumbers.isfloat(-367.3268, str_only=True)
@@ -404,7 +401,7 @@ def test_isfloat():
     assert fastnumbers.isfloat(u"Ⅴ")
 
 
-def test_isint():
+def test_isint() -> None:
     # 1. float number
     assert not fastnumbers.isint(-367.3268)
     # 2. signed float string
@@ -456,7 +453,7 @@ def test_isint():
     assert not fastnumbers.isint(u"Ⅴ")
 
 
-def test_isintlike():
+def test_isintlike() -> None:
     # 1. float number
     assert not fastnumbers.isintlike(-367.3268)
     assert fastnumbers.isintlike(-367.0)
@@ -516,7 +513,7 @@ def test_isintlike():
     assert fastnumbers.isintlike(u"Ⅴ")
 
 
-def test_type():
+def test_type() -> None:
     # 1. float number
     assert fastnumbers.query_type(-367.3268) is float
     # 2. signed float string
@@ -569,11 +566,11 @@ def test_type():
 
 
 @pytest.fixture()
-def tprint(capsys):
+def tprint(capsys: pytest.CaptureFixture[str]) -> Iterator[Callable[[str], None]]:
     """
     Fixture for printing info after test, not supressed by pytest stdout/stderr capture
     """
-    lines = []
+    lines: List[str] = []
     yield lines.append
 
     with capsys.disabled():
@@ -581,7 +578,7 @@ def tprint(capsys):
             sys.stdout.write("\n{}".format(line))
 
 
-def test_print_limits(tprint):
+def test_print_limits(tprint: Callable[[str], None]) -> None:
     tprint("\nFASNUMBERS NUMERICAL LIMITS FOR THIS COMPILER BEFORE PYTHON FALLBACK:")
     tprint("MAXIMUM INTEGER LENTH: {}".format(fastnumbers.max_int_len))
     tprint("MAX NUMBER FLOAT DIGITS: {}".format(fastnumbers.dig))

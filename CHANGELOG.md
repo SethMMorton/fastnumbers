@@ -3,6 +3,10 @@ Unreleased
 
 ### Added
 - Support for Python 3.10
+- Full coverage of mypy type-checking
+
+### Removed
+- Support for Python 3.5
 
 [3.1.0] - 2020-11-21
 ---

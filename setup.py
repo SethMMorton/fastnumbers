@@ -6,7 +6,7 @@ import glob
 import os
 
 # Non-std lib imports
-from setuptools import Extension, setup
+from setuptools import Extension, find_packages, setup
 
 
 # Define how to build the extension module.
@@ -14,10 +14,14 @@ from setuptools import Extension, setup
 setup(
     name="fastnumbers",
     version="3.1.0",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    package_data={"fastnumbers": ["py.typed", "*.pyi"]},
+    zip_safe=False,
     ext_modules=[
         Extension(
-            "fastnumbers",
+            "fastnumbers.fastnumbers",
             sorted(glob.glob("src/*.c")),
             include_dirs=[os.path.abspath(os.path.join("include"))],
             extra_compile_args=[],

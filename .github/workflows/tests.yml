@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
         # Note, clang is used on macos, even though it says gcc
         os: [ubuntu-latest, windows-latest, macos-latest]
 
@@ -31,7 +31,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest pytest-faulthandler hypothesis
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions
 
       - name: Patch Doctests
         run: python dev/patch_doctest.py
@@ -78,7 +78,7 @@ jobs:
           source .env/bin/activate && \
           echo -e "\e[1;34m Install Dependencies \e[0m" && \
           python -m pip install --upgrade pip && \
-          python -m pip install pytest pytest-faulthandler hypothesis && \
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions && \
           echo -e "\e[1;34m Patch Doctests \e[0m" && \
           python dev/patch_doctest.py && \
           echo -e "\e[1;34m Set CFLAGS \e[0m" && \
