@@ -31,7 +31,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    "m2r",
+    "m2r2",
 ]
 
 # Napoleon settings
