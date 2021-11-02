@@ -12,8 +12,8 @@ from .fastnumbers import (
     isintlike,
     isreal,
     max_exp,
-    min_exp,
     max_int_len,
+    min_exp,
     query_type,
     real,
 )
@@ -32,8 +32,8 @@ __all__ = [
     "isintlike",
     "isreal",
     "max_exp",
-    "min_exp",
     "max_int_len",
+    "min_exp",
     "query_type",
-    "real",  
+    "real",
 ]
