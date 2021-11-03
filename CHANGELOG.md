@@ -10,6 +10,7 @@ Unreleased
 ---
 
 ### Added
+- Support for ARM wheels ([@odidev](https://github.com/odidev), issues #48, #49)
 - Support for Python 3.10
 - Full coverage of mypy type-checking
 
