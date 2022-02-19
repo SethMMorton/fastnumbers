@@ -94,11 +94,11 @@ typedef struct Options {
 /* MACRO to set the correct return value based on given input.
  * Expects the Options struct NOT as a pointer.
  */
-#define Options_Set_Return_Value(o, input, default_value, raise) \
-    (o).input = (input); \
+#define Options_Set_Return_Value(o, input_, default_value, raise) \
+    (o).input = (input_); \
     (o).retval = (raise) \
                  ? NULL \
-                 : (((o).on_fail != NULL || default_value == NULL) ? input : default_value)
+                 : (((o).on_fail != NULL || default_value == NULL) ? input_ : default_value)
 
 #ifdef __cplusplus
 } /* extern "C" */
