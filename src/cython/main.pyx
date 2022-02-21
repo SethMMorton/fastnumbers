@@ -1221,7 +1221,7 @@ def query_type(
         return <object> result
 
 
-def int(*args, **kwargs):
+def fn_int(*args, **kwargs):
     """
     Drop-in but faster replacement for the built-in *int*.
 
@@ -1286,7 +1286,7 @@ def int(*args, **kwargs):
 
     return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.INT, &opts)
 
-def float(*args):
+def fn_float(*args):
     """
     Drop-in but faster replacement for the built-in *float*.
 
