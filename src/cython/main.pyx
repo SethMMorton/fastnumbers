@@ -13,9 +13,6 @@ from options cimport Options, Options_Set_Return_Value, PyNumberType
 cdef extern from "fastnumbers/objects.h":
     PyObject *PyObject_to_PyNumber(
         PyObject *obj, const PyNumberType type, const Options *options) except NULL
-    PyObject *PyObject_is_number(
-        PyObject *obj, const PyNumberType type, const Options *options) except NULL
-    PyObject *PyObject_contains_type(PyObject *obj, const Options *options) except NULL
 
 
 cdef extern from "fastnumbers/parsing.h":
@@ -35,6 +32,9 @@ max_int_len = FN_MAX_INT_LEN
 dig = FN_DBL_DIG
 max_exp = FN_MAX_EXP
 min_exp = FN_MIN_EXP
+
+
+include "objects.pyx"
 
 
 def fast_real(
@@ -780,7 +780,7 @@ def isreal(
     opts.allow_underscores = allow_underscores
     opts.allow_uni = True
     opts.base = INT_MIN
-    return <object> PyObject_is_number(<PyObject *> x, PyNumberType.REAL, &opts)
+    return object_is_number(x, PyNumberType.REAL, &opts)
 
 
 def isfloat(
@@ -896,7 +896,7 @@ def isfloat(
     opts.allow_underscores = allow_underscores
     opts.allow_uni = True
     opts.base = INT_MIN
-    return <object> PyObject_is_number(<PyObject *> x, PyNumberType.FLOAT, &opts)
+    return object_is_number(x, PyNumberType.FLOAT, &opts)
 
 
 def isint(
@@ -1004,7 +1004,7 @@ def isint(
     if (longbase != INT_MIN and longbase != 0 and longbase < 2) or longbase > 36:
         raise ValueError("int() base must be >= 2 and <= 36")
     opts.base = <int> longbase
-    return <object> PyObject_is_number(<PyObject *> x, PyNumberType.INT, &opts)
+    return object_is_number(x, PyNumberType.INT, &opts)
 
 
 def isintlike(
@@ -1111,7 +1111,7 @@ def isintlike(
     opts.allow_underscores = allow_underscores
     opts.allow_uni = True
     opts.base = INT_MIN
-    return <object> PyObject_is_number(<PyObject *> x, PyNumberType.INTLIKE, &opts)
+    return object_is_number(x, PyNumberType.INTLIKE, &opts)
 
 
 def query_type(
@@ -1213,12 +1213,12 @@ def query_type(
         if len(allowed_types) < 1:
             raise ValueError("allowed_type must not be an empty sequence")
     
-    result = PyObject_contains_type(<PyObject *> x, &opts)
+    result = check_potential_object_type(x, &opts)
 
-    if result != NULL and allowed_types is not None and <object> result not in allowed_types:
+    if allowed_types is not None and result not in allowed_types:
         return None
     else:
-        return <object> result
+        return result
 
 
 def fn_int(*args, **kwargs):
