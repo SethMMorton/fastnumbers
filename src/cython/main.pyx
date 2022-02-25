@@ -4,11 +4,76 @@
 # Author: Seth M. Morton, July 30, 2014
 #
 # distutils: language = c++
-from cpython.getargs cimport PyArg_ParseTuple, PyArg_ParseTupleAndKeywords
+from cpython.getargs cimport (
+    PyArg_ParseTuple,
+    PyArg_ParseTupleAndKeywords,
+)
 from cpython.ref cimport PyObject
 from libc.limits cimport INT_MIN
 
-from options cimport Options, Options_Set_Return_Value, PyNumberType
+
+cdef extern from "fastnumbers/options.h":
+
+    # Selector for the type of number to check/convert.
+    enum PyNumberType:
+        REAL, FLOAT, INT, INTLIKE, FORCEINT
+
+    # This struct holds all the user options.
+    # Makes adding new future options easier to manage.
+    struct Options:
+        PyObject *retval
+        PyObject *input
+        PyObject *on_fail
+        PyObject *handle_inf
+        PyObject *handle_nan
+        int coerce
+        int num_only
+        int str_only
+        int allow_underscores
+        bint allow_uni
+        int base
+
+    # Some query shortcuts.
+    bint Options_Coerce_True(const Options *o)
+    bint Options_Has_NaN_Sub(const Options *o)
+    bint Options_Has_INF_Sub(const Options *o)
+    bint Options_Return_NaN_Sub(const Options *o)
+    bint Options_Return_INF_Sub(const Options *o)
+    bint Options_Should_Raise(const Options *o)
+    bint Options_Default_Base(const Options *o)
+    bint Options_Allow_UnicodeCharacter(const Options *o)
+    bint Options_Allow_Infinity(const Options *o)
+    bint Options_Allow_NAN(const Options *o)
+    bint Options_Allow_Underscores(const Options *o)
+    bint Options_String_Only(const Options *o)
+    bint Options_Number_Only(const Options *o)
+
+    # Set allow unicode.
+    void Options_Set_Disallow_UnicodeCharacter(Options *o)
+
+    # Return the correct result based on user-input.
+    # Expects the Options struct as a pointer.
+    PyObject* Options_Return_Correct_Result_On_Error(Options *o)
+
+    # Set the correct return value based on given input.
+    # Expects the Options struct NOT as a pointer.
+    void Options_Set_Return_Value(
+        Options o, PyObject *input, PyObject *default_value, bint raise_
+    )
+
+
+cdef extern from "fastnumbers/numbers.h":
+    bint PyFloat_is_Intlike(PyObject *obj)
+
+
+cdef extern from "fastnumbers/strings.h":
+    PyObject * PyString_contains_type(PyObject *obj, const Options *options)
+    PyObject * PyString_is_number(PyObject *obj, const PyNumberType type, const Options *options)
+
+
+cdef extern from "fastnumbers/unicode_character.h":
+    PyObject * PyUnicodeCharacter_contains_type(PyObject *obj)
+    PyObject * PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type)
 
 
 cdef extern from "fastnumbers/objects.h":
@@ -33,9 +98,6 @@ max_int_len = FN_MAX_INT_LEN
 dig = FN_DBL_DIG
 max_exp = FN_MAX_EXP
 min_exp = FN_MIN_EXP
-
-
-include "objects.pyx"
 
 
 def fast_real(
@@ -1214,12 +1276,27 @@ def query_type(
         if len(allowed_types) < 1:
             raise ValueError("allowed_type must not be an empty sequence")
     
-    result = check_potential_object_type(x, &opts)
+    # Already a number? Just return the type directly.
+    cdef object type_result
+    if isinstance(x, int):
+        return validate_query_type(int, allowed_types)
+    elif isinstance(x, float):
+        if Options_Coerce_True(&opts) and PyFloat_is_Intlike(<PyObject *> x):
+            return validate_query_type(int, allowed_types)
+        return validate_query_type(float, allowed_types)
 
-    if allowed_types is not None and result not in allowed_types:
-        return None
-    else:
-        return result
+    # Assume a string.
+    type_result = <object> PyString_contains_type(<PyObject *> x, &opts)
+    if type_result is not None:
+        return validate_query_type(type_result, allowed_types)
+
+    # Assume unicode.
+    type_result = <object> PyUnicodeCharacter_contains_type(<PyObject *> x)
+    if type_result is not None:
+        return validate_query_type(type_result, allowed_types)
+
+    # If we got here, the type was invalid.
+    return validate_query_type(type(x), allowed_types)
 
 
 def fn_int(*args, **kwargs):
@@ -1379,3 +1456,49 @@ def real(*args, **kwargs):
         return 0 if coerce else 0.0
 
     return <object> PyObject_to_PyNumber(x, PyNumberType.REAL, &opts)
+
+
+# PRIVATE FUNCTIONS
+
+
+cdef validate_query_type(result, allowed_types):
+    """Ensure the type is allowed, otherwise return None"""
+    if allowed_types is not None and result not in allowed_types:
+        return None
+    else:
+        return result
+
+
+cdef object_is_number(obj, const PyNumberType type, const Options *options):
+    """Check if an arbitrary PyObject is a PyNumber."""
+
+    # Already a number? Simple checks will work.
+    if isinstance(obj, int):
+        return not Options_String_Only(options) and type != PyNumberType.FLOAT
+    elif isinstance(obj, float):
+        if Options_String_Only(options):
+            return False
+        if type == PyNumberType.INTLIKE or type == PyNumberType.FORCEINT:
+            return PyFloat_is_Intlike(<PyObject *> obj)
+        elif type == PyNumberType.REAL or type == PyNumberType.FLOAT:
+            return True
+        else:
+            return False
+
+    # If we are requiring it to be a number then we must declare false now.
+    elif Options_Number_Only(options):
+        return False
+
+    # Assume a string.
+    cdef object pyresult
+    pyresult = <object> PyString_is_number(<PyObject *> obj, type, options)
+    if (pyresult is not None):
+        return pyresult
+
+    # Assume unicode.
+    pyresult = <object> PyUnicodeCharacter_is_number(<PyObject *> obj, type)
+    if (pyresult is not None):
+        return pyresult
+
+    # If we got here, the type was invalid so return False.
+    return False
