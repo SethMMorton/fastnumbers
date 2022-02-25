@@ -104,6 +104,34 @@ public:
             return true;
         case NumberType::FLOAT:
             return float_is_intlike(PyFloat_AS_DOUBLE(obj));
+        default:
+            return false;  // cannot reach, but this silences compiler warnings
+        }
+    }
+
+    /**
+     * \brief Was the passed Python objecte intlike?
+     *
+     * \param ntype PyNumberType indicating the desired type to check
+     * \return bool
+     */
+    bool is_type(const PyNumberType ntype) const {
+        switch (ntype) {
+        case PyNumberType::REAL:
+            return is_real();
+
+        case PyNumberType::FLOAT:
+            return is_float();
+
+        case PyNumberType::INT:
+            return is_int();
+
+        case PyNumberType::INTLIKE:
+        case PyNumberType::FORCEINT:
+            return is_intlike();
+
+        default:
+            return false;  // cannot reach, but this silences compiler warnings
         }
     }
 

@@ -94,7 +94,8 @@ cdef extern from "fastnumbers/numeric.hpp":
         bint is_float()
         bint is_int()
         bint is_intlike()
-        bint float_is_intlike()
+        bint is_type(const PyNumberType)
+        bint float_is_intlike(double)
 
 
 cdef extern from "fastnumbers/parsing.h":
@@ -1488,22 +1489,16 @@ cdef validate_query_type(result, allowed_types):
 cdef object_is_number(obj, const PyNumberType type, const Options *options):
     """Check if an arbitrary PyObject is a PyNumber."""
 
-    # Already a number? Simple checks will work.
-    if isinstance(obj, int):
-        return not Options_String_Only(options) and type != PyNumberType.FLOAT
-    elif isinstance(obj, float):
-        if Options_String_Only(options):
+    # Use the NumericAnalyzer for objects already a number
+    cdef NumericAnalyzer num_analyzer
+    num_analyzer.set_object(obj)
+    if num_analyzer.not_numeric():
+        if Options_Number_Only(options):
             return False
-        if type == PyNumberType.INTLIKE or type == PyNumberType.FORCEINT:
-            return PyFloat_is_Intlike(<PyObject *> obj)
-        elif type == PyNumberType.REAL or type == PyNumberType.FLOAT:
-            return True
-        else:
-            return False
-
-    # If we are requiring it to be a number then we must declare false now.
-    elif Options_Number_Only(options):
+    elif Options_String_Only(options):
         return False
+    else:
+        return num_analyzer.is_type(type)
 
     # Assume a string.
     cdef object pyresult
