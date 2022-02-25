@@ -81,6 +81,22 @@ cdef extern from "fastnumbers/objects.h":
         PyObject *obj, const PyNumberType type, const Options *options) except NULL
 
 
+cdef extern from "fastnumbers/numeric.hpp":
+    cdef cppclass NumericAnalyzer:
+        NumericAnalyzer()
+        NumericAnalyzer(object)
+        void set_object(object)
+        void set_coerce(bool)
+        void set_nan_action(bool)
+        void set_inf_action(bool)
+        bint not_numeric()
+        bint is_real()
+        bint is_float()
+        bint is_int()
+        bint is_intlike()
+        bint float_is_intlike()
+
+
 cdef extern from "fastnumbers/parsing.h":
     long FN_MAX_INT_LEN
     long FN_DBL_DIG
@@ -1277,15 +1293,15 @@ def query_type(
             raise ValueError("allowed_type must not be an empty sequence")
     
     # Already a number? Just return the type directly.
-    cdef object type_result
-    if isinstance(x, int):
+    cdef NumericAnalyzer num_analyzer
+    num_analyzer.set_object(x)
+    if num_analyzer.is_intlike() if Options_Coerce_True(&opts) else num_analyzer.is_int():
         return validate_query_type(int, allowed_types)
-    elif isinstance(x, float):
-        if Options_Coerce_True(&opts) and PyFloat_is_Intlike(<PyObject *> x):
-            return validate_query_type(int, allowed_types)
+    elif num_analyzer.is_float():
         return validate_query_type(float, allowed_types)
 
     # Assume a string.
+    cdef object type_result
     type_result = <object> PyString_contains_type(<PyObject *> x, &opts)
     if type_result is not None:
         return validate_query_type(type_result, allowed_types)
