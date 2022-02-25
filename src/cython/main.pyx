@@ -3,6 +3,7 @@
 #
 # Author: Seth M. Morton, July 30, 2014
 #
+# distutils: language = c++
 from cpython.getargs cimport PyArg_ParseTuple, PyArg_ParseTupleAndKeywords
 from cpython.ref cimport PyObject
 from libc.limits cimport INT_MIN
@@ -188,8 +189,8 @@ def fast_real(
     cdef Options opts
     opts.retval = NULL
     opts.input = <PyObject *> x
-    opts.handle_inf = NULL if inf is SENTINEL else <PyObject *> inf
-    opts.handle_nan = NULL if nan is SENTINEL else <PyObject *> nan
+    opts.handle_inf = <PyObject *> NULL if inf is SENTINEL else <PyObject *> inf
+    opts.handle_nan = <PyObject *> NULL if nan is SENTINEL else <PyObject *> nan
     opts.coerce = coerce
     opts.num_only = True
     opts.str_only = True
@@ -202,10 +203,10 @@ def fast_real(
         if on_fail is not None:
             raise ValueError("Cannot set both on_fail and key")
         on_fail = key
-    opts.on_fail = NULL if on_fail is None else <PyObject *> on_fail
+    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
 
     # Determine the return value
-    cdef PyObject * c_default = NULL if default is SENTINEL else <PyObject *> default
+    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
     Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
 
     return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.REAL, &opts)
@@ -347,8 +348,8 @@ def fast_float(
     cdef Options opts
     opts.retval = NULL
     opts.input = <PyObject *> x
-    opts.handle_inf = NULL if inf is SENTINEL else <PyObject *> inf
-    opts.handle_nan = NULL if nan is SENTINEL else <PyObject *> nan
+    opts.handle_inf = <PyObject *> NULL if inf is SENTINEL else <PyObject *> inf
+    opts.handle_nan = <PyObject *> NULL if nan is SENTINEL else <PyObject *> nan
     opts.coerce = False  # Not used
     opts.num_only = True
     opts.str_only = True
@@ -361,10 +362,10 @@ def fast_float(
         if on_fail is not None:
             raise ValueError("Cannot set both on_fail and key")
         on_fail = key
-    opts.on_fail = NULL if on_fail is None else <PyObject *> on_fail
+    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
 
     # Determine the return value
-    cdef PyObject * c_default = NULL if default is SENTINEL else <PyObject *> default
+    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
     Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
 
     return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.FLOAT, &opts)
@@ -490,8 +491,8 @@ def fast_int(
     cdef Options opts
     opts.retval = NULL
     opts.input = <PyObject *> x
-    opts.handle_inf = NULL
-    opts.handle_nan = NULL
+    opts.handle_inf = <PyObject *> NULL
+    opts.handle_nan = <PyObject *> NULL
     opts.coerce = False  # Not used
     opts.num_only = True
     opts.str_only = True
@@ -503,10 +504,10 @@ def fast_int(
         if on_fail is not None:
             raise ValueError("Cannot set both on_fail and key")
         on_fail = key
-    opts.on_fail = NULL if on_fail is None else <PyObject *> on_fail
+    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
 
     # Determine the return value
-    cdef PyObject * c_default = NULL if default is SENTINEL else <PyObject *> default
+    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
     Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
 
     # Validate the integer base is in the accepted range
@@ -645,8 +646,8 @@ def fast_forceint(
     cdef Options opts
     opts.retval = NULL
     opts.input =  <PyObject *> x
-    opts.handle_inf = NULL
-    opts.handle_nan = NULL
+    opts.handle_inf = <PyObject *> NULL
+    opts.handle_nan = <PyObject *> NULL
     opts.coerce = False  # Not used
     opts.num_only = True
     opts.str_only = True
@@ -659,10 +660,10 @@ def fast_forceint(
         if on_fail is not None:
             raise ValueError("Cannot set both on_fail and key")
         on_fail = key
-    opts.on_fail = NULL if on_fail is None else <PyObject *> on_fail
+    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
 
     # Determine the return value
-    cdef PyObject * c_default = NULL if default is SENTINEL else <PyObject *> default
+    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
     Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
 
     return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.FORCEINT, &opts)
