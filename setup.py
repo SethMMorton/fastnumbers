@@ -25,6 +25,7 @@ setup(
             sorted(glob.glob("src/*.c")),
             include_dirs=[os.path.abspath(os.path.join("include"))],
             extra_compile_args=[],
+            extra_link_args=["-lm"],
         )
     ],
 )
