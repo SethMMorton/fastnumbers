@@ -1,0 +1,197 @@
+#include <cstring>
+
+#include <Python.h>
+
+#include "fastnumbers/evaluator.hpp"
+#include "fastnumbers/parser.hpp"
+
+
+bool Evaluator::is_type(const PyNumberType ntype) const {
+    switch (ntype) {
+    case PyNumberType::REAL:
+        return (nan_action and parser.is_nan())
+            or (inf_action and parser.is_infinity())
+            or parser.is_real();
+
+    case PyNumberType::FLOAT:
+        return (nan_action and parser.is_nan())
+            or (inf_action and parser.is_infinity())
+            or parser.is_float();
+
+    case PyNumberType::INT:
+        return parser.is_int();
+
+    case PyNumberType::INTLIKE:
+    case PyNumberType::FORCEINT:
+        return parser.is_intlike();
+
+    default:
+        return false;  // cannot reach, but this silences compiler warnings
+    }
+}
+
+
+void Evaluator::extract_string_data()
+{
+    // Use short-circuit logic to extract string data from the python object
+    // from most likely to least likely.
+    extract_from_unicode()
+        or extract_from_bytes()
+        or extract_from_bytearray()
+        or extract_from_buffer();
+}
+
+
+bool Evaluator::extract_from_unicode()
+{
+    if (PyUnicode_Check(obj)) {
+        // Unicode in ASCII form is stored like bytes!
+        if (PyUnicode_IS_READY(obj) and PyUnicode_IS_COMPACT_ASCII(obj)) {
+            parser.set_input((const char *) PyUnicode_1BYTE_DATA(obj), PyUnicode_GET_LENGTH(obj));
+            return true;
+        }
+        return parse_unicode_to_char();
+    }
+    return false;
+}
+
+
+bool Evaluator::extract_from_bytes()
+{
+    if (PyBytes_Check(obj)) {
+        parser.set_input(PyBytes_AS_STRING(obj), PyBytes_GET_SIZE(obj));
+        return true;
+    }
+    return false;
+}
+
+
+bool Evaluator::extract_from_bytearray()
+{
+    if (PyByteArray_Check(obj)) {
+        parser.set_input(PyByteArray_AS_STRING(obj), PyByteArray_GET_SIZE(obj));
+        return true;
+    }
+    return false;
+}
+
+
+bool Evaluator::extract_from_buffer()
+{
+    Py_buffer view = {NULL, NULL};
+    if (PyObject_CheckBuffer(obj) and PyObject_GetBuffer(obj, &view, PyBUF_SIMPLE) == 0) {
+        // This buffer could be a memoryview slice. If this is the case, the
+        // nul termination of the string will be past the given length, creating
+        // unexpected parsing results. Rather than complicate the parsing and
+        // adding more operations for a low probability event, a copy of the
+        // slice will be made here and null termination will be added.
+        // If the data amount is small enough, we use a fixed-sized buffer for speed.
+        const char* str = nullptr;
+        size_t str_len = 0;
+        if (view.len + 1 < FIXED_BUFFER_SIZE) {
+            std::memcpy(fixed_buffer, (char *) view.buf, view.len);
+            fixed_buffer[view.len] = '\0';
+            str = fixed_buffer;
+        } else {
+            variable_buffer.reserve(view.len + 1);
+            std::memcpy(variable_buffer.data(), (char *) view.buf, view.len);
+            variable_buffer[view.len] = '\0';
+            str = variable_buffer.data();
+        }
+        str_len = view.len;
+
+        // All we care about is the underlying buffer data, not the obj
+        // which was allocated when we created the buffer. For this reason
+        // it is safe to release the buffer here.
+        PyBuffer_Release(&view);
+        parser.set_input(str, str_len);
+        return true;
+    }
+    return false;
+}
+
+
+bool Evaluator::parse_unicode_to_char()
+{
+    const int kind = PyUnicode_KIND(obj);  // Unicode storage format.
+    const void *data = PyUnicode_DATA(obj);  // Raw data 
+    size_t len = PyUnicode_GET_LENGTH(obj);
+    size_t index = 0;
+
+    // Ensure input is a valid unicode object.
+    // If true, then not OK for conversion.
+    if (PyUnicode_READY(obj)) {
+        return false;
+    }
+
+    // Strip whitespace from both ends of the data.
+    while (Py_UNICODE_ISSPACE(PyUnicode_READ(kind, data, index))) {
+        index += 1;
+        len -= 1;
+    }
+    while (Py_UNICODE_ISSPACE(PyUnicode_READ(kind, data, index + len - 1))) {
+        len -= 1;
+    }
+
+    // Remove the sign - remember if it is negative.
+    char sign = '\0';
+    bool negative = false;
+    if (PyUnicode_READ(kind, data, index) == '-') {
+        negative = true;
+        sign = '-';
+        index += 1;
+        len -= 1;
+    }
+    else if (PyUnicode_READ(kind, data, index) == '+') {
+        sign = '+';
+        index += 1;
+        len -= 1;
+    }
+
+
+    // Allocate space for the character data, but use a small fixed size
+    // buffer if the data is small enough. Ensure a trailing null character.
+    char* buffer = nullptr;
+    size_t buffer_index = 0;
+    if (len + (sign ? 1 : 0) + 1 > FIXED_BUFFER_SIZE) {
+        variable_buffer.reserve(len + (sign ? 1 : 0) + 1);
+        buffer = variable_buffer.data();
+    } else {
+        buffer = fixed_buffer;
+    }
+
+    // If the string had a sign, add it back to the front of the buffer
+    if (sign) {
+        buffer[buffer_index] = sign;
+        buffer_index += 1;
+    }
+
+    // Iterate over the unicode data and transform to ASCII-compatible
+    // data. If at any point this fails, exit and do not save the string
+    // data, unless the length was one, in which case we save the one
+    // character.
+    constexpr size_t ASCII_MAX = 127;
+    long u_as_decimal = 0;
+    const size_t data_len = len + index;
+    for (; index < data_len; index++) {
+        const Py_UCS4 u = (Py_UCS4) PyUnicode_READ(kind, data, index);
+        if (u < ASCII_MAX) {
+            buffer[buffer_index] = (char) u;
+        } else if ((u_as_decimal = Py_UNICODE_TODECIMAL(u)) > -1) {
+            buffer[buffer_index] = '0' + (char) u_as_decimal;
+        } else if (Py_UNICODE_ISSPACE(u)) {
+            buffer[buffer_index] = ' ';
+        } else {
+            if (len == 1) {
+                parser.set_input(u, negative);
+                return true;
+            }
+            return false;
+        }
+        buffer_index += 1;
+    }
+    buffer[buffer_index] = '\0';
+
+    parser.set_input(buffer, buffer_index);
+    return true;
+}

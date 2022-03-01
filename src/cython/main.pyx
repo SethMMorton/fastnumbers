@@ -62,40 +62,32 @@ cdef extern from "fastnumbers/options.h":
     )
 
 
-cdef extern from "fastnumbers/numbers.h":
-    bint PyFloat_is_Intlike(PyObject *obj)
-
-
-cdef extern from "fastnumbers/strings.h":
-    PyObject * PyString_contains_type(PyObject *obj, const Options *options)
-    PyObject * PyString_is_number(PyObject *obj, const PyNumberType type, const Options *options)
-
-
-cdef extern from "fastnumbers/unicode_character.h":
-    PyObject * PyUnicodeCharacter_contains_type(PyObject *obj)
-    PyObject * PyUnicodeCharacter_is_number(PyObject *obj, const PyNumberType type)
-
-
 cdef extern from "fastnumbers/objects.h":
     PyObject *PyObject_to_PyNumber(
         PyObject *obj, const PyNumberType type, const Options *options) except NULL
 
 
-cdef extern from "fastnumbers/numeric.hpp":
-    cdef cppclass NumericAnalyzer:
-        NumericAnalyzer()
-        NumericAnalyzer(object)
+cdef extern from "fastnumbers/parser.hpp":
+    ctypedef enum ParserType:
+        NUMERIC "ParserType::NUMERIC"
+        UNICODE "ParserType::UNICODE"
+        CHARACTER "ParserType::CHARACTER"
+        UNKNOWN "ParserType::UNKNOWN"
+
+
+cdef extern from "fastnumbers/evaluator.hpp":
+    cdef cppclass Evaluator:
+        Evaluator()
+        Evaluator(object)
         void set_object(object)
-        void set_coerce(bool)
-        void set_nan_action(bool)
-        void set_inf_action(bool)
-        bint not_numeric()
-        bint is_real()
-        bint is_float()
-        bint is_int()
-        bint is_intlike()
+        void set_coerce(bint)
+        void set_nan_action(bint)
+        void set_inf_action(bint)
+        void set_base(int)
+        ParserType parser_type()
         bint is_type(const PyNumberType)
-        bint float_is_intlike(double)
+        bint type_is_float()
+        bint type_is_int()
 
 
 cdef extern from "fastnumbers/parsing.h":
@@ -848,19 +840,8 @@ def isreal(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = <PyObject *> None
-    opts.input = NULL
-    opts.on_fail = NULL
-    opts.handle_inf = <PyObject *> allow_inf
-    opts.handle_nan = <PyObject *> allow_nan
-    opts.coerce = True  # Not used
-    opts.num_only = num_only
-    opts.str_only = str_only
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-    return object_is_number(x, PyNumberType.REAL, &opts)
+    # opts.allow_underscores = allow_underscores
+    return object_is_number(x, PyNumberType.REAL, INT_MIN, allow_nan, allow_inf, str_only, num_only)
 
 
 def isfloat(
@@ -964,19 +945,8 @@ def isfloat(
         ...             return False
 
     """
-    cdef Options opts
-    opts.retval = <PyObject *> None
-    opts.input = NULL
-    opts.on_fail = NULL
-    opts.handle_inf = <PyObject *> allow_inf
-    opts.handle_nan = <PyObject *> allow_nan
-    opts.coerce = True  # Not used
-    opts.num_only = num_only
-    opts.str_only = str_only
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-    return object_is_number(x, PyNumberType.FLOAT, &opts)
+    # opts.allow_underscores = allow_underscores
+    return object_is_number(x, PyNumberType.FLOAT, INT_MIN, allow_nan, allow_inf, str_only, num_only)
 
 
 def isint(
@@ -1063,17 +1033,7 @@ def isint(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = <PyObject *> None
-    opts.input = NULL
-    opts.on_fail = NULL
-    opts.handle_inf = <PyObject *> False
-    opts.handle_nan = <PyObject *> False
-    opts.coerce = True  # Not used
-    opts.num_only = num_only
-    opts.str_only = str_only
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
+    # opts.allow_underscores = allow_underscores
 
     # Validate the integer base is in the accepted range
     cdef Py_ssize_t longbase
@@ -1083,8 +1043,7 @@ def isint(
         raise ValueError("int() base must be >= 2 and <= 36")
     if (longbase != INT_MIN and longbase != 0 and longbase < 2) or longbase > 36:
         raise ValueError("int() base must be >= 2 and <= 36")
-    opts.base = <int> longbase
-    return object_is_number(x, PyNumberType.INT, &opts)
+    return object_is_number(x, PyNumberType.INT, <int> longbase, False, False, str_only, num_only)
 
 
 def isintlike(
@@ -1179,19 +1138,8 @@ def isintlike(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = <PyObject *> None
-    opts.input = NULL
-    opts.on_fail = NULL
-    opts.handle_inf = <PyObject *> False
-    opts.handle_nan = <PyObject *> False
-    opts.coerce = True  # Not used
-    opts.num_only = num_only
-    opts.str_only = str_only
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-    return object_is_number(x, PyNumberType.INTLIKE, &opts)
+    # opts.allow_underscores = allow_underscores
+    return object_is_number(x, PyNumberType.INTLIKE, INT_MIN, False, False, str_only, num_only)
 
 
 def query_type(
@@ -1274,46 +1222,29 @@ def query_type(
         <class 'float'>
 
     """
-    cdef Options opts
-    opts.retval = <PyObject *> None
-    opts.input = NULL
-    opts.on_fail = NULL
-    opts.handle_inf = <PyObject *> allow_inf
-    opts.handle_nan = <PyObject *> allow_nan
-    opts.coerce = coerce
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-
     if allowed_types is not None:
         if not isinstance(allowed_types, (list, tuple, set)):
             raise TypeError(f"allowed_type is not a sequence type: {allowed_types!r}")
         if len(allowed_types) < 1:
             raise ValueError("allowed_type must not be an empty sequence")
     
-    # Already a number? Just return the type directly.
-    cdef NumericAnalyzer num_analyzer
-    num_analyzer.set_object(x)
-    if num_analyzer.is_intlike() if Options_Coerce_True(&opts) else num_analyzer.is_int():
+    # Create the evaluator and populate with the appropriate options
+    cdef Evaluator evaluator
+    evaluator.set_object(x)
+    evaluator.set_coerce(coerce)
+    if evaluator.parser_type() == ParserType.NUMERIC:
+        evaluator.set_nan_action(True)
+        evaluator.set_inf_action(True)
+    else:
+        evaluator.set_nan_action(allow_nan)
+        evaluator.set_inf_action(allow_inf)
+
+    if evaluator.type_is_int():
         return validate_query_type(int, allowed_types)
-    elif num_analyzer.is_float():
+    elif evaluator.type_is_float():
         return validate_query_type(float, allowed_types)
-
-    # Assume a string.
-    cdef object type_result
-    type_result = <object> PyString_contains_type(<PyObject *> x, &opts)
-    if type_result is not None:
-        return validate_query_type(type_result, allowed_types)
-
-    # Assume unicode.
-    type_result = <object> PyUnicodeCharacter_contains_type(<PyObject *> x)
-    if type_result is not None:
-        return validate_query_type(type_result, allowed_types)
-
-    # If we got here, the type was invalid.
-    return validate_query_type(type(x), allowed_types)
+    else:
+        return validate_query_type(type(x), allowed_types)
 
 
 def fn_int(*args, **kwargs):
@@ -1486,30 +1417,36 @@ cdef validate_query_type(result, allowed_types):
         return result
 
 
-cdef object_is_number(obj, const PyNumberType type, const Options *options):
+cdef object_is_number(
+    obj,
+    const PyNumberType type,
+    int base,
+    bint allow_nan,
+    bint allow_inf,
+    bint str_only,
+    bint num_only,
+):
     """Check if an arbitrary PyObject is a PyNumber."""
 
-    # Use the NumericAnalyzer for objects already a number
-    cdef NumericAnalyzer num_analyzer
-    num_analyzer.set_object(obj)
-    if num_analyzer.not_numeric():
-        if Options_Number_Only(options):
+    # Create the evaluator and populate with the appropriate options
+    cdef Evaluator evaluator
+    evaluator.set_object(obj)
+    evaluator.set_base(base)
+    evaluator.set_nan_action(allow_nan)
+    evaluator.set_inf_action(allow_inf)
+
+    # If the user explictly asked to disallow some types, check that here.
+    cdef ParserType ptype = evaluator.parser_type()
+    if ptype == ParserType.NUMERIC:
+        if str_only:
             return False
-    elif Options_String_Only(options):
+        evaluator.set_nan_action(True)
+        evaluator.set_inf_action(True)
+    elif ptype == ParserType.UNICODE or ptype == ParserType.CHARACTER:
+        if num_only:
+            return False
+    elif ptype == ParserType.UNKNOWN:
         return False
-    else:
-        return num_analyzer.is_type(type)
 
-    # Assume a string.
-    cdef object pyresult
-    pyresult = <object> PyString_is_number(<PyObject *> obj, type, options)
-    if (pyresult is not None):
-        return pyresult
-
-    # Assume unicode.
-    pyresult = <object> PyUnicodeCharacter_is_number(<PyObject *> obj, type)
-    if (pyresult is not None):
-        return pyresult
-
-    # If we got here, the type was invalid so return False.
-    return False
+    # Evaluate the type!
+    return evaluator.is_type(type)
