@@ -38,6 +38,23 @@ bool Evaluator::is_type(const PyNumberType ntype) const {
 /* TYPE CONVERSION */
 
 
+static inline Payload typed_error(const PyNumberType ntype, const bool type=true) {
+    if (ntype == PyNumberType::REAL or ntype == PyNumberType::FLOAT) {
+        if (type) {
+            return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
+        } else {
+            return Payload(ActionType::ERROR_INVALID_FLOAT);
+        }
+    } else {
+        if (type) {
+            return Payload(ActionType::ERROR_BAD_TYPE_INT);
+        } else {
+            return Payload(ActionType::ERROR_INVALID_INT);
+        }
+    }
+}
+
+
 Payload Evaluator::as_type(const PyNumberType ntype) {
     // Send to the appropriate convenience function based on the found type
     switch(parser_type()) {
@@ -46,7 +63,7 @@ Payload Evaluator::as_type(const PyNumberType ntype) {
 
     case ParserType::UNICODE:
         if (not unicode_allowed) {
-            break;
+            return typed_error(ntype, false);
         }
         /* DELIBERATE FALL-THROUGH */
     case ParserType::CHARACTER:
@@ -57,22 +74,14 @@ Payload Evaluator::as_type(const PyNumberType ntype) {
     }
 
     // If here, the input type is not valid
-    if (ntype == PyNumberType::REAL or ntype == PyNumberType::FLOAT) {
-        return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
-    } else {
-        return Payload(ActionType::ERROR_BAD_TYPE_INT);
-    }
+    return typed_error(ntype);
 }
 
 
 Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
     // If not numeric the type is invalid
     if (parser.not_numeric()) {
-        if (ntype == PyNumberType::REAL or ntype == PyNumberType::FLOAT) {
-            return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
-        } else {
-            return Payload(ActionType::ERROR_BAD_TYPE_INT);
-        }
+        return typed_error(ntype);
     }
 
     // Otherwise, tell the downstream parser what action to take based
@@ -280,11 +289,16 @@ bool Evaluator::parse_unicode_to_char()
     const void *data = PyUnicode_DATA(obj);  // Raw data 
     size_t len = PyUnicode_GET_LENGTH(obj);
     size_t index = 0;
+    char sign = '\0';
+    bool negative = false;
 
     // Ensure input is a valid unicode object.
     // If true, then not OK for conversion.
+    // In that case just store as a 0-length string.
     if (PyUnicode_READY(obj)) {
-        return false;
+        fixed_buffer[0] = '\0';
+        parser.set_input(fixed_buffer, 0);
+        return true;
     }
 
     // Strip whitespace from both ends of the data.
@@ -297,8 +311,6 @@ bool Evaluator::parse_unicode_to_char()
     }
 
     // Remove the sign - remember if it is negative.
-    char sign = '\0';
-    bool negative = false;
     if (PyUnicode_READ(kind, data, index) == '-') {
         negative = true;
         sign = '-';
@@ -330,8 +342,8 @@ bool Evaluator::parse_unicode_to_char()
     }
 
     // Iterate over the unicode data and transform to ASCII-compatible
-    // data. If at any point this fails, exit and do not save the string
-    // data, unless the length was one, in which case we save the one
+    // data. If at any point this fails, exit and just save as a 0-length
+    // string, unless the length was one, in which case we save the one
     // character.
     constexpr size_t ASCII_MAX = 127;
     long u_as_decimal = 0;
@@ -349,7 +361,9 @@ bool Evaluator::parse_unicode_to_char()
                 parser.set_input(u, negative);
                 return true;
             }
-            return false;
+            buffer[0] = '\0';
+            parser.set_input(buffer, 0);
+            return true;
         }
         buffer_index += 1;
     }
