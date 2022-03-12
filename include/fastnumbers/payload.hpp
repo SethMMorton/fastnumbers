@@ -8,6 +8,7 @@ enum class ActionType {  // TODO: annotate values
     INT,
     NAN_ACTION,
     INF_ACTION,
+    NEG_NAN_ACTION,
     NEG_INF_ACTION,
     ERROR_INVALID_INT,
     ERROR_INVALID_FLOAT,

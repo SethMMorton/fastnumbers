@@ -96,7 +96,7 @@ void Parser::set_input(const char* str, const size_t len)
         start += 1;
     } else if (*start == '-') {
         start += 1;
-        this->negative = true;
+        negative = true;
     }
 }
 

@@ -168,7 +168,9 @@ Payload Evaluator::from_text_as_float() {
         );
 
     } else if (parser.is_nan()) {
-        return Payload(ActionType::NAN_ACTION);
+        return Payload(
+            parser.is_negative() ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION
+        );
 
     } else {
         const double result = parser.as_float();

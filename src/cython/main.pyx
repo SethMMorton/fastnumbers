@@ -51,6 +51,7 @@ cdef extern from "fastnumbers/payload.hpp":
         INT "ActionType::INT"
         NAN_ACTION "ActionType::NAN_ACTION"
         INF_ACTION "ActionType::INF_ACTION"
+        NEG_NAN_ACTION "ActionType::NEG_NAN_ACTION"
         NEG_INF_ACTION "ActionType::NEG_INF_ACTION"
         ERROR_INVALID_INT "ActionType::ERROR_INVALID_INT"
         ERROR_INVALID_FLOAT "ActionType::ERROR_INVALID_FLOAT"
@@ -1447,6 +1448,10 @@ cdef convert_evaluator_payload(
         # Return the appropriate value for when NaN is found
         elif atype == ActionType.NAN_ACTION:
             return NAN if nan is SENTINEL else nan
+
+        # Return the appropriate value for when negative NaN is found
+        elif atype == ActionType.NEG_NAN_ACTION:
+            return -NAN if nan is SENTINEL else nan
 
         # Raise an exception due passing an invalid type to convert to an integer
         elif atype == ActionType.ERROR_BAD_TYPE_INT:
