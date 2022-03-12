@@ -13,58 +13,8 @@ from libc.limits cimport INT_MIN
 
 
 cdef extern from "fastnumbers/options.h":
-
-    # Selector for the type of number to check/convert.
     enum PyNumberType:
         REAL, FLOAT, INT, INTLIKE, FORCEINT
-
-    # This struct holds all the user options.
-    # Makes adding new future options easier to manage.
-    struct Options:
-        PyObject *retval
-        PyObject *input
-        PyObject *on_fail
-        PyObject *handle_inf
-        PyObject *handle_nan
-        int coerce
-        int num_only
-        int str_only
-        int allow_underscores
-        bint allow_uni
-        int base
-
-    # Some query shortcuts.
-    bint Options_Coerce_True(const Options *o)
-    bint Options_Has_NaN_Sub(const Options *o)
-    bint Options_Has_INF_Sub(const Options *o)
-    bint Options_Return_NaN_Sub(const Options *o)
-    bint Options_Return_INF_Sub(const Options *o)
-    bint Options_Should_Raise(const Options *o)
-    bint Options_Default_Base(const Options *o)
-    bint Options_Allow_UnicodeCharacter(const Options *o)
-    bint Options_Allow_Infinity(const Options *o)
-    bint Options_Allow_NAN(const Options *o)
-    bint Options_Allow_Underscores(const Options *o)
-    bint Options_String_Only(const Options *o)
-    bint Options_Number_Only(const Options *o)
-
-    # Set allow unicode.
-    void Options_Set_Disallow_UnicodeCharacter(Options *o)
-
-    # Return the correct result based on user-input.
-    # Expects the Options struct as a pointer.
-    PyObject* Options_Return_Correct_Result_On_Error(Options *o)
-
-    # Set the correct return value based on given input.
-    # Expects the Options struct NOT as a pointer.
-    void Options_Set_Return_Value(
-        Options o, PyObject *input, PyObject *default_value, bint raise_
-    )
-
-
-cdef extern from "fastnumbers/objects.h":
-    PyObject *PyObject_to_PyNumber(
-        PyObject *obj, const PyNumberType type, const Options *options) except NULL
 
 
 cdef extern from "fastnumbers/parser.hpp":
@@ -81,13 +31,47 @@ cdef extern from "fastnumbers/evaluator.hpp":
         Evaluator(object)
         void set_object(object)
         void set_coerce(bint)
-        void set_nan_action(bint)
-        void set_inf_action(bint)
+        void set_nan_allowed(bint)
+        void set_inf_allowed(bint)
         void set_base(int)
+        void set_unicode_allowed(bint)
+        object get_object()
+        int get_base()
         ParserType parser_type()
-        bint is_type(const PyNumberType)
-        bint type_is_float()
-        bint type_is_int()
+        bint is_type(PyNumberType) except +
+        bint type_is_float() except +
+        bint type_is_int() except +
+        Payload as_type(PyNumberType) except +
+
+
+cdef extern from "fastnumbers/payload.hpp":
+    ctypedef enum ActionType:
+        AS_IS "ActionType::AS_IS"
+        FLOAT "ActionType::FLOAT"
+        INT "ActionType::INT"
+        NAN_ACTION "ActionType::NAN_ACTION"
+        INF_ACTION "ActionType::INF_ACTION"
+        NEG_INF_ACTION "ActionType::NEG_INF_ACTION"
+        ERROR_INVALID_INT "ActionType::ERROR_INVALID_INT"
+        ERROR_INVALID_FLOAT "ActionType::ERROR_INVALID_FLOAT"
+        ERROR_INVALID_BASE "ActionType::ERROR_INVALID_BASE"
+        ERROR_INFINITY_TO_INT "ActionType::ERROR_INFINITY_TO_INT"
+        ERROR_NAN_TO_INT "ActionType::ERROR_NAN_TO_INT"
+        ERROR_BAD_TYPE_INT "ActionType::ERROR_BAD_TYPE_INT"
+        ERROR_BAD_TYPE_FLOAT "ActionType::ERROR_BAD_TYPE_FLOAT"
+
+    ctypedef enum PayloadType:
+        ACTION "PayloadType::ACTION"
+        INT "PayloadType::INT"
+        FLOAT "PayloadType::FLOAT"
+        FLOAT_TO_INT "PayloadType::FLOAT_TO_INT"
+
+    cdef cppclass Payload:
+        Payload()
+        PayloadType payload_type()
+        ActionType get_action()
+        double to_double()
+        long to_long()
 
 
 cdef extern from "fastnumbers/parsing.h":
@@ -99,6 +83,11 @@ cdef extern from "fastnumbers/parsing.h":
 
 # Sentinel to use for arguments where None is a valid option
 cdef object SENTINEL = object()
+
+
+# Infinity and NaN can be cached at startup
+cdef object INFINITY = float("inf")
+cdef object NAN = float("nan")
 
 
 # Global exports
@@ -257,30 +246,14 @@ def fast_real(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = NULL
-    opts.input = <PyObject *> x
-    opts.handle_inf = <PyObject *> NULL if inf is SENTINEL else <PyObject *> inf
-    opts.handle_nan = <PyObject *> NULL if nan is SENTINEL else <PyObject *> nan
-    opts.coerce = coerce
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-
-    # Key function backwards compatibility
-    if key is not None:
-        if on_fail is not None:
-            raise ValueError("Cannot set both on_fail and key")
-        on_fail = key
-    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
-
-    # Determine the return value
-    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
-    Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
-
-    return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.REAL, &opts)
+    cdef Evaluator evaluator
+    evaluator.set_object(x)
+    evaluator.set_coerce(coerce)
+    on_fail = on_fail_backwards_compatibility(on_fail, key)
+    on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
+    return convert_evaluator_payload(
+        x, evaluator, PyNumberType.REAL, inf, nan, on_invalid_return, on_fail
+    )
 
 
 def fast_float(
@@ -416,30 +389,13 @@ def fast_float(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = NULL
-    opts.input = <PyObject *> x
-    opts.handle_inf = <PyObject *> NULL if inf is SENTINEL else <PyObject *> inf
-    opts.handle_nan = <PyObject *> NULL if nan is SENTINEL else <PyObject *> nan
-    opts.coerce = False  # Not used
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-
-    # Key function backwards compatibility
-    if key is not None:
-        if on_fail is not None:
-            raise ValueError("Cannot set both on_fail and key")
-        on_fail = key
-    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
-
-    # Determine the return value
-    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
-    Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
-
-    return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.FLOAT, &opts)
+    cdef Evaluator evaluator
+    evaluator.set_object(x)
+    on_fail = on_fail_backwards_compatibility(on_fail, key)
+    on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
+    return convert_evaluator_payload(
+        x, evaluator, PyNumberType.FLOAT, inf, nan, on_invalid_return, on_fail
+    )
 
 
 def fast_int(
@@ -559,39 +515,14 @@ def fast_int(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = NULL
-    opts.input = <PyObject *> x
-    opts.handle_inf = <PyObject *> NULL
-    opts.handle_nan = <PyObject *> NULL
-    opts.coerce = False  # Not used
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-
-    # Key function backwards compatibility
-    if key is not None:
-        if on_fail is not None:
-            raise ValueError("Cannot set both on_fail and key")
-        on_fail = key
-    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
-
-    # Determine the return value
-    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
-    Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
-
-    # Validate the integer base is in the accepted range
-    cdef Py_ssize_t longbase
-    try:
-        longbase = <Py_ssize_t> base
-    except OverflowError:
-        raise ValueError("int() base must be >= 2 and <= 36")
-    if (longbase != INT_MIN and longbase != 0 and longbase < 2) or longbase > 36:
-        raise ValueError("int() base must be >= 2 and <= 36")
-    opts.base = <int> longbase
-
-    return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.INT, &opts)
+    cdef Evaluator evaluator
+    evaluator.set_object(x)
+    evaluator.set_base(validate_integer_base(base))
+    on_fail = on_fail_backwards_compatibility(on_fail, key)
+    on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
+    return convert_evaluator_payload(
+        x, evaluator, PyNumberType.INT, None, None, on_invalid_return, on_fail
+    )
 
 
 def fast_forceint(
@@ -714,30 +645,13 @@ def fast_forceint(
         ... 
 
     """
-    cdef Options opts
-    opts.retval = NULL
-    opts.input =  <PyObject *> x
-    opts.handle_inf = <PyObject *> NULL
-    opts.handle_nan = <PyObject *> NULL
-    opts.coerce = False  # Not used
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = allow_underscores
-    opts.allow_uni = True
-    opts.base = INT_MIN
-
-    # Key function backwards compatibility
-    if key is not None:
-        if on_fail is not None:
-            raise ValueError("Cannot set both on_fail and key")
-        on_fail = key
-    opts.on_fail = <PyObject *> NULL if on_fail is None else <PyObject *> on_fail
-
-    # Determine the return value
-    cdef PyObject * c_default = <PyObject *> NULL if default is SENTINEL else <PyObject *> default
-    Options_Set_Return_Value(opts, <PyObject *> x, c_default , raise_on_invalid)
-
-    return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.FORCEINT, &opts)
+    cdef Evaluator evaluator
+    evaluator.set_object(x)
+    on_fail = on_fail_backwards_compatibility(on_fail, key)
+    on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
+    return convert_evaluator_payload(
+        x, evaluator, PyNumberType.FORCEINT, None, None, on_invalid_return, on_fail
+    )
 
 
 def isreal(
@@ -840,8 +754,15 @@ def isreal(
         ... 
 
     """
-    # opts.allow_underscores = allow_underscores
-    return object_is_number(x, PyNumberType.REAL, INT_MIN, allow_nan, allow_inf, str_only, num_only)
+    return object_is_number(
+        x,
+        PyNumberType.REAL,
+        INT_MIN,
+        allow_nan,
+        allow_inf,
+        str_only,
+        num_only,
+    )
 
 
 def isfloat(
@@ -945,8 +866,15 @@ def isfloat(
         ...             return False
 
     """
-    # opts.allow_underscores = allow_underscores
-    return object_is_number(x, PyNumberType.FLOAT, INT_MIN, allow_nan, allow_inf, str_only, num_only)
+    return object_is_number(
+        x,
+        PyNumberType.FLOAT,
+        INT_MIN,
+        allow_nan,
+        allow_inf,
+        str_only,
+        num_only,
+    )
 
 
 def isint(
@@ -1033,17 +961,15 @@ def isint(
         ... 
 
     """
-    # opts.allow_underscores = allow_underscores
-
-    # Validate the integer base is in the accepted range
-    cdef Py_ssize_t longbase
-    try:
-        longbase = <Py_ssize_t> base
-    except OverflowError:
-        raise ValueError("int() base must be >= 2 and <= 36")
-    if (longbase != INT_MIN and longbase != 0 and longbase < 2) or longbase > 36:
-        raise ValueError("int() base must be >= 2 and <= 36")
-    return object_is_number(x, PyNumberType.INT, <int> longbase, False, False, str_only, num_only)
+    return object_is_number(
+        x,
+        PyNumberType.INT,
+        validate_integer_base(base),
+        False,
+        False,
+        str_only,
+        num_only,
+    )
 
 
 def isintlike(
@@ -1138,8 +1064,15 @@ def isintlike(
         ... 
 
     """
-    # opts.allow_underscores = allow_underscores
-    return object_is_number(x, PyNumberType.INTLIKE, INT_MIN, False, False, str_only, num_only)
+    return object_is_number(
+        x,
+        PyNumberType.INTLIKE,
+        INT_MIN,
+        False,
+        False,
+        str_only,
+        num_only,
+    )
 
 
 def query_type(
@@ -1233,11 +1166,11 @@ def query_type(
     evaluator.set_object(x)
     evaluator.set_coerce(coerce)
     if evaluator.parser_type() == ParserType.NUMERIC:
-        evaluator.set_nan_action(True)
-        evaluator.set_inf_action(True)
+        evaluator.set_nan_allowed(True)
+        evaluator.set_inf_allowed(True)
     else:
-        evaluator.set_nan_action(allow_nan)
-        evaluator.set_inf_action(allow_inf)
+        evaluator.set_nan_allowed(allow_nan)
+        evaluator.set_inf_allowed(allow_inf)
 
     if evaluator.type_is_int():
         return validate_query_type(int, allowed_types)
@@ -1278,39 +1211,23 @@ def fn_int(*args, **kwargs):
     # TODO: If/when cython supports the positional-only syntax `/` investigate
     #       if that can be used to support this use case.
     cdef PyObject *x = NULL
-    cdef PyObject *base = NULL
-    PyArg_ParseTupleAndKeywords(args, kwargs, "|OO:int", ["", "base", NULL], &x, &base)
+    cdef PyObject *base_ = NULL
+    PyArg_ParseTupleAndKeywords(args, kwargs, "|OO:int", ["", "base", NULL], &x, &base_)
 
-    cdef Options opts
-    opts.retval = NULL
-    opts.input = <PyObject *> x
-    opts.handle_inf = NULL
-    opts.handle_nan = NULL
-    opts.coerce = False  # Not used
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = True
-    opts.allow_uni = False
-
-    # Validate the integer base is in the accepted range
-    cdef Py_ssize_t longbase
-    try:
-        if base == NULL:
-            longbase = <Py_ssize_t> INT_MIN
-        else:
-            longbase = <Py_ssize_t> <object> base
-    except OverflowError:
-        raise ValueError("int() base must be >= 2 and <= 36")
-    if (longbase != INT_MIN and longbase != 0 and longbase < 2) or longbase > 36:
-        raise ValueError("int() base must be >= 2 and <= 36")
-    opts.base = <int> longbase
-
+    cdef int base = validate_integer_base(<object> base_)
     if x == NULL:
-        if opts.base != INT_MIN:
+        if base != INT_MIN:
             raise TypeError("int() missing string argument")
         return 0
 
-    return <object> PyObject_to_PyNumber(<PyObject *> x, PyNumberType.INT, &opts)
+    cdef Evaluator evaluator
+    evaluator.set_object(<object> x)
+    evaluator.set_unicode_allowed(False)
+    evaluator.set_base(base)
+    return convert_evaluator_payload(
+        <object> x, evaluator, PyNumberType.INT, None, None, SENTINEL, None
+    )
+
 
 def fn_float(*args):
     """
@@ -1346,22 +1263,16 @@ def fn_float(*args):
     cdef PyObject *x = NULL
     PyArg_ParseTuple(args, "|O:float", &x)
 
-    cdef Options opts
-    opts.retval = NULL
-    opts.input = x
-    opts.handle_inf = NULL
-    opts.handle_nan = NULL
-    opts.coerce = False  # Not used
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = True
-    opts.allow_uni = False
-    opts.base = INT_MIN
-
     if x == NULL:
         return 0.0
 
-    return <object> PyObject_to_PyNumber(x, PyNumberType.FLOAT, &opts)
+    cdef Evaluator evaluator
+    evaluator.set_object(<object> x)
+    evaluator.set_unicode_allowed(False)
+    return convert_evaluator_payload(
+        <object> x, evaluator, PyNumberType.FLOAT, SENTINEL, SENTINEL, SENTINEL, None
+    )
+
 
 def real(*args, **kwargs):
     """
@@ -1388,23 +1299,16 @@ def real(*args, **kwargs):
     cdef bint coerce = True
     PyArg_ParseTupleAndKeywords(args, kwargs, "|O$p:real", ["", "coerce", NULL], &x, &coerce)
 
-    cdef Options opts
-    opts.retval = NULL
-    opts.input = x
-    opts.handle_inf = NULL
-    opts.handle_nan = NULL
-    opts.coerce = coerce
-    opts.num_only = True
-    opts.str_only = True
-    opts.allow_underscores = True
-    opts.allow_uni = False
-    opts.base = INT_MIN
-
     if x == NULL:
         return 0 if coerce else 0.0
 
-    return <object> PyObject_to_PyNumber(x, PyNumberType.REAL, &opts)
-
+    cdef Evaluator evaluator
+    evaluator.set_object(<object> x)
+    evaluator.set_coerce(coerce)
+    evaluator.set_unicode_allowed(False)
+    return convert_evaluator_payload(
+        <object> x, evaluator, PyNumberType.REAL, SENTINEL, SENTINEL, SENTINEL, None
+    )
 
 # PRIVATE FUNCTIONS
 
@@ -1432,21 +1336,163 @@ cdef object_is_number(
     cdef Evaluator evaluator
     evaluator.set_object(obj)
     evaluator.set_base(base)
-    evaluator.set_nan_action(allow_nan)
-    evaluator.set_inf_action(allow_inf)
+    evaluator.set_nan_allowed(allow_nan)
+    evaluator.set_inf_allowed(allow_inf)
 
     # If the user explictly asked to disallow some types, check that here.
     cdef ParserType ptype = evaluator.parser_type()
     if ptype == ParserType.NUMERIC:
         if str_only:
             return False
-        evaluator.set_nan_action(True)
-        evaluator.set_inf_action(True)
+        evaluator.set_nan_allowed(True)
+        evaluator.set_inf_allowed(True)
     elif ptype == ParserType.UNICODE or ptype == ParserType.CHARACTER:
         if num_only:
             return False
-    elif ptype == ParserType.UNKNOWN:
+    else:
         return False
 
     # Evaluate the type!
     return evaluator.is_type(type)
+
+
+cdef on_fail_backwards_compatibility(on_fail, key):
+    """Ensure that both on_fail and key are not given together"""
+    if key is not None:
+        if on_fail is not None:
+            raise ValueError("Cannot set both on_fail and key")
+        return key
+    return on_fail
+
+
+cdef int validate_integer_base(base) except -1:
+    """Ensure the given integer base is within range"""
+    cdef Py_ssize_t base_
+    try:
+        base_ = <Py_ssize_t> base
+    except OverflowError:
+        raise ValueError("int() base must be >= 2 and <= 36")
+    if (base_ != INT_MIN and base_ != 0 and base_ < 2) or base_ > 36:
+        raise ValueError("int() base must be >= 2 and <= 36")
+    return <int> base_
+
+
+cdef determine_failure_return_value(obj, bint raise_on_invalid, default):
+    """Return the best return value for when an error occurs"""
+    if raise_on_invalid:
+        return SENTINEL
+    elif default is not SENTINEL:
+        return default
+    else:
+        return obj
+
+
+cdef convert_evaluator_payload(
+    object obj,
+    Evaluator & evaluator,
+    const PyNumberType ntype,
+    object infinity,
+    object nan,
+    object return_object,
+    object on_fail,
+):
+    """Convert the Payload of an Evaluator into a PyNumber"""
+    cdef Payload payload = evaluator.as_type(ntype)
+    cdef PayloadType ptype = payload.payload_type()
+    cdef ActionType atype
+    cdef str obj_repr
+    cdef str obj_name
+    cdef str msg
+    cdef type exception_type
+
+    # I realize this chain of ifs looks ugly and "the wrong way", but
+    # Cython will smartly convert this into a switch statement because
+    # it can detect all of the statements in the if are from the same enum.
+
+    # Level 1: If the payload contains an actual number,
+    #          convert to PyObject directly
+    if ptype == PayloadType.INT:
+        return payload.to_long()
+
+    elif ptype == PayloadType.FLOAT:
+        return payload.to_double()
+
+    elif ptype == PayloadType.FLOAT_TO_INT:
+        return int(payload.to_double())
+
+    # Level 2: We need to instruct Cython as to what action to take
+    elif ptype == PayloadType.ACTION:
+        atype = payload.get_action()
+
+        # Return the given object as-is
+        if atype == ActionType.AS_IS:
+            return obj
+
+        # Convert the given object to an integer
+        elif atype == ActionType.INT:
+            return int(obj)
+
+        # Convert the given object to a float
+        elif atype == ActionType.FLOAT:
+            return float(obj)
+
+        # Return the appropriate value for when infinity is found
+        elif atype == ActionType.INF_ACTION:
+            return INFINITY if infinity is SENTINEL else infinity
+
+        # Return the appropriate value for when negative infinity is found
+        elif atype == ActionType.NEG_INF_ACTION:
+            return -INFINITY if infinity is SENTINEL else infinity
+
+        # Return the appropriate value for when NaN is found
+        elif atype == ActionType.NAN_ACTION:
+            return NAN if nan is SENTINEL else nan
+
+        # Raise an exception due passing an invalid type to convert to an integer
+        elif atype == ActionType.ERROR_BAD_TYPE_INT:
+            obj_name = type(obj).__name__
+            msg = "int() argument must be a string, a bytes-like object or a number, not '{}'"
+            raise TypeError(msg.format(obj_name))
+
+        # Raise an exception due passing an invalid type to convert to a float
+        elif atype == ActionType.ERROR_BAD_TYPE_FLOAT:
+            obj_name = type(obj).__name__
+            msg = "float() argument must be a string or a number, not '{}'"
+            raise TypeError(msg.format(obj_name))
+
+        # Raise an exception due to an invalid integer
+        elif atype == ActionType.ERROR_INVALID_INT:
+            base = evaluator.get_base()
+            obj_repr = repr(obj)
+            msg = "invalid literal for int() with base {}: {}"
+            msg = msg.format(base, obj_repr)
+            exception_type = ValueError
+
+        # Raise an exception due to an invalid float
+        elif atype == ActionType.ERROR_INVALID_FLOAT:
+            obj_repr = repr(obj)
+            msg = f"could not convert string to float: {obj_repr}"
+            exception_type = ValueError
+
+        # Raise an exception due to an invalid base for integer conversion
+        elif atype == ActionType.ERROR_INVALID_BASE:
+            msg = "int() can't convert non-string with explicit base"
+            exception_type = TypeError
+
+        # Raise an exception due to attempting to convert infininty to an integer
+        elif atype == ActionType.ERROR_INFINITY_TO_INT:
+            msg = "cannot convert float infinity to integer"
+            exception_type = OverflowError
+
+        # Raise an exception due to attempting to convert NaN to an integer
+        elif atype == ActionType.ERROR_NAN_TO_INT:
+            msg = "cannot convert float NaN to integer"
+            exception_type = ValueError
+
+        # Return the correct value (or raise) on error
+        if return_object is SENTINEL:
+            raise exception_type(msg)
+        elif on_fail is not None:
+            return on_fail(obj)
+        else:
+            return return_object

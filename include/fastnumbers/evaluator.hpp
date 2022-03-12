@@ -7,6 +7,8 @@
 
 #include "fastnumbers/options.h"
 #include "fastnumbers/parser.hpp"
+#include "fastnumbers/payload.hpp"
+
 
 // Size of the fix-with buffer
 constexpr Py_ssize_t FIXED_BUFFER_SIZE = 32;
@@ -24,8 +26,9 @@ public:
         , fixed_buffer()
         , variable_buffer()
         , coerce(false)
-        , nan_action(false)
-        , inf_action(false)
+        , nan_allowed(false)
+        , inf_allowed(false)
+        , unicode_allowed(true)
         , parser()
     {
         evaluate_stored_object();
@@ -36,66 +39,52 @@ public:
     Evaluator(const Evaluator&) = delete;
     Evaluator(Evaluator&&) = delete;
     Evaluator& operator=(const Evaluator&) = delete;
-    ~Evaluator() = default;
+    ~Evaluator() { Py_XDECREF(obj); }
 
-    /**
-     * \brief Assign a new object to analyze
-     * \param obj A PyObject pointer to analyze
-     */
+    /// Assign a new object to analyze
     void set_object(PyObject* obj) {
         this->obj = obj;
         evaluate_stored_object();
     }
 
-    /**
-     * \brief Tell the analyzer the base to use when parsing ints
-     * \param base The integer base
-     */
+    /// Tell the analyzer the base to use when parsing ints
     void set_base(const int base) {
         parser.set_base(base);
     }
 
-    /**
-     * \brief Tell the analyzer whether or not to coerce to int for REAL
-     * \param coerce Whether or not to coerce
-     */
+    /// Tell the analyzer whether or not to coerce to int for REAL
     void set_coerce(const bool coerce) {
         this->coerce = coerce;
     }
 
-    /**
-     * \brief Tell the analyzer how to deal with NaN
-     * \param nan_action Whether or not NaN will need special handling
-     */
-    void set_nan_action(const bool nan_action) {
-        this->nan_action = nan_action;
+    /// Tell the analyzer if NaN is allowed when type checking
+    void set_nan_allowed(const bool nan_allowed) {
+        this->nan_allowed = nan_allowed;
     }
 
-    /**
-     * \brief Tell the analyzer how to deal with infinity
-     * \param inf_action Whether or not infinity will need special handling
-     */
-    void set_inf_action(const bool inf_action) {
-        this->inf_action = inf_action;
+    /// Tell the analyzer if infinity is allowed when type checking
+    void set_inf_allowed(const bool inf_allowed) {
+        this->inf_allowed = inf_allowed;
     }
+
+    /// Tell the analyzer if unicode characters are allowed as input
+    void set_unicode_allowed(const bool unicode_allowed) {
+        this->unicode_allowed = unicode_allowed;
+    }
+
+    /// Return the base used for integer conversion
+    int get_base() const { return parser.get_base(); }
 
     /// Return the parser type currenly associated with the Evaluator
-    ParserType parser_type() {
-        return parser.parser_type();
-    }
+    ParserType parser_type() const { return parser.parser_type(); }
 
-    /**
-     * \brief Was the passed Python object of the correct type?
-     *
-     * \param ntype PyNumberType indicating the desired type to check
-     * \return bool
-     */
+    /// Was the passed Python object of the correct type?
     bool is_type(const PyNumberType ntype) const;
 
     /// Is the stored type a float? Account for nan_action and inf_action.
     bool type_is_float() const {
-        return (nan_action and parser.is_nan())
-            or (inf_action and parser.is_infinity())
+        return (nan_allowed and parser.is_nan())
+            or (inf_allowed and parser.is_infinity())
             or parser.is_float();
     }
 
@@ -103,6 +92,16 @@ public:
     bool type_is_int() const {
         return coerce ? parser.is_intlike() : parser.is_int();
     }
+
+    /**
+     * \brief Convert the stored object to the desired number type
+     *
+     * Use the appropriate error handling on error.
+     *
+     * \param ntype PyNumberType indicating the desired type to check
+     * \return Payload
+     */
+    Payload as_type(const PyNumberType ntype);
 
 private:
     /// The Python object under evaluation
@@ -117,11 +116,14 @@ private:
     /// Whether or not floats should be coerced to integers if user wants REAL
     bool coerce;
 
-    /// Whether or not an NaN requires a special handling
-    bool nan_action;
+    /// Whether or not an NaN is allowed
+    bool nan_allowed;
 
-    /// Whether or not an infinity requires a special handling
-    bool inf_action;
+    /// Whether or not an infinity is allowed
+    bool inf_allowed;
+
+    /// Whether or not a unicode character is allowed
+    bool unicode_allowed;
 
     /// A Parser object used for evaluating the Python object
     Parser parser;
@@ -130,6 +132,7 @@ private:
     /// Generate a Parser object from Python object data
     void evaluate_stored_object() {
         if (obj != nullptr) {
+            Py_IncRef(obj);
             parser.set_input(obj);
             if (parser.not_numeric()) {
                 extract_string_data();
@@ -154,5 +157,20 @@ private:
 
     /// Parse unicode data and convert to character data
     bool parse_unicode_to_char();
+
+    /// Logic for evaluating a numeric python object
+    Payload from_numeric_as_type(const PyNumberType ntype);
+
+    /// Logic for evaluating a text python object
+    Payload from_text_as_type(const PyNumberType ntype);
+
+    /// Logic for evaluating a text python object as a float or integer
+    Payload from_text_as_int_or_float(const bool force_int);
+
+    /// Logic for evaluating a text python object as a float
+    Payload from_text_as_float();
+
+    /// Logic for evaluating a text python object as an int
+    Payload from_text_as_int();
 
 };

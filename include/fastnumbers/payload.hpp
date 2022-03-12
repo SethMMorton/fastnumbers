@@ -8,14 +8,23 @@ enum class ActionType {  // TODO: annotate values
     INT,
     NAN_ACTION,
     INF_ACTION,
-    ERROR,
+    NEG_INF_ACTION,
+    ERROR_INVALID_INT,
+    ERROR_INVALID_FLOAT,
+    ERROR_INVALID_BASE,
+    ERROR_INFINITY_TO_INT,
+    ERROR_NAN_TO_INT,
+    ERROR_BAD_TYPE_INT,
+    ERROR_BAD_TYPE_FLOAT,
 };
 
 
-/// Known classes of errors that can occur
-enum class ErrorType {  // TODO: annotate values
-    INF_AS_INT,
-    NAN_AS_INT,
+/// The types of data this class can store
+enum class PayloadType {
+    ACTION,
+    INT,
+    FLOAT,
+    FLOAT_TO_INT,
 };
 
 
@@ -29,35 +38,35 @@ enum class ErrorType {  // TODO: annotate values
 class Payload
 {
 public:
-    /// Construct the payload with an error.
-    explicit Payload(const ErrorType etype): type(PayloadType::ERROR), errval(etype) {}
+    /// Default construct - needed for use with Cython.
+    Payload() : type(PayloadType::ACTION), actval(ActionType::AS_IS) {}
+
+    /// Construct the payload with an action.
+    explicit Payload(const ActionType atype) : type(PayloadType::ACTION), actval(atype) {}
 
     /// Construct the payload with a double.
-    explicit Payload(const double val): type(PayloadType::FLOAT), dval(val) {}
+    explicit Payload(const double val) : type(PayloadType::FLOAT), dval(val) {}
+
+    /// Construct the payload with a double that needs to be be converted to an int.
+    explicit Payload(const double val, const bool needs_int_conversion)
+        : type(needs_int_conversion ? PayloadType::FLOAT_TO_INT : PayloadType::FLOAT)
+        , dval(val)
+    {}
 
     /// Construct the payload with a long.
-    explicit Payload(const long val): type(PayloadType::INT), ival(val) {}
+    explicit Payload(const long val) : type(PayloadType::INT), ival(val) {}
 
-    /// Default copy constructor
+    // Copy, assignment, and destruct are defaults
     Payload(const Payload&) = default;
-
-    /// Default assignment operator
+    Payload(Payload&&) = default;
     Payload& operator=(const Payload&) = default;
-
-    /// Default destructor
     ~Payload() = default;
 
-    /// Is the Payload storing an error?
-    bool errored() const { return type == PayloadType::ERROR; }
+    /// What type of payload is being carried?
+    PayloadType payload_type() const { return type; }
 
-    /// Is the Payload storing a double?
-    bool has_double() const { return type == PayloadType::FLOAT; }
-
-    /// Is the Payload storing a long?
-    bool has_long() const { return type == PayloadType::INT; }
-
-    /// Return the Payload as an ErrorType.
-    ErrorType get_error() const { return errval; }
+    /// Return the Payload as an ActionType.
+    ActionType get_action() const { return actval; }
 
     /// Return the Payload as a double.
     double to_double() const { return dval; }
@@ -66,12 +75,6 @@ public:
     long to_long() const { return ival; }
 
 private:
-    /// The types of data this class can store
-    enum PayloadType {
-        ERROR,
-        INT,
-        FLOAT,
-    };
 
     /// Tracker of what type is being stored
     PayloadType type;
@@ -88,8 +91,8 @@ private:
         long ival;
         /// The Payload as a double
         double dval;
-        /// The Payload as an ErrorType
-        ErrorType errval;
+        /// The Payload as an ActionType
+        ActionType actval;
     };
 
 };

@@ -28,6 +28,7 @@ void Parser::set_input(PyObject* obj)
         
         // Store this object
         this->obj = obj;
+        Py_IncRef(this->obj);
 
     }
 }
@@ -100,6 +101,86 @@ void Parser::set_input(const char* str, const size_t len)
 }
 
 
+long Parser::as_int() {
+    // Reset any pre-existing error code
+    unset_error_code();
+
+    // Convert the data to an integer correctly based on the contained type
+    // We do not intend to use the Parser to convert numeric objects, so
+    // to enforce this we do not even implement that here.
+    switch (ptype) {
+    case ParserType::CHARACTER:
+        {
+            bool error = false;
+            const long result = parse_int(start, end, &error);
+            if (not error) {
+                return sign() * result;
+            }
+        }
+        break;
+
+    case ParserType::UNICODE:
+        switch (number_type) {
+        case NumberType::INT:
+            return sign() * digit_uchar;
+        case NumberType::FLOAT:
+            return sign() * static_cast<long>(numeric_uchar);
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+
+    }
+
+    // Any non-success above ends up here, record as failure
+    encountered_conversion_error();
+    return -1L;
+}
+
+
+double Parser::as_float() {
+    // Reset any pre-existing error code
+    unset_error_code();
+
+    // Convert the data to an integer correctly based on the contained type
+    // We do not intend to use the Parser to convert numeric objects, so
+    // to enforce this we do not even implement that here.
+    switch (ptype) {
+    case ParserType::CHARACTER:
+        {
+            bool error = false;
+            const double result = parse_float(start, end, &error, 1);
+            if (not error) {
+                return sign() * result;
+            }
+        }
+        break;
+
+    case ParserType::UNICODE:
+        switch (number_type) {
+        case NumberType::INT:
+            return static_cast<double>(sign() * digit_uchar);
+        case NumberType::FLOAT:
+            return sign() * numeric_uchar;
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+
+    }
+
+    // Any non-success above ends up here, record as failure
+    encountered_conversion_error();
+    return -1.0;
+}
+
+
 bool Parser::not_numeric() const {
     return not is_real();
 }
@@ -112,7 +193,7 @@ bool Parser::is_finite() const {
     case ParserType::UNICODE:
         return is_real();
     case ParserType::NUMERIC:
-        return is_int() or (is_float() and not std::isfinite(PyFloat_AS_DOUBLE(obj)));
+        return is_int() or (is_float() and std::isfinite(PyFloat_AS_DOUBLE(obj)));
     default:
         return false;
     }

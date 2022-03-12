@@ -6,16 +6,20 @@
 #include "fastnumbers/parser.hpp"
 
 
+/* TYPE CHECKING */
+
+
 bool Evaluator::is_type(const PyNumberType ntype) const {
+    // Dispatch to the appropriate parser function based on requested type
     switch (ntype) {
     case PyNumberType::REAL:
-        return (nan_action and parser.is_nan())
-            or (inf_action and parser.is_infinity())
+        return (nan_allowed and parser.is_nan())
+            or (inf_allowed and parser.is_infinity())
             or parser.is_real();
 
     case PyNumberType::FLOAT:
-        return (nan_action and parser.is_nan())
-            or (inf_action and parser.is_infinity())
+        return (nan_allowed and parser.is_nan())
+            or (inf_allowed and parser.is_infinity())
             or parser.is_float();
 
     case PyNumberType::INT:
@@ -29,6 +33,163 @@ bool Evaluator::is_type(const PyNumberType ntype) const {
         return false;  // cannot reach, but this silences compiler warnings
     }
 }
+
+
+/* TYPE CONVERSION */
+
+
+Payload Evaluator::as_type(const PyNumberType ntype) {
+    // Send to the appropriate convenience function based on the found type
+    switch(parser_type()) {
+    case ParserType::NUMERIC:
+        return from_numeric_as_type(ntype);
+
+    case ParserType::UNICODE:
+        if (not unicode_allowed) {
+            break;
+        }
+        /* DELIBERATE FALL-THROUGH */
+    case ParserType::CHARACTER:
+        return from_text_as_type(ntype);
+
+    default:
+        break;
+    }
+
+    // If here, the input type is not valid
+    if (ntype == PyNumberType::REAL or ntype == PyNumberType::FLOAT) {
+        return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
+    } else {
+        return Payload(ActionType::ERROR_BAD_TYPE_INT);
+    }
+}
+
+
+Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
+    // If not numeric the type is invalid
+    if (parser.not_numeric()) {
+        if (ntype == PyNumberType::REAL or ntype == PyNumberType::FLOAT) {
+            return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
+        } else {
+            return Payload(ActionType::ERROR_BAD_TYPE_INT);
+        }
+    }
+
+    // Otherwise, tell the downstream parser what action to take based
+    // on the user requested type.
+    switch (ntype) {
+    case PyNumberType::REAL:
+        if (coerce and parser.is_intlike()) {
+            return Payload(ActionType::INT);
+        } else {
+            return Payload(ActionType::AS_IS);
+        }
+
+    case PyNumberType::FLOAT:
+        return Payload(ActionType::FLOAT);
+
+    case PyNumberType::INT:
+    case PyNumberType::INTLIKE:
+    case PyNumberType::FORCEINT:
+        if (parser.is_finite()) {
+            return Payload(ActionType::INT);
+        } else if (parser.is_infinity()) {
+            return Payload(ActionType::ERROR_INFINITY_TO_INT);
+        } else {
+            return Payload(ActionType::ERROR_NAN_TO_INT);
+        }
+
+    default:
+        return Payload(ActionType::AS_IS);  // should never happen
+    }
+}
+
+
+Payload Evaluator::from_text_as_type(const PyNumberType ntype) {
+    switch (ntype) {
+    case PyNumberType::REAL:
+    case PyNumberType::INTLIKE:
+    case PyNumberType::FORCEINT:
+        // REAL will only try to coerce to integer... the others will force
+        return from_text_as_int_or_float(ntype != PyNumberType::REAL);
+
+    case PyNumberType::FLOAT:
+        return from_text_as_float();
+
+    case PyNumberType::INT:
+        return from_text_as_int();
+
+    default:
+        return Payload(ActionType::AS_IS);  // should never happen
+    }
+}
+
+
+Payload Evaluator::from_text_as_int_or_float(const bool force_int) {
+    // If already an integer, no special care is needed
+    if (parser.is_int()) {
+        const long result = parser.as_int();
+        if (parser.errored()) {
+            return Payload(ActionType::ERROR_INVALID_INT);
+        }
+        return Payload(result);
+
+    // For infinity and NaN, if attemptying to force to integer then
+    // this value is not valid, but if just coercing then these values
+    // are fine.
+    } else if (parser.is_infinity()) {
+        return Payload(
+            force_int ? ActionType::ERROR_INVALID_INT : ActionType::INF_ACTION
+        );
+
+    } else if (parser.is_nan()) {
+        return Payload(
+            force_int ? ActionType::ERROR_INVALID_INT : ActionType::NAN_ACTION
+        );
+
+    // Otherwise, extract as a float and tell the downstream parser if
+    // it needs to be converted to an integer or not.
+    } else {
+        const double result = parser.as_float();
+        if (parser.errored()) {
+            return Payload(ActionType::ERROR_INVALID_FLOAT);
+        }
+        return Payload(
+            result, force_int or (coerce and Parser::float_is_intlike(result))
+        );
+    }
+}
+
+
+Payload Evaluator::from_text_as_float() {
+    if (parser.is_infinity()) {
+        return Payload(
+            parser.is_negative() ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION
+        );
+
+    } else if (parser.is_nan()) {
+        return Payload(ActionType::NAN_ACTION);
+
+    } else {
+        const double result = parser.as_float();
+        if (parser.errored()) {
+            return Payload(ActionType::ERROR_INVALID_FLOAT);
+        }
+        return Payload(result);
+    }
+}
+
+
+Payload Evaluator::from_text_as_int() {
+    const long result = parser.as_int();
+    if (parser.errored()) {
+        return Payload(ActionType::ERROR_INVALID_INT);
+    }
+    return Payload(result);
+}
+
+
+/* TEXT EXTRACTION */
 
 
 void Evaluator::extract_string_data()

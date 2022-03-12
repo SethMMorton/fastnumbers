@@ -38,6 +38,7 @@ public:
         , start(nullptr)
         , end(nullptr)
         , base(10)
+        , errcode(0)
     {}
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
@@ -67,8 +68,26 @@ public:
      */
     void set_input(const char* str, const size_t len);
 
-    ///  Tell the analyzer the base to use when parsing ints
+    /// Tell the analyzer the base to use when parsing ints
     void set_base(const int base) { this->base = base == INT_MIN ? 10 : base; }
+
+    /// Get the stored base
+    int get_base() const { return base; }
+
+    /// Convert the stored object to a long (-1 if not possible, check error state)
+    long as_int();
+
+    /// Convert the stored object to a double (-1.0 if not possible, check error state)
+    double as_float();
+
+    /// Whether the last conversion encountered an error
+    bool errored() const { return errcode != 0; }
+
+    /// Whether the last conversion encountered an underscore
+    bool underscore_error() const { return errcode < 0; }
+
+    /// Is the stored number negative?
+    bool is_negative() const { return negative; }
 
     /// Was the passed Python object not numeric?
     bool not_numeric() const;
@@ -147,9 +166,13 @@ private:
     /// The desired base of integers when parsing
     int base;
 
+    /// Track if a number conversion failed.
+    int errcode;
+
 private:
     /// Reset the Parser object to the uninitialized state
     void reset() {
+        Py_XDECREF(obj);
         ptype = ParserType::UNKNOWN;
         number_type = NumberType::NOT_NUMERIC;
         obj = nullptr;
@@ -163,4 +186,13 @@ private:
 
     /// Integer that can be used to apply the sign of the number in the text
     int sign() const { return negative ? -1 : 1; }
+
+    /// Record that the conversion encountered an error
+    void encountered_conversion_error() { errcode = 1; }
+
+    /// Record that the conversion encountered an underscore
+    void encountered_underscore_in_conversion() { errcode = -1; }
+
+    /// Forget any tracked error code
+    void unset_error_code() { errcode = 0; }
 };
