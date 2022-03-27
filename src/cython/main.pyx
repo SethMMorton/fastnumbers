@@ -1215,7 +1215,9 @@ def fn_int(*args, **kwargs):
     cdef PyObject *base_ = NULL
     PyArg_ParseTupleAndKeywords(args, kwargs, "|OO:int", ["", "base", NULL], &x, &base_)
 
-    cdef int base = validate_integer_base(<object> base_)
+    # When converting base to integer, note that in the way this function
+    # is parsing arguments a NULL is allowed so that is handled specially
+    cdef int base = INT_MIN if base_ == NULL else validate_integer_base(<object> base_)
     if x == NULL:
         if base != INT_MIN:
             raise TypeError("int() missing string argument")
