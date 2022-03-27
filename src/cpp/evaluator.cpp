@@ -90,12 +90,30 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
     case PyNumberType::REAL:
         if (coerce and parser.is_intlike()) {
             return Payload(ActionType::INT);
+        } else if (parser.is_nan()) {
+            return Payload(ActionType::NAN_ACTION);
+        } else if  (parser.is_infinity()) {
+            if (PyFloat_AS_DOUBLE(obj) < 0) {
+                return Payload(ActionType::NEG_INF_ACTION);
+            } else {
+                return Payload(ActionType::INF_ACTION);
+            }
         } else {
             return Payload(ActionType::AS_IS);
         }
 
     case PyNumberType::FLOAT:
-        return Payload(ActionType::FLOAT);
+        if (parser.is_nan()) {
+            return Payload(ActionType::NAN_ACTION);
+        } else if  (parser.is_infinity()) {
+            if (PyFloat_AS_DOUBLE(obj) < 0) {
+                return Payload(ActionType::NEG_INF_ACTION);
+            } else {
+                return Payload(ActionType::INF_ACTION);
+            }
+        } else {
+            return Payload(ActionType::FLOAT);
+        }
 
     case PyNumberType::INT:
     case PyNumberType::INTLIKE:
