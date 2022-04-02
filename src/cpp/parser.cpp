@@ -1,11 +1,5 @@
 #include "fastnumbers/parser.hpp"
-
-
-// Check if a character is whitespace or not
-inline bool is_whitespace(const char c)
-{
-    return c == ' ' or (c >= '\t' and c <= '\r');
-}
+#include "fastnumbers/parsing.h"
 
 
 void Parser::set_input(PyObject* obj)
@@ -58,7 +52,7 @@ void Parser::set_input(const Py_UCS4 uchar, const bool negative)
 
 
 
-void Parser::set_input(const char* str, const size_t len)
+void Parser::set_input(const char* str, const std::size_t len)
 {
     // Clear any previous stored data
     reset();
@@ -76,7 +70,7 @@ void Parser::set_input(const char* str, const size_t len)
     end = str + len;
 
     // Strip leading whitespace
-    while (is_whitespace(*start)) {
+    while (is_white_space(start)) {
         start += 1;
     }
 
@@ -86,7 +80,7 @@ void Parser::set_input(const char* str, const size_t len)
     // backwards, then push the end pointer up one
     // as if there were still a '\0' character.
     end -= 1;
-    while (is_whitespace(*end) and start != end) {
+    while (is_white_space(end) and start != end) {
         end -= 1;
     }
     end += 1;
@@ -111,10 +105,16 @@ long Parser::as_int() {
     switch (ptype) {
     case ParserType::CHARACTER:
         {
-            bool error = false;
-            const long result = parse_int(start, end, &error);
-            if (not error) {
-                return sign() * result;
+            if (is_likely_int(start, end - start)) {
+                if (int_might_overflow(start, end)) {
+                    encountered_potential_overflow_error();
+                    return -1L;
+                }
+                bool error = false;
+                const long result = parse_int(start, end, &error);
+                if (not error) {
+                    return sign() * result;
+                }
             }
         }
         break;
@@ -151,10 +151,16 @@ double Parser::as_float() {
     switch (ptype) {
     case ParserType::CHARACTER:
         {
-            bool error = false;
-            const double result = parse_float(start, end, &error, 1);
-            if (not error) {
-                return sign() * result;
+            if (is_likely_float(start, end - start)) {
+                if (float_might_overflow(start, end - start)) {
+                    encountered_potential_overflow_error();
+                    return -1L;
+                }
+                bool error = false;
+                const double result = parse_float(start, end, &error, 1);
+                if (not error) {
+                    return sign() * result;
+                }
             }
         }
         break;

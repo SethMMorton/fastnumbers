@@ -157,7 +157,9 @@ Payload Evaluator::from_text_as_int_or_float(const bool force_int) {
     if (parser.is_int()) {
         const long result = parser.as_int();
         if (parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_INT);
+            return parser.potential_overflow()
+                 ? Payload(ActionType::TRY_INT_IN_PYTHON)
+                 : Payload(ActionType::ERROR_INVALID_INT);
         }
         return Payload(result);
 
@@ -179,7 +181,17 @@ Payload Evaluator::from_text_as_int_or_float(const bool force_int) {
     } else {
         const double result = parser.as_float();
         if (parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_FLOAT);
+            if (parser.potential_overflow()) {
+                if (force_int) {
+                    return Payload(ActionType::TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON);
+                } else if (coerce) {
+                    return Payload(ActionType::TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON);
+                } else {
+                    return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
+                }
+            } else {
+                return Payload(ActionType::ERROR_INVALID_FLOAT);
+            }
         }
         return Payload(
             result, force_int or (coerce and Parser::float_is_intlike(result))
@@ -202,7 +214,9 @@ Payload Evaluator::from_text_as_float() {
     } else {
         const double result = parser.as_float();
         if (parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_FLOAT);
+            return parser.potential_overflow()
+                 ? Payload(ActionType::TRY_FLOAT_IN_PYTHON)
+                 : Payload(ActionType::ERROR_INVALID_FLOAT);
         }
         return Payload(result);
     }
@@ -212,7 +226,9 @@ Payload Evaluator::from_text_as_float() {
 Payload Evaluator::from_text_as_int() {
     const long result = parser.as_int();
     if (parser.errored()) {
-        return Payload(ActionType::ERROR_INVALID_INT);
+        return parser.potential_overflow()
+             ? Payload(ActionType::TRY_INT_IN_PYTHON)
+             : Payload(ActionType::ERROR_INVALID_INT);
     }
     return Payload(result);
 }
@@ -277,7 +293,7 @@ bool Evaluator::extract_from_buffer()
         // slice will be made here and null termination will be added.
         // If the data amount is small enough, we use a fixed-sized buffer for speed.
         const char* str = nullptr;
-        size_t str_len = 0;
+        std::size_t str_len = 0;
         if (view.len + 1 < FIXED_BUFFER_SIZE) {
             std::memcpy(fixed_buffer, (char *) view.buf, view.len);
             fixed_buffer[view.len] = '\0';
@@ -305,8 +321,8 @@ bool Evaluator::parse_unicode_to_char()
 {
     const int kind = PyUnicode_KIND(obj);  // Unicode storage format.
     const void *data = PyUnicode_DATA(obj);  // Raw data 
-    size_t len = PyUnicode_GET_LENGTH(obj);
-    size_t index = 0;
+    std::size_t len = PyUnicode_GET_LENGTH(obj);
+    std::size_t index = 0;
     char sign = '\0';
     bool negative = false;
 
@@ -345,7 +361,7 @@ bool Evaluator::parse_unicode_to_char()
     // Allocate space for the character data, but use a small fixed size
     // buffer if the data is small enough. Ensure a trailing null character.
     char* buffer = nullptr;
-    size_t buffer_index = 0;
+    std::size_t buffer_index = 0;
     if (len + (sign ? 1 : 0) + 1 > FIXED_BUFFER_SIZE) {
         variable_buffer.reserve(len + (sign ? 1 : 0) + 1);
         buffer = variable_buffer.data();
@@ -363,9 +379,9 @@ bool Evaluator::parse_unicode_to_char()
     // data. If at any point this fails, exit and just save as a 0-length
     // string, unless the length was one, in which case we save the one
     // character.
-    constexpr size_t ASCII_MAX = 127;
+    constexpr std::size_t ASCII_MAX = 127;
     long u_as_decimal = 0;
-    const size_t data_len = len + index;
+    const std::size_t data_len = len + index;
     for (; index < data_len; index++) {
         const Py_UCS4 u = (Py_UCS4) PyUnicode_READ(kind, data, index);
         if (u < ASCII_MAX) {

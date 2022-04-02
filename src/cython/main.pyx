@@ -23,6 +23,9 @@ cdef extern from "fastnumbers/parser.hpp":
         UNICODE "ParserType::UNICODE"
         CHARACTER "ParserType::CHARACTER"
         UNKNOWN "ParserType::UNKNOWN"
+    cdef cppclass Parser:
+        @staticmethod
+        bint float_is_intlike(double)
 
 
 cdef extern from "fastnumbers/evaluator.hpp":
@@ -49,6 +52,10 @@ cdef extern from "fastnumbers/payload.hpp":
         AS_IS "ActionType::AS_IS"
         FLOAT "ActionType::FLOAT"
         INT "ActionType::INT"
+        TRY_INT_IN_PYTHON "ActionType::TRY_INT_IN_PYTHON"
+        TRY_FLOAT_IN_PYTHON "ActionType::TRY_FLOAT_IN_PYTHON"
+        TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON "ActionType::TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON"
+        TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON "ActionType::TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON"
         NAN_ACTION "ActionType::NAN_ACTION"
         INF_ACTION "ActionType::INF_ACTION"
         NEG_NAN_ACTION "ActionType::NEG_NAN_ACTION"
@@ -1407,6 +1414,7 @@ cdef convert_evaluator_payload(
     cdef str obj_name
     cdef str msg
     cdef type exception_type
+    cdef double temp_float
 
     # I realize this chain of ifs looks ugly and "the wrong way", but
     # Cython will smartly convert this into a switch statement because
@@ -1438,6 +1446,61 @@ cdef convert_evaluator_payload(
         # Convert the given object to a float
         elif atype == ActionType.FLOAT:
             return float(obj)
+
+        # Attempt to convert the given object to an integer, handle errors
+        elif atype == ActionType.TRY_INT_IN_PYTHON:
+            # Any exception raised is propagated to the caller
+            if return_object is SENTINEL:
+                return int(obj)
+            # Otherwise, respond to errors appropriately
+            try:
+                return int(obj)
+            except Exception:
+                return on_fail(obj) if on_fail is not None else return_object
+
+        # Attempt to convert the given object to a float, handle errors
+        elif atype == ActionType.TRY_FLOAT_IN_PYTHON:
+            # Any exception raised is propagated to the caller
+            if return_object is SENTINEL:
+                return float(obj)
+            # Otherwise, respond to errors appropriately
+            try:
+                return float(obj)
+            except Exception:
+                return on_fail(obj) if on_fail is not None else return_object
+
+        # Attempt to convert the given object to a float then integer, handle errors
+        elif atype == ActionType.TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON:
+            # Any exception raised is propagated to the caller
+            if return_object is SENTINEL:
+                temp_float = float(obj)
+                return int(temp_float)
+            # Otherwise, respond to errors appropriately
+            try:
+                temp_float = float(obj)
+                return int(temp_float)
+            except Exception:
+                return on_fail(obj) if on_fail is not None else return_object
+
+        # Attempt to convert the given object to a float then possibly to an integer,
+        # handle errors
+        elif atype == ActionType.TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON:
+            # Any exception raised is propagated to the caller
+            if return_object is SENTINEL:
+                temp_float = float(obj)
+                if Parser.float_is_intlike(temp_float):
+                    return int(temp_float)
+                else:
+                    return temp_float
+            # Otherwise, respond to errors appropriately
+            try:
+                temp_float = float(obj)
+                if Parser.float_is_intlike(temp_float):
+                    return int(temp_float)
+                else:
+                    return temp_float
+            except Exception:
+                return on_fail(obj) if on_fail is not None else return_object
 
         # Return the appropriate value for when infinity is found
         elif atype == ActionType.INF_ACTION:

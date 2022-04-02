@@ -83,6 +83,9 @@ public:
     /// Whether the last conversion encountered an error
     bool errored() const { return errcode != 0; }
 
+    /// Whether the last conversion potentially had an overflow
+    bool potential_overflow() const { return errcode == 2; }
+
     /// Whether the last conversion encountered an underscore
     bool underscore_error() const { return errcode < 0; }
 
@@ -182,6 +185,7 @@ private:
         digit_uchar = -1L;
         start = nullptr;
         end = nullptr;
+        unset_error_code();
     }
 
     /// Integer that can be used to apply the sign of the number in the text
@@ -189,6 +193,9 @@ private:
 
     /// Record that the conversion encountered an error
     void encountered_conversion_error() { errcode = 1; }
+
+    /// Record that the conversion encountered a potential overflow
+    void encountered_potential_overflow_error() { errcode = 2; }
 
     /// Record that the conversion encountered an underscore
     void encountered_underscore_in_conversion() { errcode = -1; }
