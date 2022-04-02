@@ -168,12 +168,16 @@ Payload Evaluator::from_text_as_int_or_float(const bool force_int) {
     // are fine.
     } else if (parser.is_infinity()) {
         return Payload(
-            force_int ? ActionType::ERROR_INVALID_INT : ActionType::INF_ACTION
+            force_int ? ActionType::ERROR_INVALID_INT : (
+                parser.is_negative() ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION
+            )
         );
 
     } else if (parser.is_nan()) {
         return Payload(
-            force_int ? ActionType::ERROR_INVALID_INT : ActionType::NAN_ACTION
+            force_int ? ActionType::ERROR_INVALID_INT : (
+                parser.is_negative() ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION
+            )
         );
 
     // Otherwise, extract as a float and tell the downstream parser if
