@@ -75,6 +75,9 @@ public:
     /// Return the base used for integer conversion
     int get_base() const { return parser.get_base(); }
 
+    /// Was the default base given?
+    bool is_default_base() const { return parser.is_default_base(); }
+
     /// Return the parser type currenly associated with the Evaluator
     ParserType parser_type() const { return parser.parser_type(); }
 

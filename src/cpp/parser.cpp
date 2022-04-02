@@ -123,8 +123,6 @@ long Parser::as_int() {
         switch (number_type) {
         case NumberType::INT:
             return sign() * digit_uchar;
-        case NumberType::FLOAT:
-            return sign() * static_cast<long>(numeric_uchar);
         default:
             break;
         }

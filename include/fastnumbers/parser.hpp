@@ -38,6 +38,7 @@ public:
         , start(nullptr)
         , end(nullptr)
         , base(10)
+        , default_base(true)
         , errcode(0)
     {}
     Parser(const Parser&) = default;
@@ -69,10 +70,16 @@ public:
     void set_input(const char* str, const size_t len);
 
     /// Tell the analyzer the base to use when parsing ints
-    void set_base(const int base) { this->base = base == INT_MIN ? 10 : base; }
+    void set_base(const int base) {
+        default_base = base == INT_MIN;
+        this->base = default_base ? 10 : base;
+    }
 
     /// Get the stored base
     int get_base() const { return base; }
+
+    /// Was the default base given?
+    bool is_default_base() const { return default_base; }
 
     /// Convert the stored object to a long (-1 if not possible, check error state)
     long as_int();
@@ -168,6 +175,9 @@ private:
 
     /// The desired base of integers when parsing
     int base;
+
+    /// If the user-given base is the default base
+    bool default_base;
 
     /// Track if a number conversion failed.
     int errcode;

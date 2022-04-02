@@ -40,6 +40,7 @@ cdef extern from "fastnumbers/evaluator.hpp":
         void set_unicode_allowed(bint)
         object get_object()
         int get_base()
+        bint is_default_base()
         ParserType parser_type()
         bint is_type(PyNumberType) except +
         bint type_is_float() except +
@@ -526,6 +527,7 @@ def fast_int(
     cdef Evaluator evaluator
     evaluator.set_object(x)
     evaluator.set_base(validate_integer_base(base))
+    evaluator.set_unicode_allowed(evaluator.is_default_base())
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
