@@ -228,6 +228,9 @@ Payload Evaluator::from_text_as_float() {
 
 
 Payload Evaluator::from_text_as_int() {
+    if (parser.get_base() != 10) {
+        return Payload(ActionType::TRY_INT_IN_PYTHON);
+    }
     const long result = parser.as_int();
     if (parser.errored()) {
         return parser.potential_overflow()
