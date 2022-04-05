@@ -44,7 +44,7 @@ public:
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
     Parser& operator=(const Parser&) = default;
-    ~Parser() = default;
+    ~Parser()  { Py_XDECREF(obj); };
 
     /// What type of parser is this?
     ParserType parser_type() const { return ptype; };
