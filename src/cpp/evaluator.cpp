@@ -94,6 +94,9 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
             case PyNumberType::FLOAT:
                 return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
             default:
+                if (not parser.is_default_base()) {
+                    return Payload(ActionType::ERROR_INVALID_BASE);
+                }
                 return Payload(ActionType::TRY_INT_IN_PYTHON);
             }
         }
@@ -134,7 +137,9 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
     case PyNumberType::INT:
     case PyNumberType::INTLIKE:
     case PyNumberType::FORCEINT:
-        if (parser.is_finite()) {
+        if (not parser.is_default_base()) {
+            return Payload(ActionType::ERROR_INVALID_BASE);
+        } else if (parser.is_finite()) {
             return Payload(ActionType::INT);
         } else if (parser.is_infinity()) {
             return Payload(ActionType::ERROR_INFINITY_TO_INT);
