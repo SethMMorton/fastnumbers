@@ -18,6 +18,8 @@ void Parser::set_input(PyObject* obj)
             number_type = NumberType::FLOAT;
         } else if (PyLong_Check(obj)) {
             number_type = NumberType::INT;
+        } else if (NumericMethodsAnalyzer(obj).is_numeric()) {
+            number_type = NumberType::SPECIAL_NUMERIC;
         }
         
         // Store this object
@@ -185,7 +187,7 @@ double Parser::as_float() {
 }
 
 
-bool Parser::not_numeric() const {
+bool Parser::not_float_or_int() const {
     return not is_real();
 }
 
@@ -233,7 +235,8 @@ bool Parser::is_real() const {
     case ParserType::CHARACTER:
         return is_float();
     default:
-        return number_type != NumberType::NOT_NUMERIC;
+        return number_type != NumberType::NOT_FLOAT_OR_INT and
+               number_type != NumberType::SPECIAL_NUMERIC;
     }
 }
 
@@ -243,7 +246,8 @@ bool Parser::is_float() const {
     case ParserType::CHARACTER:
         return string_contains_float(start, end, false, false);
     case ParserType::UNICODE:
-        return number_type != NumberType::NOT_NUMERIC;
+        return number_type != NumberType::NOT_FLOAT_OR_INT and
+               number_type != NumberType::SPECIAL_NUMERIC;
     case ParserType::NUMERIC:
         return number_type == NumberType::FLOAT;
     default:

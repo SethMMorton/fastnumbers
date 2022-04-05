@@ -29,7 +29,7 @@ public:
     // There is no constructor with arguments
     Parser()
         : ptype(ParserType::UNKNOWN)
-        , number_type(NumberType::NOT_NUMERIC)
+        , number_type(NumberType::NOT_FLOAT_OR_INT)
         , obj(nullptr)
         , negative(false)
         , uchar('\0')
@@ -96,11 +96,16 @@ public:
     /// Whether the last conversion encountered an underscore
     bool underscore_error() const { return errcode < 0; }
 
+    /// Was the passed Python object a user class with __float__ or __int__?
+    bool is_special_numeric() const {
+        return number_type == NumberType::SPECIAL_NUMERIC;
+    }
+
     /// Is the stored number negative?
     bool is_negative() const { return negative; }
 
-    /// Was the passed Python object not numeric?
-    bool not_numeric() const;
+    /// Was the passed Python object not float or int?
+    bool not_float_or_int() const;
 
     /// Was the passed Python object finite?
     bool is_finite() const;
@@ -144,9 +149,10 @@ private:
 
     /// The types of data this class can store
     enum NumberType {
-        NOT_NUMERIC,
+        NOT_FLOAT_OR_INT,
         FLOAT,
         INT,
+        SPECIAL_NUMERIC,
     };
 
     /// Tracker of what type is being stored
@@ -187,7 +193,7 @@ private:
     void reset() {
         Py_XDECREF(obj);
         ptype = ParserType::UNKNOWN;
-        number_type = NumberType::NOT_NUMERIC;
+        number_type = NumberType::NOT_FLOAT_OR_INT;
         obj = nullptr;
         negative = false;
         uchar = '\0';
@@ -212,4 +218,34 @@ private:
 
     /// Forget any tracked error code
     void unset_error_code() { errcode = 0; }
+};
+
+
+/**
+ * \class NumericMethodsParser
+ * \brief Determine if an object defines numeric dunder methods
+ */
+class NumericMethodsAnalyzer {
+public:
+    NumericMethodsAnalyzer(PyObject *obj)
+        : nmeth(obj ? Py_TYPE(obj)->tp_as_number : nullptr)
+    {}
+    NumericMethodsAnalyzer(const NumericMethodsAnalyzer&) = default;
+    NumericMethodsAnalyzer(NumericMethodsAnalyzer&&) = default;
+    NumericMethodsAnalyzer& operator=(const NumericMethodsAnalyzer&) = default;
+    ~NumericMethodsAnalyzer() = default;
+
+    /// Does this object define __index__, __int__, or __float?
+    bool is_numeric() const { return is_int() or is_float(); };
+
+    /// Does this object define __float?
+    bool is_float() const { return nmeth and nmeth->nb_float; }
+
+    /// Does this object define __index__ or __int__?
+    bool is_int() const { return nmeth and (nmeth->nb_index or nmeth->nb_int); }
+
+private:
+    /// The struct providing access to numeric dunder methods
+    PyNumberMethods *nmeth;
+
 };

@@ -79,8 +79,24 @@ Payload Evaluator::as_type(const PyNumberType ntype) {
 
 
 Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
-    // If not numeric the type is invalid
-    if (parser.not_numeric()) {
+    // If not a direct numeric type, assume it might be a user
+    // class with e.g __int__ or __float__ defined. Otherwise it's a
+    // type error
+    if (parser.not_float_or_int()) {
+        if (parser.is_special_numeric()) {
+            switch (ntype) {
+            case PyNumberType::REAL:
+                if (NumericMethodsAnalyzer(obj).is_float()) {
+                    return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
+                } else {
+                    return Payload(ActionType::TRY_INT_IN_PYTHON);
+                }
+            case PyNumberType::FLOAT:
+                return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
+            default:
+                return Payload(ActionType::TRY_INT_IN_PYTHON);
+            }
+        }
         return typed_error(ntype);
     }
 

@@ -1453,10 +1453,16 @@ cdef convert_evaluator_payload(
         elif atype == ActionType.TRY_INT_IN_PYTHON:
             # Any exception raised is propagated to the caller
             if return_object is SENTINEL:
-                return int(obj, base=evaluator.get_base())
+                if evaluator.parser_type() == ParserType.CHARACTER:
+                    return int(obj, base=evaluator.get_base())
+                else:
+                    return int(obj)
             # Otherwise, respond to errors appropriately
             try:
-                return int(obj, base=evaluator.get_base())
+                if evaluator.parser_type() == ParserType.CHARACTER:
+                    return int(obj, base=evaluator.get_base())
+                else:
+                    return int(obj)
             except Exception:
                 return on_fail(obj) if on_fail is not None else return_object
 

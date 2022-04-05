@@ -137,7 +137,7 @@ private:
         if (obj != nullptr) {
             Py_IncRef(obj);
             parser.set_input(obj);
-            if (parser.not_numeric()) {
+            if (parser.not_float_or_int() and not parser.is_special_numeric()) {
                 extract_string_data();
             }
         }
