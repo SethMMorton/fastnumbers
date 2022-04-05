@@ -344,8 +344,8 @@ bool Evaluator::parse_unicode_to_char()
 {
     const int kind = PyUnicode_KIND(obj);  // Unicode storage format.
     const void *data = PyUnicode_DATA(obj);  // Raw data 
-    std::size_t len = PyUnicode_GET_LENGTH(obj);
-    std::size_t index = 0;
+    Py_ssize_t len = PyUnicode_GET_LENGTH(obj);
+    Py_ssize_t index = 0;
     char sign = '\0';
     bool negative = false;
 
@@ -404,7 +404,7 @@ bool Evaluator::parse_unicode_to_char()
     // character.
     constexpr std::size_t ASCII_MAX = 127;
     long u_as_decimal = 0;
-    const std::size_t data_len = len + index;
+    const Py_ssize_t data_len = len + index;
     for (; index < data_len; index++) {
         const Py_UCS4 u = (Py_UCS4) PyUnicode_READ(kind, data, index);
         if (u < ASCII_MAX) {
