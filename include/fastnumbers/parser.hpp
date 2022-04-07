@@ -6,11 +6,11 @@
 
 
 /// Possible types of Parser objects
-enum class ParserType {  // TODO: annotate values
-    NUMERIC,
-    UNICODE,
-    CHARACTER,
-    UNKNOWN,
+enum class ParserType {
+    NUMERIC,    ///< The parser is handling numeric Python objects
+    UNICODE,    ///< The parser is handling single unicode characters
+    CHARACTER,  ///< The parser is handling C-style character arrays
+    UNKNOWN,    ///< The incoming object unknown to the parser
 };
 
 

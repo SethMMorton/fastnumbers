@@ -2,34 +2,34 @@
 
 
 /// Possible actions that can be performed on input objects
-enum class ActionType {  // TODO: annotate values
-    AS_IS,
-    AS_FLOAT,
-    AS_INT,
-    TRY_INT_IN_PYTHON,
-    TRY_FLOAT_IN_PYTHON,
-    TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON,
-    TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON,
-    NAN_ACTION,
-    INF_ACTION,
-    NEG_NAN_ACTION,
-    NEG_INF_ACTION,
-    ERROR_INVALID_INT,
-    ERROR_INVALID_FLOAT,
-    ERROR_INVALID_BASE,
-    ERROR_INFINITY_TO_INT,
-    ERROR_NAN_TO_INT,
-    ERROR_BAD_TYPE_INT,
-    ERROR_BAD_TYPE_FLOAT,
+enum class ActionType {
+    AS_IS,                                ///< Return object as-is
+    AS_FLOAT,                             ///< Force as Python float
+    AS_INT,                               ///< Force as Python int
+    TRY_INT_IN_PYTHON,                    ///< Use Python int for conversion
+    TRY_FLOAT_IN_PYTHON,                  ///< Use Python float for conversion
+    TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON,   ///< Use Python float for conversion then force to int
+    TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON,  ///< Use Python float for conversion then make int if int-like
+    NAN_ACTION,                           ///< Return NaN
+    INF_ACTION,                           ///< Return infinity
+    NEG_NAN_ACTION,                       ///< Return negative NaN
+    NEG_INF_ACTION,                       ///< Return negative infinity
+    ERROR_INVALID_INT,                    ///< Raise invalid int exception
+    ERROR_INVALID_FLOAT,                  ///< Raise invalid float exception
+    ERROR_INVALID_BASE,                   ///< Raise invalid base exception
+    ERROR_INFINITY_TO_INT,                ///< Raise oveflow for infintity to int
+    ERROR_NAN_TO_INT,                     ///< Raise NaN to int exception
+    ERROR_BAD_TYPE_INT,                   ///< Raise invalid type for int
+    ERROR_BAD_TYPE_FLOAT,                 ///< Raise invalid type for float
 };
 
 
-/// The types of data this class can store
+/// The types of data that Payload can store
 enum class PayloadType {
-    ACTION,
-    LONG,
-    DOUBLE,
-    DOUBLE_TO_LONG,
+    ACTION,          ///< An ActionType enum value
+    LONG,            ///< A C-long
+    DOUBLE,          ///< A C-double
+    DOUBLE_TO_LONG,  ///< A C-double type that must be converted to long
 };
 
 

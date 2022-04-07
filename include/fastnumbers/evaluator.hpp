@@ -13,12 +13,13 @@
 constexpr Py_ssize_t FIXED_BUFFER_SIZE = 32;
 
 
+/// The conversion the user has requested
 enum class UserType {
-    REAL,
-    FLOAT,
-    INT,
-    INTLIKE,
-    FORCEINT,
+    REAL,      ///< Convert to/check a real
+    FLOAT,     ///< Convert to/check a float
+    INT,       ///< Convert to/check an int
+    INTLIKE,   ///< Check int-like
+    FORCEINT,  ///< Force conversion to int
 };
 
 
