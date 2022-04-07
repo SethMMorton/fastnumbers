@@ -1,5 +1,5 @@
 #include "fastnumbers/parser.hpp"
-#include "fastnumbers/parsing.h"
+#include "fastnumbers/c_str_parsing.hpp"
 
 
 void Parser::set_input(PyObject* obj)
@@ -72,7 +72,7 @@ void Parser::set_input(const char* str, const std::size_t len)
     end = str + len;
 
     // Strip leading whitespace
-    while (is_white_space(start)) {
+    while (is_whitespace(*start)) {
         start += 1;
     }
 
@@ -82,7 +82,7 @@ void Parser::set_input(const char* str, const std::size_t len)
     // backwards, then push the end pointer up one
     // as if there were still a '\0' character.
     end -= 1;
-    while (is_white_space(end) and start != end) {
+    while (is_whitespace(*end) and start != end) {
         end -= 1;
     }
     end += 1;
@@ -113,7 +113,7 @@ long Parser::as_int() {
                     return -1L;
                 }
                 bool error = false;
-                const long result = parse_int(start, end, &error);
+                const long result = parse_int(start, end, error);
                 if (not error) {
                     return sign() * result;
                 }
@@ -157,7 +157,7 @@ double Parser::as_float() {
                     return -1L;
                 }
                 bool error = false;
-                const double result = parse_float(start, end, &error, 1);
+                const double result = parse_float(start, end, error);
                 if (not error) {
                     return sign() * result;
                 }
@@ -244,7 +244,7 @@ bool Parser::is_real() const {
 bool Parser::is_float() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_float(start, end, false, false);
+        return string_contains_float(start, end);
     case ParserType::UNICODE:
         return number_type != NumberType::NOT_FLOAT_OR_INT and
                number_type != NumberType::SPECIAL_NUMERIC;

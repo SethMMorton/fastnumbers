@@ -4,8 +4,6 @@
 
 #include <Python.h>
 
-#include "fastnumbers/parsing.h"
-
 
 /// Possible types of Parser objects
 enum class ParserType {  // TODO: annotate values

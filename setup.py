@@ -18,7 +18,7 @@ if USING_CYTHON:
         [
             Extension(
                 "fastnumbers.fastnumbers",
-                sorted(glob.glob("src/cython/main.pyx") + glob.glob("src/cpp/*.cpp") + glob.glob("src/*.c")),
+                sorted(glob.glob("src/cython/main.pyx") + glob.glob("src/cpp/*.cpp")),
                 include_dirs=[os.path.abspath(os.path.join("include"))],
                 extra_compile_args=[],
                 extra_link_args=["-lm"],

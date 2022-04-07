@@ -83,7 +83,7 @@ cdef extern from "fastnumbers/payload.hpp":
         long to_long()
 
 
-cdef extern from "fastnumbers/parsing.h":
+cdef extern from "fastnumbers/c_str_parsing.hpp":
     long FN_MAX_INT_LEN
     long FN_DBL_DIG
     long FN_MAX_EXP

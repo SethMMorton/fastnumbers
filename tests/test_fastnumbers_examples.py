@@ -84,6 +84,7 @@ def test_fast_real() -> None:
     assert fastnumbers.fast_real("+") == "+"
     assert fastnumbers.fast_real("-") == "-"
     assert fastnumbers.fast_real("e") == "e"
+    assert fastnumbers.fast_real("e8") == "e8"
     assert fastnumbers.fast_real(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_real("invalid", 90) == 90
@@ -151,6 +152,7 @@ def test_fast_float() -> None:
     assert fastnumbers.fast_float("+") == "+"
     assert fastnumbers.fast_float("-") == "-"
     assert fastnumbers.fast_float("e") == "e"
+    assert fastnumbers.fast_float("e8") == "e8"
     assert fastnumbers.fast_float(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_float("invalid", 90) == 90
@@ -211,6 +213,7 @@ def test_fast_int() -> None:
     assert fastnumbers.fast_int("+") == "+"
     assert fastnumbers.fast_int("-") == "-"
     assert fastnumbers.fast_int("e") == "e"
+    assert fastnumbers.fast_int("e8") == "e8"
     assert fastnumbers.fast_int(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_int("invalid", 90) == 90
@@ -273,6 +276,7 @@ def test_fast_forceint() -> None:
     assert fastnumbers.fast_forceint("+") == "+"
     assert fastnumbers.fast_forceint("-") == "-"
     assert fastnumbers.fast_forceint("e") == "e"
+    assert fastnumbers.fast_forceint("e8") == "e8"
     assert fastnumbers.fast_forceint(".") == "."
     # 17. Default on invalid... 'raise_on_invalid' supersedes
     assert fastnumbers.fast_forceint("invalid", 90) == 90
@@ -337,6 +341,7 @@ def test_isreal() -> None:
     assert not fastnumbers.isreal("+")
     assert not fastnumbers.isreal("-")
     assert not fastnumbers.isreal("e")
+    assert not fastnumbers.isreal("e8")
     assert not fastnumbers.isreal(".")
     # 18. Unicode numbers
     assert fastnumbers.isreal(u"⑦")
@@ -393,6 +398,7 @@ def test_isfloat() -> None:
     assert not fastnumbers.isfloat("+")
     assert not fastnumbers.isfloat("-")
     assert not fastnumbers.isfloat("e")
+    assert not fastnumbers.isfloat("e8")
     assert not fastnumbers.isfloat(".")
     # 18. Unicode numbers
     assert fastnumbers.isfloat(u"⑦")
@@ -445,6 +451,7 @@ def test_isint() -> None:
     assert not fastnumbers.isint("+")
     assert not fastnumbers.isint("-")
     assert not fastnumbers.isint("e")
+    assert not fastnumbers.isint("e8")
     assert not fastnumbers.isint(".")
     # 18. Unicode numbers
     assert fastnumbers.isint(u"⑦")
@@ -505,6 +512,7 @@ def test_isintlike() -> None:
     assert not fastnumbers.isintlike("+")
     assert not fastnumbers.isintlike("-")
     assert not fastnumbers.isintlike("e")
+    assert not fastnumbers.isintlike("e8")
     assert not fastnumbers.isintlike(".")
     # 18. Unicode numbers
     assert fastnumbers.isintlike(u"⑦")
@@ -557,6 +565,7 @@ def test_type() -> None:
     assert fastnumbers.query_type("+") is str
     assert fastnumbers.query_type("-") is str
     assert fastnumbers.query_type("e") is str
+    assert fastnumbers.query_type("e8") is str
     assert fastnumbers.query_type(".") is str
     # 18. Unicode numbers
     assert fastnumbers.query_type(u"⑦") is int
