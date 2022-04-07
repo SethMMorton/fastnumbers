@@ -9,24 +9,24 @@
 /* TYPE CHECKING */
 
 
-bool Evaluator::is_type(const PyNumberType ntype) const {
+bool Evaluator::is_type(const UserType ntype) const {
     // Dispatch to the appropriate parser function based on requested type
     switch (ntype) {
-    case PyNumberType::REAL:
+    case UserType::REAL:
         return (nan_allowed and parser.is_nan())
             or (inf_allowed and parser.is_infinity())
             or parser.is_real();
 
-    case PyNumberType::FLOAT:
+    case UserType::FLOAT:
         return (nan_allowed and parser.is_nan())
             or (inf_allowed and parser.is_infinity())
             or parser.is_float();
 
-    case PyNumberType::INT:
+    case UserType::INT:
         return parser.is_int();
 
-    case PyNumberType::INTLIKE:
-    case PyNumberType::FORCEINT:
+    case UserType::INTLIKE:
+    case UserType::FORCEINT:
         return parser.is_intlike();
 
     default:
@@ -38,8 +38,8 @@ bool Evaluator::is_type(const PyNumberType ntype) const {
 /* TYPE CONVERSION */
 
 
-static inline Payload typed_error(const PyNumberType ntype, const bool type=true) {
-    if (ntype == PyNumberType::REAL or ntype == PyNumberType::FLOAT) {
+static inline Payload typed_error(const UserType ntype, const bool type=true) {
+    if (ntype == UserType::REAL or ntype == UserType::FLOAT) {
         if (type) {
             return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
         } else {
@@ -55,7 +55,7 @@ static inline Payload typed_error(const PyNumberType ntype, const bool type=true
 }
 
 
-Payload Evaluator::as_type(const PyNumberType ntype) {
+Payload Evaluator::as_type(const UserType ntype) {
     // Send to the appropriate convenience function based on the found type
     switch(parser_type()) {
     case ParserType::NUMERIC:
@@ -78,20 +78,20 @@ Payload Evaluator::as_type(const PyNumberType ntype) {
 }
 
 
-Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
+Payload Evaluator::from_numeric_as_type(const UserType ntype) {
     // If not a direct numeric type, assume it might be a user
     // class with e.g __int__ or __float__ defined. Otherwise it's a
     // type error
     if (parser.not_float_or_int()) {
         if (parser.is_special_numeric()) {
             switch (ntype) {
-            case PyNumberType::REAL:
+            case UserType::REAL:
                 if (NumericMethodsAnalyzer(obj).is_float()) {
                     return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
                 } else {
                     return Payload(ActionType::TRY_INT_IN_PYTHON);
                 }
-            case PyNumberType::FLOAT:
+            case UserType::FLOAT:
                 return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
             default:
                 if (not parser.is_default_base()) {
@@ -106,9 +106,9 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
     // Otherwise, tell the downstream parser what action to take based
     // on the user requested type.
     switch (ntype) {
-    case PyNumberType::REAL:
+    case UserType::REAL:
         if (coerce and parser.is_intlike()) {
-            return Payload(ActionType::INT);
+            return Payload(ActionType::AS_INT);
         } else if (parser.is_nan()) {
             return Payload(ActionType::NAN_ACTION);
         } else if  (parser.is_infinity()) {
@@ -121,7 +121,7 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
             return Payload(ActionType::AS_IS);
         }
 
-    case PyNumberType::FLOAT:
+    case UserType::FLOAT:
         if (parser.is_nan()) {
             return Payload(ActionType::NAN_ACTION);
         } else if  (parser.is_infinity()) {
@@ -131,16 +131,16 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
                 return Payload(ActionType::INF_ACTION);
             }
         } else {
-            return Payload(ActionType::FLOAT);
+            return Payload(ActionType::AS_FLOAT);
         }
 
-    case PyNumberType::INT:
-    case PyNumberType::INTLIKE:
-    case PyNumberType::FORCEINT:
+    case UserType::INT:
+    case UserType::INTLIKE:
+    case UserType::FORCEINT:
         if (not parser.is_default_base()) {
             return Payload(ActionType::ERROR_INVALID_BASE);
         } else if (parser.is_finite()) {
-            return Payload(ActionType::INT);
+            return Payload(ActionType::AS_INT);
         } else if (parser.is_infinity()) {
             return Payload(ActionType::ERROR_INFINITY_TO_INT);
         } else {
@@ -153,18 +153,18 @@ Payload Evaluator::from_numeric_as_type(const PyNumberType ntype) {
 }
 
 
-Payload Evaluator::from_text_as_type(const PyNumberType ntype) {
+Payload Evaluator::from_text_as_type(const UserType ntype) {
     switch (ntype) {
-    case PyNumberType::REAL:
-    case PyNumberType::INTLIKE:
-    case PyNumberType::FORCEINT:
+    case UserType::REAL:
+    case UserType::INTLIKE:
+    case UserType::FORCEINT:
         // REAL will only try to coerce to integer... the others will force
-        return from_text_as_int_or_float(ntype != PyNumberType::REAL);
+        return from_text_as_int_or_float(ntype != UserType::REAL);
 
-    case PyNumberType::FLOAT:
+    case UserType::FLOAT:
         return from_text_as_float();
 
-    case PyNumberType::INT:
+    case UserType::INT:
         return from_text_as_int();
 
     default:

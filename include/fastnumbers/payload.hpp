@@ -4,8 +4,8 @@
 /// Possible actions that can be performed on input objects
 enum class ActionType {  // TODO: annotate values
     AS_IS,
-    FLOAT,
-    INT,
+    AS_FLOAT,
+    AS_INT,
     TRY_INT_IN_PYTHON,
     TRY_FLOAT_IN_PYTHON,
     TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON,
@@ -27,9 +27,9 @@ enum class ActionType {  // TODO: annotate values
 /// The types of data this class can store
 enum class PayloadType {
     ACTION,
-    INT,
-    FLOAT,
-    FLOAT_TO_INT,
+    LONG,
+    DOUBLE,
+    DOUBLE_TO_LONG,
 };
 
 
@@ -50,16 +50,16 @@ public:
     explicit Payload(const ActionType atype) : type(PayloadType::ACTION), actval(atype) {}
 
     /// Construct the payload with a double.
-    explicit Payload(const double val) : type(PayloadType::FLOAT), dval(val) {}
+    explicit Payload(const double val) : type(PayloadType::DOUBLE), dval(val) {}
 
     /// Construct the payload with a double that needs to be be converted to an int.
     explicit Payload(const double val, const bool needs_int_conversion)
-        : type(needs_int_conversion ? PayloadType::FLOAT_TO_INT : PayloadType::FLOAT)
+        : type(needs_int_conversion ? PayloadType::DOUBLE_TO_LONG : PayloadType::DOUBLE)
         , dval(val)
     {}
 
     /// Construct the payload with a long.
-    explicit Payload(const long val) : type(PayloadType::INT), ival(val) {}
+    explicit Payload(const long val) : type(PayloadType::LONG), ival(val) {}
 
     // Copy, assignment, and destruct are defaults
     Payload(const Payload&) = default;

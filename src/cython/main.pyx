@@ -12,11 +12,6 @@ from cpython.ref cimport PyObject
 from libc.limits cimport INT_MIN
 
 
-cdef extern from "fastnumbers/options.h":
-    enum PyNumberType:
-        REAL, FLOAT, INT, INTLIKE, FORCEINT
-
-
 cdef extern from "fastnumbers/parser.hpp":
     ctypedef enum ParserType:
         NUMERIC "ParserType::NUMERIC"
@@ -29,6 +24,12 @@ cdef extern from "fastnumbers/parser.hpp":
 
 
 cdef extern from "fastnumbers/evaluator.hpp":
+    ctypedef enum UserType:
+        REAL "UserType::REAL"
+        FLOAT "UserType::FLOAT"
+        INT "UserType::INT"
+        INTLIKE "UserType::INTLIKE"
+        FORCEINT "UserType::FORCEINT"
     cdef cppclass Evaluator:
         Evaluator()
         Evaluator(object)
@@ -42,17 +43,17 @@ cdef extern from "fastnumbers/evaluator.hpp":
         int get_base()
         bint is_default_base()
         ParserType parser_type()
-        bint is_type(PyNumberType) except +
+        bint is_type(UserType) except +
         bint type_is_float() except +
         bint type_is_int() except +
-        Payload as_type(PyNumberType) except +
+        Payload as_type(UserType) except +
 
 
 cdef extern from "fastnumbers/payload.hpp":
     ctypedef enum ActionType:
         AS_IS "ActionType::AS_IS"
-        FLOAT "ActionType::FLOAT"
-        INT "ActionType::INT"
+        AS_FLOAT "ActionType::AS_FLOAT"
+        AS_INT "ActionType::AS_INT"
         TRY_INT_IN_PYTHON "ActionType::TRY_INT_IN_PYTHON"
         TRY_FLOAT_IN_PYTHON "ActionType::TRY_FLOAT_IN_PYTHON"
         TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON "ActionType::TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON"
@@ -71,9 +72,9 @@ cdef extern from "fastnumbers/payload.hpp":
 
     ctypedef enum PayloadType:
         ACTION "PayloadType::ACTION"
-        INT "PayloadType::INT"
-        FLOAT "PayloadType::FLOAT"
-        FLOAT_TO_INT "PayloadType::FLOAT_TO_INT"
+        LONG "PayloadType::LONG"
+        DOUBLE "PayloadType::DOUBLE"
+        DOUBLE_TO_LONG "PayloadType::DOUBLE_TO_LONG"
 
     cdef cppclass Payload:
         Payload()
@@ -261,7 +262,7 @@ def fast_real(
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
-        x, evaluator, PyNumberType.REAL, inf, nan, on_invalid_return, on_fail
+        x, evaluator, UserType.REAL, inf, nan, on_invalid_return, on_fail
     )
 
 
@@ -403,7 +404,7 @@ def fast_float(
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
-        x, evaluator, PyNumberType.FLOAT, inf, nan, on_invalid_return, on_fail
+        x, evaluator, UserType.FLOAT, inf, nan, on_invalid_return, on_fail
     )
 
 
@@ -531,7 +532,7 @@ def fast_int(
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
-        x, evaluator, PyNumberType.INT, None, None, on_invalid_return, on_fail
+        x, evaluator, UserType.INT, None, None, on_invalid_return, on_fail
     )
 
 
@@ -660,7 +661,7 @@ def fast_forceint(
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
-        x, evaluator, PyNumberType.FORCEINT, None, None, on_invalid_return, on_fail
+        x, evaluator, UserType.FORCEINT, None, None, on_invalid_return, on_fail
     )
 
 
@@ -766,7 +767,7 @@ def isreal(
     """
     return object_is_number(
         x,
-        PyNumberType.REAL,
+        UserType.REAL,
         INT_MIN,
         allow_nan,
         allow_inf,
@@ -878,7 +879,7 @@ def isfloat(
     """
     return object_is_number(
         x,
-        PyNumberType.FLOAT,
+        UserType.FLOAT,
         INT_MIN,
         allow_nan,
         allow_inf,
@@ -973,7 +974,7 @@ def isint(
     """
     return object_is_number(
         x,
-        PyNumberType.INT,
+        UserType.INT,
         validate_integer_base(base),
         False,
         False,
@@ -1076,7 +1077,7 @@ def isintlike(
     """
     return object_is_number(
         x,
-        PyNumberType.INTLIKE,
+        UserType.INTLIKE,
         INT_MIN,
         False,
         False,
@@ -1237,7 +1238,7 @@ def fn_int(*args, **kwargs):
     evaluator.set_unicode_allowed(False)
     evaluator.set_base(base)
     return convert_evaluator_payload(
-        <object> x, evaluator, PyNumberType.INT, None, None, SENTINEL, None
+        <object> x, evaluator, UserType.INT, None, None, SENTINEL, None
     )
 
 
@@ -1282,7 +1283,7 @@ def fn_float(*args):
     evaluator.set_object(<object> x)
     evaluator.set_unicode_allowed(False)
     return convert_evaluator_payload(
-        <object> x, evaluator, PyNumberType.FLOAT, SENTINEL, SENTINEL, SENTINEL, None
+        <object> x, evaluator, UserType.FLOAT, SENTINEL, SENTINEL, SENTINEL, None
     )
 
 
@@ -1319,7 +1320,7 @@ def real(*args, **kwargs):
     evaluator.set_coerce(coerce)
     evaluator.set_unicode_allowed(False)
     return convert_evaluator_payload(
-        <object> x, evaluator, PyNumberType.REAL, SENTINEL, SENTINEL, SENTINEL, None
+        <object> x, evaluator, UserType.REAL, SENTINEL, SENTINEL, SENTINEL, None
     )
 
 # PRIVATE FUNCTIONS
@@ -1335,7 +1336,7 @@ cdef validate_query_type(result, allowed_types):
 
 cdef object_is_number(
     obj,
-    const PyNumberType type,
+    const UserType type,
     int base,
     bint allow_nan,
     bint allow_inf,
@@ -1402,7 +1403,7 @@ cdef determine_failure_return_value(obj, bint raise_on_invalid, default):
 cdef convert_evaluator_payload(
     object obj,
     Evaluator & evaluator,
-    const PyNumberType ntype,
+    const UserType ntype,
     object infinity,
     object nan,
     object return_object,
@@ -1424,13 +1425,13 @@ cdef convert_evaluator_payload(
 
     # Level 1: If the payload contains an actual number,
     #          convert to PyObject directly
-    if ptype == PayloadType.INT:
+    if ptype == PayloadType.LONG:
         return payload.to_long()
 
-    elif ptype == PayloadType.FLOAT:
+    elif ptype == PayloadType.DOUBLE:
         return payload.to_double()
 
-    elif ptype == PayloadType.FLOAT_TO_INT:
+    elif ptype == PayloadType.DOUBLE_TO_LONG:
         return int(payload.to_double())
 
     # Level 2: We need to instruct Cython as to what action to take
@@ -1442,11 +1443,11 @@ cdef convert_evaluator_payload(
             return obj
 
         # Convert the given object to an integer
-        elif atype == ActionType.INT:
+        elif atype == ActionType.AS_INT:
             return int(obj)
 
         # Convert the given object to a float
-        elif atype == ActionType.FLOAT:
+        elif atype == ActionType.AS_FLOAT:
             return float(obj)
 
         # Attempt to convert the given object to an integer, handle errors

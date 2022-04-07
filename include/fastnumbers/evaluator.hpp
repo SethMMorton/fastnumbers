@@ -5,13 +5,22 @@
 
 #include <Python.h>
 
-#include "fastnumbers/options.h"
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
 
 
 // Size of the fix-with buffer
 constexpr Py_ssize_t FIXED_BUFFER_SIZE = 32;
+
+
+enum class UserType {
+    REAL,
+    FLOAT,
+    INT,
+    INTLIKE,
+    FORCEINT,
+};
+
 
 /**
  * \class Evaluator
@@ -82,7 +91,7 @@ public:
     ParserType parser_type() const { return parser.parser_type(); }
 
     /// Was the passed Python object of the correct type?
-    bool is_type(const PyNumberType ntype) const;
+    bool is_type(const UserType ntype) const;
 
     /// Is the stored type a float? Account for nan_action and inf_action.
     bool type_is_float() const {
@@ -104,7 +113,7 @@ public:
      * \param ntype PyNumberType indicating the desired type to check
      * \return Payload
      */
-    Payload as_type(const PyNumberType ntype);
+    Payload as_type(const UserType ntype);
 
 private:
     /// The Python object under evaluation
@@ -162,10 +171,10 @@ private:
     bool parse_unicode_to_char();
 
     /// Logic for evaluating a numeric python object
-    Payload from_numeric_as_type(const PyNumberType ntype);
+    Payload from_numeric_as_type(const UserType ntype);
 
     /// Logic for evaluating a text python object
-    Payload from_text_as_type(const PyNumberType ntype);
+    Payload from_text_as_type(const UserType ntype);
 
     /// Logic for evaluating a text python object as a float or integer
     Payload from_text_as_int_or_float(const bool force_int);
