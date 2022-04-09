@@ -320,25 +320,16 @@ bool Evaluator::extract_from_buffer()
         // adding more operations for a low probability event, a copy of the
         // slice will be made here and null termination will be added.
         // If the data amount is small enough, we use a fixed-sized buffer for speed.
-        const char* str = nullptr;
-        std::size_t str_len = 0;
-        if (view.len + 1 < FIXED_BUFFER_SIZE) {
-            std::memcpy(fixed_buffer, (char *) view.buf, view.len);
-            fixed_buffer[view.len] = '\0';
-            str = fixed_buffer;
-        } else {
-            variable_buffer.reserve(view.len + 1);
-            std::memcpy(variable_buffer.data(), (char *) view.buf, view.len);
-            variable_buffer[view.len] = '\0';
-            str = variable_buffer.data();
-        }
-        str_len = view.len;
+        const std::size_t str_len = view.len;
+        char_buffer = new Buffer(static_cast<char *>(view.buf), str_len);
+        char* buffer = char_buffer->get();
+        buffer[str_len] = '\0';
 
         // All we care about is the underlying buffer data, not the obj
         // which was allocated when we created the buffer. For this reason
         // it is safe to release the buffer here.
         PyBuffer_Release(&view);
-        parser.set_input(str, str_len);
+        parser.set_input(buffer, str_len);
         return true;
     }
     return false;
@@ -358,8 +349,10 @@ bool Evaluator::parse_unicode_to_char()
     // If true, then not OK for conversion.
     // In that case just store as a 0-length string.
     if (PyUnicode_READY(obj)) {
-        fixed_buffer[0] = '\0';
-        parser.set_input(fixed_buffer, 0);
+        char_buffer = new Buffer(0);
+        char* buffer = char_buffer->get();
+        buffer[0] = '\0';
+        parser.set_input(buffer, 0);
         return true;
     }
 
@@ -388,14 +381,9 @@ bool Evaluator::parse_unicode_to_char()
 
     // Allocate space for the character data, but use a small fixed size
     // buffer if the data is small enough. Ensure a trailing null character.
-    char* buffer = nullptr;
+    char_buffer = new Buffer(len + (sign ? 1 : 0) + 1);
+    char* buffer = char_buffer->get();
     std::size_t buffer_index = 0;
-    if (len + (sign ? 1 : 0) + 1 > FIXED_BUFFER_SIZE) {
-        variable_buffer.reserve(len + (sign ? 1 : 0) + 1);
-        buffer = variable_buffer.data();
-    } else {
-        buffer = fixed_buffer;
-    }
 
     // If the string had a sign, add it back to the front of the buffer
     if (sign) {
@@ -413,9 +401,9 @@ bool Evaluator::parse_unicode_to_char()
     for (; index < data_len; index++) {
         const Py_UCS4 u = (Py_UCS4) PyUnicode_READ(kind, data, index);
         if (u < ASCII_MAX) {
-            buffer[buffer_index] = (char) u;
+            buffer[buffer_index] = static_cast<char>(u);
         } else if ((u_as_decimal = Py_UNICODE_TODECIMAL(u)) > -1) {
-            buffer[buffer_index] = '0' + (char) u_as_decimal;
+            buffer[buffer_index] = '0' + static_cast<char>(u_as_decimal);
         } else if (Py_UNICODE_ISSPACE(u)) {
             buffer[buffer_index] = ' ';
         } else {

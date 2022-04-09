@@ -1,16 +1,11 @@
 #pragma once
 
 #include <climits>
-#include <vector>
 
 #include <Python.h>
 
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
-
-
-// Size of the fix-with buffer
-constexpr Py_ssize_t FIXED_BUFFER_SIZE = 32;
 
 
 /// The conversion the user has requested
@@ -33,13 +28,12 @@ public:
     /// Constructor from a Python object
     explicit Evaluator(PyObject* obj)
         : obj(obj)
-        , fixed_buffer()
-        , variable_buffer()
         , coerce(false)
         , nan_allowed(false)
         , inf_allowed(false)
         , unicode_allowed(true)
         , parser()
+        , char_buffer(nullptr)
     {
         evaluate_stored_object();
     }
@@ -49,7 +43,10 @@ public:
     Evaluator(const Evaluator&) = delete;
     Evaluator(Evaluator&&) = delete;
     Evaluator& operator=(const Evaluator&) = delete;
-    ~Evaluator() { Py_XDECREF(obj); }
+    ~Evaluator() {
+        Py_XDECREF(obj);
+        delete char_buffer;
+    }
 
     /// Assign a new object to analyze
     void set_object(PyObject* obj) {
@@ -120,12 +117,6 @@ private:
     /// The Python object under evaluation
     PyObject* obj;
 
-    /// A string buffer of fixed size, in case data must be copied
-    char fixed_buffer[FIXED_BUFFER_SIZE];
-
-    /// A string buffer of variable size, in case large data must be copied
-    std::vector<char> variable_buffer;
-
     /// Whether or not floats should be coerced to integers if user wants REAL
     bool coerce;
 
@@ -140,6 +131,9 @@ private:
 
     /// A Parser object used for evaluating the Python object
     Parser parser;
+
+    /// Buffer object into which to store character data
+    Buffer *char_buffer;
 
 private:
     /// Generate a Parser object from Python object data

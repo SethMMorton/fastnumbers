@@ -1,8 +1,14 @@
 #pragma once
 
 #include <cmath>
+#include <cstring>
+#include <vector>
 
 #include <Python.h>
+
+
+// Size of the fix-with buffer
+constexpr Py_ssize_t FIXED_BUFFER_SIZE = 32;
 
 
 /// Possible types of Parser objects
@@ -65,7 +71,7 @@ public:
      * \param str The character array to be parsed
      * \param len The length of the character array
      */
-    void set_input(const char* str, const size_t len);
+    void set_input(const char* str, const std::size_t len);
 
     /// Tell the analyzer the base to use when parsing ints
     void set_base(const int base) {
@@ -246,4 +252,65 @@ private:
     /// The struct providing access to numeric dunder methods
     PyNumberMethods *nmeth;
 
+};
+
+
+/**
+ * \class Buffer
+ * \brief A buffer of character data
+ */
+class Buffer {
+public:
+    /// Allocate buffer space
+    Buffer(const std::size_t needed_length)
+        : fixed_buffer()
+        , variable_buffer()
+        , buffer(nullptr)
+    {
+        if (needed_length + 1 < FIXED_BUFFER_SIZE) {
+            buffer = fixed_buffer;
+        } else {
+            variable_buffer.reserve(needed_length + 1);
+            buffer = variable_buffer.data();
+        }
+    }
+
+    /// Allocate buffer space and copy data into it
+    Buffer(const char* data, const std::size_t length)
+        : Buffer(length)
+    {
+        copy(data, length);
+    }
+
+    Buffer(const Buffer&) = default;
+    Buffer(Buffer&&) = default;
+    Buffer& operator=(const Buffer&) = default;
+    ~Buffer() = default;
+
+    /// Return the start of the buffer
+    char* get() { return buffer; }
+
+    /// Update where the start of the buffer should point
+    void update(char* str) { buffer = str; }
+
+    /// Update where the start of the buffer should point
+    void update(const char* str) { update(const_cast<char*>(str)); }
+
+    /// Copy data into the buffer
+    void copy(const char* data, const std::size_t length) {
+        std::memcpy(buffer, data, length);
+    }
+
+private:
+    /// Size of the fix-with buffer
+    static const std::size_t FIXED_BUFFER_SIZE = 32;
+
+    /// A string buffer of fixed size, in case data must be copied
+    char fixed_buffer[FIXED_BUFFER_SIZE];
+
+    /// A string buffer of variable size, in case large data must be copied
+    std::vector<char> variable_buffer;
+
+    /// Pointer to the character buffer being used
+    char* buffer;
 };
