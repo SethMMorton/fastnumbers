@@ -29,6 +29,7 @@ void Parser::set_input(PyObject* obj)
     }
 }
 
+
 void Parser::set_input(const Py_UCS4 uchar, const bool negative)
 {
     // Clear any previous stored data
@@ -51,7 +52,6 @@ void Parser::set_input(const Py_UCS4 uchar, const bool negative)
     this->uchar = uchar;
     this->negative = negative;
 }
-
 
 
 void Parser::set_input(const char* str, const std::size_t len)
@@ -113,13 +113,24 @@ long Parser::as_int() {
         {
             if (is_likely_int(start, str_len)) {
                 if (int_might_overflow(start, str_len)) {
-                    encountered_potential_overflow_error();
+                    if (has_invalid_underscores()) {
+                        encountered_conversion_error();
+                    } else {
+                        encountered_potential_overflow_error();
+                    }
                     return -1L;
                 }
                 bool error = false;
-                const long result = parse_int(start, end(), error);
+                long result = parse_int(start, end(), error);
                 if (not error) {
                     return sign() * result;
+                } else if (has_valid_underscores()) {
+                    Buffer buffer(start, str_len);
+                    buffer.remove_valid_underscores();
+                    result = parse_int(buffer.start(), buffer.end(), error);
+                    if (not error) {
+                        return sign() * result;
+                    }
                 }
             }
         }
@@ -157,13 +168,24 @@ double Parser::as_float() {
         {
             if (is_likely_float(start, str_len)) {
                 if (float_might_overflow(start, str_len)) {
-                    encountered_potential_overflow_error();
+                    if (has_invalid_underscores()) {
+                        encountered_conversion_error();
+                    } else {
+                        encountered_potential_overflow_error();
+                    }
                     return -1L;
                 }
                 bool error = false;
-                const double result = parse_float(start, end(), error);
+                double result = parse_float(start, end(), error);
                 if (not error) {
                     return sign() * result;
+                } else if (has_valid_underscores()) {
+                    Buffer buffer(start, str_len);
+                    buffer.remove_valid_underscores();
+                    result = parse_float(buffer.start(), buffer.end(), error);
+                    if (not error) {
+                        return sign() * result;
+                    }
                 }
             }
         }
@@ -248,7 +270,15 @@ bool Parser::is_real() const {
 bool Parser::is_float() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_float(start, end());
+        if (string_contains_float(start, end())) {
+            return true;
+        } else if (has_valid_underscores()) {
+            Buffer buffer(start, str_len);
+            buffer.remove_valid_underscores();
+            return string_contains_float(buffer.start(), buffer.end());
+        } else {
+            return false;
+        }
     case ParserType::UNICODE:
         return number_type != NumberType::NOT_FLOAT_OR_INT and
                number_type != NumberType::SPECIAL_NUMERIC;
@@ -263,7 +293,15 @@ bool Parser::is_float() const {
 bool Parser::is_int() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_int(start, end(), base);
+        if (string_contains_int(start, end(), base)) {
+            return true;
+        } else if (has_valid_underscores()) {
+            Buffer buffer(start, str_len);
+            buffer.remove_valid_underscores(not is_default_base());
+            return string_contains_int(buffer.start(), buffer.end(), base);
+        } else {
+            return false;
+        }
     default:
         return number_type == NumberType::INT;
     }
@@ -273,7 +311,15 @@ bool Parser::is_int() const {
 bool Parser::is_intlike() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_intlike_float(start, end());
+        if (string_contains_intlike_float(start, end())) {
+            return true;
+        } else if (has_valid_underscores()) {
+            Buffer buffer(start, str_len);
+            buffer.remove_valid_underscores();
+            return string_contains_intlike_float(buffer.start(), buffer.end());
+        } else {
+            return false;
+        }
     default:
         switch (number_type) {
         case NumberType::INT:
@@ -288,4 +334,12 @@ bool Parser::is_intlike() const {
             return false;
         }
     }
+}
+
+
+void Buffer::remove_valid_underscores(const bool based)
+{
+    const char* new_end = end();
+    ::remove_valid_underscores(start(), new_end, based);
+    len = new_end - start();
 }

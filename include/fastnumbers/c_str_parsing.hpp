@@ -59,6 +59,23 @@ bool string_contains_float(const char *str, const char *end);
 bool string_contains_intlike_float(const char *str, const char *end);
 
 
+/** 
+ * \brief Remove underscores in a numeric-representing string
+ * 
+ * Assumes the input can ba modified.
+ * 
+ * In a generic number, valid underscores are between two digits.
+ * A "based" number is necessarily an int, and in those cases the
+ * definition of a valid underscore is a bit less well-defined.
+ *
+ * \param str The string from which to remove underscores
+ * \param end Reference to the end of the string - after processing will
+ *            point to the new end of the string
+ * \param based Whether or not the string contains a non-base-10 integer
+ */
+void remove_valid_underscores(char *str, const char *&end, const bool based);
+
+
 /**
  * \brief Maximum number of digits we allow in an integer for conversion
  * 

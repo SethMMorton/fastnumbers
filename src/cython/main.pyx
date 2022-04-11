@@ -39,6 +39,7 @@ cdef extern from "fastnumbers/evaluator.hpp":
         void set_inf_allowed(bint)
         void set_base(int)
         void set_unicode_allowed(bint)
+        void set_underscores_allowed(bint)
         object get_object()
         int get_base()
         bint is_default_base()
@@ -259,6 +260,7 @@ def fast_real(
     cdef Evaluator evaluator
     evaluator.set_object(x)
     evaluator.set_coerce(coerce)
+    evaluator.set_underscores_allowed(allow_underscores)
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
@@ -401,6 +403,7 @@ def fast_float(
     """
     cdef Evaluator evaluator
     evaluator.set_object(x)
+    evaluator.set_underscores_allowed(allow_underscores)
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
@@ -529,6 +532,7 @@ def fast_int(
     evaluator.set_object(x)
     evaluator.set_base(validate_integer_base(base))
     evaluator.set_unicode_allowed(evaluator.is_default_base())
+    evaluator.set_underscores_allowed(allow_underscores)
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
@@ -658,6 +662,7 @@ def fast_forceint(
     """
     cdef Evaluator evaluator
     evaluator.set_object(x)
+    evaluator.set_underscores_allowed(allow_underscores)
     on_fail = on_fail_backwards_compatibility(on_fail, key)
     on_invalid_return = determine_failure_return_value(x, raise_on_invalid, default)
     return convert_evaluator_payload(
@@ -773,6 +778,7 @@ def isreal(
         allow_inf,
         str_only,
         num_only,
+        allow_underscores,
     )
 
 
@@ -885,6 +891,7 @@ def isfloat(
         allow_inf,
         str_only,
         num_only,
+        allow_underscores,
     )
 
 
@@ -980,6 +987,7 @@ def isint(
         False,
         str_only,
         num_only,
+        allow_underscores,
     )
 
 
@@ -1083,6 +1091,7 @@ def isintlike(
         False,
         str_only,
         num_only,
+        allow_underscores,
     )
 
 
@@ -1176,6 +1185,7 @@ def query_type(
     cdef Evaluator evaluator
     evaluator.set_object(x)
     evaluator.set_coerce(coerce)
+    evaluator.set_underscores_allowed(allow_underscores)
     if evaluator.parser_type() == ParserType.NUMERIC:
         evaluator.set_nan_allowed(True)
         evaluator.set_inf_allowed(True)
@@ -1342,6 +1352,7 @@ cdef object_is_number(
     bint allow_inf,
     bint str_only,
     bint num_only,
+    bint allow_underscores,
 ):
     """Check if an arbitrary PyObject is a PyNumber."""
 
@@ -1351,6 +1362,7 @@ cdef object_is_number(
     evaluator.set_base(base)
     evaluator.set_nan_allowed(allow_nan)
     evaluator.set_inf_allowed(allow_inf)
+    evaluator.set_underscores_allowed(allow_underscores)
 
     # If the user explictly asked to disallow some types, check that here.
     cdef ParserType ptype = evaluator.parser_type()

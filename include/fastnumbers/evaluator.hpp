@@ -85,6 +85,11 @@ public:
     /// Was the default base given?
     bool is_default_base() const { return parser.is_default_base(); }
 
+    /// Tell the analyzer whether or not underscores are allowed when parsing
+    void set_underscores_allowed(const bool underscores_allowed) {
+        parser.set_allow_underscores(underscores_allowed);
+    }
+
     /// Return the parser type currenly associated with the Evaluator
     ParserType parser_type() const { return parser.parser_type(); }
 

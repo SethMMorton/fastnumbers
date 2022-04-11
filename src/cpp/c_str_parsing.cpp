@@ -235,7 +235,7 @@ bool float_might_overflow(const char *start, const std::size_t len)
     const char *exp = NULL;
     const char *stop = decimal_loc ? decimal_loc : start;
     for (ptr = start + len - 1; ptr > stop; ptr--) {
-        if (*ptr == 'e' || *ptr == 'E') {
+        if (*ptr == 'e' or *ptr == 'E') {
             exp = ptr;
             break;
         }
@@ -265,6 +265,88 @@ bool float_might_overflow(const char *start, const std::size_t len)
 
     // Won't overflow
     return false;
+}
+
+
+void remove_valid_underscores(char *str, const char *&end, const bool based)
+{
+    const std::size_t len = end - str;
+    std::size_t i, offset;
+
+    // The method that will be used to remove underscores is to
+    // traverse the character array, and when a valid underscore
+    // is found all characters will be shifted one to the left in
+    // order to remove that underscore. Extra characters at the
+    // end of the character array will be overwritten with \0.
+
+    // For non-based strings, parsing is "simple" -
+    // a valid underscore is surrounded by two numbers.
+    if (!based) {
+        for (i = offset = 0; i < len; i++) {
+            if (str[i] == '_' and i > 0 and i < len - 1 and
+                    is_valid_digit(str[i - 1]) and
+                    is_valid_digit(str[i + 1])) {
+                offset += 1;
+                continue;
+            }
+            if (offset) {
+                str[i - offset] = str[i];
+            }
+        }
+    }
+
+    // For based strings we must incorporate some state at the
+    // beginning of the string before the more simple "surrounded
+    // by two numbers" algorithm kicks in.
+    else {
+        i = offset = 0;
+        if (is_sign(*str)) {
+            i += 1;
+        }
+        // Skip leading characters for non-base 10 ints.
+        if ((len - i) > 1 and str[i] == '0' and
+                (((str[i + 1] == 'x' or str[i + 1] == 'X')) or
+                 ((str[i + 1] == 'o' or str[i + 1] == 'O')) or
+                 ((str[i + 1] == 'b' or str[i + 1] == 'B')))) {
+            // An underscore after the prefix is allowed, e.g. 0x_d4.
+            if ((len - i > 2) and str[i + 2] == '_') {
+                i += 3;
+                offset += 1;
+            }
+            else {
+                i += 2;
+            }
+        }
+        // No underscore in the base selector, e.g. 0_b0 is invalid.
+        else if ((len - i) > 2 and str[i] == '0' and str[i + 1] == '_' and
+                 (((str[i + 2] == 'x' or str[i + 2] == 'X')) or
+                  ((str[i + 2] == 'o' or str[i + 2] == 'O')) or
+                  ((str[i + 2] == 'b' or str[i + 2] == 'B')))) {
+            i += 3;
+        }
+
+        // Now search for simpler valid underscores.
+        // use hex as the base because it is the most inclusive.
+        for (; i < len; i++) {
+            if (str[i] == '_' and i > 0 and i < len - 1 and
+                    is_valid_digit_arbitrary_base(str[i - 1], 16) and
+                    is_valid_digit_arbitrary_base(str[i + 1], 16)) {
+                offset += 1;
+                continue;
+            }
+            if (offset) {
+                str[i - offset] = str[i];
+            }
+        }
+    }
+
+    // Update the end position.
+    end = str + (i - offset);
+
+    // Fill the trailing data with nul characters.
+    for (i = len - offset; i < len; i++) {
+        str[i] = '\0';
+    }
 }
 
 

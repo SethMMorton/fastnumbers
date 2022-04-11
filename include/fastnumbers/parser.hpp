@@ -44,6 +44,7 @@ public:
         , base(10)
         , default_base(true)
         , errcode(0)
+        , underscore_allowed(true)
     {}
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
@@ -85,6 +86,12 @@ public:
     /// Was the default base given?
     bool is_default_base() const { return default_base; }
 
+    /// Define whether or not underscores are allowed
+    void set_allow_underscores(const bool val) { underscore_allowed = val; }
+
+    /// Are underscores allowed?
+    bool are_underscores_allowed() const { return underscore_allowed; }
+
     /// Convert the stored object to a long (-1 if not possible, check error state)
     long as_int();
 
@@ -96,9 +103,6 @@ public:
 
     /// Whether the last conversion potentially had an overflow
     bool potential_overflow() const { return errcode == 2; }
-
-    /// Whether the last conversion encountered an underscore
-    bool underscore_error() const { return errcode < 0; }
 
     /// Was the passed Python object a user class with __float__ or __int__?
     bool is_special_numeric() const {
@@ -192,6 +196,9 @@ private:
     /// Track if a number conversion failed.
     int errcode;
 
+    /// Whether or not underscores are allowed when parsing
+    bool underscore_allowed;
+
 private:
     /// Reset the Parser object to the uninitialized state
     void reset() {
@@ -211,6 +218,22 @@ private:
     /// Integer that can be used to apply the sign of the number in the text
     int sign() const { return negative ? -1 : 1; }
 
+    /// Check if the character array contains valid underscores
+    bool has_valid_underscores() const {
+        return start != nullptr
+            and are_underscores_allowed()
+            and str_len > 0
+            and std::memchr(start, '_', str_len);
+    }
+
+    /// Check if the character array contains invalid underscores
+    bool has_invalid_underscores() const {
+        return start != nullptr
+            and not are_underscores_allowed()
+            and str_len > 0
+            and std::memchr(start, '_', str_len);
+    }
+
     /// The end of the stored character array
     const char* end() const { return start == nullptr ? nullptr : (start + str_len); }
 
@@ -219,9 +242,6 @@ private:
 
     /// Record that the conversion encountered a potential overflow
     void encountered_potential_overflow_error() { errcode = 2; }
-
-    /// Record that the conversion encountered an underscore
-    void encountered_underscore_in_conversion() { errcode = -1; }
 
     /// Forget any tracked error code
     void unset_error_code() { errcode = 0; }
@@ -300,6 +320,12 @@ public:
     /// Return the length of the buffer
     std::size_t length() { return len; }
 
+    /// Remove underscores that are syntactically valid in a number
+    void remove_valid_underscores() { remove_valid_underscores(false); }
+
+    /// Remove underscores that are syntactically valid in a number,
+    /// possibly accounting for non-base-10 integers
+    void remove_valid_underscores(const bool based);
 
 private:
     /// Size of the fix-with buffer
