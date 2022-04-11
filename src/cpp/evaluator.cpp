@@ -322,14 +322,13 @@ bool Evaluator::extract_from_buffer()
         // If the data amount is small enough, we use a fixed-sized buffer for speed.
         const std::size_t str_len = view.len;
         char_buffer = new Buffer(static_cast<char *>(view.buf), str_len);
-        char* buffer = char_buffer->get();
-        buffer[str_len] = '\0';
+        char_buffer->start()[str_len] = '\0';
 
         // All we care about is the underlying buffer data, not the obj
         // which was allocated when we created the buffer. For this reason
         // it is safe to release the buffer here.
         PyBuffer_Release(&view);
-        parser.set_input(buffer, str_len);
+        parser.set_input(char_buffer->start(), str_len);
         return true;
     }
     return false;
@@ -350,9 +349,8 @@ bool Evaluator::parse_unicode_to_char()
     // In that case just store as a 0-length string.
     if (PyUnicode_READY(obj)) {
         char_buffer = new Buffer(0);
-        char* buffer = char_buffer->get();
-        buffer[0] = '\0';
-        parser.set_input(buffer, 0);
+        char_buffer->start()[0] = '\0';
+        parser.set_input(char_buffer->start(), 0);
         return true;
     }
 
@@ -382,7 +380,7 @@ bool Evaluator::parse_unicode_to_char()
     // Allocate space for the character data, but use a small fixed size
     // buffer if the data is small enough. Ensure a trailing null character.
     char_buffer = new Buffer(len + (sign ? 1 : 0) + 1);
-    char* buffer = char_buffer->get();
+    char* buffer = char_buffer->start();
     std::size_t buffer_index = 0;
 
     // If the string had a sign, add it back to the front of the buffer

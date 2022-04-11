@@ -69,7 +69,7 @@ void Parser::set_input(const char* str, const std::size_t len)
 
     // Store the start and end point of the character array
     start = str;
-    end = str + len;
+    const char* end = str + len;
 
     // Strip leading whitespace
     while (is_whitespace(*start)) {
@@ -82,7 +82,7 @@ void Parser::set_input(const char* str, const std::size_t len)
     // backwards, then push the end pointer up one
     // as if there were still a '\0' character.
     end -= 1;
-    while (is_whitespace(*end) and start != end) {
+    while (is_whitespace(*end) and start < end) {
         end -= 1;
     }
     end += 1;
@@ -94,6 +94,10 @@ void Parser::set_input(const char* str, const std::size_t len)
         start += 1;
         negative = true;
     }
+
+    // Calculate the length of the string after accounting for
+    // whitespace and signs
+    str_len = end - start;
 }
 
 
@@ -107,13 +111,13 @@ long Parser::as_int() {
     switch (ptype) {
     case ParserType::CHARACTER:
         {
-            if (is_likely_int(start, end - start)) {
-                if (int_might_overflow(start, end)) {
+            if (is_likely_int(start, str_len)) {
+                if (int_might_overflow(start, str_len)) {
                     encountered_potential_overflow_error();
                     return -1L;
                 }
                 bool error = false;
-                const long result = parse_int(start, end, error);
+                const long result = parse_int(start, end(), error);
                 if (not error) {
                     return sign() * result;
                 }
@@ -151,13 +155,13 @@ double Parser::as_float() {
     switch (ptype) {
     case ParserType::CHARACTER:
         {
-            if (is_likely_float(start, end - start)) {
-                if (float_might_overflow(start, end - start)) {
+            if (is_likely_float(start, str_len)) {
+                if (float_might_overflow(start, str_len)) {
                     encountered_potential_overflow_error();
                     return -1L;
                 }
                 bool error = false;
-                const double result = parse_float(start, end, error);
+                const double result = parse_float(start, end(), error);
                 if (not error) {
                     return sign() * result;
                 }
@@ -209,7 +213,7 @@ bool Parser::is_finite() const {
 bool Parser::is_infinity() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return quick_detect_infinity(start, end - start);
+        return quick_detect_infinity(start, str_len);
     case ParserType::NUMERIC:
         return is_float() and std::isinf(PyFloat_AS_DOUBLE(obj));
     default:
@@ -221,7 +225,7 @@ bool Parser::is_infinity() const {
 bool Parser::is_nan() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return quick_detect_nan(start, end - start);
+        return quick_detect_nan(start, str_len);
     case ParserType::NUMERIC:
         return is_float() and std::isnan(PyFloat_AS_DOUBLE(obj));
     default:
@@ -244,7 +248,7 @@ bool Parser::is_real() const {
 bool Parser::is_float() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_float(start, end);
+        return string_contains_float(start, end());
     case ParserType::UNICODE:
         return number_type != NumberType::NOT_FLOAT_OR_INT and
                number_type != NumberType::SPECIAL_NUMERIC;
@@ -259,7 +263,7 @@ bool Parser::is_float() const {
 bool Parser::is_int() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_int(start, end, base);
+        return string_contains_int(start, end(), base);
     default:
         return number_type == NumberType::INT;
     }
@@ -269,7 +273,7 @@ bool Parser::is_int() const {
 bool Parser::is_intlike() const {
     switch (ptype) {
     case ParserType::CHARACTER:
-        return string_contains_intlike_float(start, end);
+        return string_contains_intlike_float(start, end());
     default:
         switch (number_type) {
         case NumberType::INT:

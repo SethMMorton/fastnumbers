@@ -40,7 +40,7 @@ public:
         , numeric_uchar(-1.0)
         , digit_uchar(-1L)
         , start(nullptr)
-        , end(nullptr)
+        , str_len(0)
         , base(10)
         , default_base(true)
         , errcode(0)
@@ -180,8 +180,8 @@ private:
     /// The potential start of the character array
     const char* start;
 
-    /// The potential end of the character array
-    const char* end;
+    /// The potential length of the character array
+    std::size_t str_len;
 
     /// The desired base of integers when parsing
     int base;
@@ -204,12 +204,15 @@ private:
         numeric_uchar = -1.0;
         digit_uchar = -1L;
         start = nullptr;
-        end = nullptr;
+        str_len = 0;
         unset_error_code();
     }
 
     /// Integer that can be used to apply the sign of the number in the text
     int sign() const { return negative ? -1 : 1; }
+
+    /// The end of the stored character array
+    const char* end() const { return start == nullptr ? nullptr : (start + str_len); }
 
     /// Record that the conversion encountered an error
     void encountered_conversion_error() { errcode = 1; }
@@ -266,11 +269,12 @@ public:
         : fixed_buffer()
         , variable_buffer()
         , buffer(nullptr)
+        , len(needed_length)
     {
-        if (needed_length + 1 < FIXED_BUFFER_SIZE) {
+        if (len + 1 < FIXED_BUFFER_SIZE) {
             buffer = fixed_buffer;
         } else {
-            variable_buffer.reserve(needed_length + 1);
+            variable_buffer.reserve(len + 1);
             buffer = variable_buffer.data();
         }
     }
@@ -279,7 +283,7 @@ public:
     Buffer(const char* data, const std::size_t length)
         : Buffer(length)
     {
-        copy(data, length);
+        std::memcpy(buffer, data, len);
     }
 
     Buffer(const Buffer&) = default;
@@ -288,18 +292,14 @@ public:
     ~Buffer() = default;
 
     /// Return the start of the buffer
-    char* get() { return buffer; }
+    char* start() { return buffer; }
 
-    /// Update where the start of the buffer should point
-    void update(char* str) { buffer = str; }
+    /// Return the end of the buffer
+    char* end() { return buffer + len; }
 
-    /// Update where the start of the buffer should point
-    void update(const char* str) { update(const_cast<char*>(str)); }
+    /// Return the length of the buffer
+    std::size_t length() { return len; }
 
-    /// Copy data into the buffer
-    void copy(const char* data, const std::size_t length) {
-        std::memcpy(buffer, data, length);
-    }
 
 private:
     /// Size of the fix-with buffer
@@ -313,4 +313,7 @@ private:
 
     /// Pointer to the character buffer being used
     char* buffer;
+
+    /// The length of the character array
+    std::size_t len;
 };

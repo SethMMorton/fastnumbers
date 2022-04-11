@@ -234,10 +234,10 @@ constexpr long FN_MIN_EXP = -22;
  * \brief Guess if an int will overflow.
  *
  * \param str The string to check, assumed to be non-NULL
- * \param end The end of the string being checked
+ * \param len The length of the string
  */
-inline bool int_might_overflow(const char* start, const char* end) {
-    return (end - start) > FN_MAX_INT_LEN;
+inline bool int_might_overflow(const char* start, const std::size_t len) {
+    return len > FN_MAX_INT_LEN;
 }
 
 
