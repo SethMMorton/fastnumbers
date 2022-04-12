@@ -261,7 +261,7 @@ class GeneralFloatCases(unittest.TestCase):
                     return self.value
 
             self.assertEqual(float(MyIndex(42)), 42.0)
-            self.assertRaises(OverflowError, float, MyIndex(2 ** 2000))
+            self.assertRaises(OverflowError, float, MyIndex(2**2000))
 
             class MyInt:
                 def __int__(self) -> int:

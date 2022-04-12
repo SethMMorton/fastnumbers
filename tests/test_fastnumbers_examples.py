@@ -93,10 +93,10 @@ def test_fast_real() -> None:
     with raises(ValueError):
         assert fastnumbers.fast_real("invalid", 90, raise_on_invalid=True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_real(u"⑦") == 7
-    assert fastnumbers.fast_real(u"⁸") == 8
-    assert fastnumbers.fast_real(u"⅔") == 2.0 / 3.0
-    assert fastnumbers.fast_real(u"Ⅴ") == 5
+    assert fastnumbers.fast_real("⑦") == 7
+    assert fastnumbers.fast_real("⁸") == 8
+    assert fastnumbers.fast_real("⅔") == 2.0 / 3.0
+    assert fastnumbers.fast_real("Ⅴ") == 5
     # 19. Function to execute on failure to convert
     assert fastnumbers.fast_real("76.8", on_fail=len) == 76.8
     assert fastnumbers.fast_real("invalid", on_fail=len) == 7
@@ -161,10 +161,10 @@ def test_fast_float() -> None:
     with raises(ValueError):
         assert fastnumbers.fast_float("invalid", 90, raise_on_invalid=True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_float(u"⑦") == 7.0
-    assert fastnumbers.fast_float(u"⁸") == 8.0
-    assert fastnumbers.fast_float(u"⅔") == 2.0 / 3.0
-    assert fastnumbers.fast_float(u"Ⅴ") == 5.0
+    assert fastnumbers.fast_float("⑦") == 7.0
+    assert fastnumbers.fast_float("⁸") == 8.0
+    assert fastnumbers.fast_float("⅔") == 2.0 / 3.0
+    assert fastnumbers.fast_float("Ⅴ") == 5.0
     # 19. Function to execute on failure to convert
     assert fastnumbers.fast_float("76.8", on_fail=len) == 76.8
     assert fastnumbers.fast_float("invalid", on_fail=len) == 7
@@ -222,11 +222,11 @@ def test_fast_int() -> None:
     with raises(ValueError):
         assert fastnumbers.fast_int("invalid", 90, raise_on_invalid=True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_int(u"⑦") == 7
-    assert fastnumbers.fast_int(u"⁸") == 8
-    assert fastnumbers.fast_int(u"⁸", base=10) == u"⁸"
-    assert fastnumbers.fast_int(u"⅔") == u"⅔"
-    assert fastnumbers.fast_int(u"Ⅴ") == u"Ⅴ"
+    assert fastnumbers.fast_int("⑦") == 7
+    assert fastnumbers.fast_int("⁸") == 8
+    assert fastnumbers.fast_int("⁸", base=10) == "⁸"
+    assert fastnumbers.fast_int("⅔") == "⅔"
+    assert fastnumbers.fast_int("Ⅴ") == "Ⅴ"
     # 19. Function to execute on failure to convert
     assert fastnumbers.fast_int("76", on_fail=len) == 76
     assert fastnumbers.fast_int("invalid", on_fail=len) == 7
@@ -285,10 +285,10 @@ def test_fast_forceint() -> None:
     with raises(ValueError):
         assert fastnumbers.fast_forceint("invalid", 90, raise_on_invalid=True)
     # 18. Unicode numbers
-    assert fastnumbers.fast_forceint(u"⑦") == 7
-    assert fastnumbers.fast_forceint(u"⁸") == 8
-    assert fastnumbers.fast_forceint(u"⅔") == 0
-    assert fastnumbers.fast_forceint(u"Ⅴ") == 5
+    assert fastnumbers.fast_forceint("⑦") == 7
+    assert fastnumbers.fast_forceint("⁸") == 8
+    assert fastnumbers.fast_forceint("⅔") == 0
+    assert fastnumbers.fast_forceint("Ⅴ") == 5
     # 19. Function to execute on failure to convert
     assert fastnumbers.fast_forceint("76.8", on_fail=len) == 76
     assert fastnumbers.fast_forceint("invalid", on_fail=len) == 7
@@ -344,10 +344,10 @@ def test_isreal() -> None:
     assert not fastnumbers.isreal("e8")
     assert not fastnumbers.isreal(".")
     # 18. Unicode numbers
-    assert fastnumbers.isreal(u"⑦")
-    assert fastnumbers.isreal(u"⁸")
-    assert fastnumbers.isreal(u"⅔")
-    assert fastnumbers.isreal(u"Ⅴ")
+    assert fastnumbers.isreal("⑦")
+    assert fastnumbers.isreal("⁸")
+    assert fastnumbers.isreal("⅔")
+    assert fastnumbers.isreal("Ⅴ")
 
 
 def test_isfloat() -> None:
@@ -401,10 +401,10 @@ def test_isfloat() -> None:
     assert not fastnumbers.isfloat("e8")
     assert not fastnumbers.isfloat(".")
     # 18. Unicode numbers
-    assert fastnumbers.isfloat(u"⑦")
-    assert fastnumbers.isfloat(u"⁸")
-    assert fastnumbers.isfloat(u"⅔")
-    assert fastnumbers.isfloat(u"Ⅴ")
+    assert fastnumbers.isfloat("⑦")
+    assert fastnumbers.isfloat("⁸")
+    assert fastnumbers.isfloat("⅔")
+    assert fastnumbers.isfloat("Ⅴ")
 
 
 def test_isint() -> None:
@@ -454,10 +454,10 @@ def test_isint() -> None:
     assert not fastnumbers.isint("e8")
     assert not fastnumbers.isint(".")
     # 18. Unicode numbers
-    assert fastnumbers.isint(u"⑦")
-    assert fastnumbers.isint(u"⁸")
-    assert not fastnumbers.isint(u"⅔")
-    assert not fastnumbers.isint(u"Ⅴ")
+    assert fastnumbers.isint("⑦")
+    assert fastnumbers.isint("⁸")
+    assert not fastnumbers.isint("⅔")
+    assert not fastnumbers.isint("Ⅴ")
 
 
 def test_isintlike() -> None:
@@ -515,10 +515,10 @@ def test_isintlike() -> None:
     assert not fastnumbers.isintlike("e8")
     assert not fastnumbers.isintlike(".")
     # 18. Unicode numbers
-    assert fastnumbers.isintlike(u"⑦")
-    assert fastnumbers.isintlike(u"⁸")
-    assert not fastnumbers.isintlike(u"⅔")
-    assert fastnumbers.isintlike(u"Ⅴ")
+    assert fastnumbers.isintlike("⑦")
+    assert fastnumbers.isintlike("⁸")
+    assert not fastnumbers.isintlike("⅔")
+    assert fastnumbers.isintlike("Ⅴ")
 
 
 def test_type() -> None:
@@ -568,10 +568,10 @@ def test_type() -> None:
     assert fastnumbers.query_type("e8") is str
     assert fastnumbers.query_type(".") is str
     # 18. Unicode numbers
-    assert fastnumbers.query_type(u"⑦") is int
-    assert fastnumbers.query_type(u"⁸") is int
-    assert fastnumbers.query_type(u"⅔") is float
-    assert fastnumbers.query_type(u"Ⅴ") is float
+    assert fastnumbers.query_type("⑦") is int
+    assert fastnumbers.query_type("⁸") is int
+    assert fastnumbers.query_type("⅔") is float
+    assert fastnumbers.query_type("Ⅴ") is float
 
 
 @pytest.fixture()

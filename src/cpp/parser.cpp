@@ -1,7 +1,6 @@
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/c_str_parsing.hpp"
 
-
 void Parser::set_input(PyObject* obj)
 {
     // Clear any previous stored data
@@ -21,14 +20,12 @@ void Parser::set_input(PyObject* obj)
         } else if (NumericMethodsAnalyzer(obj).is_numeric()) {
             number_type = NumberType::SPECIAL_NUMERIC;
         }
-        
+
         // Store this object
         this->obj = obj;
         Py_IncRef(this->obj);
-
     }
 }
-
 
 void Parser::set_input(const Py_UCS4 uchar, const bool negative)
 {
@@ -52,7 +49,6 @@ void Parser::set_input(const Py_UCS4 uchar, const bool negative)
     this->uchar = uchar;
     this->negative = negative;
 }
-
 
 void Parser::set_input(const char* str, const std::size_t len)
 {
@@ -100,8 +96,8 @@ void Parser::set_input(const char* str, const std::size_t len)
     str_len = end - start;
 }
 
-
-long Parser::as_int() {
+long Parser::as_int()
+{
     // Reset any pre-existing error code
     unset_error_code();
 
@@ -109,32 +105,30 @@ long Parser::as_int() {
     // We do not intend to use the Parser to convert numeric objects, so
     // to enforce this we do not even implement that here.
     switch (ptype) {
-    case ParserType::CHARACTER:
-        {
-            if (is_likely_int(start, str_len)) {
-                if (int_might_overflow(start, str_len)) {
-                    if (has_invalid_underscores()) {
-                        encountered_conversion_error();
-                    } else {
-                        encountered_potential_overflow_error();
-                    }
-                    return -1L;
+    case ParserType::CHARACTER: {
+        if (is_likely_int(start, str_len)) {
+            if (int_might_overflow(start, str_len)) {
+                if (has_invalid_underscores()) {
+                    encountered_conversion_error();
+                } else {
+                    encountered_potential_overflow_error();
                 }
-                bool error = false;
-                long result = parse_int(start, end(), error);
+                return -1L;
+            }
+            bool error = false;
+            long result = parse_int(start, end(), error);
+            if (not error) {
+                return sign() * result;
+            } else if (has_valid_underscores()) {
+                Buffer buffer(start, str_len);
+                buffer.remove_valid_underscores();
+                result = parse_int(buffer.start(), buffer.end(), error);
                 if (not error) {
                     return sign() * result;
-                } else if (has_valid_underscores()) {
-                    Buffer buffer(start, str_len);
-                    buffer.remove_valid_underscores();
-                    result = parse_int(buffer.start(), buffer.end(), error);
-                    if (not error) {
-                        return sign() * result;
-                    }
                 }
             }
         }
-        break;
+    } break;
 
     case ParserType::UNICODE:
         switch (number_type) {
@@ -147,7 +141,6 @@ long Parser::as_int() {
 
     default:
         break;
-
     }
 
     // Any non-success above ends up here, record as failure
@@ -155,8 +148,8 @@ long Parser::as_int() {
     return -1L;
 }
 
-
-double Parser::as_float() {
+double Parser::as_float()
+{
     // Reset any pre-existing error code
     unset_error_code();
 
@@ -164,32 +157,30 @@ double Parser::as_float() {
     // We do not intend to use the Parser to convert numeric objects, so
     // to enforce this we do not even implement that here.
     switch (ptype) {
-    case ParserType::CHARACTER:
-        {
-            if (is_likely_float(start, str_len)) {
-                if (float_might_overflow(start, str_len)) {
-                    if (has_invalid_underscores()) {
-                        encountered_conversion_error();
-                    } else {
-                        encountered_potential_overflow_error();
-                    }
-                    return -1L;
+    case ParserType::CHARACTER: {
+        if (is_likely_float(start, str_len)) {
+            if (float_might_overflow(start, str_len)) {
+                if (has_invalid_underscores()) {
+                    encountered_conversion_error();
+                } else {
+                    encountered_potential_overflow_error();
                 }
-                bool error = false;
-                double result = parse_float(start, end(), error);
+                return -1L;
+            }
+            bool error = false;
+            double result = parse_float(start, end(), error);
+            if (not error) {
+                return sign() * result;
+            } else if (has_valid_underscores()) {
+                Buffer buffer(start, str_len);
+                buffer.remove_valid_underscores();
+                result = parse_float(buffer.start(), buffer.end(), error);
                 if (not error) {
                     return sign() * result;
-                } else if (has_valid_underscores()) {
-                    Buffer buffer(start, str_len);
-                    buffer.remove_valid_underscores();
-                    result = parse_float(buffer.start(), buffer.end(), error);
-                    if (not error) {
-                        return sign() * result;
-                    }
                 }
             }
         }
-        break;
+    } break;
 
     case ParserType::UNICODE:
         switch (number_type) {
@@ -204,7 +195,6 @@ double Parser::as_float() {
 
     default:
         break;
-
     }
 
     // Any non-success above ends up here, record as failure
@@ -212,16 +202,16 @@ double Parser::as_float() {
     return -1.0;
 }
 
-
-bool Parser::not_float_or_int() const {
+bool Parser::not_float_or_int() const
+{
     return not is_real();
 }
 
-
-bool Parser::is_finite() const {
+bool Parser::is_finite() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
-        return is_real() and not (is_infinity() or is_nan());
+        return is_real() and not(is_infinity() or is_nan());
     case ParserType::UNICODE:
         return is_real();
     case ParserType::NUMERIC:
@@ -231,8 +221,8 @@ bool Parser::is_finite() const {
     }
 }
 
-
-bool Parser::is_infinity() const {
+bool Parser::is_infinity() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
         return quick_detect_infinity(start, str_len);
@@ -243,8 +233,8 @@ bool Parser::is_infinity() const {
     }
 }
 
-
-bool Parser::is_nan() const {
+bool Parser::is_nan() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
         return quick_detect_nan(start, str_len);
@@ -255,19 +245,19 @@ bool Parser::is_nan() const {
     }
 }
 
-
-bool Parser::is_real() const {
+bool Parser::is_real() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
         return is_float();
     default:
-        return number_type != NumberType::NOT_FLOAT_OR_INT and
-               number_type != NumberType::SPECIAL_NUMERIC;
+        return number_type != NumberType::NOT_FLOAT_OR_INT
+            and number_type != NumberType::SPECIAL_NUMERIC;
     }
 }
 
-
-bool Parser::is_float() const {
+bool Parser::is_float() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
         if (string_contains_float(start, end())) {
@@ -280,8 +270,8 @@ bool Parser::is_float() const {
             return false;
         }
     case ParserType::UNICODE:
-        return number_type != NumberType::NOT_FLOAT_OR_INT and
-               number_type != NumberType::SPECIAL_NUMERIC;
+        return number_type != NumberType::NOT_FLOAT_OR_INT
+            and number_type != NumberType::SPECIAL_NUMERIC;
     case ParserType::NUMERIC:
         return number_type == NumberType::FLOAT;
     default:
@@ -289,8 +279,8 @@ bool Parser::is_float() const {
     }
 }
 
-
-bool Parser::is_int() const {
+bool Parser::is_int() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
         if (string_contains_int(start, end(), base)) {
@@ -307,8 +297,8 @@ bool Parser::is_int() const {
     }
 }
 
-
-bool Parser::is_intlike() const {
+bool Parser::is_intlike() const
+{
     switch (ptype) {
     case ParserType::CHARACTER:
         if (string_contains_intlike_float(start, end())) {
@@ -325,9 +315,8 @@ bool Parser::is_intlike() const {
         case NumberType::INT:
             return true;
         case NumberType::FLOAT: {
-            const double d = ptype == ParserType::UNICODE
-                           ? numeric_uchar
-                           : PyFloat_AS_DOUBLE(obj);
+            const double d
+                = ptype == ParserType::UNICODE ? numeric_uchar : PyFloat_AS_DOUBLE(obj);
             return float_is_intlike(d);
         }
         default:
@@ -335,7 +324,6 @@ bool Parser::is_intlike() const {
         }
     }
 }
-
 
 void Buffer::remove_valid_underscores(const bool based)
 {

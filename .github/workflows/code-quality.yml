@@ -24,11 +24,11 @@ jobs:
 
       - name: Install deps
         run: |
-          sudo apt-get install astyle
+          sudo apt-get install clang-format
           pip install black
 
       - name: Run formatting checks
-        run: python dev/check-formatting.py
+        run: python dev/formatting.py --check
 
   static-analysis:
     name: Static Analysis

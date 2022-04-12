@@ -7,16 +7,14 @@
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
 
-
 /// The conversion the user has requested
 enum class UserType {
-    REAL,      ///< Convert to/check a real
-    FLOAT,     ///< Convert to/check a float
-    INT,       ///< Convert to/check an int
-    INTLIKE,   ///< Check int-like
-    FORCEINT,  ///< Force conversion to int
+    REAL, ///< Convert to/check a real
+    FLOAT, ///< Convert to/check a float
+    INT, ///< Convert to/check an int
+    INTLIKE, ///< Check int-like
+    FORCEINT, ///< Force conversion to int
 };
-
 
 /**
  * \class Evaluator
@@ -24,7 +22,6 @@ enum class UserType {
  */
 class Evaluator {
 public:
-
     /// Constructor from a Python object
     explicit Evaluator(PyObject* obj)
         : obj(obj)
@@ -39,43 +36,40 @@ public:
     }
 
     // Other constructors, destructors, and assignment
-    Evaluator() : Evaluator(nullptr) {}
+    Evaluator()
+        : Evaluator(nullptr)
+    { }
     Evaluator(const Evaluator&) = delete;
     Evaluator(Evaluator&&) = delete;
     Evaluator& operator=(const Evaluator&) = delete;
-    ~Evaluator() {
+    ~Evaluator()
+    {
         Py_XDECREF(obj);
         delete char_buffer;
     }
 
     /// Assign a new object to analyze
-    void set_object(PyObject* obj) {
+    void set_object(PyObject* obj)
+    {
         this->obj = obj;
         evaluate_stored_object();
     }
 
     /// Tell the analyzer the base to use when parsing ints
-    void set_base(const int base) {
-        parser.set_base(base);
-    }
+    void set_base(const int base) { parser.set_base(base); }
 
     /// Tell the analyzer whether or not to coerce to int for REAL
-    void set_coerce(const bool coerce) {
-        this->coerce = coerce;
-    }
+    void set_coerce(const bool coerce) { this->coerce = coerce; }
 
     /// Tell the analyzer if NaN is allowed when type checking
-    void set_nan_allowed(const bool nan_allowed) {
-        this->nan_allowed = nan_allowed;
-    }
+    void set_nan_allowed(const bool nan_allowed) { this->nan_allowed = nan_allowed; }
 
     /// Tell the analyzer if infinity is allowed when type checking
-    void set_inf_allowed(const bool inf_allowed) {
-        this->inf_allowed = inf_allowed;
-    }
+    void set_inf_allowed(const bool inf_allowed) { this->inf_allowed = inf_allowed; }
 
     /// Tell the analyzer if unicode characters are allowed as input
-    void set_unicode_allowed(const bool unicode_allowed) {
+    void set_unicode_allowed(const bool unicode_allowed)
+    {
         this->unicode_allowed = unicode_allowed;
     }
 
@@ -86,7 +80,8 @@ public:
     bool is_default_base() const { return parser.is_default_base(); }
 
     /// Tell the analyzer whether or not underscores are allowed when parsing
-    void set_underscores_allowed(const bool underscores_allowed) {
+    void set_underscores_allowed(const bool underscores_allowed)
+    {
         parser.set_allow_underscores(underscores_allowed);
     }
 
@@ -97,16 +92,14 @@ public:
     bool is_type(const UserType ntype) const;
 
     /// Is the stored type a float? Account for nan_action and inf_action.
-    bool type_is_float() const {
+    bool type_is_float() const
+    {
         return (nan_allowed and parser.is_nan())
-            or (inf_allowed and parser.is_infinity())
-            or parser.is_float();
+            or (inf_allowed and parser.is_infinity()) or parser.is_float();
     }
 
     /// Is the stored type an integer? If coerce is true, is the type intlike?
-    bool type_is_int() const {
-        return coerce ? parser.is_intlike() : parser.is_int();
-    }
+    bool type_is_int() const { return coerce ? parser.is_intlike() : parser.is_int(); }
 
     /**
      * \brief Convert the stored object to the desired number type
@@ -138,11 +131,12 @@ private:
     Parser parser;
 
     /// Buffer object into which to store character data
-    Buffer *char_buffer;
+    Buffer* char_buffer;
 
 private:
     /// Generate a Parser object from Python object data
-    void evaluate_stored_object() {
+    void evaluate_stored_object()
+    {
         if (obj != nullptr) {
             Py_IncRef(obj);
             parser.set_input(obj);
@@ -184,5 +178,4 @@ private:
 
     /// Logic for evaluating a text python object as an int
     Payload from_text_as_int();
-
 };

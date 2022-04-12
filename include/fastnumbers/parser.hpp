@@ -6,28 +6,24 @@
 
 #include <Python.h>
 
-
 // Size of the fix-with buffer
 constexpr Py_ssize_t FIXED_BUFFER_SIZE = 32;
 
-
 /// Possible types of Parser objects
 enum class ParserType {
-    NUMERIC,    ///< The parser is handling numeric Python objects
-    UNICODE,    ///< The parser is handling single unicode characters
-    CHARACTER,  ///< The parser is handling C-style character arrays
-    UNKNOWN,    ///< The incoming object unknown to the parser
+    NUMERIC, ///< The parser is handling numeric Python objects
+    UNICODE, ///< The parser is handling single unicode characters
+    CHARACTER, ///< The parser is handling C-style character arrays
+    UNKNOWN, ///< The incoming object unknown to the parser
 };
-
 
 /**
  * \class Parser
  * \brief Flexible parser of various possible Python input types
- * 
+ *
  * Parses the input as a number.
  */
-class Parser
-{
+class Parser {
 public:
     // Constructors, destructors, and assignment
     // There is no constructor with arguments
@@ -45,11 +41,11 @@ public:
         , default_base(true)
         , errcode(0)
         , underscore_allowed(true)
-    {}
+    { }
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
     Parser& operator=(const Parser&) = default;
-    ~Parser()  { Py_XDECREF(obj); };
+    ~Parser() { Py_XDECREF(obj); };
 
     /// What type of parser is this?
     ParserType parser_type() const { return ptype; };
@@ -65,7 +61,7 @@ public:
      * \param uchar The unicode character to be parsed
      * \param negative Whether or not the character was negative
      */
-    void set_input(const Py_UCS4 uchar, const bool negative=false);
+    void set_input(const Py_UCS4 uchar, const bool negative = false);
 
     /**
      * \brief Assign a character array to be parsed as a number
@@ -75,7 +71,8 @@ public:
     void set_input(const char* str, const std::size_t len);
 
     /// Tell the analyzer the base to use when parsing ints
-    void set_base(const int base) {
+    void set_base(const int base)
+    {
         default_base = base == INT_MIN;
         this->base = default_base ? 10 : base;
     }
@@ -105,7 +102,8 @@ public:
     bool potential_overflow() const { return errcode == 2; }
 
     /// Was the passed Python object a user class with __float__ or __int__?
-    bool is_special_numeric() const {
+    bool is_special_numeric() const
+    {
         return number_type == NumberType::SPECIAL_NUMERIC;
     }
 
@@ -147,7 +145,8 @@ public:
      * This is defined as a float that can be converted to an int with
      * no information loss.
      */
-    static bool float_is_intlike(const double x) {
+    static bool float_is_intlike(const double x)
+    {
         errno = 0;
         return std::isfinite(x) and std::floor(x) == x and errno == 0;
     }
@@ -201,7 +200,8 @@ private:
 
 private:
     /// Reset the Parser object to the uninitialized state
-    void reset() {
+    void reset()
+    {
         Py_XDECREF(obj);
         ptype = ParserType::UNKNOWN;
         number_type = NumberType::NOT_FLOAT_OR_INT;
@@ -219,18 +219,16 @@ private:
     int sign() const { return negative ? -1 : 1; }
 
     /// Check if the character array contains valid underscores
-    bool has_valid_underscores() const {
-        return start != nullptr
-            and are_underscores_allowed()
-            and str_len > 0
+    bool has_valid_underscores() const
+    {
+        return start != nullptr and are_underscores_allowed() and str_len > 0
             and std::memchr(start, '_', str_len);
     }
 
     /// Check if the character array contains invalid underscores
-    bool has_invalid_underscores() const {
-        return start != nullptr
-            and not are_underscores_allowed()
-            and str_len > 0
+    bool has_invalid_underscores() const
+    {
+        return start != nullptr and not are_underscores_allowed() and str_len > 0
             and std::memchr(start, '_', str_len);
     }
 
@@ -247,16 +245,15 @@ private:
     void unset_error_code() { errcode = 0; }
 };
 
-
 /**
  * \class NumericMethodsParser
  * \brief Determine if an object defines numeric dunder methods
  */
 class NumericMethodsAnalyzer {
 public:
-    NumericMethodsAnalyzer(PyObject *obj)
+    NumericMethodsAnalyzer(PyObject* obj)
         : nmeth(obj ? Py_TYPE(obj)->tp_as_number : nullptr)
-    {}
+    { }
     NumericMethodsAnalyzer(const NumericMethodsAnalyzer&) = default;
     NumericMethodsAnalyzer(NumericMethodsAnalyzer&&) = default;
     NumericMethodsAnalyzer& operator=(const NumericMethodsAnalyzer&) = default;
@@ -273,10 +270,8 @@ public:
 
 private:
     /// The struct providing access to numeric dunder methods
-    PyNumberMethods *nmeth;
-
+    PyNumberMethods* nmeth;
 };
-
 
 /**
  * \class Buffer
