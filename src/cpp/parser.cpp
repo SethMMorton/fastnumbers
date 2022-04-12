@@ -78,7 +78,7 @@ void Parser::set_input(const char* str, const std::size_t len)
     // backwards, then push the end pointer up one
     // as if there were still a '\0' character.
     end -= 1;
-    while (is_whitespace(*end) && m_start < end) {
+    while (m_start < end && is_whitespace(*end)) {
         end -= 1;
     }
     end += 1;

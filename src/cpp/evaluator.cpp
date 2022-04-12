@@ -321,14 +321,14 @@ bool Evaluator::extract_from_buffer()
         // slice will be made here and null termination will be added.
         // If the data amount is small enough, we use a fixed-sized buffer for speed.
         const std::size_t str_len = static_cast<const std::size_t>(view.len);
-        m_char_buffer = new Buffer(static_cast<char*>(view.buf), str_len);
-        m_char_buffer->start()[str_len] = '\0';
+        m_char_buffer.copy(static_cast<char*>(view.buf), str_len);
+        m_char_buffer.start()[str_len] = '\0';
 
         // All we care about is the underlying buffer data, not the obj
         // which was allocated when we created the buffer. For this reason
         // it is safe to release the buffer here.
         PyBuffer_Release(&view);
-        m_parser.set_input(m_char_buffer->start(), str_len);
+        m_parser.set_input(m_char_buffer.start(), str_len);
         return true;
     }
     return false;
@@ -340,16 +340,13 @@ bool Evaluator::parse_unicode_to_char()
     const void* data = PyUnicode_DATA(m_obj); // Raw data
     Py_ssize_t len = PyUnicode_GET_LENGTH(m_obj);
     Py_ssize_t index = 0;
-    char sign = '\0';
-    bool negative = false;
 
     // Ensure input is a valid unicode object.
     // If true, then not OK for conversion.
     // In that case just store as a 0-length string.
     if (PyUnicode_READY(m_obj)) {
-        m_char_buffer = new Buffer(0);
-        m_char_buffer->start()[0] = '\0';
-        m_parser.set_input(m_char_buffer->start(), 0);
+        m_char_buffer.start()[0] = '\0';
+        m_parser.set_input(m_char_buffer.start(), 1);
         return true;
     }
 
@@ -362,29 +359,21 @@ bool Evaluator::parse_unicode_to_char()
         len -= 1;
     }
 
-    // Remove the sign - remember if it is negative.
-    if (PyUnicode_READ(kind, data, index) == '-') {
-        negative = true;
-        sign = '-';
-        index += 1;
-        len -= 1;
-    } else if (PyUnicode_READ(kind, data, index) == '+') {
-        sign = '+';
-        index += 1;
-        len -= 1;
+    // Remember if it was negative
+    const bool negative = PyUnicode_READ(kind, data, index) == '-';
+
+    // Protect against attempting to allocate too much memory
+    if (static_cast<std::size_t>(len) + 1 > m_char_buffer.max_size()) {
+        m_char_buffer.start()[0] = '\0';
+        m_parser.set_input(m_char_buffer.start(), 1);
+        return true;
     }
 
     // Allocate space for the character data, but use a small fixed size
     // buffer if the data is small enough. Ensure a trailing null character.
-    m_char_buffer = new Buffer(static_cast<std::size_t>(len + (sign ? 1 : 0) + 1));
-    char* buffer = m_char_buffer->start();
+    m_char_buffer.reserve(static_cast<std::size_t>(len));
+    char* buffer = m_char_buffer.start();
     std::size_t buffer_index = 0;
-
-    // If the string had a sign, add it back to the front of the buffer
-    if (sign) {
-        buffer[buffer_index] = sign;
-        buffer_index += 1;
-    }
 
     // Iterate over the unicode data and transform to ASCII-compatible
     // data. If at any point this fails, exit and just save as a 0-length
@@ -407,7 +396,7 @@ bool Evaluator::parse_unicode_to_char()
                 return true;
             }
             buffer[0] = '\0';
-            m_parser.set_input(buffer, 0);
+            m_parser.set_input(buffer, 1);
             return true;
         }
         buffer_index += 1;

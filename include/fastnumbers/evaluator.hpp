@@ -30,7 +30,7 @@ public:
         , m_inf_allowed(false)
         , m_unicode_allowed(true)
         , m_parser()
-        , m_char_buffer(nullptr)
+        , m_char_buffer()
     {
         evaluate_stored_object();
     }
@@ -42,11 +42,7 @@ public:
     Evaluator(const Evaluator&) = delete;
     Evaluator(Evaluator&&) = delete;
     Evaluator& operator=(const Evaluator&) = delete;
-    ~Evaluator()
-    {
-        Py_XDECREF(m_obj);
-        delete m_char_buffer;
-    }
+    ~Evaluator() { Py_XDECREF(m_obj); }
 
     /// Assign a new object to analyze
     void set_object(PyObject* obj)
@@ -134,7 +130,7 @@ private:
     Parser m_parser;
 
     /// Buffer object into which to store character data
-    Buffer* m_char_buffer;
+    Buffer m_char_buffer;
 
 private:
     /// Generate a Parser object from Python object data
