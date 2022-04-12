@@ -93,7 +93,7 @@ constexpr long FN_MAX_INT_LEN
  */
 inline bool is_whitespace(const char c)
 {
-    return c == ' ' or (c >= '\t' and c <= '\r');
+    return c == ' ' || (c >= '\t' && c <= '\r');
 }
 
 /**
@@ -101,7 +101,7 @@ inline bool is_whitespace(const char c)
  */
 inline bool is_valid_digit(const char c)
 {
-    return c >= '0' and c <= '9';
+    return c >= '0' && c <= '9';
 }
 
 /**
@@ -109,7 +109,7 @@ inline bool is_valid_digit(const char c)
  */
 inline bool is_sign(const char c)
 {
-    return c == '-' or c == '+';
+    return c == '-' || c == '+';
 }
 
 /**
@@ -117,7 +117,7 @@ inline bool is_sign(const char c)
  */
 inline bool is_base_prefix(const char c)
 {
-    return (c == 'x' or c == 'X') or (c == 'o' or c == 'O') or (c == 'b' or c == 'B');
+    return (c == 'x' || c == 'X') || (c == 'o' || c == 'O') || (c == 'b' || c == 'B');
 }
 
 /**
@@ -125,9 +125,9 @@ inline bool is_base_prefix(const char c)
  */
 inline bool is_base_prefix(const char c, const int base)
 {
-    return (base == 16 and (c == 'x' or c == 'X'))
-        or (base == 8 and (c == 'o' or c == 'O'))
-        or (base == 2 and (c == 'b' or c == 'B'));
+    return (base == 16 && (c == 'x' || c == 'X'))
+        || (base == 8 && (c == 'o' || c == 'O'))
+        || (base == 2 && (c == 'b' || c == 'B'));
 }
 
 /**
@@ -143,13 +143,13 @@ inline bool quick_detect_infinity(const char* str, const std::size_t len)
 {
     switch (len) {
     case 3:
-        return (str[0] == 'i' or str[0] == 'I') and (str[1] == 'n' or str[1] == 'N')
-            and (str[2] == 'f' or str[2] == 'F');
+        return (str[0] == 'i' || str[0] == 'I') && (str[1] == 'n' || str[1] == 'N')
+            && (str[2] == 'f' || str[2] == 'F');
     case 8:
-        return (str[0] == 'i' or str[0] == 'I') and (str[1] == 'n' or str[1] == 'N')
-            and (str[2] == 'f' or str[2] == 'F') and (str[3] == 'i' or str[3] == 'I')
-            and (str[4] == 'n' or str[4] == 'N') and (str[5] == 'i' or str[5] == 'I')
-            and (str[6] == 't' or str[6] == 'T') and (str[7] == 'y' or str[7] == 'Y');
+        return (str[0] == 'i' || str[0] == 'I') && (str[1] == 'n' || str[1] == 'N')
+            && (str[2] == 'f' || str[2] == 'F') && (str[3] == 'i' || str[3] == 'I')
+            && (str[4] == 'n' || str[4] == 'N') && (str[5] == 'i' || str[5] == 'I')
+            && (str[6] == 't' || str[6] == 'T') && (str[7] == 'y' || str[7] == 'Y');
     default:
         return false;
     }
@@ -166,8 +166,8 @@ inline bool quick_detect_infinity(const char* str, const std::size_t len)
  */
 inline bool quick_detect_nan(const char* str, const std::size_t len)
 {
-    return len == 3 and (str[0] == 'n' or str[0] == 'N')
-        and (str[1] == 'a' or str[1] == 'A') and (str[2] == 'n' or str[2] == 'N');
+    return len == 3 && (str[0] == 'n' || str[0] == 'N')
+        && (str[1] == 'a' || str[1] == 'A') && (str[2] == 'n' || str[2] == 'N');
 }
 
 /**
@@ -181,7 +181,7 @@ inline bool quick_detect_nan(const char* str, const std::size_t len)
  */
 inline bool is_likely_int(const char* str, std::size_t len)
 {
-    return len > 0 and is_valid_digit(*str);
+    return len > 0 && is_valid_digit(*str);
 }
 
 /**
@@ -197,8 +197,8 @@ inline bool is_likely_int(const char* str, std::size_t len)
 inline bool is_likely_float(const char* str, std::size_t len)
 {
     return len > 0
-        and (is_valid_digit(*str)
-             or (*str == '.' and len > 1 and is_valid_digit(*(str + 1))));
+        && (is_valid_digit(*str)
+            || (*str == '.' && len > 1 && is_valid_digit(*(str + 1))));
 }
 
 // Define the number of digits in a float that fastnumbers is willing
@@ -223,7 +223,7 @@ constexpr long FN_MAX_EXP = 99;
 constexpr long FN_MIN_EXP = -98;
 
 /// Allow the preprocessor to be able to dispatch on this decision
-#define FASTNUMBERS_EXP_MAX_MIN NINETYNINE_NINETYEIGHT
+#define FASTNUMBERS_WIDE_EXP_RANGE
 
 #else
 
@@ -237,17 +237,17 @@ constexpr long FN_MAX_EXP = 22;
 constexpr long FN_MIN_EXP = -22;
 
 /// Allow the preprocessor to be able to dispatch on this decision
-#define FASTNUMBERS_EXP_MAX_MIN TWENTYTWO_TWENTYTWO
+#undef FASTNUMBERS_WIDE_EXP_RANGE
 
 #endif
 
 /**
  * \brief Guess if an int will overflow.
  *
- * \param str The string to check, assumed to be non-NULL
+ * \param start The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-inline bool int_might_overflow(const char* start, const std::size_t len)
+inline bool int_might_overflow(const char*, const std::size_t len)
 {
     return len > FN_MAX_INT_LEN;
 }
@@ -255,7 +255,7 @@ inline bool int_might_overflow(const char* start, const std::size_t len)
 /**
  * \brief Guess if a float will overflow.
  *
- * \param str The string to check, assumed to be non-NULL
+ * \param start The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
 bool float_might_overflow(const char* start, const std::size_t len);

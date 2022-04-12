@@ -12,22 +12,22 @@ bool Evaluator::is_type(const UserType ntype) const
     // Dispatch to the appropriate parser function based on requested type
     switch (ntype) {
     case UserType::REAL:
-        return (nan_allowed and parser.is_nan())
-            or (inf_allowed and parser.is_infinity()) or parser.is_real();
+        return (m_nan_allowed && m_parser.is_nan())
+            || (m_inf_allowed && m_parser.is_infinity()) || m_parser.is_real();
 
     case UserType::FLOAT:
-        return (nan_allowed and parser.is_nan())
-            or (inf_allowed and parser.is_infinity()) or parser.is_float();
+        return (m_nan_allowed && m_parser.is_nan())
+            || (m_inf_allowed && m_parser.is_infinity()) || m_parser.is_float();
 
     case UserType::INT:
-        return parser.is_int();
+        return m_parser.is_int();
 
     case UserType::INTLIKE:
     case UserType::FORCEINT:
-        return parser.is_intlike();
+        return m_parser.is_intlike();
 
     default:
-        return false; // cannot reach, but this silences compiler warnings
+        return false;
     }
 }
 
@@ -35,7 +35,7 @@ bool Evaluator::is_type(const UserType ntype) const
 
 static inline Payload typed_error(const UserType ntype, const bool type = true)
 {
-    if (ntype == UserType::REAL or ntype == UserType::FLOAT) {
+    if (ntype == UserType::REAL || ntype == UserType::FLOAT) {
         if (type) {
             return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
         } else {
@@ -58,13 +58,14 @@ Payload Evaluator::as_type(const UserType ntype)
         return from_numeric_as_type(ntype);
 
     case ParserType::UNICODE:
-        if (not unicode_allowed) {
+        if (!m_unicode_allowed) {
             return typed_error(ntype, false);
         }
         /* DELIBERATE FALL-THROUGH */
     case ParserType::CHARACTER:
         return from_text_as_type(ntype);
 
+    case ParserType::UNKNOWN:
     default:
         break;
     }
@@ -78,19 +79,21 @@ Payload Evaluator::from_numeric_as_type(const UserType ntype)
     // If not a direct numeric type, assume it might be a user
     // class with e.g __int__ or __float__ defined. Otherwise it's a
     // type error
-    if (parser.not_float_or_int()) {
-        if (parser.is_special_numeric()) {
+    if (m_parser.not_float_or_int()) {
+        if (m_parser.is_special_numeric()) {
             switch (ntype) {
             case UserType::REAL:
-                if (NumericMethodsAnalyzer(obj).is_float()) {
+                if (NumericMethodsAnalyzer(m_obj).is_float()) {
                     return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
                 } else {
                     return Payload(ActionType::TRY_INT_IN_PYTHON);
                 }
             case UserType::FLOAT:
                 return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
-            default:
-                if (not parser.is_default_base()) {
+            case UserType::INT:
+            case UserType::INTLIKE:
+            case UserType::FORCEINT:
+                if (!m_parser.is_default_base()) {
                     return Payload(ActionType::ERROR_INVALID_BASE);
                 }
                 return Payload(ActionType::TRY_INT_IN_PYTHON);
@@ -103,12 +106,12 @@ Payload Evaluator::from_numeric_as_type(const UserType ntype)
     // on the user requested type.
     switch (ntype) {
     case UserType::REAL:
-        if (coerce and parser.is_intlike()) {
+        if (m_coerce && m_parser.is_intlike()) {
             return Payload(ActionType::AS_INT);
-        } else if (parser.is_nan()) {
+        } else if (m_parser.is_nan()) {
             return Payload(ActionType::NAN_ACTION);
-        } else if (parser.is_infinity()) {
-            if (PyFloat_AS_DOUBLE(obj) < 0) {
+        } else if (m_parser.is_infinity()) {
+            if (PyFloat_AS_DOUBLE(m_obj) < 0) {
                 return Payload(ActionType::NEG_INF_ACTION);
             } else {
                 return Payload(ActionType::INF_ACTION);
@@ -118,10 +121,10 @@ Payload Evaluator::from_numeric_as_type(const UserType ntype)
         }
 
     case UserType::FLOAT:
-        if (parser.is_nan()) {
+        if (m_parser.is_nan()) {
             return Payload(ActionType::NAN_ACTION);
-        } else if (parser.is_infinity()) {
-            if (PyFloat_AS_DOUBLE(obj) < 0) {
+        } else if (m_parser.is_infinity()) {
+            if (PyFloat_AS_DOUBLE(m_obj) < 0) {
                 return Payload(ActionType::NEG_INF_ACTION);
             } else {
                 return Payload(ActionType::INF_ACTION);
@@ -133,11 +136,11 @@ Payload Evaluator::from_numeric_as_type(const UserType ntype)
     case UserType::INT:
     case UserType::INTLIKE:
     case UserType::FORCEINT:
-        if (not parser.is_default_base()) {
+        if (!m_parser.is_default_base()) {
             return Payload(ActionType::ERROR_INVALID_BASE);
-        } else if (parser.is_finite()) {
+        } else if (m_parser.is_finite()) {
             return Payload(ActionType::AS_INT);
-        } else if (parser.is_infinity()) {
+        } else if (m_parser.is_infinity()) {
             return Payload(ActionType::ERROR_INFINITY_TO_INT);
         } else {
             return Payload(ActionType::ERROR_NAN_TO_INT);
@@ -171,40 +174,41 @@ Payload Evaluator::from_text_as_type(const UserType ntype)
 Payload Evaluator::from_text_as_int_or_float(const bool force_int)
 {
     // If already an integer, no special care is needed
-    if (parser.is_int()) {
-        const long result = parser.as_int();
-        if (parser.errored()) {
-            return parser.potential_overflow() ? Payload(ActionType::TRY_INT_IN_PYTHON)
-                                               : Payload(ActionType::ERROR_INVALID_INT);
+    if (m_parser.is_int()) {
+        const long result = m_parser.as_int();
+        if (m_parser.errored()) {
+            return m_parser.potential_overflow()
+                ? Payload(ActionType::TRY_INT_IN_PYTHON)
+                : Payload(ActionType::ERROR_INVALID_INT);
         }
         return Payload(result);
 
         // For infinity and NaN, if attemptying to force to integer then
         // this value is not valid, but if just coercing then these values
         // are fine.
-    } else if (parser.is_infinity()) {
+    } else if (m_parser.is_infinity()) {
         return Payload(
             force_int ? ActionType::ERROR_INVALID_INT
-                      : (parser.is_negative() ? ActionType::NEG_INF_ACTION
-                                              : ActionType::INF_ACTION)
+                      : (m_parser.is_negative() ? ActionType::NEG_INF_ACTION
+                                                : ActionType::INF_ACTION)
         );
 
-    } else if (parser.is_nan()) {
+    } else if (m_parser.is_nan()) {
         return Payload(
             force_int ? ActionType::ERROR_INVALID_INT
-                      : (parser.is_negative() ? ActionType::NEG_NAN_ACTION
-                                              : ActionType::NAN_ACTION)
+                      : (m_parser.is_negative() ? ActionType::NEG_NAN_ACTION
+                                                : ActionType::NAN_ACTION)
         );
 
         // Otherwise, extract as a float and tell the downstream parser if
         // it needs to be converted to an integer or not.
     } else {
-        const double result = parser.as_float();
-        if (parser.errored()) {
-            if (parser.potential_overflow()) {
+        const double result = m_parser.as_float();
+        if (m_parser.errored()) {
+            if (m_parser.potential_overflow()) {
                 if (force_int) {
                     return Payload(ActionType::TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON);
-                } else if (coerce) {
+                } else if (m_coerce) {
                     return Payload(ActionType::TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON);
                 } else {
                     return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
@@ -214,27 +218,27 @@ Payload Evaluator::from_text_as_int_or_float(const bool force_int)
             }
         }
         return Payload(
-            result, force_int or (coerce and Parser::float_is_intlike(result))
+            result, force_int || (m_coerce && Parser::float_is_intlike(result))
         );
     }
 }
 
 Payload Evaluator::from_text_as_float()
 {
-    if (parser.is_infinity()) {
+    if (m_parser.is_infinity()) {
         return Payload(
-            parser.is_negative() ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION
+            m_parser.is_negative() ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION
         );
 
-    } else if (parser.is_nan()) {
+    } else if (m_parser.is_nan()) {
         return Payload(
-            parser.is_negative() ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION
+            m_parser.is_negative() ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION
         );
 
     } else {
-        const double result = parser.as_float();
-        if (parser.errored()) {
-            return parser.potential_overflow()
+        const double result = m_parser.as_float();
+        if (m_parser.errored()) {
+            return m_parser.potential_overflow()
                 ? Payload(ActionType::TRY_FLOAT_IN_PYTHON)
                 : Payload(ActionType::ERROR_INVALID_FLOAT);
         }
@@ -244,13 +248,13 @@ Payload Evaluator::from_text_as_float()
 
 Payload Evaluator::from_text_as_int()
 {
-    if (parser.get_base() != 10) {
+    if (m_parser.get_base() != 10) {
         return Payload(ActionType::TRY_INT_IN_PYTHON);
     }
-    const long result = parser.as_int();
-    if (parser.errored()) {
-        return parser.potential_overflow() ? Payload(ActionType::TRY_INT_IN_PYTHON)
-                                           : Payload(ActionType::ERROR_INVALID_INT);
+    const long result = m_parser.as_int();
+    if (m_parser.errored()) {
+        return m_parser.potential_overflow() ? Payload(ActionType::TRY_INT_IN_PYTHON)
+                                             : Payload(ActionType::ERROR_INVALID_INT);
     }
     return Payload(result);
 }
@@ -261,17 +265,18 @@ void Evaluator::extract_string_data()
 {
     // Use short-circuit logic to extract string data from the python object
     // from most likely to least likely.
-    extract_from_unicode() or extract_from_bytes() or extract_from_bytearray()
-        or extract_from_buffer();
+    extract_from_unicode() || extract_from_bytes() || extract_from_bytearray()
+        || extract_from_buffer();
 }
 
 bool Evaluator::extract_from_unicode()
 {
-    if (PyUnicode_Check(obj)) {
+    if (PyUnicode_Check(m_obj)) {
         // Unicode in ASCII form is stored like bytes!
-        if (PyUnicode_IS_READY(obj) and PyUnicode_IS_COMPACT_ASCII(obj)) {
-            parser.set_input(
-                (const char*)PyUnicode_1BYTE_DATA(obj), PyUnicode_GET_LENGTH(obj)
+        if (PyUnicode_IS_READY(m_obj) && PyUnicode_IS_COMPACT_ASCII(m_obj)) {
+            m_parser.set_input(
+                (const char*)PyUnicode_1BYTE_DATA(m_obj),
+                static_cast<const std::size_t>(PyUnicode_GET_LENGTH(m_obj))
             );
             return true;
         }
@@ -282,8 +287,11 @@ bool Evaluator::extract_from_unicode()
 
 bool Evaluator::extract_from_bytes()
 {
-    if (PyBytes_Check(obj)) {
-        parser.set_input(PyBytes_AS_STRING(obj), PyBytes_GET_SIZE(obj));
+    if (PyBytes_Check(m_obj)) {
+        m_parser.set_input(
+            PyBytes_AS_STRING(m_obj),
+            static_cast<const std::size_t>(PyBytes_GET_SIZE(m_obj))
+        );
         return true;
     }
     return false;
@@ -291,8 +299,11 @@ bool Evaluator::extract_from_bytes()
 
 bool Evaluator::extract_from_bytearray()
 {
-    if (PyByteArray_Check(obj)) {
-        parser.set_input(PyByteArray_AS_STRING(obj), PyByteArray_GET_SIZE(obj));
+    if (PyByteArray_Check(m_obj)) {
+        m_parser.set_input(
+            PyByteArray_AS_STRING(m_obj),
+            static_cast<const std::size_t>(PyByteArray_GET_SIZE(m_obj))
+        );
         return true;
     }
     return false;
@@ -301,23 +312,23 @@ bool Evaluator::extract_from_bytearray()
 bool Evaluator::extract_from_buffer()
 {
     Py_buffer view = { NULL, NULL };
-    if (PyObject_CheckBuffer(obj)
-        and PyObject_GetBuffer(obj, &view, PyBUF_SIMPLE) == 0) {
+    if (PyObject_CheckBuffer(m_obj)
+        && PyObject_GetBuffer(m_obj, &view, PyBUF_SIMPLE) == 0) {
         // This buffer could be a memoryview slice. If this is the case, the
         // nul termination of the string will be past the given length, creating
         // unexpected parsing results. Rather than complicate the parsing and
         // adding more operations for a low probability event, a copy of the
         // slice will be made here and null termination will be added.
         // If the data amount is small enough, we use a fixed-sized buffer for speed.
-        const std::size_t str_len = view.len;
-        char_buffer = new Buffer(static_cast<char*>(view.buf), str_len);
-        char_buffer->start()[str_len] = '\0';
+        const std::size_t str_len = static_cast<const std::size_t>(view.len);
+        m_char_buffer = new Buffer(static_cast<char*>(view.buf), str_len);
+        m_char_buffer->start()[str_len] = '\0';
 
         // All we care about is the underlying buffer data, not the obj
         // which was allocated when we created the buffer. For this reason
         // it is safe to release the buffer here.
         PyBuffer_Release(&view);
-        parser.set_input(char_buffer->start(), str_len);
+        m_parser.set_input(m_char_buffer->start(), str_len);
         return true;
     }
     return false;
@@ -325,9 +336,9 @@ bool Evaluator::extract_from_buffer()
 
 bool Evaluator::parse_unicode_to_char()
 {
-    const int kind = PyUnicode_KIND(obj); // Unicode storage format.
-    const void* data = PyUnicode_DATA(obj); // Raw data
-    Py_ssize_t len = PyUnicode_GET_LENGTH(obj);
+    const unsigned kind = PyUnicode_KIND(m_obj); // Unicode storage format.
+    const void* data = PyUnicode_DATA(m_obj); // Raw data
+    Py_ssize_t len = PyUnicode_GET_LENGTH(m_obj);
     Py_ssize_t index = 0;
     char sign = '\0';
     bool negative = false;
@@ -335,10 +346,10 @@ bool Evaluator::parse_unicode_to_char()
     // Ensure input is a valid unicode object.
     // If true, then not OK for conversion.
     // In that case just store as a 0-length string.
-    if (PyUnicode_READY(obj)) {
-        char_buffer = new Buffer(0);
-        char_buffer->start()[0] = '\0';
-        parser.set_input(char_buffer->start(), 0);
+    if (PyUnicode_READY(m_obj)) {
+        m_char_buffer = new Buffer(0);
+        m_char_buffer->start()[0] = '\0';
+        m_parser.set_input(m_char_buffer->start(), 0);
         return true;
     }
 
@@ -365,8 +376,8 @@ bool Evaluator::parse_unicode_to_char()
 
     // Allocate space for the character data, but use a small fixed size
     // buffer if the data is small enough. Ensure a trailing null character.
-    char_buffer = new Buffer(len + (sign ? 1 : 0) + 1);
-    char* buffer = char_buffer->start();
+    m_char_buffer = new Buffer(static_cast<std::size_t>(len + (sign ? 1 : 0) + 1));
+    char* buffer = m_char_buffer->start();
     std::size_t buffer_index = 0;
 
     // If the string had a sign, add it back to the front of the buffer
@@ -392,17 +403,17 @@ bool Evaluator::parse_unicode_to_char()
             buffer[buffer_index] = ' ';
         } else {
             if (len == 1) {
-                parser.set_input(u, negative);
+                m_parser.set_input(u, negative);
                 return true;
             }
             buffer[0] = '\0';
-            parser.set_input(buffer, 0);
+            m_parser.set_input(buffer, 0);
             return true;
         }
         buffer_index += 1;
     }
     buffer[buffer_index] = '\0';
 
-    parser.set_input(buffer, buffer_index);
+    m_parser.set_input(buffer, buffer_index);
     return true;
 }

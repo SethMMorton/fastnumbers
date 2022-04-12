@@ -43,32 +43,34 @@ class Payload {
 public:
     /// Default construct - needed for use with Cython.
     Payload()
-        : type(PayloadType::ACTION)
-        , actval(ActionType::AS_IS)
+        : m_type(PayloadType::ACTION)
+        , m_actval(ActionType::AS_IS)
     { }
 
     /// Construct the payload with an action.
     explicit Payload(const ActionType atype)
-        : type(PayloadType::ACTION)
-        , actval(atype)
+        : m_type(PayloadType::ACTION)
+        , m_actval(atype)
     { }
 
     /// Construct the payload with a double.
     explicit Payload(const double val)
-        : type(PayloadType::DOUBLE)
-        , dval(val)
+        : m_type(PayloadType::DOUBLE)
+        , m_dval(val)
     { }
 
     /// Construct the payload with a double that needs to be be converted to an int.
     explicit Payload(const double val, const bool needs_int_conversion)
-        : type(needs_int_conversion ? PayloadType::DOUBLE_TO_LONG : PayloadType::DOUBLE)
-        , dval(val)
+        : m_type(
+            needs_int_conversion ? PayloadType::DOUBLE_TO_LONG : PayloadType::DOUBLE
+        )
+        , m_dval(val)
     { }
 
     /// Construct the payload with a long.
     explicit Payload(const long val)
-        : type(PayloadType::LONG)
-        , ival(val)
+        : m_type(PayloadType::LONG)
+        , m_ival(val)
     { }
 
     // Copy, assignment, and destruct are defaults
@@ -78,20 +80,20 @@ public:
     ~Payload() = default;
 
     /// What type of payload is being carried?
-    PayloadType payload_type() const { return type; }
+    PayloadType payload_type() const { return m_type; }
 
     /// Return the Payload as an ActionType.
-    ActionType get_action() const { return actval; }
+    ActionType get_action() const { return m_actval; }
 
     /// Return the Payload as a double.
-    double to_double() const { return dval; }
+    double to_double() const { return m_dval; }
 
     /// Return the Payload as a long.
-    long to_long() const { return ival; }
+    long to_long() const { return m_ival; }
 
 private:
     /// Tracker of what type is being stored
-    PayloadType type;
+    PayloadType m_type;
 
     /**
      * \brief All possible Payload types, occupying the same memory
@@ -102,10 +104,10 @@ private:
      */
     union {
         /// The Payload as a long
-        long ival;
+        long m_ival;
         /// The Payload as a double
-        double dval;
+        double m_dval;
         /// The Payload as an ActionType
-        ActionType actval;
+        ActionType m_actval;
     };
 };

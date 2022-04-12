@@ -17,7 +17,7 @@ template <typename T> static inline T ascii2int(const char c)
 }
 
 /// A function that accepts an argument and does nothing
-static inline void do_nothing(const char x) { }
+static inline void do_nothing(const char) { }
 
 /// Map to the approprate scaling factor for an exponent value
 constexpr long double POWER_OF_TEN_SCALING_FACTOR[] = {
@@ -37,9 +37,9 @@ constexpr long double POWER_OF_TEN_SCALING_FACTOR[] = {
     1E130L, 1E131L, 1E132L, 1E133L, 1E134L, 1E135L, 1E136L, 1E137L, 1E138L, 1E139L,
     1E140L, 1E141L, 1E142L, 1E143L, 1E144L, 1E145L, 1E146L, 1E147L, 1E148L, 1E149L,
 };
-constexpr int16_t LEN_EXP_ARRAY
+constexpr int32_t LEN_EXP_ARRAY
     = sizeof(POWER_OF_TEN_SCALING_FACTOR) / sizeof(POWER_OF_TEN_SCALING_FACTOR[0]);
-constexpr int16_t MAX_EXP_VALUE = LEN_EXP_ARRAY - 1;
+constexpr int32_t MAX_EXP_VALUE = LEN_EXP_ARRAY - 1;
 
 // FORWARD DECLARATIONS
 template <typename Function>
@@ -72,14 +72,14 @@ bool string_contains_int(const char* str, const char* end, int base)
 
     /* If base 10, take fast route. */
     if (base == 10) {
-        return parse_integer_components(str) and str == end;
+        return parse_integer_components(str) && str == end;
     } else if (base == -1) {
         return false;
     } else {
-        const std::size_t len = end - str;
+        const std::size_t len = static_cast<std::size_t>(end - str);
 
         /* Skip leading characters for non-base 10 ints. */
-        if (len > 1 and str[0] == '0' and is_base_prefix(str[1], base)) {
+        if (len > 1 && str[0] == '0' && is_base_prefix(str[1], base)) {
             str += 2;
         }
 
@@ -89,18 +89,18 @@ bool string_contains_int(const char* str, const char* end, int base)
             str += 1;
             valid = true;
         }
-        return valid and str == end;
+        return valid && str == end;
     }
 }
 
 bool string_contains_float(const char* str, const char* end)
 {
     bool valid = parse_integer_components(str);
-    valid = parse_decimal_components(str) or valid;
+    valid = parse_decimal_components(str) || valid;
     if (valid) {
         valid = parse_exponent_components(str);
     }
-    return valid and str == end;
+    return valid && str == end;
 }
 
 bool string_contains_intlike_float(const char* str, const char* end)
@@ -115,11 +115,11 @@ bool string_contains_intlike_float(const char* str, const char* end)
     uint32_t dec_length = 0;
     valid = parse_decimal_components(
                 str,
-                [&dec_length](const char c) {
+                [&dec_length](const char) {
                     dec_length += 1;
                 }
             )
-        or valid;
+        || valid;
     const char* decimal_end = str;
 
     /* Exponential part of float. Parse the magnitude. */
@@ -128,7 +128,7 @@ bool string_contains_intlike_float(const char* str, const char* end)
     if (valid) {
         valid = parse_exponent_components(
             str,
-            [&exp_negative](const char c) {
+            [&exp_negative](const char) {
                 exp_negative = true;
             },
             [&expon](const char c) {
@@ -138,7 +138,7 @@ bool string_contains_intlike_float(const char* str, const char* end)
         );
     }
 
-    if (not valid or str != end) {
+    if (!valid || str != end) {
         return false;
     } else {
         /* If we "move the decimal place" left or right depending on
@@ -152,7 +152,7 @@ bool string_contains_intlike_float(const char* str, const char* end)
             : number_trailing_zeros(decimal_start + 1, decimal_end);
 
         if (exp_negative) {
-            return expon <= int_trailing_zeros and dec_length == dec_trailing_zeros;
+            return expon <= int_trailing_zeros && dec_length == dec_trailing_zeros;
         } else {
             return expon >= (dec_length - dec_trailing_zeros);
         }
@@ -169,7 +169,7 @@ long parse_int(const char* str, const char* end, bool& error)
         value += ascii2int<long>(c);
     });
 
-    error = not valid or str != end;
+    error = !valid || str != end;
     return value;
 }
 
@@ -183,7 +183,7 @@ double parse_float(const char* str, const char* end, bool& error)
     });
 
     /* Parse decimal part. */
-    uint16_t decimal_len = 0;
+    uint32_t decimal_len = 0;
     valid = parse_decimal_components(
                 str,
                 [&intvalue, &decimal_len](const char c) {
@@ -192,12 +192,12 @@ double parse_float(const char* str, const char* end, bool& error)
                     decimal_len += 1U;
                 }
             )
-        or valid;
+        || valid;
 
     /* Parse exponential part. */
-    int16_t expon = 0;
+    int32_t expon = 0;
     if (valid) {
-        int16_t exp_sign = 1;
+        int32_t exp_sign = 1;
         valid = parse_exponent_components(
             str,
             [&exp_sign](const char c) {
@@ -214,12 +214,18 @@ double parse_float(const char* str, const char* end, bool& error)
     }
     expon -= decimal_len; /* Adjust the exponent by the # of decimal places */
 
-    error = not valid or str != end;
+    error = !valid || str != end;
     if (expon < 0) {
         expon = std::abs(expon);
-        return intvalue / POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)];
+        return static_cast<double>(
+            static_cast<long double>(intvalue)
+            / POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)]
+        );
     } else {
-        return intvalue * POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)];
+        return static_cast<double>(
+            static_cast<long double>(intvalue)
+            * POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)]
+        );
     }
 }
 
@@ -238,7 +244,7 @@ bool float_might_overflow(const char* start, const std::size_t len)
     const char* exp = nullptr;
     const char* stop = decimal_loc ? decimal_loc : start;
     for (ptr = start + len - 1; ptr > stop; ptr--) {
-        if (*ptr == 'e' or *ptr == 'E') {
+        if (*ptr == 'e' || *ptr == 'E') {
             exp = ptr;
             break;
         }
@@ -261,7 +267,7 @@ bool float_might_overflow(const char* start, const std::size_t len)
             exp_len -= 1;
         }
         const bool exp_ok = neg ? neg_exp_ok(exp, exp_len) : pos_exp_ok(exp, exp_len);
-        if (not exp_ok) {
+        if (!exp_ok) {
             return true;
         }
     }
@@ -272,7 +278,7 @@ bool float_might_overflow(const char* start, const std::size_t len)
 
 void remove_valid_underscores(char* str, const char*& end, const bool based)
 {
-    const std::size_t len = end - str;
+    const std::size_t len = static_cast<std::size_t>(end - str);
     std::size_t i, offset;
 
     // The method that will be used to remove underscores is to
@@ -285,8 +291,8 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
     // a valid underscore is surrounded by two numbers.
     if (!based) {
         for (i = offset = 0; i < len; i++) {
-            if (str[i] == '_' and i > 0 and i < len - 1 and is_valid_digit(str[i - 1])
-                and is_valid_digit(str[i + 1])) {
+            if (str[i] == '_' && i > 0 && i < len - 1 && is_valid_digit(str[i - 1])
+                && is_valid_digit(str[i + 1])) {
                 offset += 1;
                 continue;
             }
@@ -305,9 +311,9 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
             i += 1;
         }
         // Skip leading characters for non-base 10 ints.
-        if ((len - i) > 1 and str[i] == '0' and is_base_prefix(str[i + 1])) {
+        if ((len - i) > 1 && str[i] == '0' && is_base_prefix(str[i + 1])) {
             // An underscore after the prefix is allowed, e.g. 0x_d4.
-            if ((len - i > 2) and str[i + 2] == '_') {
+            if ((len - i > 2) && str[i + 2] == '_') {
                 i += 3;
                 offset += 1;
             } else {
@@ -315,16 +321,16 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
             }
         }
         // No underscore in the base selector, e.g. 0_b0 is invalid.
-        else if ((len - i) > 2 and str[i] == '0' and str[i + 1] == '_' and is_base_prefix(str[i + 2])) {
+        else if ((len - i) > 2 && str[i] == '0' && str[i + 1] == '_' && is_base_prefix(str[i + 2])) {
             i += 3;
         }
 
         // Now search for simpler valid underscores.
         // use hex as the base because it is the most inclusive.
         for (; i < len; i++) {
-            if (str[i] == '_' and i > 0 and i < len - 1
-                and is_valid_digit_arbitrary_base(str[i - 1], 16)
-                and is_valid_digit_arbitrary_base(str[i + 1], 16)) {
+            if (str[i] == '_' && i > 0 && i < len - 1
+                && is_valid_digit_arbitrary_base(str[i - 1], 16)
+                && is_valid_digit_arbitrary_base(str[i + 1], 16)) {
                 offset += 1;
                 continue;
             }
@@ -429,7 +435,7 @@ bool parse_exponent_components(
     const char*& str, NFunction sign_callback, Function callback
 )
 {
-    if (*str == 'e' or *str == 'E') {
+    if (*str == 'e' || *str == 'E') {
         str += 1;
         if (is_sign(*str)) {
             sign_callback(*str);
@@ -445,12 +451,11 @@ bool parse_exponent_components(const char*& str)
     return parse_exponent_components(str, do_nothing, do_nothing);
 }
 
-#if FASTNUMBERS_EXP_MAX_MIN == TWENTYTWO_TWENTYTWO
+#ifndef FASTNUMBERS_WIDE_EXP_RANGE
 /// Helper to check if an exponent number is in the allowed range
 static inline bool _exp_ok(const char* str, std::size_t len)
 {
-    return len == 1
-        or (len == 2 and (*str <= '2' or (*str == '2' and *(str + 1) <= '2')));
+    return len == 1 || (len == 2 && (*str <= '2' || (*str == '2' && *(str + 1) <= '2')));
 }
 #endif
 
@@ -461,9 +466,8 @@ static inline bool _exp_ok(const char* str, std::size_t len)
  */
 bool neg_exp_ok(const char* str, std::size_t len)
 {
-#if FASTNUMBERS_EXP_MAX_MIN == NINTETYNINE_NINETYEIGHT
-    return len == 1
-        or (len == 2 and (*str <= '8' or (*str == '9' and *(str + 1) <= '8')));
+#ifdef FASTNUMBERS_WIDE_EXP_RANGE
+    return len == 1 || (len == 2 && (*str <= '8' || (*str == '9' && *(str + 1) <= '8')));
 #else
     return _exp_ok(str, len);
 #endif
@@ -476,8 +480,8 @@ bool neg_exp_ok(const char* str, std::size_t len)
  */
 bool pos_exp_ok(const char* str, std::size_t len)
 {
-#if FASTNUMBERS_EXP_MAX_MIN == NINTETYNINE_NINETYEIGHT
-    return len > 0 and len <= 2;
+#ifdef FASTNUMBERS_WIDE_EXP_RANGE
+    return len > 0 && len <= 2;
 #else
     return _exp_ok(str, len);
 #endif
@@ -512,14 +516,14 @@ uint32_t number_trailing_zeros(const char* start, const char* end)
  */
 int detect_base(const char* str, const char* end)
 {
-    const std::size_t len = end - str;
-    if (str[0] != '0' or len == 1) {
+    const std::size_t len = static_cast<std::size_t>(end - str);
+    if (str[0] != '0' || len == 1) {
         return 10;
-    } else if (str[1] == 'x' or str[1] == 'X') {
+    } else if (str[1] == 'x' || str[1] == 'X') {
         return 16;
-    } else if (str[1] == 'o' or str[1] == 'O') {
+    } else if (str[1] == 'o' || str[1] == 'O') {
         return 8;
-    } else if (str[1] == 'b' or str[1] == 'B') {
+    } else if (str[1] == 'b' || str[1] == 'B') {
         return 2;
     } else
         /* "old" (C-style) octal literal illegal in 3.x. */
@@ -539,10 +543,10 @@ int detect_base(const char* str, const char* end)
 bool is_valid_digit_arbitrary_base(const char c, const int base)
 {
     if (base < 10) {
-        return c >= '0' and c <= (static_cast<int>('0') + base);
+        return c >= '0' && c <= (static_cast<int>('0') + base);
     } else {
         const char offset = static_cast<char>(base) - 10;
-        return (c >= '0' and c <= '9') or (c >= 'a' and c <= 'a' + offset)
-            or (c >= 'A' and c <= 'A' + offset);
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'a' + offset)
+            || (c >= 'A' && c <= 'A' + offset);
     }
 }

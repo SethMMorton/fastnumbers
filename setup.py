@@ -18,6 +18,10 @@ from setuptools import Extension, find_packages, setup
 if sys.platform == "win32":
     compile_args = [
         "/Wall",
+        "/wd4514",  # don't warn that inline functions are removed
+        "/wd4711",  # don't warn about automatic inline expansion
+        "/wd5045",  # don't warn about Spectre mitigation
+        "/wd4820",  # don't warn about added padding in classes
         "/O2",
     ]
 else:

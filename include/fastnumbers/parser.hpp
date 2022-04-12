@@ -28,27 +28,27 @@ public:
     // Constructors, destructors, and assignment
     // There is no constructor with arguments
     Parser()
-        : ptype(ParserType::UNKNOWN)
-        , number_type(NumberType::NOT_FLOAT_OR_INT)
-        , obj(nullptr)
-        , negative(false)
-        , uchar('\0')
-        , numeric_uchar(-1.0)
-        , digit_uchar(-1L)
-        , start(nullptr)
-        , str_len(0)
-        , base(10)
-        , default_base(true)
-        , errcode(0)
-        , underscore_allowed(true)
+        : m_ptype(ParserType::UNKNOWN)
+        , m_number_type(NumberType::NOT_FLOAT_OR_INT)
+        , m_obj(nullptr)
+        , m_negative(false)
+        , m_uchar('\0')
+        , m_numeric_uchar(-1.0)
+        , m_digit_uchar(-1L)
+        , m_start(nullptr)
+        , m_str_len(0)
+        , m_base(10)
+        , m_default_base(true)
+        , m_errcode(0)
+        , m_underscore_allowed(true)
     { }
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
     Parser& operator=(const Parser&) = default;
-    ~Parser() { Py_XDECREF(obj); };
+    ~Parser() { Py_XDECREF(m_obj); };
 
     /// What type of parser is this?
-    ParserType parser_type() const { return ptype; };
+    ParserType parser_type() const { return m_ptype; };
 
     /**
      * \brief Assign a Python object to be parsed as a number
@@ -73,21 +73,21 @@ public:
     /// Tell the analyzer the base to use when parsing ints
     void set_base(const int base)
     {
-        default_base = base == INT_MIN;
-        this->base = default_base ? 10 : base;
+        m_default_base = base == INT_MIN;
+        m_base = m_default_base ? 10 : base;
     }
 
     /// Get the stored base
-    int get_base() const { return base; }
+    int get_base() const { return m_base; }
 
     /// Was the default base given?
-    bool is_default_base() const { return default_base; }
+    bool is_default_base() const { return m_default_base; }
 
     /// Define whether or not underscores are allowed
-    void set_allow_underscores(const bool val) { underscore_allowed = val; }
+    void set_allow_underscores(const bool val) { m_underscore_allowed = val; }
 
     /// Are underscores allowed?
-    bool are_underscores_allowed() const { return underscore_allowed; }
+    bool are_underscores_allowed() const { return m_underscore_allowed; }
 
     /// Convert the stored object to a long (-1 if not possible, check error state)
     long as_int();
@@ -96,19 +96,19 @@ public:
     double as_float();
 
     /// Whether the last conversion encountered an error
-    bool errored() const { return errcode != 0; }
+    bool errored() const { return m_errcode != 0; }
 
     /// Whether the last conversion potentially had an overflow
-    bool potential_overflow() const { return errcode == 2; }
+    bool potential_overflow() const { return m_errcode == 2; }
 
     /// Was the passed Python object a user class with __float__ or __int__?
     bool is_special_numeric() const
     {
-        return number_type == NumberType::SPECIAL_NUMERIC;
+        return m_number_type == NumberType::SPECIAL_NUMERIC;
     }
 
     /// Is the stored number negative?
-    bool is_negative() const { return negative; }
+    bool is_negative() const { return m_negative; }
 
     /// Was the passed Python object not float or int?
     bool not_float_or_int() const;
@@ -148,11 +148,11 @@ public:
     static bool float_is_intlike(const double x)
     {
         errno = 0;
-        return std::isfinite(x) and std::floor(x) == x and errno == 0;
+        return std::isfinite(x) && std::floor(x) == x && errno == 0;
     }
 
 private:
-    ParserType ptype;
+    ParserType m_ptype;
 
     /// The types of data this class can store
     enum NumberType {
@@ -163,86 +163,89 @@ private:
     };
 
     /// Tracker of what type is being stored
-    NumberType number_type;
+    NumberType m_number_type;
 
     /// The Python object potentially under analysis
-    PyObject* obj;
+    PyObject* m_obj;
 
     /// Whether or not the text is a negative number
-    bool negative;
+    bool m_negative;
 
     /// The single unicode character to potentially parse
-    Py_UCS4 uchar;
+    Py_UCS4 m_uchar;
 
     /// The potential numeric value of a unicode character
-    double numeric_uchar;
+    double m_numeric_uchar;
 
     /// The potential digit value of a unicode character
-    long digit_uchar;
+    long m_digit_uchar;
 
     /// The potential start of the character array
-    const char* start;
+    const char* m_start;
 
     /// The potential length of the character array
-    std::size_t str_len;
+    std::size_t m_str_len;
 
     /// The desired base of integers when parsing
-    int base;
+    int m_base;
 
     /// If the user-given base is the default base
-    bool default_base;
+    bool m_default_base;
 
     /// Track if a number conversion failed.
-    int errcode;
+    int m_errcode;
 
     /// Whether or not underscores are allowed when parsing
-    bool underscore_allowed;
+    bool m_underscore_allowed;
 
 private:
     /// Reset the Parser object to the uninitialized state
     void reset()
     {
-        Py_XDECREF(obj);
-        ptype = ParserType::UNKNOWN;
-        number_type = NumberType::NOT_FLOAT_OR_INT;
-        obj = nullptr;
-        negative = false;
-        uchar = '\0';
-        numeric_uchar = -1.0;
-        digit_uchar = -1L;
-        start = nullptr;
-        str_len = 0;
+        Py_XDECREF(m_obj);
+        m_ptype = ParserType::UNKNOWN;
+        m_number_type = NumberType::NOT_FLOAT_OR_INT;
+        m_obj = nullptr;
+        m_negative = false;
+        m_uchar = '\0';
+        m_numeric_uchar = -1.0;
+        m_digit_uchar = -1L;
+        m_start = nullptr;
+        m_str_len = 0;
         unset_error_code();
     }
 
     /// Integer that can be used to apply the sign of the number in the text
-    int sign() const { return negative ? -1 : 1; }
+    int sign() const { return m_negative ? -1 : 1; }
 
     /// Check if the character array contains valid underscores
     bool has_valid_underscores() const
     {
-        return start != nullptr and are_underscores_allowed() and str_len > 0
-            and std::memchr(start, '_', str_len);
+        return m_start != nullptr && are_underscores_allowed() && m_str_len > 0
+            && std::memchr(m_start, '_', m_str_len);
     }
 
     /// Check if the character array contains invalid underscores
     bool has_invalid_underscores() const
     {
-        return start != nullptr and not are_underscores_allowed() and str_len > 0
-            and std::memchr(start, '_', str_len);
+        return m_start != nullptr && !are_underscores_allowed() && m_str_len > 0
+            && std::memchr(m_start, '_', m_str_len);
     }
 
     /// The end of the stored character array
-    const char* end() const { return start == nullptr ? nullptr : (start + str_len); }
+    const char* end() const
+    {
+        return m_start == nullptr ? nullptr : (m_start + m_str_len);
+    }
 
     /// Record that the conversion encountered an error
-    void encountered_conversion_error() { errcode = 1; }
+    void encountered_conversion_error() { m_errcode = 1; }
 
     /// Record that the conversion encountered a potential overflow
-    void encountered_potential_overflow_error() { errcode = 2; }
+    void encountered_potential_overflow_error() { m_errcode = 2; }
 
     /// Forget any tracked error code
-    void unset_error_code() { errcode = 0; }
+    void unset_error_code() { m_errcode = 0; }
 };
 
 /**
@@ -252,7 +255,7 @@ private:
 class NumericMethodsAnalyzer {
 public:
     NumericMethodsAnalyzer(PyObject* obj)
-        : nmeth(obj ? Py_TYPE(obj)->tp_as_number : nullptr)
+        : m_nmeth(obj ? Py_TYPE(obj)->tp_as_number : nullptr)
     { }
     NumericMethodsAnalyzer(const NumericMethodsAnalyzer&) = default;
     NumericMethodsAnalyzer(NumericMethodsAnalyzer&&) = default;
@@ -260,17 +263,17 @@ public:
     ~NumericMethodsAnalyzer() = default;
 
     /// Does this object define __index__, __int__, or __float?
-    bool is_numeric() const { return is_int() or is_float(); };
+    bool is_numeric() const { return is_int() || is_float(); };
 
     /// Does this object define __float?
-    bool is_float() const { return nmeth and nmeth->nb_float; }
+    bool is_float() const { return m_nmeth && m_nmeth->nb_float; }
 
     /// Does this object define __index__ or __int__?
-    bool is_int() const { return nmeth and (nmeth->nb_index or nmeth->nb_int); }
+    bool is_int() const { return m_nmeth && (m_nmeth->nb_index || m_nmeth->nb_int); }
 
 private:
     /// The struct providing access to numeric dunder methods
-    PyNumberMethods* nmeth;
+    PyNumberMethods* m_nmeth;
 };
 
 /**
@@ -281,16 +284,16 @@ class Buffer {
 public:
     /// Allocate buffer space
     Buffer(const std::size_t needed_length)
-        : fixed_buffer()
-        , variable_buffer()
-        , buffer(nullptr)
-        , len(needed_length)
+        : m_fixed_buffer()
+        , m_variable_buffer()
+        , m_buffer(nullptr)
+        , m_len(needed_length)
     {
-        if (len + 1 < FIXED_BUFFER_SIZE) {
-            buffer = fixed_buffer;
+        if (m_len + 1 < FIXED_BUFFER_SIZE) {
+            m_buffer = m_fixed_buffer;
         } else {
-            variable_buffer.reserve(len + 1);
-            buffer = variable_buffer.data();
+            m_variable_buffer.reserve(m_len + 1);
+            m_buffer = m_variable_buffer.data();
         }
     }
 
@@ -298,7 +301,7 @@ public:
     Buffer(const char* data, const std::size_t length)
         : Buffer(length)
     {
-        std::memcpy(buffer, data, len);
+        std::memcpy(m_buffer, data, m_len);
     }
 
     Buffer(const Buffer&) = default;
@@ -307,13 +310,13 @@ public:
     ~Buffer() = default;
 
     /// Return the start of the buffer
-    char* start() { return buffer; }
+    char* start() { return m_buffer; }
 
     /// Return the end of the buffer
-    char* end() { return buffer + len; }
+    char* end() { return m_buffer + m_len; }
 
     /// Return the length of the buffer
-    std::size_t length() { return len; }
+    std::size_t length() { return m_len; }
 
     /// Remove underscores that are syntactically valid in a number
     void remove_valid_underscores() { remove_valid_underscores(false); }
@@ -327,14 +330,14 @@ private:
     static const std::size_t FIXED_BUFFER_SIZE = 32;
 
     /// A string buffer of fixed size, in case data must be copied
-    char fixed_buffer[FIXED_BUFFER_SIZE];
+    char m_fixed_buffer[FIXED_BUFFER_SIZE];
 
     /// A string buffer of variable size, in case large data must be copied
-    std::vector<char> variable_buffer;
+    std::vector<char> m_variable_buffer;
 
     /// Pointer to the character buffer being used
-    char* buffer;
+    char* m_buffer;
 
     /// The length of the character array
-    std::size_t len;
+    std::size_t m_len;
 };
