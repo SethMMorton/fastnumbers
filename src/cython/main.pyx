@@ -9,6 +9,7 @@ from cpython.getargs cimport (
     PyArg_ParseTupleAndKeywords,
 )
 from cpython.ref cimport PyObject
+from cpython.version cimport PY_VERSION_HEX
 from libc.limits cimport INT_MIN
 
 
@@ -1233,7 +1234,10 @@ def fn_int(*args, **kwargs):
     #       if that can be used to support this use case.
     cdef PyObject *x = NULL
     cdef PyObject *base_ = NULL
-    PyArg_ParseTupleAndKeywords(args, kwargs, "|OO:int", ["", "base", NULL], &x, &base_)
+    if PY_VERSION_HEX >= 0x030700A0:
+        PyArg_ParseTupleAndKeywords(args, kwargs, "|OO:int", ["", "base", NULL], &x, &base_)
+    else:
+        PyArg_ParseTupleAndKeywords(args, kwargs, "|OO:int", ["x", "base", NULL], &x, &base_)
 
     # When converting base to integer, note that in the way this function
     # is parsing arguments a NULL is allowed so that is handled specially
