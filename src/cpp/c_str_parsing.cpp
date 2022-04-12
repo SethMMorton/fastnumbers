@@ -194,10 +194,9 @@ double parse_float(const char* str, const char* end, bool& error)
 
     error = not valid or str != end;
     if (expon < 0) {
-        return static_cast<long double>(intvalue)
-            / power_of_ten_scaling_factor(std::abs(expon));
+        return intvalue / power_of_ten_scaling_factor(std::abs(expon));
     } else {
-        return static_cast<long double>(intvalue) * power_of_ten_scaling_factor(expon);
+        return intvalue * power_of_ten_scaling_factor(expon);
     }
 }
 
