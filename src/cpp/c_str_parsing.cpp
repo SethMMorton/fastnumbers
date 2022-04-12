@@ -455,7 +455,7 @@ bool parse_exponent_components(const char*& str)
 /// Helper to check if an exponent number is in the allowed range
 static inline bool _exp_ok(const char* str, std::size_t len)
 {
-    return len == 1 || (len == 2 && (*str <= '2' || (*str == '2' && *(str + 1) <= '2')));
+    return len == 1 || (len == 2 && (*str <= '1' || (*str == '1' && *(str + 1) <= '9')));
 }
 #endif
 

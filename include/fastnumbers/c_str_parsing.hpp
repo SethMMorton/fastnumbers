@@ -231,10 +231,10 @@ constexpr long FN_MIN_EXP = -98;
 constexpr long FN_DBL_DIG = std::numeric_limits<double>::digits10 - 6;
 
 /// Most positive exponent fastumbers will convert itself
-constexpr long FN_MAX_EXP = 22;
+constexpr long FN_MAX_EXP = 19;
 
 /// Most negative exponent fastumbers will convert itself
-constexpr long FN_MIN_EXP = -22;
+constexpr long FN_MIN_EXP = -19;
 
 /// Allow the preprocessor to be able to dispatch on this decision
 #undef FASTNUMBERS_WIDE_EXP_RANGE
