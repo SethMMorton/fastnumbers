@@ -24,8 +24,7 @@ jobs:
 
       - name: Install deps
         run: |
-          sudo apt-get install clang-format
-          pip install black
+          pip install black clang-format
 
       - name: Run formatting checks
         run: python dev/formatting.py --check
