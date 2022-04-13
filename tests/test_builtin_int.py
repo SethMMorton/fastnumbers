@@ -412,7 +412,7 @@ class IntTestCases(unittest.TestCase):
             def __int__(self) -> builtins.float:  # type: ignore
                 return 42.0
 
-        my_int = MyInt(7)
+        my_int: Union[MyInt, BadInt] = MyInt(7)
         self.assertEqual(my_int, 7)
         self.assertEqual(int(my_int), 42)
 
@@ -440,6 +440,7 @@ class IntTestCases(unittest.TestCase):
             def __int__(self) -> bool:
                 return True
 
+        bad_int: Union[BadInt, BadIndex, BadIndex2]
         if sys.version_info >= (3, 8):
             bad_int = BadIndex()
             with self.assertWarns(DeprecationWarning):
