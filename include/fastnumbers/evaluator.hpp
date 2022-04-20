@@ -29,7 +29,7 @@ public:
         , m_nan_allowed(false)
         , m_inf_allowed(false)
         , m_unicode_allowed(true)
-        , m_parser()
+        , m_parser(nullptr)
         , m_char_buffer()
     {
         evaluate_stored_object();
@@ -42,7 +42,11 @@ public:
     Evaluator(const Evaluator&) = delete;
     Evaluator(Evaluator&&) = delete;
     Evaluator& operator=(const Evaluator&) = delete;
-    ~Evaluator() { Py_XDECREF(m_obj); }
+    ~Evaluator()
+    {
+        delete m_parser;
+        Py_XDECREF(m_obj);
+    }
 
     /// Assign a new object to analyze
     void set_object(PyObject* obj)
@@ -52,7 +56,7 @@ public:
     }
 
     /// Tell the analyzer the base to use when parsing ints
-    void set_base(const int base) { m_parser.set_base(base); }
+    void set_base(const int base) { m_parser->set_base(base); }
 
     /// Tell the analyzer whether or not to coerce to int for REAL
     void set_coerce(const bool coerce) { m_coerce = coerce; }
@@ -70,19 +74,24 @@ public:
     }
 
     /// Return the base used for integer conversion
-    int get_base() const { return m_parser.get_base(); }
+    int get_base() const { return m_parser->get_base(); }
 
     /// Was the default base given?
-    bool is_default_base() const { return m_parser.is_default_base(); }
+    bool is_default_base() const { return m_parser->is_default_base(); }
 
     /// Tell the analyzer whether or not underscores are allowed when parsing
     void set_underscores_allowed(const bool underscores_allowed)
     {
-        m_parser.set_allow_underscores(underscores_allowed);
+        // Do nothing unless the parser is a character parser
+        if (m_parser->parser_type() == ParserType::CHARACTER) {
+            static_cast<CharacterParser*>(m_parser)->set_allow_underscores(
+                underscores_allowed
+            );
+        }
     }
 
     /// Return the parser type currenly associated with the Evaluator
-    ParserType parser_type() const { return m_parser.parser_type(); }
+    ParserType parser_type() const { return m_parser->parser_type(); }
 
     /// Was the passed Python object of the correct type?
     bool is_type(const UserType ntype) const;
@@ -90,14 +99,14 @@ public:
     /// Is the stored type a float? Account for nan_action and inf_action.
     bool type_is_float() const
     {
-        return (m_nan_allowed && m_parser.is_nan())
-            || (m_inf_allowed && m_parser.is_infinity()) || m_parser.is_float();
+        return (m_nan_allowed && m_parser->is_nan())
+            || (m_inf_allowed && m_parser->is_infinity()) || m_parser->is_float();
     }
 
     /// Is the stored type an integer? If coerce is true, is the type intlike?
     bool type_is_int() const
     {
-        return m_coerce ? m_parser.is_intlike() : m_parser.is_int();
+        return m_coerce ? m_parser->is_intlike() : m_parser->is_int();
     }
 
     /**
@@ -127,7 +136,7 @@ private:
     bool m_unicode_allowed;
 
     /// A Parser object used for evaluating the Python object
-    Parser m_parser;
+    Parser* m_parser;
 
     /// Buffer object into which to store character data
     Buffer m_char_buffer;
@@ -136,12 +145,18 @@ private:
     /// Generate a Parser object from Python object data
     void evaluate_stored_object()
     {
+        delete m_parser;
         if (m_obj != nullptr) {
             Py_IncRef(m_obj);
-            m_parser.set_input(m_obj);
-            if (m_parser.not_float_or_int() && !m_parser.is_special_numeric()) {
+            NumericParser* nparser = new NumericParser(m_obj);
+            if (nparser->not_float_or_int() && !nparser->is_user_numeric()) {
+                delete nparser;
                 extract_string_data();
+            } else {
+                m_parser = nparser;
             }
+        } else {
+            m_parser = new Parser();
         }
     }
 

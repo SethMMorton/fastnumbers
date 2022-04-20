@@ -28,6 +28,7 @@ clang_format = [
 ]
 cpp = glob.glob("src/cpp/*.cpp")
 hpp = glob.glob("include/fastnumbers/*.hpp")
+hpp += glob.glob("include/fastnumbers/parser/*.hpp")
 
 clang_format = clang_format + cpp + hpp
 print(*map(shlex.quote, clang_format))
