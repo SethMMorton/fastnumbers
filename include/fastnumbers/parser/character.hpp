@@ -15,15 +15,10 @@
 class CharacterParser : public SignedParser {
 
 public:
-    /**
-     * \brief Assign a character array to be parsed as a number
-     * \param str The character array to be parsed
-     * \param len The length of the character array
-     */
-    void set_input(const char* str, const std::size_t len);
-
     /// Construct with a single unicode character and sign
-    CharacterParser(const char* str, const std::size_t len);
+    CharacterParser(
+        const char* str, const std::size_t len, const bool explict_base_allowed = true
+    );
 
     // No default constructor
     CharacterParser() = delete;
@@ -34,11 +29,17 @@ public:
     CharacterParser& operator=(const CharacterParser&) = default;
     ~CharacterParser() final = default;
 
-    /// Convert the stored object to a long (-1 if not possible, check error state)
+    /// Convert the stored object to a long (check error state)
     long as_int() final;
 
-    /// Convert the stored object to a double (-1.0 if not possible, check error state)
+    /// Convert the stored object to a double (check error state)
     double as_float() final;
+
+    /// Convert the stored object to a python int (check error state)
+    PyObject* as_pyint() final;
+
+    /// Convert the stored object to a python float (check error state)
+    PyObject* as_pyfloat() final;
 
     /// Was the passed Python object infinity?
     bool is_infinity() const final;
@@ -72,6 +73,9 @@ public:
 private:
     /// The potential start of the character array
     const char* m_start;
+
+    /// The original end of the character array
+    const char* m_end_orig;
 
     /// The potential length of the character array
     std::size_t m_str_len;

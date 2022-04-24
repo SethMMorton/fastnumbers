@@ -47,6 +47,51 @@ public:
     /// Descructor decreases reference count of the stored object
     ~NumericParser() final { Py_XDECREF(m_obj); };
 
+    /// Convert the stored object to a long (check error state)
+    long as_int() final
+    {
+        reset_error();
+
+        if (Parser::is_int() || is_user_numeric_int()) {
+            int overflow = 0;
+            const long value = PyLong_AsLongAndOverflow(m_obj, &overflow);
+            if (overflow) {
+                encountered_potential_overflow_error();
+                return -1L;
+            } else if (value == -1 && PyErr_Occurred()) {
+                PyErr_Clear();
+            }
+            return value;
+        }
+        encountered_conversion_error();
+        return -1L;
+    }
+
+    /// Convert the stored object to a double (check error state)
+    double as_float() final
+    {
+        reset_error();
+
+        if (Parser::is_float()) {
+            return get_double();
+        } else if (is_user_numeric_float()) {
+            const double value = PyFloat_AsDouble(m_obj);
+            if (value == -1.0 && PyErr_Occurred()) {
+                PyErr_Clear();
+            } else {
+                return value;
+            }
+        }
+        encountered_conversion_error();
+        return -1.0;
+    }
+
+    /// Convert the stored object to a python int (check error state)
+    PyObject* as_pyint() final { return PyNumber_Long(m_obj); }
+
+    /// Convert the stored object to a python float (check error state)
+    PyObject* as_pyfloat() final { return PyNumber_Float(m_obj); }
+
     /// Was the passed Python object finite?
     bool is_finite() const final
     {

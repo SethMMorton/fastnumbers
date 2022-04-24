@@ -1,4 +1,5 @@
 #include <cstring>
+#include <stdexcept>
 
 #include <Python.h>
 
@@ -27,7 +28,9 @@ bool Evaluator::is_type(const UserType ntype) const
         return m_parser->is_intlike();
 
     default:
-        return false;
+        throw std::runtime_error(
+            "An impossible code path was encountered in Evaluator::is_type"
+        );
     }
 }
 
@@ -74,64 +77,61 @@ Payload Evaluator::as_type(const UserType ntype)
     return typed_error(ntype);
 }
 
+static inline ActionType inf_action(const bool is_negative)
+{
+    return is_negative ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION;
+}
+
+static inline ActionType nan_action(const bool is_negative)
+{
+    return is_negative ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION;
+}
+
+static inline ActionType handle_nan_and_inf(NumericParser* nparser)
+{
+    // Exctract the double from the parser, accounting for errors
+    const double value = nparser->as_float();
+    if (nparser->errored()) {
+        return ActionType::ERROR_BAD_TYPE_FLOAT;
+    }
+
+    // Assume infinity or NaN.
+    return nparser->is_nan() ? nan_action(value < 0.0) : inf_action(value < 0.0);
+}
+
 Payload Evaluator::from_numeric_as_type(const UserType ntype)
 {
     NumericParser* nparser = static_cast<NumericParser*>(m_parser);
-    // If not a direct numeric type, assume it might be a user
-    // class with e.g __int__ or __float__ defined. Otherwise it's a
-    // type error
-    if (nparser->not_float_or_int()) {
-        if (nparser->is_user_numeric()) {
-            switch (ntype) {
-            case UserType::REAL:
-                if (nparser->is_user_numeric_float()) {
-                    return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
-                } else {
-                    return Payload(ActionType::TRY_INT_IN_PYTHON);
-                }
-            case UserType::FLOAT:
-                return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
-            case UserType::INT:
-            case UserType::INTLIKE:
-            case UserType::FORCEINT:
-                if (!nparser->is_default_base()) {
-                    return Payload(ActionType::ERROR_INVALID_BASE);
-                }
-                return Payload(ActionType::TRY_INT_IN_PYTHON);
-            }
-        }
+
+    // If not a numeric type it is a type error
+    if (nparser->not_float_or_int() && !nparser->is_user_numeric()) {
         return typed_error(ntype);
     }
 
     // Otherwise, tell the downstream parser what action to take based
-    // on the user requested type.
+    // on the user requested type
     switch (ntype) {
     case UserType::REAL:
         if (m_coerce && nparser->is_intlike()) {
-            return Payload(ActionType::AS_INT);
-        } else if (nparser->is_nan()) {
-            return Payload(ActionType::NAN_ACTION);
-        } else if (nparser->is_infinity()) {
-            if (PyFloat_AS_DOUBLE(m_obj) < 0) {
-                return Payload(ActionType::NEG_INF_ACTION);
+            return Payload(nparser->as_pyint());
+        } else if (nparser->is_nan() || nparser->is_infinity()) {
+            return Payload(handle_nan_and_inf(nparser));
+        } else if (nparser->is_user_numeric()) {
+            if (nparser->is_user_numeric_float()) {
+                return Payload(nparser->as_pyfloat());
             } else {
-                return Payload(ActionType::INF_ACTION);
+                return Payload(nparser->as_pyint());
             }
         } else {
-            return Payload(ActionType::AS_IS);
+            Py_IncRef(m_obj);
+            return Payload(m_obj);
         }
 
     case UserType::FLOAT:
-        if (nparser->is_nan()) {
-            return Payload(ActionType::NAN_ACTION);
-        } else if (nparser->is_infinity()) {
-            if (PyFloat_AS_DOUBLE(m_obj) < 0) {
-                return Payload(ActionType::NEG_INF_ACTION);
-            } else {
-                return Payload(ActionType::INF_ACTION);
-            }
+        if (nparser->is_nan() || nparser->is_infinity()) {
+            return Payload(handle_nan_and_inf(nparser));
         } else {
-            return Payload(ActionType::AS_FLOAT);
+            return Payload(nparser->as_pyfloat());
         }
 
     case UserType::INT:
@@ -139,16 +139,13 @@ Payload Evaluator::from_numeric_as_type(const UserType ntype)
     case UserType::FORCEINT:
         if (!nparser->is_default_base()) {
             return Payload(ActionType::ERROR_INVALID_BASE);
-        } else if (nparser->is_finite()) {
-            return Payload(ActionType::AS_INT);
-        } else if (nparser->is_infinity()) {
-            return Payload(ActionType::ERROR_INFINITY_TO_INT);
-        } else {
-            return Payload(ActionType::ERROR_NAN_TO_INT);
         }
+        return Payload(nparser->as_pyint());
 
     default:
-        return Payload(ActionType::AS_IS); // should never happen
+        throw std::runtime_error(
+            "An impossible code path was encountered in Evaluator::from_numeric_as_type"
+        );
     }
 }
 
@@ -168,98 +165,115 @@ Payload Evaluator::from_text_as_type(const UserType ntype)
         return from_text_as_int();
 
     default:
-        return Payload(ActionType::AS_IS); // should never happen
+        throw std::runtime_error(
+            "An impossible code path was encountered in Evaluator::from_text_as_type"
+        );
     }
+}
+
+/// Helper function to convert to Python float objects
+static inline Payload to_pyfloat(SignedParser* parser)
+{
+    PyObject* result = parser->as_pyfloat();
+    if (parser->errored()) {
+        return Payload(ActionType::ERROR_INVALID_FLOAT);
+    }
+    return Payload(result);
 }
 
 Payload Evaluator::from_text_as_int_or_float(const bool force_int)
 {
     SignedParser* sparser = static_cast<SignedParser*>(m_parser);
-    // If already an integer, no special care is needed
+
+    // Integers are returned as-is
+    // NaN and infinity are illegal with force_int
+    // Otherwise, grab as a float and convert to int if required
     if (sparser->is_int()) {
-        const long result = sparser->as_int();
-        if (sparser->errored()) {
-            return sparser->potential_overflow()
-                ? Payload(ActionType::TRY_INT_IN_PYTHON)
-                : Payload(ActionType::ERROR_INVALID_INT);
-        }
-        return Payload(result);
+        return from_text_as_int();
 
-        // For infinity and NaN, if attemptying to force to integer then
-        // this value is not valid, but if just coercing then these values
-        // are fine.
-    } else if (sparser->is_infinity()) {
-        return Payload(
-            force_int ? ActionType::ERROR_INVALID_INT
-                      : (sparser->is_negative() ? ActionType::NEG_INF_ACTION
-                                                : ActionType::INF_ACTION)
-        );
+    } else if (force_int && (sparser->is_infinity() || sparser->is_nan())) {
+        return Payload(ActionType::ERROR_INVALID_INT);
 
-    } else if (sparser->is_nan()) {
-        return Payload(
-            force_int ? ActionType::ERROR_INVALID_INT
-                      : (sparser->is_negative() ? ActionType::NEG_NAN_ACTION
-                                                : ActionType::NAN_ACTION)
-        );
-
-        // Otherwise, extract as a float and tell the downstream parser if
-        // it needs to be converted to an integer or not.
     } else {
-        const double result = sparser->as_float();
-        if (sparser->errored()) {
-            if (m_parser->potential_overflow()) {
-                if (force_int) {
-                    return Payload(ActionType::TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON);
-                } else if (m_coerce) {
-                    return Payload(ActionType::TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON);
-                } else {
-                    return Payload(ActionType::TRY_FLOAT_IN_PYTHON);
-                }
-            } else {
-                return Payload(ActionType::ERROR_INVALID_FLOAT);
+        Payload payload = from_text_as_float();
+
+        // If the returned value is a double or a python float, annotate
+        // whether it should be an integer and then return.
+        const bool is_double = payload.payload_type() == PayloadType::DOUBLE;
+        const bool is_python = payload.payload_type() == PayloadType::PYOBJECT
+            && payload.to_pyobject() != nullptr;
+        if (is_double || is_python) {
+            const double value = is_double ? payload.to_double()
+                                           : PyFloat_AS_DOUBLE(payload.to_pyobject());
+            if (is_python) {
+                Py_DECREF(payload.to_pyobject());
             }
+            return Payload(
+                value, force_int || (m_coerce && Parser::float_is_intlike(value))
+            );
         }
-        return Payload(
-            result, force_int || (m_coerce && Parser::float_is_intlike(result))
-        );
+
+        // Otherwise return the payload as-is.
+        return payload;
     }
 }
 
 Payload Evaluator::from_text_as_float()
 {
     SignedParser* sparser = static_cast<SignedParser*>(m_parser);
+
+    // Special-case handling of infinity and NaN
     if (sparser->is_infinity()) {
-        return Payload(
-            sparser->is_negative() ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION
-        );
-
+        return Payload(inf_action(sparser->is_negative()));
     } else if (sparser->is_nan()) {
-        return Payload(
-            sparser->is_negative() ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION
-        );
-
-    } else {
-        const double result = sparser->as_float();
-        if (sparser->errored()) {
-            return sparser->potential_overflow()
-                ? Payload(ActionType::TRY_FLOAT_IN_PYTHON)
-                : Payload(ActionType::ERROR_INVALID_FLOAT);
-        }
-        return Payload(result);
+        return Payload(nan_action(sparser->is_negative()));
     }
+
+    // Otherwise, attempt to naively parse if possible, otherwise
+    // use the python conversion function
+    const double result = sparser->as_float();
+    if (sparser->errored()) {
+        return sparser->potential_overflow() ? to_pyfloat(sparser)
+                                             : Payload(ActionType::ERROR_INVALID_FLOAT);
+    }
+
+    // Successful naive conversion
+    return Payload(result);
+}
+
+/// Helper function to convert to Python int objects
+static inline Payload to_pyint(SignedParser* parser)
+{
+    PyObject* result = parser->as_pyint();
+    if (parser->errored()) {
+        return Payload(ActionType::ERROR_INVALID_INT);
+    }
+    return Payload(result);
 }
 
 Payload Evaluator::from_text_as_int()
 {
     SignedParser* sparser = static_cast<SignedParser*>(m_parser);
+
+    // We use python to convert non-base-10 integer strings.
+    // Some strings are not allowed to use an explict base,
+    // so check that first.
     if (sparser->get_base() != 10) {
-        return Payload(ActionType::TRY_INT_IN_PYTHON);
+        if (sparser->illegal_explicit_base()) {
+            return Payload(ActionType::ERROR_ILLEGAL_EXPLICIT_BASE);
+        }
+        return to_pyint(sparser);
     }
+
+    // Otherwise, attempt to naively parse if possible, otherwise
+    // use the python conversion function
     const long result = sparser->as_int();
     if (sparser->errored()) {
-        return sparser->potential_overflow() ? Payload(ActionType::TRY_INT_IN_PYTHON)
+        return sparser->potential_overflow() ? to_pyint(sparser)
                                              : Payload(ActionType::ERROR_INVALID_INT);
     }
+
+    // Successful naive conversion
     return Payload(result);
 }
 
@@ -335,7 +349,9 @@ bool Evaluator::extract_from_buffer()
         // which was allocated when we created the buffer. For this reason
         // it is safe to release the buffer here.
         PyBuffer_Release(&view);
-        m_parser = new CharacterParser(m_char_buffer.start(), str_len);
+        constexpr bool explict_base_allowed = true;
+        m_parser
+            = new CharacterParser(m_char_buffer.start(), str_len, !explict_base_allowed);
         return true;
     }
     return false;

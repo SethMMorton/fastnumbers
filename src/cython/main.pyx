@@ -33,8 +33,7 @@ cdef extern from "fastnumbers/evaluator.hpp":
         FORCEINT "UserType::FORCEINT"
     cdef cppclass Evaluator:
         Evaluator()
-        Evaluator(object)
-        void set_object(object)
+        void set_object(object) except +
         void set_coerce(bint)
         void set_nan_allowed(bint)
         void set_inf_allowed(bint)
@@ -53,13 +52,8 @@ cdef extern from "fastnumbers/evaluator.hpp":
 
 cdef extern from "fastnumbers/payload.hpp":
     ctypedef enum ActionType:
-        AS_IS "ActionType::AS_IS"
-        AS_FLOAT "ActionType::AS_FLOAT"
-        AS_INT "ActionType::AS_INT"
         TRY_INT_IN_PYTHON "ActionType::TRY_INT_IN_PYTHON"
         TRY_FLOAT_IN_PYTHON "ActionType::TRY_FLOAT_IN_PYTHON"
-        TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON "ActionType::TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON"
-        TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON "ActionType::TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON"
         NAN_ACTION "ActionType::NAN_ACTION"
         INF_ACTION "ActionType::INF_ACTION"
         NEG_NAN_ACTION "ActionType::NEG_NAN_ACTION"
@@ -71,12 +65,14 @@ cdef extern from "fastnumbers/payload.hpp":
         ERROR_NAN_TO_INT "ActionType::ERROR_NAN_TO_INT"
         ERROR_BAD_TYPE_INT "ActionType::ERROR_BAD_TYPE_INT"
         ERROR_BAD_TYPE_FLOAT "ActionType::ERROR_BAD_TYPE_FLOAT"
+        ERROR_ILLEGAL_EXPLICIT_BASE "ActionType::ERROR_ILLEGAL_EXPLICIT_BASE"
 
     ctypedef enum PayloadType:
         ACTION "PayloadType::ACTION"
         LONG "PayloadType::LONG"
         DOUBLE "PayloadType::DOUBLE"
         DOUBLE_TO_LONG "PayloadType::DOUBLE_TO_LONG"
+        PYOBJECT "PayloadType::PYOBJECT"
 
     cdef cppclass Payload:
         Payload()
@@ -84,6 +80,7 @@ cdef extern from "fastnumbers/payload.hpp":
         ActionType get_action()
         double to_double()
         long to_long()
+        object to_pyobject()
 
 
 cdef extern from "fastnumbers/c_str_parsing.hpp":
@@ -99,7 +96,9 @@ cdef object SENTINEL = object()
 
 # Infinity and NaN can be cached at startup
 cdef object INFINITY = float("inf")
+cdef object NEG_INFINITY = float("-inf")
 cdef object NAN = float("nan")
+cdef object NEG_NAN = float("-nan")
 
 
 # Global exports
@@ -1450,90 +1449,25 @@ cdef convert_evaluator_payload(
     elif ptype == PayloadType.DOUBLE_TO_LONG:
         return int(payload.to_double())
 
+    elif ptype == PayloadType.PYOBJECT:
+        if return_object is SENTINEL:
+            return payload.to_pyobject()
+        try:
+            return payload.to_pyobject()
+        except Exception:
+            return on_fail(obj) if on_fail is not None else return_object
+            
     # Level 2: We need to instruct Cython as to what action to take
     elif ptype == PayloadType.ACTION:
         atype = payload.get_action()
 
-        # Return the given object as-is
-        if atype == ActionType.AS_IS:
-            return obj
-
-        # Convert the given object to an integer
-        elif atype == ActionType.AS_INT:
-            return int(obj)
-
-        # Convert the given object to a float
-        elif atype == ActionType.AS_FLOAT:
-            return float(obj)
-
-        # Attempt to convert the given object to an integer, handle errors
-        elif atype == ActionType.TRY_INT_IN_PYTHON:
-            # Any exception raised is propagated to the caller
-            if return_object is SENTINEL:
-                if evaluator.parser_type() == ParserType.CHARACTER:
-                    return int(obj, base=evaluator.get_base())
-                else:
-                    return int(obj)
-            # Otherwise, respond to errors appropriately
-            try:
-                if evaluator.parser_type() == ParserType.CHARACTER:
-                    return int(obj, base=evaluator.get_base())
-                else:
-                    return int(obj)
-            except Exception:
-                return on_fail(obj) if on_fail is not None else return_object
-
-        # Attempt to convert the given object to a float, handle errors
-        elif atype == ActionType.TRY_FLOAT_IN_PYTHON:
-            # Any exception raised is propagated to the caller
-            if return_object is SENTINEL:
-                return float(obj)
-            # Otherwise, respond to errors appropriately
-            try:
-                return float(obj)
-            except Exception:
-                return on_fail(obj) if on_fail is not None else return_object
-
-        # Attempt to convert the given object to a float then integer, handle errors
-        elif atype == ActionType.TRY_FLOAT_THEN_FORCE_INT_IN_PYTHON:
-            # Any exception raised is propagated to the caller
-            if return_object is SENTINEL:
-                temp_float = float(obj)
-                return int(temp_float)
-            # Otherwise, respond to errors appropriately
-            try:
-                temp_float = float(obj)
-                return int(temp_float)
-            except Exception:
-                return on_fail(obj) if on_fail is not None else return_object
-
-        # Attempt to convert the given object to a float then possibly to an integer,
-        # handle errors
-        elif atype == ActionType.TRY_FLOAT_THEN_COERCE_INT_IN_PYTHON:
-            # Any exception raised is propagated to the caller
-            if return_object is SENTINEL:
-                temp_float = float(obj)
-                if Parser.float_is_intlike(temp_float):
-                    return int(temp_float)
-                else:
-                    return temp_float
-            # Otherwise, respond to errors appropriately
-            try:
-                temp_float = float(obj)
-                if Parser.float_is_intlike(temp_float):
-                    return int(temp_float)
-                else:
-                    return temp_float
-            except Exception:
-                return on_fail(obj) if on_fail is not None else return_object
-
         # Return the appropriate value for when infinity is found
-        elif atype == ActionType.INF_ACTION:
+        if atype == ActionType.INF_ACTION:
             return INFINITY if infinity is SENTINEL else infinity
 
         # Return the appropriate value for when negative infinity is found
         elif atype == ActionType.NEG_INF_ACTION:
-            return -INFINITY if infinity is SENTINEL else infinity
+            return NEG_INFINITY if infinity is SENTINEL else infinity
 
         # Return the appropriate value for when NaN is found
         elif atype == ActionType.NAN_ACTION:
@@ -1541,7 +1475,7 @@ cdef convert_evaluator_payload(
 
         # Return the appropriate value for when negative NaN is found
         elif atype == ActionType.NEG_NAN_ACTION:
-            return -NAN if nan is SENTINEL else nan
+            return NEG_NAN if nan is SENTINEL else nan
 
         # Raise an exception due passing an invalid type to convert to an integer
         elif atype == ActionType.ERROR_BAD_TYPE_INT:
@@ -1554,6 +1488,10 @@ cdef convert_evaluator_payload(
             obj_name = type(obj).__name__
             msg = "float() argument must be a string or a number, not '{}'"
             raise TypeError(msg.format(obj_name))
+
+        # Raise an exception due to useing an explict integer base where it shouldn't
+        elif atype == ActionType.ERROR_ILLEGAL_EXPLICIT_BASE:
+            raise TypeError("int() can't convert non-string with explicit base")
 
         # Raise an exception due to an invalid integer
         elif atype == ActionType.ERROR_INVALID_INT:

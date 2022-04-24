@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <stdexcept>
 
 #include <Python.h>
 
@@ -36,10 +37,13 @@ public:
     ParserType parser_type() const { return m_ptype; };
 
     /// Whether the last conversion encountered an error
-    bool errored() const { return m_errcode != 0; }
+    bool errored() const { return m_error_type != ErrorType::NONE; }
 
     /// Whether the last conversion potentially had an overflow
-    bool potential_overflow() const { return m_errcode == 2; }
+    bool potential_overflow() const
+    {
+        return m_error_type == ErrorType::POTENTIAL_OVERFLOW;
+    }
 
     /// Tell the analyzer the base to use when parsing ints
     void set_base(const int base)
@@ -54,18 +58,42 @@ public:
     /// Was the default base given?
     bool is_default_base() const { return m_default_base; }
 
-    /// Convert the stored object to a long (-1 if not possible, check error state)
-    virtual long as_int()
+    /// Was an explict base given illegally?
+    bool illegal_explicit_base() const
     {
-        encountered_conversion_error();
-        return -1L;
+        return !m_explicit_base_allowed && !is_default_base();
     }
 
-    /// Convert the stored object to a double (-1.0 if not possible, check error state)
+    /// Convert the stored object to a long (check error state)
+    /// Base implementation does nothing but throw a runtime error
+    virtual long as_int()
+    {
+        throw std::runtime_error("Parser::as_int() must be overriden to be used - "
+                                 "unexpected code path encountered");
+    }
+
+    /// Convert the stored object to a double (check error state)
+    /// Base implementation does nothing but throw a runtime error
     virtual double as_float()
     {
-        encountered_conversion_error();
-        return -1.0;
+        throw std::runtime_error("Parser::as_float() must be overriden to be used - "
+                                 "unexpected code path encountered");
+    }
+
+    /// Convert the stored object to a python int (check error state)
+    /// Base implementation does nothing but throw a runtime error
+    virtual PyObject* as_pyint()
+    {
+        throw std::runtime_error("Parser::as_pyint() must be overriden to be used - "
+                                 "unexpected code path encountered");
+    }
+
+    /// Convert the stored object to a python float (check error state)
+    /// Base implementation does nothing but throw a runtime error
+    virtual PyObject* as_pyfloat()
+    {
+        throw std::runtime_error("Parser::as_pyfloat() must be overriden to be used - "
+                                 "unexpected code path encountered");
     }
 
     /// Was the passed Python object not float or int?
@@ -114,12 +142,14 @@ public:
 
 protected:
     /// Constructor for use only by base-classes to define the parser type
-    Parser(const ParserType ptype)
+    /// and base requirements
+    Parser(const ParserType ptype, const bool explict_base_allowed = false)
         : m_ptype(ptype)
         , m_number_type(NumberType::NOT_FLOAT_OR_INT)
-        , m_errcode(0)
+        , m_error_type(ErrorType::NONE)
         , m_base(10)
         , m_default_base(true)
+        , m_explicit_base_allowed(explict_base_allowed)
     { }
 
     /// Define this parser as "unknown"
@@ -132,10 +162,16 @@ protected:
     void set_as_int_type() { m_number_type = NumberType::INT; }
 
     /// Record that the conversion encountered an error
-    void encountered_conversion_error() { m_errcode = 1; }
+    void encountered_conversion_error() { m_error_type = ErrorType::CANNOT_PARSE; }
 
     /// Record that the conversion encountered a potential overflow
-    void encountered_potential_overflow_error() { m_errcode = 2; }
+    void encountered_potential_overflow_error()
+    {
+        m_error_type = ErrorType::POTENTIAL_OVERFLOW;
+    }
+
+    /// Reset the error state to "no error"
+    void reset_error() { m_error_type = ErrorType::NONE; }
 
 private:
     /// The type of the parser
@@ -151,14 +187,24 @@ private:
     /// Tracker of what type is being stored
     NumberType m_number_type;
 
-    /// Track if a number conversion failed.
-    int m_errcode;
+    /// The types of errors this class can encounter
+    enum ErrorType {
+        NONE,
+        CANNOT_PARSE,
+        POTENTIAL_OVERFLOW,
+    };
+
+    /// Tracker of what error is being stored
+    ErrorType m_error_type;
 
     /// The desired base of integers when parsing
     int m_base;
 
     /// If the user-given base is the default base
     bool m_default_base;
+
+    /// Whether or not explicit base are allowed when parsing
+    bool m_explicit_base_allowed;
 };
 
 /**
@@ -186,6 +232,12 @@ protected:
     /// Dispatch construction to the base class - only avalable to sub-classes
     SignedParser(const ParserType ptype)
         : Parser(ptype)
+        , m_negative(false)
+    { }
+
+    /// Dispatch construction to the base class - only avalable to sub-classes
+    SignedParser(const ParserType ptype, const bool explict_base_allowed)
+        : Parser(ptype, explict_base_allowed)
         , m_negative(false)
     { }
 

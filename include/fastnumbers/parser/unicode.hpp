@@ -36,26 +36,56 @@ public:
     UnicodeParser& operator=(const UnicodeParser&) = default;
     ~UnicodeParser() final = default;
 
-    /// Convert the stored object to a long (-1 if not possible, check error state)
+    /// Convert the stored object to a long (check error state)
     long as_int() final
     {
+        reset_error();
+
         if (Parser::is_int()) {
             return sign() * m_digit;
-        } else {
-            return Parser::as_int();
         }
+        encountered_conversion_error();
+        return -1L;
     }
 
-    /// Convert the stored object to a double (-1.0 if not possible, check error state)
+    /// Convert the stored object to a double (check error state)
     double as_float() final
     {
+        reset_error();
+
         if (Parser::is_int()) {
             return static_cast<double>(sign() * m_digit);
         } else if (Parser::is_float()) {
             return sign() * m_numeric;
-        } else {
-            return Parser::as_float();
         }
+        encountered_conversion_error();
+        return -1.0;
+    }
+
+    /// Convert the stored object to a python int (check error state)
+    PyObject* as_pyint() final
+    {
+        reset_error();
+
+        const long value = as_int();
+        if (!errored()) {
+            return PyLong_FromLong(value);
+        }
+        encountered_conversion_error();
+        return nullptr;
+    }
+
+    /// Convert the stored object to a python float (check error state)
+    virtual PyObject* as_pyfloat()
+    {
+        reset_error();
+
+        const double value = as_float();
+        if (!errored()) {
+            return PyFloat_FromDouble(value);
+        }
+        encountered_conversion_error();
+        return nullptr;
     }
 
     /// Was the passed Python object a float?
