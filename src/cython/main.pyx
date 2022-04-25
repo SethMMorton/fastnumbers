@@ -4,6 +4,7 @@
 # Author: Seth M. Morton, July 30, 2014
 #
 # distutils: language = c++
+# cython: language_level = 3, always_allow_keywords = False
 from cpython.getargs cimport (
     PyArg_ParseTuple,
     PyArg_ParseTupleAndKeywords,

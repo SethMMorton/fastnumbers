@@ -44,11 +44,7 @@ if USING_CYTHON:
                 extra_compile_args=compile_args,
                 extra_link_args=["-lm"],
             )
-        ],
-        language_level="3",
-        compiler_directives={
-            "always_allow_keywords": False,
-        },
+        ]
     )
 else:
     ext = None
