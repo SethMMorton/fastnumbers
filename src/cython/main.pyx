@@ -52,8 +52,6 @@ cdef extern from "fastnumbers/evaluator.hpp":
 
 cdef extern from "fastnumbers/payload.hpp":
     ctypedef enum ActionType:
-        TRY_INT_IN_PYTHON "ActionType::TRY_INT_IN_PYTHON"
-        TRY_FLOAT_IN_PYTHON "ActionType::TRY_FLOAT_IN_PYTHON"
         NAN_ACTION "ActionType::NAN_ACTION"
         INF_ACTION "ActionType::INF_ACTION"
         NEG_NAN_ACTION "ActionType::NEG_NAN_ACTION"
@@ -1428,11 +1426,6 @@ cdef convert_evaluator_payload(
     cdef Payload payload = evaluator.as_type(ntype)
     cdef PayloadType ptype = payload.payload_type()
     cdef ActionType atype
-    cdef str obj_repr
-    cdef str obj_name
-    cdef str msg
-    cdef type exception_type
-    cdef double temp_float
 
     # I realize this chain of ifs looks ugly and "the wrong way", but
     # Cython will smartly convert this into a switch statement because
@@ -1477,55 +1470,78 @@ cdef convert_evaluator_payload(
         elif atype == ActionType.NEG_NAN_ACTION:
             return NEG_NAN if nan is SENTINEL else nan
 
-        # Raise an exception due passing an invalid type to convert to an integer
-        elif atype == ActionType.ERROR_BAD_TYPE_INT:
-            obj_name = type(obj).__name__
-            msg = "int() argument must be a string, a bytes-like object or a number, not '{}'"
-            raise TypeError(msg.format(obj_name))
+        # Raise an exception due passing an invalid type to convert to
+        # an integer or float, or if using an explicit integer base
+        # where it shouldn't be used
+        elif (atype == ActionType.ERROR_BAD_TYPE_INT
+                or atype == ActionType.ERROR_BAD_TYPE_FLOAT
+                or atype == ActionType.ERROR_ILLEGAL_EXPLICIT_BASE
+        ):
+            raise_appropriate_exception(obj, atype, evaluator)
 
-        # Raise an exception due passing an invalid type to convert to a float
-        elif atype == ActionType.ERROR_BAD_TYPE_FLOAT:
-            obj_name = type(obj).__name__
-            msg = "float() argument must be a string or a number, not '{}'"
-            raise TypeError(msg.format(obj_name))
+        # Raise an exception if that is what the user has asked for
+        elif return_object is SENTINEL:
+            raise_appropriate_exception(obj, atype, evaluator)
 
-        # Raise an exception due to useing an explict integer base where it shouldn't
-        elif atype == ActionType.ERROR_ILLEGAL_EXPLICIT_BASE:
-            raise TypeError("int() can't convert non-string with explicit base")
-
-        # Raise an exception due to an invalid integer
-        elif atype == ActionType.ERROR_INVALID_INT:
-            base = evaluator.get_base()
-            obj_repr = repr(obj)
-            msg = "invalid literal for int() with base {}: {}"
-            msg = msg.format(base, obj_repr)
-            exception_type = ValueError
-
-        # Raise an exception due to an invalid float
-        elif atype == ActionType.ERROR_INVALID_FLOAT:
-            obj_repr = repr(obj)
-            msg = f"could not convert string to float: {obj_repr}"
-            exception_type = ValueError
-
-        # Raise an exception due to an invalid base for integer conversion
-        elif atype == ActionType.ERROR_INVALID_BASE:
-            msg = "int() can't convert non-string with explicit base"
-            exception_type = TypeError
-
-        # Raise an exception due to attempting to convert infininty to an integer
-        elif atype == ActionType.ERROR_INFINITY_TO_INT:
-            msg = "cannot convert float infinity to integer"
-            exception_type = OverflowError
-
-        # Raise an exception due to attempting to convert NaN to an integer
-        elif atype == ActionType.ERROR_NAN_TO_INT:
-            msg = "cannot convert float NaN to integer"
-            exception_type = ValueError
-
-        # Return the correct value (or raise) on error
-        if return_object is SENTINEL:
-            raise exception_type(msg)
+        # Transform the input via a function
         elif on_fail is not None:
             return on_fail(obj)
+
+        # Return the input as-is
         else:
             return return_object
+
+
+cdef raise_appropriate_exception(obj, ActionType atype, Evaluator & evaluator):
+    """Prepare and raise the appropriate exception given an action type"""
+    cdef str obj_repr
+    cdef str obj_name
+    cdef str msg
+    cdef type exception_type
+
+    # Raise an exception due passing an invalid type to convert to an integer
+    if atype == ActionType.ERROR_BAD_TYPE_INT:
+        obj_name = type(obj).__name__
+        msg = f"int() argument must be a string, a bytes-like object or a number, not '{obj_name}'"
+        exception_type = TypeError
+
+    # Raise an exception due passing an invalid type to convert to a float
+    elif atype == ActionType.ERROR_BAD_TYPE_FLOAT:
+        obj_name = type(obj).__name__
+        msg = f"float() argument must be a string or a number, not '{obj_name}'"
+        exception_type = TypeError
+
+    # Raise an exception due to useing an explict integer base where it shouldn't
+    elif atype == ActionType.ERROR_ILLEGAL_EXPLICIT_BASE:
+        msg = "int() can't convert non-string with explicit base"
+        exception_type = TypeError
+
+    # Raise an exception due to an invalid integer
+    elif atype == ActionType.ERROR_INVALID_INT:
+        base = evaluator.get_base()
+        obj_repr = repr(obj)
+        msg = f"invalid literal for int() with base {base}: {obj_repr}"
+        exception_type = ValueError
+
+    # Raise an exception due to an invalid float
+    elif atype == ActionType.ERROR_INVALID_FLOAT:
+        obj_repr = repr(obj)
+        msg = f"could not convert string to float: {obj_repr}"
+        exception_type = ValueError
+
+    # Raise an exception due to an invalid base for integer conversion
+    elif atype == ActionType.ERROR_INVALID_BASE:
+        msg = "int() can't convert non-string with explicit base"
+        exception_type = TypeError
+
+    # Raise an exception due to attempting to convert infininty to an integer
+    elif atype == ActionType.ERROR_INFINITY_TO_INT:
+        msg = "cannot convert float infinity to integer"
+        exception_type = OverflowError
+
+    # Raise an exception due to attempting to convert NaN to an integer
+    elif atype == ActionType.ERROR_NAN_TO_INT:
+        msg = "cannot convert float NaN to integer"
+        exception_type = ValueError
+
+    raise exception_type(msg)
