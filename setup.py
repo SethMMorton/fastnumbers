@@ -17,11 +17,9 @@ from setuptools import Extension, find_packages, setup
 # Compilation arguments are platform-dependent
 if sys.platform == "win32":
     compile_args = [
-        "/Wall",
-        "/wd4514",  # don't warn that inline functions are removed
-        "/wd4711",  # don't warn about automatic inline expansion
-        "/wd5045",  # don't warn about Spectre mitigation
-        "/wd4820",  # don't warn about added padding in classes
+        "/W4",  # Equivalent to -Wall -Wpedantic on GCC/Clang
+        "/wd4100",  # don't warn about unreferenced formal parameters
+        "/wd4127",  # don't warn about constant conditional expressions
         "/O2",
     ]
 else:
