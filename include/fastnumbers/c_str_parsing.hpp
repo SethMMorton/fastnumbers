@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cctype>
 #include <cstring>
 #include <limits>
 
@@ -93,7 +94,7 @@ constexpr long FN_MAX_INT_LEN
  */
 inline bool is_whitespace(const char c)
 {
-    return c == ' ' || (c >= '\t' && c <= '\r');
+    return std::isspace(static_cast<unsigned char>(c));
 }
 
 /**
@@ -101,7 +102,7 @@ inline bool is_whitespace(const char c)
  */
 inline bool is_valid_digit(const char c)
 {
-    return c >= '0' && c <= '9';
+    return std::isdigit(static_cast<unsigned char>(c));
 }
 
 /**
