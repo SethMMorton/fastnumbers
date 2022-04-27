@@ -11,7 +11,8 @@
 #include <cstring>
 
 /// Convert a character to an integer in the desired type
-template <typename T> static inline T ascii2int(const char c)
+template <typename T>
+static inline T ascii2int(const char c)
 {
     return static_cast<T>(c - '0');
 }

@@ -7,6 +7,7 @@
 #include <Python.h>
 
 #include "fastnumbers/parser/base.hpp"
+#include "fastnumbers/parser/buffer.hpp"
 
 /**
  * \class CharacterParser
@@ -103,4 +104,26 @@ private:
     {
         return m_start == nullptr ? nullptr : (m_start + m_str_len);
     }
+
+    /// Template for conversion to base types
+    template <
+        typename T,
+        typename CheckFunction,
+        typename OverflowCheckFunction,
+        typename ConvertFunction>
+    T as_type(
+        CheckFunction check_function,
+        OverflowCheckFunction overflow_check_function,
+        ConvertFunction convert_function
+    );
+
+    /// Template for checking that in input contains a type, accounting for underscores
+    template <typename Function>
+    bool check_string_for_number(
+        Buffer& buffer,
+        const char*& start,
+        const char*& new_end,
+        const std::size_t offset,
+        Function string_contains_number
+    );
 };
