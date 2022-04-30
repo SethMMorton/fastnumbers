@@ -5,12 +5,6 @@ import glob
 import os
 import sys
 
-try:
-    from Cython.Build import cythonize
-except ImportError:
-    USING_CYTHON = False
-else:
-    USING_CYTHON = True
 from setuptools import Extension, find_packages, setup
 
 
@@ -34,20 +28,15 @@ else:
         compile_args.append("-Wno-c++17-extensions")
 
 
-if USING_CYTHON:
-    ext = cythonize(
-        [
-            Extension(
-                "fastnumbers.fastnumbers",
-                sorted(glob.glob("src/cython/main.pyx") + glob.glob("src/cpp/*.cpp")),
-                include_dirs=[os.path.abspath(os.path.join("include"))],
-                extra_compile_args=compile_args,
-                extra_link_args=["-lm"],
-            )
-        ]
+ext = [
+    Extension(
+        "fastnumbers.fastnumbers",
+        sorted(glob.glob("src/cpp/*.cpp")),
+        include_dirs=[os.path.abspath(os.path.join("include"))],
+        extra_compile_args=compile_args,
+        extra_link_args=["-lm"],
     )
-else:
-    ext = None
+]
 
 # Define how to build the extension module.
 # All other data is in the setup.cfg file.
