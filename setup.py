@@ -23,6 +23,8 @@ else:
         "-Weffc++",
         "-Wpedantic",
         "-O2",
+        # "-O0",
+        # "-g",
     ]
     if sys.platform == "darwin":
         compile_args.append("-Wno-c++17-extensions")

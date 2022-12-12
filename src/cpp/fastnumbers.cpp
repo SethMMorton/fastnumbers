@@ -3,8 +3,10 @@
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/evaluator.hpp"
+#include "fastnumbers/extractor.hpp"
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
+#include "fastnumbers/user_options.hpp"
 #include "fastnumbers/version.hpp"
 
 // Infinity and NaN can be cached at startup
@@ -87,8 +89,9 @@ PyObject* failure_return_value(PyObject* obj, bool raise_on_invalid, PyObject* d
 }
 
 /// Prepare and raise the appropriate exception given an action type
-PyObject*
-raise_appropriate_exception(PyObject* obj, const ActionType atype, Evaluator& evaluator)
+PyObject* raise_appropriate_exception(
+    PyObject* obj, const ActionType atype, const UserOptions& options
+)
 {
     switch (atype) {
     case ActionType::ERROR_BAD_TYPE_INT:
@@ -122,7 +125,7 @@ raise_appropriate_exception(PyObject* obj, const ActionType atype, Evaluator& ev
         PyErr_Format(
             PyExc_ValueError,
             "invalid literal for int() with base %d: %.200R",
-            evaluator.get_base(),
+            options.get_base(),
             obj
         );
         break;
@@ -155,19 +158,34 @@ raise_appropriate_exception(PyObject* obj, const ActionType atype, Evaluator& ev
     return nullptr;
 }
 
+/// Extract the return payload from a given python object
+Payload collect_payload(PyObject* obj, const UserOptions& options, const UserType ntype)
+{
+    Buffer buffer;
+    TextExtractor extractor(obj, buffer);
+    if (extractor.is_text()) {
+        CharacterParser cparser = extractor.text_parser(options);
+        return Evaluator(obj, options, &cparser).as_type(ntype);
+    } else if (extractor.is_unicode_character()) {
+        UnicodeParser uparser = extractor.unicode_char_parser(options);
+        return Evaluator(obj, options, &uparser).as_type(ntype);
+    } else {
+        NumericParser nparser(obj, options);
+        return Evaluator(obj, options, &nparser).as_type(ntype);
+    }
+}
+
 /// Convert the Payload of an Evaluator into a PyNumber
-PyObject* convert_evaluator_payload(
+PyObject* convert_payload(
     PyObject* obj,
-    Evaluator& evaluator,
-    const UserType ntype,
+    const Payload& payload,
+    const UserOptions& options,
     PyObject* infinity,
     PyObject* nan,
     PyObject* return_object,
     PyObject* on_fail
 )
 {
-    const Payload payload = evaluator.as_type(ntype);
-
     // Level 1: If the payload contains an actual number,
     //          convert to PyObject directly
     switch (payload.payload_type()) {
@@ -225,13 +243,13 @@ PyObject* convert_evaluator_payload(
         case ActionType::ERROR_BAD_TYPE_INT:
         case ActionType::ERROR_BAD_TYPE_FLOAT:
         case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE:
-            return raise_appropriate_exception(obj, atype, evaluator);
+            return raise_appropriate_exception(obj, atype, options);
 
         default:
             // Raise an exception if that is what the user has asked for, otherwise
             // transform the input via a function, otherwise return the input as-is
             if (return_object == nullptr) {
-                return raise_appropriate_exception(obj, atype, evaluator);
+                return raise_appropriate_exception(obj, atype, options);
             }
 
             PyErr_Clear();
@@ -260,35 +278,33 @@ PyObject* object_is_number(
     bool allow_underscores
 )
 {
+    // Store the user options in a common interface
+    UserOptions options;
+    options.set_base(base);
+    options.set_nan_allowed(allow_nan);
+    options.set_inf_allowed(allow_inf);
+    options.set_underscores_allowed(allow_underscores);
 
-    // Create the evaluator and populate with the appropriate options
-    Evaluator evaluator(obj);
-    evaluator.set_base(base);
-    evaluator.set_nan_allowed(allow_nan);
-    evaluator.set_inf_allowed(allow_inf);
-    evaluator.set_underscores_allowed(allow_underscores);
-
-    // If the user explictly asked to disallow some types, check that here.
-    switch (evaluator.parser_type()) {
-    case ParserType::NUMERIC:
-        if (str_only) {
-            Py_RETURN_FALSE;
-        }
-        evaluator.set_nan_allowed(true);
-        evaluator.set_inf_allowed(true);
-        break;
-    case ParserType::UNICODE:
-    case ParserType::CHARACTER:
-        if (num_only) {
-            Py_RETURN_FALSE;
-        }
-        break;
-    default:
+    // Attempt to extract character data from the object
+    Buffer buffer;
+    TextExtractor extractor(obj, buffer);
+    if (num_only && (extractor.is_text() || extractor.is_unicode_character())) {
+        Py_RETURN_FALSE;
+    } else if (str_only && extractor.is_non_text()) {
         Py_RETURN_FALSE;
     }
 
-    // Evaluate the type!
-    return PyBool_FromLong(evaluator.is_type(type));
+    // Create a parser and use it to evaluate the user request
+    if (extractor.is_text()) {
+        CharacterParser cparser = extractor.text_parser(options);
+        return PyBool_FromLong(Evaluator(obj, options, &cparser).is_type(type));
+    } else if (extractor.is_unicode_character()) {
+        UnicodeParser uparser = extractor.unicode_char_parser(options);
+        return PyBool_FromLong(Evaluator(obj, options, &uparser).is_type(type));
+    } else {
+        NumericParser nparser(obj, options);
+        return PyBool_FromLong(Evaluator(obj, options, &nparser).is_type(type));
+    }
 }
 
 /// Ensure the type is allowed, otherwise return None
@@ -298,6 +314,15 @@ PyObject* validate_query_type(PyObject* result, PyObject* allowed_types)
         Py_RETURN_NONE;
     }
     return increment_reference(result);
+}
+
+/// Return the correct type to search for in the input
+PyObject* query_search_type(const Evaluator& evaluator, PyObject* input)
+{
+    return evaluator.type_is_int()
+        ? (PyObject*)&PyLong_Type
+        : (evaluator.type_is_float() ? (PyObject*)&PyFloat_Type
+                                     : (PyObject*)Py_TYPE(input));
 }
 
 // Quickly convert to an int or float, depending on value
@@ -339,13 +364,14 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
         return nullptr;
     }
 
-    Evaluator evaluator(input);
-    evaluator.set_coerce(coerce);
-    evaluator.set_underscores_allowed(allow_underscores);
     PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::REAL, inf, nan, on_invalid, on_fail
-    );
+
+    UserOptions options;
+    options.set_coerce(coerce);
+    options.set_underscores_allowed(allow_underscores);
+
+    const Payload payload = collect_payload(input, options, UserType::REAL);
+    return convert_payload(input, payload, options, inf, nan, on_invalid, on_fail);
 }
 
 /* Quickly convert to a float, depending on value. */
@@ -385,12 +411,13 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
         return nullptr;
     }
 
-    Evaluator evaluator(input);
-    evaluator.set_underscores_allowed(allow_underscores);
     PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::FLOAT, inf, nan, on_invalid, on_fail
-    );
+
+    UserOptions options;
+    options.set_underscores_allowed(allow_underscores);
+
+    const Payload payload = collect_payload(input, options, UserType::FLOAT);
+    return convert_payload(input, payload, options, inf, nan, on_invalid, on_fail);
 }
 
 /* Quickly convert to an int, depending on value. */
@@ -435,13 +462,16 @@ static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* 
         return nullptr;
     }
 
-    Evaluator evaluator(input);
-    evaluator.set_underscores_allowed(allow_underscores);
-    evaluator.set_base(base);
-    evaluator.set_unicode_allowed(evaluator.is_default_base());
     PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::INT, nullptr, nullptr, on_invalid, on_fail
+
+    UserOptions options;
+    options.set_base(base);
+    options.set_unicode_allowed(options.is_default_base());
+    options.set_underscores_allowed(allow_underscores);
+
+    const Payload payload = collect_payload(input, options, UserType::INT);
+    return convert_payload(
+        input, payload, options, nullptr, nullptr, on_invalid, on_fail
     );
 }
 
@@ -481,11 +511,14 @@ fastnumbers_fast_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
         return nullptr;
     }
 
-    Evaluator evaluator(input);
-    evaluator.set_underscores_allowed(allow_underscores);
     PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::FORCEINT, nullptr, nullptr, on_invalid, on_fail
+
+    UserOptions options;
+    options.set_underscores_allowed(allow_underscores);
+
+    const Payload payload = collect_payload(input, options, UserType::FORCEINT);
+    return convert_payload(
+        input, payload, options, nullptr, nullptr, on_invalid, on_fail
     );
 }
 
@@ -692,26 +725,30 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
         }
     }
 
-    // Create the evaluator and populate with the appropriate options
-    Evaluator evaluator(input);
-    evaluator.set_coerce(coerce);
-    evaluator.set_underscores_allowed(allow_underscores);
-    if (evaluator.parser_type() == ParserType::NUMERIC) {
-        evaluator.set_nan_allowed(true);
-        evaluator.set_inf_allowed(true);
-    } else {
-        evaluator.set_nan_allowed(allow_nan);
-        evaluator.set_inf_allowed(allow_inf);
-    }
+    // Store the user options in a common interface
+    UserOptions options;
+    options.set_coerce(coerce);
+    options.set_nan_allowed(allow_nan);
+    options.set_inf_allowed(allow_inf);
+    options.set_underscores_allowed(allow_underscores);
 
-    // Check that the found type allowed, and return
-    if (evaluator.type_is_int()) {
-        return validate_query_type((PyObject*)&PyLong_Type, allowed_types);
-    } else if (evaluator.type_is_float()) {
-        return validate_query_type((PyObject*)&PyFloat_Type, allowed_types);
+    // Attempt to extract character data from the object
+    Buffer buffer;
+    TextExtractor extractor(input, buffer);
+
+    // Create a parser and use it to evaluate the user request
+    PyObject* search_type = nullptr;
+    if (extractor.is_text()) {
+        CharacterParser cparser = extractor.text_parser(options);
+        search_type = query_search_type(Evaluator(input, options, &cparser), input);
+    } else if (extractor.is_unicode_character()) {
+        UnicodeParser uparser = extractor.unicode_char_parser(options);
+        search_type = query_search_type(Evaluator(input, options, &uparser), input);
     } else {
-        return validate_query_type((PyObject*)Py_TYPE(input), allowed_types);
+        NumericParser nparser(input, options);
+        search_type = query_search_type(Evaluator(input, options, &nparser), input);
     }
+    return validate_query_type(search_type, allowed_types);
 }
 
 /* Drop-in replacement for int, float */
@@ -749,12 +786,13 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
         return nullptr;
     }
 
-    Evaluator evaluator(input);
-    evaluator.set_base(base);
-    evaluator.set_unicode_allowed(false);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::INT, nullptr, nullptr, nullptr, nullptr
-    );
+    UserOptions options;
+    options.set_base(base);
+    options.set_unicode_allowed(false);
+    options.set_underscores_allowed(true);
+
+    const Payload payload = collect_payload(input, options, UserType::INT);
+    return convert_payload(input, payload, options, nullptr, nullptr, nullptr, nullptr);
 }
 
 static PyObject*
@@ -787,11 +825,13 @@ fastnumbers_float(PyObject* self, PyObject* args, PyObject* kwargs)
     if (input == nullptr) {
         return PyFloat_FromDouble(0.0);
     }
-    Evaluator evaluator(input);
-    evaluator.set_unicode_allowed(false);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::FLOAT, nullptr, nullptr, nullptr, nullptr
-    );
+
+    UserOptions options;
+    options.set_unicode_allowed(false);
+    options.set_underscores_allowed(true);
+
+    const Payload payload = collect_payload(input, options, UserType::FLOAT);
+    return convert_payload(input, payload, options, nullptr, nullptr, nullptr, nullptr);
 }
 
 /* Behaves like float or int, but returns correct type. */
@@ -819,12 +859,14 @@ static PyObject* fastnumbers_real(PyObject* self, PyObject* args, PyObject* kwar
     if (input == nullptr) {
         return coerce ? PyLong_FromLong(0) : PyFloat_FromDouble(0.0);
     }
-    Evaluator evaluator(input);
-    evaluator.set_coerce(coerce);
-    evaluator.set_unicode_allowed(false);
-    return convert_evaluator_payload(
-        input, evaluator, UserType::REAL, nullptr, nullptr, nullptr, nullptr
-    );
+
+    UserOptions options;
+    options.set_coerce(coerce);
+    options.set_unicode_allowed(false);
+    options.set_underscores_allowed(true);
+
+    const Payload payload = collect_payload(input, options, UserType::REAL);
+    return convert_payload(input, payload, options, nullptr, nullptr, nullptr, nullptr);
 }
 
 /* This defines the methods contained in this module. */

@@ -8,17 +8,21 @@
 
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/buffer.hpp"
+#include "fastnumbers/user_options.hpp"
 
 /**
  * \class CharacterParser
  * \brief Parses an ASCII character array for numeric properties
  */
-class CharacterParser : public SignedParser {
+class CharacterParser final : public Parser {
 
 public:
     /// Construct with a single unicode character and sign
     CharacterParser(
-        const char* str, const std::size_t len, const bool explict_base_allowed = true
+        const char* str,
+        const std::size_t len,
+        const UserOptions& options,
+        const bool explict_base_allowed = true
     );
 
     // No default constructor
@@ -28,34 +32,34 @@ public:
     CharacterParser(const CharacterParser&) = default;
     CharacterParser(CharacterParser&&) = default;
     CharacterParser& operator=(const CharacterParser&) = default;
-    ~CharacterParser() final = default;
+    ~CharacterParser() = default;
 
     /// Convert the stored object to a long (check error state)
-    long as_int() final;
+    long as_int();
 
     /// Convert the stored object to a double (check error state)
-    double as_float() final;
+    double as_float();
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() final;
+    PyObject* as_pyint();
 
     /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() final;
+    PyObject* as_pyfloat();
 
     /// Was the passed Python object infinity?
-    bool is_infinity() const final;
+    bool is_infinity() const;
 
     /// Was the passed Python object NaN?
-    bool is_nan() const final;
+    bool is_nan() const;
 
     /// Was the passed Python object real (e.g. float or int)?
-    bool is_real() const final { return is_float(); }
+    bool is_real() const { return is_float(); }
 
     /// Was the passed Python object a float?
-    bool is_float() const final;
+    bool is_float() const;
 
     /// Was the passed Python object an int?
-    bool is_int() const final;
+    bool is_int() const;
 
     /**
      * \brief Was the passed Python object intlike?
@@ -63,13 +67,7 @@ public:
      * "intlike" is defined as either an int, or a float that can be
      * converted to an int with no loss of information.
      */
-    bool is_intlike() const final;
-
-    /// Define whether or not underscores are allowed
-    void set_allow_underscores(const bool val) { m_underscore_allowed = val; }
-
-    /// Are underscores allowed?
-    bool are_underscores_allowed() const { return m_underscore_allowed; }
+    bool is_intlike() const;
 
 private:
     /// The potential start of the character array
@@ -81,21 +79,18 @@ private:
     /// The potential length of the character array
     std::size_t m_str_len;
 
-    /// Whether or not underscores are allowed when parsing
-    bool m_underscore_allowed;
-
 private:
     /// Check if the character array contains valid underscores
     bool has_valid_underscores() const
     {
-        return m_start != nullptr && are_underscores_allowed() && m_str_len > 0
+        return m_start != nullptr && options().allow_underscores() && m_str_len > 0
             && std::memchr(m_start, '_', m_str_len);
     }
 
     /// Check if the character array contains invalid underscores
     bool has_invalid_underscores() const
     {
-        return m_start != nullptr && !are_underscores_allowed() && m_str_len > 0
+        return m_start != nullptr && !options().allow_underscores() && m_str_len > 0
             && std::memchr(m_start, '_', m_str_len);
     }
 

@@ -5,16 +5,17 @@
 #include <Python.h>
 
 #include "fastnumbers/parser/base.hpp"
+#include "fastnumbers/user_options.hpp"
 
 /**
  * \class NumericParser
  * \brief Parses numeric python objects
  */
-class NumericParser : public Parser {
+class NumericParser final : public Parser {
 public:
     /// Construct with a Python object
-    explicit NumericParser(PyObject* obj)
-        : Parser(ParserType::NUMERIC)
+    explicit NumericParser(PyObject* obj, const UserOptions& options)
+        : Parser(ParserType::NUMERIC, options)
         , m_obj(obj)
         , m_user_numeric(false)
     {
@@ -45,10 +46,10 @@ public:
     NumericParser& operator=(const NumericParser&) = default;
 
     /// Descructor decreases reference count of the stored object
-    ~NumericParser() final { Py_XDECREF(m_obj); };
+    ~NumericParser() { Py_XDECREF(m_obj); };
 
     /// Convert the stored object to a long (check error state)
-    long as_int() final
+    long as_int()
     {
         reset_error();
 
@@ -68,7 +69,7 @@ public:
     }
 
     /// Convert the stored object to a double (check error state)
-    double as_float() final
+    double as_float()
     {
         reset_error();
 
@@ -87,25 +88,22 @@ public:
     }
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() final { return PyNumber_Long(m_obj); }
+    PyObject* as_pyint() { return PyNumber_Long(m_obj); }
 
     /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() final { return PyNumber_Float(m_obj); }
+    PyObject* as_pyfloat() { return PyNumber_Float(m_obj); }
 
     /// Was the passed Python object finite?
-    bool is_finite() const final
+    bool is_finite() const
     {
         return Parser::is_int() || (Parser::is_float() && std::isfinite(get_double()));
     }
 
     /// Was the passed Python object infinity?
-    bool is_infinity() const final
-    {
-        return Parser::is_float() && std::isinf(get_double());
-    }
+    bool is_infinity() const { return Parser::is_float() && std::isinf(get_double()); }
 
     /// Was the passed Python object NaN?
-    bool is_nan() const final { return Parser::is_float() && std::isnan(get_double()); }
+    bool is_nan() const { return Parser::is_float() && std::isnan(get_double()); }
 
     /**
      * \brief Was the passed Python object intlike?
@@ -113,7 +111,7 @@ public:
      * "intlike" is defined as either an int, or a float that can be
      * converted to an int with no loss of information.
      */
-    bool is_intlike() const final
+    bool is_intlike() const
     {
         return Parser::is_int()
             || (Parser::is_float() && Parser::float_is_intlike(get_double()));

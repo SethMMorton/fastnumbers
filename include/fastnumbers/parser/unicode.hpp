@@ -3,16 +3,17 @@
 #include <Python.h>
 
 #include "fastnumbers/parser/base.hpp"
+#include "fastnumbers/user_options.hpp"
 
 /**
  * \class UnicodeParser
  * \brief Parses single unicode characters for numeric properties
  */
-class UnicodeParser : public SignedParser {
+class UnicodeParser final : public Parser {
 public:
     /// Construct with a single unicode character and sign
-    UnicodeParser(const Py_UCS4 uchar, const bool negative)
-        : SignedParser(ParserType::UNICODE)
+    UnicodeParser(const Py_UCS4 uchar, const bool negative, const UserOptions& options)
+        : Parser(ParserType::UNICODE, options)
         , m_numeric(Py_UNICODE_TONUMERIC(uchar))
         , m_digit(Py_UNICODE_TODIGIT(uchar))
     {
@@ -34,10 +35,10 @@ public:
     UnicodeParser(const UnicodeParser&) = default;
     UnicodeParser(UnicodeParser&&) = default;
     UnicodeParser& operator=(const UnicodeParser&) = default;
-    ~UnicodeParser() final = default;
+    ~UnicodeParser() = default;
 
     /// Convert the stored object to a long (check error state)
-    long as_int() final
+    long as_int()
     {
         reset_error();
 
@@ -49,7 +50,7 @@ public:
     }
 
     /// Convert the stored object to a double (check error state)
-    double as_float() final
+    double as_float()
     {
         reset_error();
 
@@ -63,7 +64,7 @@ public:
     }
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() final
+    PyObject* as_pyint()
     {
         reset_error();
 
@@ -76,7 +77,7 @@ public:
     }
 
     /// Convert the stored object to a python float (check error state)
-    virtual PyObject* as_pyfloat()
+    PyObject* as_pyfloat()
     {
         reset_error();
 
@@ -89,7 +90,7 @@ public:
     }
 
     /// Was the passed Python object a float?
-    bool is_float() const final { return Parser::is_float() || Parser::is_int(); }
+    bool is_float() const { return Parser::is_float() || Parser::is_int(); }
 
     /**
      * \brief Was the passed Python object intlike?
@@ -97,7 +98,7 @@ public:
      * "intlike" is defined as either an int, or a float that can be
      * converted to an int with no loss of information.
      */
-    bool is_intlike() const final
+    bool is_intlike() const
     {
         return Parser::is_int()
             || (Parser::is_float() && Parser::float_is_intlike(m_numeric));

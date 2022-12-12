@@ -2,6 +2,7 @@
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/buffer.hpp"
 #include "fastnumbers/parser/character.hpp"
+#include "fastnumbers/user_options.hpp"
 
 /**
  * \brief Remove whitespace at the end of a string
@@ -24,13 +25,15 @@ inline void strip_trailing_whitespace(const char* start, const char*& end)
 }
 
 CharacterParser::CharacterParser(
-    const char* str, const std::size_t len, const bool explict_base_allowed
+    const char* str,
+    const std::size_t len,
+    const UserOptions& options,
+    const bool explict_base_allowed
 )
-    : SignedParser(ParserType::CHARACTER, explict_base_allowed)
+    : Parser(ParserType::CHARACTER, options, explict_base_allowed)
     , m_start(nullptr)
     , m_end_orig(nullptr)
     , m_str_len(0)
-    , m_underscore_allowed(true)
 {
     // Skip if this character array points to nothing
     if (str == nullptr) {
@@ -92,7 +95,7 @@ PyObject* CharacterParser::as_pyint()
         my_end,
         offset,
         [&](const char* start, const char* end) -> bool {
-            return string_contains_int(start, end, get_base());
+            return string_contains_int(start, end, options().get_base());
         }
     );
     if (!is_integer) {
@@ -102,7 +105,7 @@ PyObject* CharacterParser::as_pyint()
 
     // Parse and record the location where parsing ended (including trailing whitespace)
     char* their_end = nullptr;
-    PyObject* retval = PyLong_FromString(start, &their_end, get_base());
+    PyObject* retval = PyLong_FromString(start, &their_end, options().get_base());
 
     // Check the parsed end against the original end - if they don't match
     // there was a parsing error.
@@ -177,12 +180,12 @@ bool CharacterParser::is_float() const
 
 bool CharacterParser::is_int() const
 {
-    if (string_contains_int(m_start, end(), get_base())) {
+    if (string_contains_int(m_start, end(), options().get_base())) {
         return true;
     } else if (has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores(!is_default_base());
-        return string_contains_int(buffer.start(), buffer.end(), get_base());
+        buffer.remove_valid_underscores(!options().is_default_base());
+        return string_contains_int(buffer.start(), buffer.end(), options().get_base());
     } else {
         return false;
     }
@@ -264,7 +267,7 @@ bool CharacterParser::check_string_for_number(
         if (has_valid_underscores()) {
             const std::size_t len = static_cast<std::size_t>(original_end - start);
             buffer.copy(start, len);
-            buffer.remove_valid_underscores(get_base() != 10);
+            buffer.remove_valid_underscores(options().get_base() != 10);
             const char* b_start = buffer.start() + offset;
             const char* b_end = buffer.end();
             strip_trailing_whitespace(b_start, b_end);

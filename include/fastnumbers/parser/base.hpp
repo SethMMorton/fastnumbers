@@ -6,6 +6,8 @@
 
 #include <Python.h>
 
+#include "fastnumbers/user_options.hpp"
+
 /// Possible types of Parser objects
 enum class ParserType {
     NUMERIC, ///< The parser is handling numeric Python objects
@@ -25,8 +27,8 @@ class Parser {
 public:
     // Constructors, destructors, and assignment
     // There is no constructor with arguments
-    Parser()
-        : Parser(ParserType::UNKNOWN)
+    Parser(const UserOptions& options)
+        : Parser(ParserType::UNKNOWN, options)
     { }
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
@@ -45,24 +47,17 @@ public:
         return m_error_type == ErrorType::POTENTIAL_OVERFLOW;
     }
 
-    /// Tell the analyzer the base to use when parsing ints
-    void set_base(const int base)
-    {
-        m_default_base = base == INT_MIN;
-        m_base = m_default_base ? 10 : base;
-    }
-
-    /// Get the stored base
-    int get_base() const { return m_base; }
-
-    /// Was the default base given?
-    bool is_default_base() const { return m_default_base; }
-
     /// Was an explict base given illegally?
     bool illegal_explicit_base() const
     {
-        return !m_explicit_base_allowed && !is_default_base();
+        return !is_explict_base_allowed() && !options().is_default_base();
     }
+
+    /// Is the stored number negative?
+    bool is_negative() const { return m_negative; }
+
+    /// Access the user-given options for parsing
+    const UserOptions& options() const { return m_options; }
 
     /// Convert the stored object to a long (check error state)
     /// Base implementation does nothing but throw a runtime error
@@ -128,6 +123,15 @@ public:
      */
     virtual bool is_intlike() const { return is_int(); }
 
+    /// Is the object is a a user-defined numeric class?
+    virtual bool is_user_numeric() const { return false; }
+
+    /// Is the object is a a user-defined numeric float?
+    virtual bool is_user_numeric_float() const { return false; }
+
+    /// Is the object is a a user-defined numeric int?
+    virtual bool is_user_numeric_int() const { return false; }
+
     /**
      * \brief Determine if a float is "intlike"
      *
@@ -143,13 +147,17 @@ public:
 protected:
     /// Constructor for use only by base-classes to define the parser type
     /// and base requirements
-    Parser(const ParserType ptype, const bool explict_base_allowed = false)
+    Parser(
+        const ParserType ptype,
+        const UserOptions& options,
+        const bool explicit_base_allowed = false
+    )
         : m_ptype(ptype)
         , m_number_type(NumberType::NOT_FLOAT_OR_INT)
         , m_error_type(ErrorType::NONE)
-        , m_base(10)
-        , m_default_base(true)
-        , m_explicit_base_allowed(explict_base_allowed)
+        , m_negative(false)
+        , m_explicit_base_allowed(explicit_base_allowed)
+        , m_options(options)
     { }
 
     /// Define this parser as "unknown"
@@ -172,6 +180,21 @@ protected:
 
     /// Reset the error state to "no error"
     void reset_error() { m_error_type = ErrorType::NONE; }
+
+    /// Define whether an explicitly give base is allowed for integers
+    void set_explict_base_allowed(bool explicit_base_allowed)
+    {
+        m_explicit_base_allowed = explicit_base_allowed;
+    }
+
+    /// Is an explicitly give base allowed for integers?
+    bool is_explict_base_allowed() const { return m_explicit_base_allowed; }
+
+    /// Toggle whether the store value is negative or not
+    void set_negative(const bool negative = true) { m_negative = negative; }
+
+    /// Integer that can be used to apply the sign of the number in the text
+    int sign() const { return is_negative() ? -1 : 1; }
 
 private:
     /// The type of the parser
@@ -197,57 +220,12 @@ private:
     /// Tracker of what error is being stored
     ErrorType m_error_type;
 
-    /// The desired base of integers when parsing
-    int m_base;
-
-    /// If the user-given base is the default base
-    bool m_default_base;
+    /// Whether or not text is a negative number
+    bool m_negative;
 
     /// Whether or not explicit base are allowed when parsing
     bool m_explicit_base_allowed;
-};
 
-/**
- * \class SignedParser
- * \brief Flexible parser of various possible Python input where
- *        storing the sign as an independent value makes sense
- *
- * Intended to be used as a base class for more specialized parsers.
- */
-class SignedParser : public Parser {
-public:
-    // Default copy/assignment/destructors
-    SignedParser(const SignedParser&) = default;
-    SignedParser(SignedParser&&) = default;
-    SignedParser& operator=(const SignedParser&) = default;
-    virtual ~SignedParser() = default;
-
-    /// Toggle whether the store value is negative or not
-    void set_negative(const bool negative = true) { m_negative = negative; }
-
-    /// Is the stored number negative?
-    bool is_negative() const { return m_negative; }
-
-protected:
-    /// Dispatch construction to the base class - only avalable to sub-classes
-    SignedParser(const ParserType ptype)
-        : Parser(ptype)
-        , m_negative(false)
-    { }
-
-    /// Dispatch construction to the base class - only avalable to sub-classes
-    SignedParser(const ParserType ptype, const bool explict_base_allowed)
-        : Parser(ptype, explict_base_allowed)
-        , m_negative(false)
-    { }
-
-    // No default constructor
-    SignedParser() = delete;
-
-    /// Integer that can be used to apply the sign of the number in the text
-    int sign() const { return m_negative ? -1 : 1; }
-
-private:
-    /// Whether or not the text is a negative number
-    bool m_negative;
+    /// Hold the parser options
+    UserOptions m_options;
 };
