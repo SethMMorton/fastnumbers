@@ -29,9 +29,7 @@ bool Evaluator::is_type(const UserType ntype) const
         return m_parser->is_intlike();
 
     default:
-        throw std::runtime_error(
-            "An impossible code path was encountered in Evaluator::is_type"
-        );
+        Py_UNREACHABLE();
     }
 }
 
@@ -142,9 +140,7 @@ Payload Evaluator::from_numeric_as_type(const UserType ntype)
         return Payload(m_parser->as_pyint());
 
     default:
-        throw std::runtime_error(
-            "An impossible code path was encountered in Evaluator::from_numeric_as_type"
-        );
+        Py_UNREACHABLE();
     }
 }
 
@@ -164,9 +160,7 @@ Payload Evaluator::from_text_as_type(const UserType ntype)
         return from_text_as_int();
 
     default:
-        throw std::runtime_error(
-            "An impossible code path was encountered in Evaluator::from_text_as_type"
-        );
+        Py_UNREACHABLE();
     }
 }
 
