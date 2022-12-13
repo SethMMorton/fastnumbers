@@ -38,7 +38,7 @@ public:
     ~UnicodeParser() = default;
 
     /// Convert the stored object to a long (check error state)
-    long as_int()
+    long as_int() override
     {
         reset_error();
 
@@ -50,7 +50,7 @@ public:
     }
 
     /// Convert the stored object to a double (check error state)
-    double as_float()
+    double as_float() override
     {
         reset_error();
 
@@ -64,7 +64,7 @@ public:
     }
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint()
+    PyObject* as_pyint() override
     {
         reset_error();
 
@@ -77,7 +77,7 @@ public:
     }
 
     /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat()
+    PyObject* as_pyfloat() override
     {
         reset_error();
 
@@ -90,7 +90,7 @@ public:
     }
 
     /// Was the passed Python object a float?
-    bool is_float() const { return Parser::is_float() || Parser::is_int(); }
+    bool is_float() const override { return Parser::is_float() || Parser::is_int(); }
 
     /**
      * \brief Was the passed Python object intlike?
@@ -98,7 +98,7 @@ public:
      * "intlike" is defined as either an int, or a float that can be
      * converted to an int with no loss of information.
      */
-    bool is_intlike() const
+    bool is_intlike() const override
     {
         return Parser::is_int()
             || (Parser::is_float() && Parser::float_is_intlike(m_numeric));

@@ -61,35 +61,19 @@ public:
 
     /// Convert the stored object to a long (check error state)
     /// Base implementation does nothing but throw a runtime error
-    virtual long as_int()
-    {
-        throw std::runtime_error("Parser::as_int() must be overriden to be used - "
-                                 "unexpected code path encountered");
-    }
+    virtual long as_int() = 0;
 
     /// Convert the stored object to a double (check error state)
     /// Base implementation does nothing but throw a runtime error
-    virtual double as_float()
-    {
-        throw std::runtime_error("Parser::as_float() must be overriden to be used - "
-                                 "unexpected code path encountered");
-    }
+    virtual double as_float() = 0;
 
     /// Convert the stored object to a python int (check error state)
     /// Base implementation does nothing but throw a runtime error
-    virtual PyObject* as_pyint()
-    {
-        throw std::runtime_error("Parser::as_pyint() must be overriden to be used - "
-                                 "unexpected code path encountered");
-    }
+    virtual PyObject* as_pyint() = 0;
 
     /// Convert the stored object to a python float (check error state)
     /// Base implementation does nothing but throw a runtime error
-    virtual PyObject* as_pyfloat()
-    {
-        throw std::runtime_error("Parser::as_pyfloat() must be overriden to be used - "
-                                 "unexpected code path encountered");
-    }
+    virtual PyObject* as_pyfloat() = 0;
 
     /// Was the passed Python object not float or int?
     virtual bool not_float_or_int() const

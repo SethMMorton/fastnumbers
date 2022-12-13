@@ -49,7 +49,7 @@ public:
     ~NumericParser() { Py_XDECREF(m_obj); };
 
     /// Convert the stored object to a long (check error state)
-    long as_int()
+    long as_int() override
     {
         reset_error();
 
@@ -69,7 +69,7 @@ public:
     }
 
     /// Convert the stored object to a double (check error state)
-    double as_float()
+    double as_float() override
     {
         reset_error();
 
@@ -88,22 +88,28 @@ public:
     }
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() { return PyNumber_Long(m_obj); }
+    PyObject* as_pyint() override { return PyNumber_Long(m_obj); }
 
     /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() { return PyNumber_Float(m_obj); }
+    PyObject* as_pyfloat() override { return PyNumber_Float(m_obj); }
 
     /// Was the passed Python object finite?
-    bool is_finite() const
+    bool is_finite() const override
     {
         return Parser::is_int() || (Parser::is_float() && std::isfinite(get_double()));
     }
 
     /// Was the passed Python object infinity?
-    bool is_infinity() const { return Parser::is_float() && std::isinf(get_double()); }
+    bool is_infinity() const override
+    {
+        return Parser::is_float() && std::isinf(get_double());
+    }
 
     /// Was the passed Python object NaN?
-    bool is_nan() const { return Parser::is_float() && std::isnan(get_double()); }
+    bool is_nan() const override
+    {
+        return Parser::is_float() && std::isnan(get_double());
+    }
 
     /**
      * \brief Was the passed Python object intlike?
@@ -111,23 +117,23 @@ public:
      * "intlike" is defined as either an int, or a float that can be
      * converted to an int with no loss of information.
      */
-    bool is_intlike() const
+    bool is_intlike() const override
     {
         return Parser::is_int()
             || (Parser::is_float() && Parser::float_is_intlike(get_double()));
     }
 
     /// Is the object is a a user-defined numeric class?
-    bool is_user_numeric() const { return m_user_numeric; }
+    bool is_user_numeric() const override { return m_user_numeric; }
 
     /// Is the object is a a user-defined numeric float?
-    bool is_user_numeric_float() const
+    bool is_user_numeric_float() const override
     {
         return Py_TYPE(m_obj)->tp_as_number && Py_TYPE(m_obj)->tp_as_number->nb_float;
     }
 
     /// Is the object is a a user-defined numeric int?
-    bool is_user_numeric_int() const
+    bool is_user_numeric_int() const override
     {
         PyNumberMethods* m_nmeth = Py_TYPE(m_obj)->tp_as_number;
         return m_nmeth && (m_nmeth->nb_index || m_nmeth->nb_int);

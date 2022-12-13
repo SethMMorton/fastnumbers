@@ -35,31 +35,31 @@ public:
     ~CharacterParser() = default;
 
     /// Convert the stored object to a long (check error state)
-    long as_int();
+    long as_int() override;
 
     /// Convert the stored object to a double (check error state)
-    double as_float();
+    double as_float() override;
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint();
+    PyObject* as_pyint() override;
 
     /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat();
+    PyObject* as_pyfloat() override;
 
     /// Was the passed Python object infinity?
-    bool is_infinity() const;
+    bool is_infinity() const override;
 
     /// Was the passed Python object NaN?
-    bool is_nan() const;
+    bool is_nan() const override;
 
     /// Was the passed Python object real (e.g. float or int)?
-    bool is_real() const { return is_float(); }
+    bool is_real() const override { return is_float(); }
 
     /// Was the passed Python object a float?
-    bool is_float() const;
+    bool is_float() const override;
 
     /// Was the passed Python object an int?
-    bool is_int() const;
+    bool is_int() const override;
 
     /**
      * \brief Was the passed Python object intlike?
@@ -67,7 +67,7 @@ public:
      * "intlike" is defined as either an int, or a float that can be
      * converted to an int with no loss of information.
      */
-    bool is_intlike() const;
+    bool is_intlike() const override;
 
 private:
     /// The potential start of the character array

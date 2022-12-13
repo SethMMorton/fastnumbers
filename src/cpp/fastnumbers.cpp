@@ -82,13 +82,13 @@ Payload collect_payload(PyObject* obj, const UserOptions& options, const UserTyp
     TextExtractor extractor(obj, buffer);
     if (extractor.is_text()) {
         CharacterParser cparser = extractor.text_parser(options);
-        return Evaluator(obj, options, &cparser).as_type(ntype);
+        return Evaluator<CharacterParser>(obj, options, cparser).as_type(ntype);
     } else if (extractor.is_unicode_character()) {
         UnicodeParser uparser = extractor.unicode_char_parser(options);
-        return Evaluator(obj, options, &uparser).as_type(ntype);
+        return Evaluator<UnicodeParser>(obj, options, uparser).as_type(ntype);
     } else {
         NumericParser nparser(obj, options);
-        return Evaluator(obj, options, &nparser).as_type(ntype);
+        return Evaluator<NumericParser>(obj, options, nparser).as_type(ntype);
     }
 }
 
@@ -123,13 +123,19 @@ PyObject* object_is_number(
     // Create a parser and use it to evaluate the user request
     if (extractor.is_text()) {
         CharacterParser cparser = extractor.text_parser(options);
-        return PyBool_FromLong(Evaluator(obj, options, &cparser).is_type(type));
+        return PyBool_FromLong(
+            Evaluator<CharacterParser>(obj, options, cparser).is_type(type)
+        );
     } else if (extractor.is_unicode_character()) {
         UnicodeParser uparser = extractor.unicode_char_parser(options);
-        return PyBool_FromLong(Evaluator(obj, options, &uparser).is_type(type));
+        return PyBool_FromLong(
+            Evaluator<UnicodeParser>(obj, options, uparser).is_type(type)
+        );
     } else {
         NumericParser nparser(obj, options);
-        return PyBool_FromLong(Evaluator(obj, options, &nparser).is_type(type));
+        return PyBool_FromLong(
+            Evaluator<NumericParser>(obj, options, nparser).is_type(type)
+        );
     }
 }
 
@@ -144,7 +150,8 @@ PyObject* validate_query_type(PyObject* result, PyObject* allowed_types)
 }
 
 /// Return the correct type to search for in the input
-PyObject* query_search_type(const Evaluator& evaluator, PyObject* input)
+template <typename T>
+PyObject* query_search_type(const T& evaluator, PyObject* input)
 {
     return evaluator.type_is_int()
         ? (PyObject*)&PyLong_Type
@@ -563,13 +570,19 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
     PyObject* search_type = nullptr;
     if (extractor.is_text()) {
         CharacterParser cparser = extractor.text_parser(options);
-        search_type = query_search_type(Evaluator(input, options, &cparser), input);
+        search_type = query_search_type(
+            Evaluator<CharacterParser>(input, options, cparser), input
+        );
     } else if (extractor.is_unicode_character()) {
         UnicodeParser uparser = extractor.unicode_char_parser(options);
-        search_type = query_search_type(Evaluator(input, options, &uparser), input);
+        search_type = query_search_type(
+            Evaluator<UnicodeParser>(input, options, uparser), input
+        );
     } else {
         NumericParser nparser(input, options);
-        search_type = query_search_type(Evaluator(input, options, &nparser), input);
+        search_type = query_search_type(
+            Evaluator<NumericParser>(input, options, nparser), input
+        );
     }
     return validate_query_type(search_type, allowed_types);
 }
