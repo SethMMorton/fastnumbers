@@ -15,12 +15,11 @@ static PyObject* NEG_INFINITY;
 static PyObject* POS_NAN;
 static PyObject* NEG_NAN;
 
-/// Increment the refcount of a non-null object, then return the object
-PyObject* increment_reference(PyObject* obj)
-{
-    Py_IncRef(obj);
-    return obj;
-}
+// Hacky way to allow access to these module-scoped variables outside this file
+PyObject** FN_POS_INFINITY_PTR = &POS_INFINITY;
+PyObject** FN_NEG_INFINITY_PTR = &NEG_INFINITY;
+PyObject** FN_POS_NAN_PTR = &POS_NAN;
+PyObject** FN_NEG_NAN_PTR = &NEG_NAN;
 
 /**
  * \brief Function to handle the conversion of base to integers.
@@ -76,88 +75,6 @@ int handle_key_backwards_compatibility(PyObject*& on_fail, PyObject*& key)
     return 0;
 }
 
-/// Return the best return value for when an error occurs
-PyObject* failure_return_value(PyObject* obj, bool raise_on_invalid, PyObject* default_)
-{
-    if (raise_on_invalid) {
-        return nullptr;
-    } else if (default_ != nullptr) {
-        return default_;
-    } else {
-        return obj;
-    }
-}
-
-/// Prepare and raise the appropriate exception given an action type
-PyObject* raise_appropriate_exception(
-    PyObject* obj, const ActionType atype, const UserOptions& options
-)
-{
-    switch (atype) {
-    case ActionType::ERROR_BAD_TYPE_INT:
-        // Raise an exception due passing an invalid type to convert to an integer
-        PyErr_Format(
-            PyExc_TypeError,
-            "int() argument must be a string, a bytes-like object or a number, not "
-            "'%s'",
-            Py_TYPE(obj)->tp_name
-        );
-        break;
-
-    case ActionType::ERROR_BAD_TYPE_FLOAT:
-        // Raise an exception due passing an invalid type to convert to a float
-        PyErr_Format(
-            PyExc_TypeError,
-            "float() argument must be a string or a number, not '%s'",
-            Py_TYPE(obj)->tp_name
-        );
-        break;
-
-    case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE: // TODO - duplciate
-        // Raise an exception due to useing an explict integer base where it shouldn't
-        PyErr_SetString(
-            PyExc_TypeError, "int() can't convert non-string with explicit base"
-        );
-        break;
-
-    case ActionType::ERROR_INVALID_INT:
-        // Raise an exception due to an invalid integer
-        PyErr_Format(
-            PyExc_ValueError,
-            "invalid literal for int() with base %d: %.200R",
-            options.get_base(),
-            obj
-        );
-        break;
-
-    case ActionType::ERROR_INVALID_FLOAT:
-        // Raise an exception due to an invalid float
-        PyErr_Format(PyExc_ValueError, "could not convert string to float: %.200R", obj);
-        break;
-
-    case ActionType::ERROR_INVALID_BASE: // TODO - duplciate
-        // Raise an exception due to an invalid base for integer conversion
-        PyErr_SetString(
-            PyExc_TypeError, "int() can't convert non-string with explicit base"
-        );
-        break;
-
-    case ActionType::ERROR_INFINITY_TO_INT:
-        // Raise an exception due to attempting to convert infininty to an integer
-        PyErr_SetString(PyExc_OverflowError, "cannot convert float infinity to integer");
-        break;
-
-    case ActionType::ERROR_NAN_TO_INT:
-        // Raise an exception due to attempting to convert NaN to an integer
-        PyErr_SetString(PyExc_ValueError, "cannot convert float NaN to integer");
-
-    default:
-        Py_UNREACHABLE();
-    }
-
-    return nullptr;
-}
-
 /// Extract the return payload from a given python object
 Payload collect_payload(PyObject* obj, const UserOptions& options, const UserType ntype)
 {
@@ -173,97 +90,6 @@ Payload collect_payload(PyObject* obj, const UserOptions& options, const UserTyp
         NumericParser nparser(obj, options);
         return Evaluator(obj, options, &nparser).as_type(ntype);
     }
-}
-
-/// Convert the Payload of an Evaluator into a PyNumber
-PyObject* convert_payload(
-    PyObject* obj,
-    const Payload& payload,
-    const UserOptions& options,
-    PyObject* infinity,
-    PyObject* nan,
-    PyObject* return_object,
-    PyObject* on_fail
-)
-{
-    // Level 1: If the payload contains an actual number,
-    //          convert to PyObject directly
-    switch (payload.payload_type()) {
-    case PayloadType::LONG:
-        return PyLong_FromLong(payload.to_long());
-
-    case PayloadType::DOUBLE:
-        return PyFloat_FromDouble(payload.to_double());
-
-    case PayloadType::DOUBLE_TO_LONG:
-        return PyLong_FromDouble(payload.to_double());
-
-    case PayloadType::PYOBJECT: {
-        PyObject* retval = payload.to_pyobject();
-        if (retval == nullptr) {
-            if (return_object == nullptr) {
-                return nullptr;
-            }
-
-            PyErr_Clear();
-
-            if (on_fail != nullptr) {
-                return PyObject_CallFunctionObjArgs(on_fail, return_object, nullptr);
-            } else {
-                return increment_reference(return_object);
-            }
-        }
-        return increment_reference(retval);
-    }
-
-    // Level 2: We need to instruct Cython as to what action to take
-    case PayloadType::ACTION: {
-        const ActionType atype = payload.get_action();
-
-        switch (atype) {
-        // Return the appropriate value for when infinity is found
-        case ActionType::INF_ACTION:
-            return increment_reference(infinity == nullptr ? POS_INFINITY : infinity);
-
-        // Return the appropriate value for when negative infinity is found
-        case ActionType::NEG_INF_ACTION:
-            return increment_reference(infinity == nullptr ? NEG_INFINITY : infinity);
-
-        // Return the appropriate value for when NaN is found
-        case ActionType::NAN_ACTION:
-            return increment_reference(nan == nullptr ? POS_NAN : nan);
-
-        // Return the appropriate value for when negative NaN is found
-        case ActionType::NEG_NAN_ACTION:
-            return increment_reference(nan == nullptr ? NEG_NAN : nan);
-
-        // Raise an exception due passing an invalid type to convert to
-        // an integer or float, or if using an explicit integer base
-        // where it shouldn't be used
-        case ActionType::ERROR_BAD_TYPE_INT:
-        case ActionType::ERROR_BAD_TYPE_FLOAT:
-        case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE:
-            return raise_appropriate_exception(obj, atype, options);
-
-        default:
-            // Raise an exception if that is what the user has asked for, otherwise
-            // transform the input via a function, otherwise return the input as-is
-            if (return_object == nullptr) {
-                return raise_appropriate_exception(obj, atype, options);
-            }
-
-            PyErr_Clear();
-
-            if (on_fail != nullptr) {
-                return PyObject_CallFunctionObjArgs(on_fail, return_object, nullptr);
-            } else {
-                return increment_reference(return_object);
-            }
-        }
-    }
-    }
-
-    Py_UNREACHABLE();
 }
 
 /// Check if an arbitrary PyObject is a PyNumber.
@@ -313,7 +139,8 @@ PyObject* validate_query_type(PyObject* result, PyObject* allowed_types)
     if (allowed_types != nullptr and !PySequence_Contains(allowed_types, result)) {
         Py_RETURN_NONE;
     }
-    return increment_reference(result);
+    Py_IncRef(result);
+    return result;
 }
 
 /// Return the correct type to search for in the input
@@ -364,14 +191,14 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
         return nullptr;
     }
 
-    PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-
     UserOptions options;
     options.set_coerce(coerce);
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::REAL);
-    return convert_payload(input, payload, options, inf, nan, on_invalid, on_fail);
+    return payload.resolve(
+        input, options, inf, nan, default_value, on_fail, raise_on_invalid
+    );
 }
 
 /* Quickly convert to a float, depending on value. */
@@ -411,13 +238,13 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
         return nullptr;
     }
 
-    PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-
     UserOptions options;
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::FLOAT);
-    return convert_payload(input, payload, options, inf, nan, on_invalid, on_fail);
+    return payload.resolve(
+        input, options, inf, nan, default_value, on_fail, raise_on_invalid
+    );
 }
 
 /* Quickly convert to an int, depending on value. */
@@ -462,16 +289,14 @@ static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* 
         return nullptr;
     }
 
-    PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-
     UserOptions options;
     options.set_base(base);
     options.set_unicode_allowed(options.is_default_base());
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::INT);
-    return convert_payload(
-        input, payload, options, nullptr, nullptr, on_invalid, on_fail
+    return payload.resolve(
+        input, options, nullptr, nullptr, default_value, on_fail, raise_on_invalid
     );
 }
 
@@ -511,14 +336,12 @@ fastnumbers_fast_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
         return nullptr;
     }
 
-    PyObject* on_invalid = failure_return_value(input, raise_on_invalid, default_value);
-
     UserOptions options;
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::FORCEINT);
-    return convert_payload(
-        input, payload, options, nullptr, nullptr, on_invalid, on_fail
+    return payload.resolve(
+        input, options, nullptr, nullptr, default_value, on_fail, raise_on_invalid
     );
 }
 
@@ -792,7 +615,7 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
     options.set_underscores_allowed(true);
 
     const Payload payload = collect_payload(input, options, UserType::INT);
-    return convert_payload(input, payload, options, nullptr, nullptr, nullptr, nullptr);
+    return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
 }
 
 static PyObject*
@@ -831,7 +654,7 @@ fastnumbers_float(PyObject* self, PyObject* args, PyObject* kwargs)
     options.set_underscores_allowed(true);
 
     const Payload payload = collect_payload(input, options, UserType::FLOAT);
-    return convert_payload(input, payload, options, nullptr, nullptr, nullptr, nullptr);
+    return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
 }
 
 /* Behaves like float or int, but returns correct type. */
@@ -866,7 +689,7 @@ static PyObject* fastnumbers_real(PyObject* self, PyObject* args, PyObject* kwar
     options.set_underscores_allowed(true);
 
     const Payload payload = collect_payload(input, options, UserType::REAL);
-    return convert_payload(input, payload, options, nullptr, nullptr, nullptr, nullptr);
+    return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
 }
 
 /* This defines the methods contained in this module. */
