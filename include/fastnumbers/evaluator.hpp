@@ -225,16 +225,11 @@ private:
 
             // If the returned value is a double or a python float, annotate
             // whether it should be an integer and then return.
-            const bool is_double = payload.payload_type() == PayloadType::DOUBLE;
-            const bool is_python = payload.payload_type() == PayloadType::PYOBJECT
+            const bool is_python = payload.get_action() == ActionType::PY_OBJECT
                 && payload.to_pyobject() != nullptr;
-            if (is_double || is_python) {
-                const double value = is_double
-                    ? payload.to_double()
-                    : PyFloat_AS_DOUBLE(payload.to_pyobject());
-                if (is_python) {
-                    Py_DECREF(payload.to_pyobject());
-                }
+            if (is_python) {
+                const double value = PyFloat_AS_DOUBLE(payload.to_pyobject());
+                Py_DECREF(payload.to_pyobject());
                 return Payload(
                     value,
                     force_int
