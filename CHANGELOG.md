@@ -1,6 +1,11 @@
 Unreleased
 ---
 
+### Changed
+- Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45)
+  and [#56](https://github.com/SethMMorton/fastnumbers/issues/56))
+- Removed support for Python 3.6
+
 [3.2.1] - 2021-11-02
 ---
 
