@@ -68,9 +68,6 @@ class GeneralFloatCases(unittest.TestCase):
     def test_noargs(self) -> None:
         self.assertEqual(float(), 0.0)
 
-    @unittest.skipUnless(
-        sys.version_info >= (3, 6), "Underscores introduced in Python 3.6"
-    )
     def test_underscores(self) -> None:
         for lit in VALID_UNDERSCORE_LITERALS:
             if not any(ch in lit for ch in "jJxXoObB"):
@@ -133,7 +130,6 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertEqual(float(memoryview(b"12.3A")[1:4]), 2.3)
         self.assertEqual(float(memoryview(b"12.34")[1:4]), 2.3)
 
-    @unittest.skipIf(sys.version_info >= (3, 7), "Messages changed in Python 3.7")
     def test_error_message_old(self) -> None:
         testlist = ("\xbd", "123\xbd", "  123 456  ")
         for s in testlist:
@@ -144,7 +140,6 @@ class GeneralFloatCases(unittest.TestCase):
             else:
                 self.fail("Expected int(%r) to raise a ValueError" % s)
 
-    @unittest.skipUnless(sys.version_info >= (3, 7), "Messages changed in Python 3.7")
     def test_error_message(self) -> None:
         def check(s: Union[str, bytes]) -> None:
             with self.assertRaises(ValueError, msg="float(%r)" % (s,)) as cm:
@@ -261,7 +256,7 @@ class GeneralFloatCases(unittest.TestCase):
                     return self.value
 
             self.assertEqual(float(MyIndex(42)), 42.0)
-            self.assertRaises(OverflowError, float, MyIndex(2 ** 2000))
+            self.assertRaises(OverflowError, float, MyIndex(2**2000))
 
             class MyInt:
                 def __int__(self) -> int:
@@ -269,9 +264,6 @@ class GeneralFloatCases(unittest.TestCase):
 
             self.assertRaises(TypeError, float, MyInt())
 
-    @unittest.skipUnless(
-        sys.version_info >= (3, 7), "Keyword arguments disallowed as of Python 3.7"
-    )
     def test_keyword_args(self) -> None:
         with self.assertRaisesRegex(TypeError, "keyword argument"):
             float(x="3.14")

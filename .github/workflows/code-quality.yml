@@ -20,15 +20,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.6'
+          python-version: 3.8
 
       - name: Install deps
         run: |
-          sudo apt-get install astyle
-          pip install black
+          pip install black clang-format
 
       - name: Run formatting checks
-        run: python dev/check-formatting.py
+        run: python dev/formatting.py --check
 
   static-analysis:
     name: Static Analysis
@@ -40,7 +39,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.6'
+          python-version: 3.8
 
       - name: Install Flake8
         run: pip install flake8 flake8-import-order flake8-bugbear pep8-naming
@@ -58,7 +57,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.6'
+          python-version: 3.8
 
       - name: Install MyPy
         run: pip install mypy hypothesis pytest typing_extensions
@@ -78,7 +77,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.6'
+          python-version: 3.8
 
       - name: Install Validators
         run: pip install twine check-manifest

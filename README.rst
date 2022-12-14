@@ -44,7 +44,7 @@ of decreasing importance as to why the module was created):
        - **PLEASE** read the quick start for these functions to fully
          understand the caveats before using them.
 
-**NOTICE**: As of ``fastnumbers`` version 3.0.0, only Python >= 3.5 is
+**NOTICE**: As of ``fastnumbers`` version X.Y.Z, only Python >= 3.7 is
 supported.
 
 Quick Start
@@ -417,18 +417,17 @@ Please note that ``fastnumbers`` is NOT set-up to support
 
 The recommended way to run tests is with
 `tox <https://tox.readthedocs.io/en/latest/>`_.
-Suppose you want to run tests for Python 3.6 - you can run tests by simply
+Suppose you want to run tests for Python 3.8 - you can run tests by simply
 executing the following:
 
 .. code-block:: sh
 
-    $ tox -e py36
+    $ tox -e py38
 
 ``tox`` will create virtual a virtual environment for your tests and install
 all the needed testing requirements for you.
 
-If you want to run testing on all of Python 3.5, 3.6, 3.7, and 3.8 you can
-simply execute
+If you want to run testing on all supported Python versions you can simply execute
 
 .. code-block:: sh
 

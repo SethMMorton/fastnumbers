@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.7, 3.8, 3.9, "3.10"]
         # Note, clang is used on macos, even though it says gcc
         os: [ubuntu-latest, windows-latest, macos-latest]
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          python setup.py install
+          python -m pip install --editable .
           python -m doctest fastnumbers
           pytest --hypothesis-profile=slow-tests --doctest-glob=README.rst
 
@@ -55,7 +55,7 @@ jobs:
     name: Tests on aarch64
     strategy:
       matrix:
-        pyver: [cp36-cp36m, cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310]
+        pyver: [cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310]
       fail-fast: false
     runs-on: ubuntu-latest
     env:
@@ -78,7 +78,7 @@ jobs:
           source .env/bin/activate && \
           echo -e "\e[1;34m Install Dependencies \e[0m" && \
           python -m pip install --upgrade pip && \
-          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions && \
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions cython && \
           echo -e "\e[1;34m Patch Doctests \e[0m" && \
           python dev/patch_doctest.py && \
           echo -e "\e[1;34m Set CFLAGS \e[0m" && \
