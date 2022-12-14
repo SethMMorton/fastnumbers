@@ -3,7 +3,6 @@
 import math
 import random
 import re
-import sys
 import unicodedata
 from functools import partial
 from typing import (
@@ -34,7 +33,6 @@ from typing_extensions import Protocol
 
 import fastnumbers
 
-skipif = mark.skipif
 parametrize = mark.parametrize
 
 
@@ -1060,9 +1058,6 @@ class TestIsInt:
         # Force unicode path
         assert fastnumbers.isint(hex(x).replace("0", "\uFF10"), base=0)
 
-    @skipif(
-        sys.version_info < (3, 6), reason="Underscore handling introduced in Python 3.6"
-    )
     def test_underscores(self) -> None:
         assert fastnumbers.isint("0_0_0")
         assert fastnumbers.isint("0_0_0", base=0)

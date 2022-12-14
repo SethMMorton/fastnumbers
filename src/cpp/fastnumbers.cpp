@@ -594,13 +594,8 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
     PyObject* pybase = nullptr;
     static const char* format = "|OO:int";
 
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
     /* Do not accept number as a keyword argument. */
     static const char* keywords[] = { "", "base", nullptr };
-#else
-    /* Do accept number as a keyword argument. */
-    static const char* keywords[] = { "x", "base", nullptr };
-#endif
 
     /* Read the function argument */
     if (!PyArg_ParseTupleAndKeywords(
@@ -631,31 +626,15 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
     return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
 }
 
-static PyObject*
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
-fastnumbers_float(PyObject* self, PyObject* args)
-#else
-fastnumbers_float(PyObject* self, PyObject* args, PyObject* kwargs)
-#endif
+static PyObject* fastnumbers_float(PyObject* self, PyObject* args)
 {
     PyObject* input = nullptr;
     static const char* format = "|O:float";
 
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
     /* Read the function argument - do not accept it as a keyword argument. */
     if (!PyArg_ParseTuple(args, format, &input)) {
         return nullptr;
     }
-#else
-    static const char* keywords[] = { "x", nullptr };
-
-    /* Read the function argument - accept it as a keyword argument. */
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, format, const_cast<char**>(keywords), &input
-        )) {
-        return nullptr;
-    }
-#endif
 
     /* No arguments returns 0.0. */
     if (input == nullptr) {
@@ -677,13 +656,8 @@ static PyObject* fastnumbers_real(PyObject* self, PyObject* args, PyObject* kwar
     int coerce = true;
     static const char* format = "|O$p:real";
 
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
     /* Do not accept number as a keyword argument. */
     static const char* keywords[] = { "", "coerce", nullptr };
-#else
-    /* Do accept number as a keyword argument. */
-    static const char* keywords[] = { "x", "coerce", nullptr };
-#endif
 
     /* Read the function argument. */
     if (!PyArg_ParseTupleAndKeywords(
@@ -747,16 +721,7 @@ static PyMethodDef FastnumbersMethods[] = {
       (PyCFunction)fastnumbers_int,
       METH_VARARGS | METH_KEYWORDS,
       fastnumbers_int__doc__ },
-    { "float",
-      (PyCFunction)fastnumbers_float,
-#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 7)
-      METH_VARARGS,
-      fastnumbers_float__doc__
-#else
-      METH_VARARGS | METH_KEYWORDS,
-      fastnumbers_float__doc__
-#endif
-    },
+    { "float", (PyCFunction)fastnumbers_float, METH_VARARGS, fastnumbers_float__doc__ },
     { "real",
       (PyCFunction)fastnumbers_real,
       METH_VARARGS | METH_KEYWORDS,

@@ -45,7 +45,7 @@ ext = [
 setup(
     name="fastnumbers",
     version="3.2.1",
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     package_data={"fastnumbers": ["py.typed", "*.pyi"]},

@@ -499,7 +499,6 @@ class IntTestCases(unittest.TestCase):
         check("123\ud800")
         check("123\ud800", 10)
 
-    @unittest.skipUnless(sys.version_info >= (3, 7), "Test introduced in Python 3.7")
     def test_issue31619(self) -> None:
         self.assertEqual(
             int("1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1_0_1", 2),
