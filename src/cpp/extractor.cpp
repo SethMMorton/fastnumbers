@@ -3,6 +3,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/extractor.hpp"
 #include "fastnumbers/parser.hpp"
 
@@ -120,7 +121,6 @@ bool TextExtractor::parse_unicode_to_char()
     // data. If at any point this fails, exit and just save as a 0-length
     // string, unless the length was one, in which case we save the one
     // character.
-    constexpr std::size_t ASCII_MAX = 127;
     long u_as_decimal = 0;
     const Py_ssize_t data_len = len + index;
     for (; index < data_len; index++) {

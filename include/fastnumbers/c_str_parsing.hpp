@@ -4,6 +4,9 @@
 #include <cstring>
 #include <limits>
 
+/// Largest allowed value for an ASCII character
+constexpr std::size_t ASCII_MAX = 127;
+
 /**
  * \brief Convert a string to a long type
  *
@@ -94,7 +97,8 @@ constexpr long FN_MAX_INT_LEN
  */
 inline bool is_whitespace(const char c)
 {
-    return std::isspace(static_cast<unsigned char>(c));
+    const unsigned char cu = static_cast<unsigned char>(c);
+    return ::isspace(cu) && cu < ASCII_MAX;
 }
 
 /**
@@ -102,7 +106,8 @@ inline bool is_whitespace(const char c)
  */
 inline bool is_valid_digit(const char c)
 {
-    return std::isdigit(static_cast<unsigned char>(c));
+    const unsigned char cu = static_cast<unsigned char>(c);
+    return ::isdigit(cu) && cu < ASCII_MAX;
 }
 
 /**
@@ -118,7 +123,7 @@ inline bool is_sign(const char c)
  */
 inline bool is_base_prefix(const char c)
 {
-    return (c == 'x' || c == 'X') || (c == 'o' || c == 'O') || (c == 'b' || c == 'B');
+    return c == 'x' || c == 'X' || c == 'o' || c == 'O' || c == 'b' || c == 'B';
 }
 
 /**
