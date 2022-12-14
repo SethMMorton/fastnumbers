@@ -42,13 +42,4 @@ ext = [
 
 # Define how to build the extension module.
 # All other data is in the setup.cfg file.
-setup(
-    name="fastnumbers",
-    version="3.2.1",
-    python_requires=">=3.7",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    package_data={"fastnumbers": ["py.typed", "*.pyi"]},
-    zip_safe=False,
-    ext_modules=ext,
-)
+setup(ext_modules=ext)
