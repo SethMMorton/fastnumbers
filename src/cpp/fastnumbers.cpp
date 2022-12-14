@@ -142,7 +142,7 @@ PyObject* object_is_number(
 /// Ensure the type is allowed, otherwise return None
 PyObject* validate_query_type(PyObject* result, PyObject* allowed_types)
 {
-    if (allowed_types != nullptr and !PySequence_Contains(allowed_types, result)) {
+    if (allowed_types != nullptr && !PySequence_Contains(allowed_types, result)) {
         Py_RETURN_NONE;
     }
     Py_IncRef(result);
