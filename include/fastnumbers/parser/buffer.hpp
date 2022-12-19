@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstring>
-#include <vector>
+#include <limits>
 
 /**
  * \class Buffer
@@ -17,7 +17,7 @@ public:
     /// Allocate buffer space
     explicit Buffer(const std::size_t needed_length)
         : m_fixed_buffer()
-        , m_variable_buffer()
+        , m_variable_buffer(nullptr)
         , m_buffer(nullptr)
         , m_len(needed_length)
     {
@@ -31,10 +31,10 @@ public:
         copy(data);
     }
 
-    Buffer(const Buffer&) = default;
-    Buffer(Buffer&&) = default;
-    Buffer& operator=(const Buffer&) = default;
-    ~Buffer() = default;
+    Buffer(const Buffer&) = delete;
+    Buffer(Buffer&&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+    ~Buffer() { delete[] m_variable_buffer; };
 
     /// Return the start of the buffer
     char* start() { return m_buffer; }
@@ -67,10 +67,7 @@ public:
     void remove_valid_underscores(const bool based);
 
     /// The largest amount of data the buffer can contain
-    std::vector<char>::size_type max_size() const
-    {
-        return m_variable_buffer.max_size();
-    }
+    std::size_t max_size() const { return std::numeric_limits<std::size_t>::max(); }
 
 private:
     /// Size of the fix-with buffer
@@ -80,7 +77,7 @@ private:
     char m_fixed_buffer[FIXED_BUFFER_SIZE];
 
     /// A string buffer of variable size, in case large data must be copied
-    std::vector<char> m_variable_buffer;
+    char* m_variable_buffer;
 
     /// Pointer to the character buffer being used
     char* m_buffer;
@@ -95,8 +92,9 @@ private:
         if (m_len + 1 < FIXED_BUFFER_SIZE) {
             m_buffer = m_fixed_buffer;
         } else {
-            m_variable_buffer.reserve(m_len + 1);
-            m_buffer = m_variable_buffer.data();
+            delete[] m_variable_buffer;
+            m_variable_buffer = new char[m_len + 1];
+            m_buffer = m_variable_buffer;
         }
     }
 
