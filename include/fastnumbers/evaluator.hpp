@@ -31,10 +31,6 @@ public:
         , m_options(options)
     {
         Py_XINCREF(m_obj);
-        if (m_parser.parser_type() == ParserType::NUMERIC) {
-            m_options.set_nan_allowed(true);
-            m_options.set_inf_allowed(true);
-        }
     }
 
     // Other constructors, destructors, and assignment
@@ -63,14 +59,12 @@ public:
         // Dispatch to the appropriate parser function based on requested type
         switch (ntype) {
         case UserType::REAL:
-            return (options().allow_nan() && m_parser.is_nan())
-                || (options().allow_inf() && m_parser.is_infinity())
-                || m_parser.is_real();
+            return (allow_nan() && m_parser.is_nan())
+                || (allow_inf() && m_parser.is_infinity()) || m_parser.is_real();
 
         case UserType::FLOAT:
-            return (options().allow_nan() && m_parser.is_nan())
-                || (options().allow_inf() && m_parser.is_infinity())
-                || m_parser.is_float();
+            return (allow_nan() && m_parser.is_nan())
+                || (allow_inf() && m_parser.is_infinity()) || m_parser.is_float();
 
         case UserType::INT:
             return m_parser.is_int();
@@ -87,8 +81,8 @@ public:
     /// Is the stored type a float? Account for nan_action and inf_action.
     bool type_is_float() const
     {
-        return (options().allow_nan() && m_parser.is_nan())
-            || (options().allow_inf() && m_parser.is_infinity()) || m_parser.is_float();
+        return (allow_nan() && m_parser.is_nan())
+            || (allow_inf() && m_parser.is_infinity()) || m_parser.is_float();
     }
 
     /// Is the stored type an integer? If coerce is true, is the type intlike?
@@ -140,6 +134,14 @@ private:
     UserOptions m_options;
 
 private:
+    /// Assess if inf is allowed
+    // Be sure to check out the template specialization in the .cpp file
+    bool allow_inf() const { return options().allow_inf_str(); }
+
+    /// Assess if nan is allowed
+    // Be sure to check out the template specialization in the .cpp file
+    bool allow_nan() const { return options().allow_nan_str(); }
+
     /// Logic for evaluating a numeric python object
     Payload from_numeric_as_type(const UserType ntype)
     {

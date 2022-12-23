@@ -115,8 +115,10 @@ PyObject* object_is_number(
     // Store the user options in a common interface
     UserOptions options;
     options.set_base(base);
-    options.set_nan_allowed(allow_nan);
-    options.set_inf_allowed(allow_inf);
+    options.set_nan_allowed_str(allow_nan);
+    options.set_inf_allowed_str(allow_inf);
+    options.set_nan_allowed_num(true);
+    options.set_inf_allowed_num(true);
     options.set_underscores_allowed(allow_underscores);
 
     // Attempt to extract character data from the object
@@ -566,8 +568,10 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
     // Store the user options in a common interface
     UserOptions options;
     options.set_coerce(coerce);
-    options.set_nan_allowed(allow_nan);
-    options.set_inf_allowed(allow_inf);
+    options.set_nan_allowed_str(allow_nan);
+    options.set_inf_allowed_str(allow_inf);
+    options.set_nan_allowed_num(true);
+    options.set_inf_allowed_num(true);
     options.set_underscores_allowed(allow_underscores);
 
     // Attempt to extract character data from the object
