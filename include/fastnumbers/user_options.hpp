@@ -46,7 +46,10 @@ public:
     bool allow_coerce() const { return m_coerce; }
 
     /// Tell the analyzer if NaN is allowed when type checking
-    void set_nan_allowed(const bool nan_allowed) { m_nan_allowed_num = m_nan_allowed_str = nan_allowed; }
+    void set_nan_allowed(const bool nan_allowed)
+    {
+        m_nan_allowed_num = m_nan_allowed_str = nan_allowed;
+    }
 
     /// Tell the analyzer if NaN is allowed for strings when type checking
     void set_nan_allowed_str(const bool nan_allowed) { m_nan_allowed_str = nan_allowed; }
@@ -61,7 +64,10 @@ public:
     bool allow_nan_num() const { return m_nan_allowed_num; }
 
     /// Tell the analyzer if infinity is allowed when type checking
-    void set_inf_allowed(const bool inf_allowed) { m_inf_allowed_num = m_inf_allowed_str = inf_allowed; }
+    void set_inf_allowed(const bool inf_allowed)
+    {
+        m_inf_allowed_num = m_inf_allowed_str = inf_allowed;
+    }
 
     /// Tell the analyzer if infinity is allowed for strings when type checking
     void set_inf_allowed_str(const bool inf_allowed) { m_inf_allowed_str = inf_allowed; }

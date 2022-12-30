@@ -1,3 +1,5 @@
+#include <exception>
+
 #include <Python.h>
 
 #include "fastnumbers/c_str_parsing.hpp"
@@ -9,78 +11,104 @@
 #include "fastnumbers/user_options.hpp"
 #include "fastnumbers/version.hpp"
 
-// Infinity and NaN can be cached at startup
-static PyObject* POS_INFINITY;
-static PyObject* NEG_INFINITY;
-static PyObject* POS_NAN;
-static PyObject* NEG_NAN;
+// Initiallize static objects
+PyObject* Resolver::POS_INFINITY = nullptr;
+PyObject* Resolver::NEG_INFINITY = nullptr;
+PyObject* Resolver::POS_NAN = nullptr;
+PyObject* Resolver::NEG_NAN = nullptr;
+PyObject* Resolver::ALLOWED = nullptr;
+PyObject* Resolver::DISALLOWED = nullptr;
+PyObject* Resolver::INPUT = nullptr;
+PyObject* Resolver::RAISE = nullptr;
+PyObject* Resolver::STRING_ONLY = nullptr;
+PyObject* Resolver::NUMBER_ONLY = nullptr;
 
-// Hacky way to allow access to these module-scoped variables outside this file
-PyObject** FN_POS_INFINITY_PTR = &POS_INFINITY;
-PyObject** FN_NEG_INFINITY_PTR = &NEG_INFINITY;
-PyObject** FN_POS_NAN_PTR = &POS_NAN;
-PyObject** FN_NEG_NAN_PTR = &NEG_NAN;
+/// Custom exception class for fastnumbers
+class fastnumbers_exception : public std::runtime_error {
+public:
+    fastnumbers_exception(const char* message)
+        : std::runtime_error(message)
+    { }
 
-// Selectors for user options
-static PyObject* fastnumbers_ALLOWED;
-static PyObject* fastnumbers_DISALLOWED;
-static PyObject* fastnumbers_INPUT;
-static PyObject* fastnumbers_RAISE;
-static PyObject* fastnumbers_STRING_ONLY;
-static PyObject* fastnumbers_NUMBER_ONLY;
+    /// Set a ValueError if a non-empty message was given.
+    PyObject* raise_value_error() const
+    {
+        if (what()[0] != '\0') {
+            PyErr_SetString(PyExc_ValueError, what());
+        }
+        return nullptr;
+    }
+};
 
 /**
  * \brief Function to handle the conversion of base to integers.
  *
  * \param pybase The base as a Python object
  * \param base The base as an integer
- * \returns 0 is success, 1 is failure.
+ * \throws fastnumbers_exception on invalid input
  */
-int assess_integer_base_input(PyObject* pybase, int& base)
+void assess_integer_base_input(PyObject* pybase, int& base)
 {
     Py_ssize_t longbase = 0;
 
     // Default to INT_MIN
     if (pybase == nullptr) {
         base = INT_MIN;
-        return 0;
+        return;
     }
 
     // Convert to int and check for overflow
     longbase = PyNumber_AsSsize_t(pybase, nullptr);
     if (longbase == -1 && PyErr_Occurred()) {
-        return 1;
+        throw fastnumbers_exception("");
     }
 
     // Ensure valid integer in valid range
     if ((longbase != 0 && longbase < 2) || longbase > 36) {
-        PyErr_SetString(PyExc_ValueError, "int() base must be >= 2 and <= 36");
-        return 1;
+        throw fastnumbers_exception("int() base must be >= 2 and <= 36");
     }
     base = static_cast<int>(longbase);
-    return 0;
 }
 
 /**
- * \brief If key is defined, move the value to on_fail.
+ * \brief Resolve all possible backwards-compatible values for on_fail.
  *
  * If both were defined, error.
  *
  * \param on_fail
  * \param key
- * \returns 0 is success, 1 is failure.
+ * \param default_value
+ * \param raise_on_invalid
+ * \throws fastnumbers_exception on invalid input
  */
-int handle_key_backwards_compatibility(PyObject*& on_fail, PyObject*& key)
+void handle_fail_backwards_compatibility(
+    PyObject*& on_fail, PyObject*& key, PyObject*& default_value, int raise_on_invalid
+)
 {
     if (key != nullptr) {
         if (on_fail != nullptr) {
-            PyErr_SetString(PyExc_ValueError, "Cannot set both on_fail and key");
-            return 1;
+            throw fastnumbers_exception("Cannot set both on_fail and key");
         }
         on_fail = key;
         key = nullptr;
     }
-    return 0;
+    if (default_value != nullptr) {
+        if (on_fail != nullptr) {
+            throw fastnumbers_exception("Cannot set both on_fail and default");
+        }
+        on_fail = default_value;
+        default_value = nullptr;
+    }
+    if (raise_on_invalid) {
+        if (on_fail != nullptr) {
+            throw fastnumbers_exception("Cannot set both on_fail and raise_on_invalid");
+        }
+        on_fail = Resolver::RAISE;
+    }
+    // fastnumbers default
+    if (on_fail == nullptr) {
+        on_fail = Resolver::INPUT;
+    }
 }
 
 /// Extract the return payload from a given python object
@@ -176,8 +204,8 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
     PyObject* default_value = nullptr;
     PyObject* on_fail = nullptr;
     PyObject* key = nullptr;
-    PyObject* inf = nullptr;
-    PyObject* nan = nullptr;
+    PyObject* inf = Resolver::ALLOWED;
+    PyObject* nan = Resolver::ALLOWED;
     int raise_on_invalid = false;
     int coerce = true;
     int allow_underscores = true;
@@ -204,8 +232,13 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
         )) {
         return nullptr;
     }
-    if (handle_key_backwards_compatibility(on_fail, key)) {
-        return nullptr;
+
+    try {
+        handle_fail_backwards_compatibility(
+            on_fail, key, default_value, raise_on_invalid
+        );
+    } catch (fastnumbers_exception& e) {
+        return e.raise_value_error();
     }
 
     UserOptions options;
@@ -213,9 +246,12 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::REAL);
-    return payload.resolve(
-        input, options, inf, nan, default_value, on_fail, raise_on_invalid
-    );
+
+    Resolver resolver(input, options);
+    resolver.set_inf_action(inf);
+    resolver.set_nan_action(nan);
+    resolver.set_fail_action(on_fail);
+    return resolver.resolve(payload);
 }
 
 /* Quickly convert to a float, depending on value. */
@@ -225,8 +261,8 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
     PyObject* default_value = nullptr;
     PyObject* on_fail = nullptr;
     PyObject* key = nullptr;
-    PyObject* inf = nullptr;
-    PyObject* nan = nullptr;
+    PyObject* inf = Resolver::ALLOWED;
+    PyObject* nan = Resolver::ALLOWED;
     int raise_on_invalid = false;
     int allow_underscores = true;
     static const char* keywords[] = { "x",    "default", "raise_on_invalid",  "on_fail",
@@ -251,17 +287,25 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
         )) {
         return nullptr;
     }
-    if (handle_key_backwards_compatibility(on_fail, key)) {
-        return nullptr;
+
+    try {
+        handle_fail_backwards_compatibility(
+            on_fail, key, default_value, raise_on_invalid
+        );
+    } catch (fastnumbers_exception& e) {
+        return e.raise_value_error();
     }
 
     UserOptions options;
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::FLOAT);
-    return payload.resolve(
-        input, options, inf, nan, default_value, on_fail, raise_on_invalid
-    );
+
+    Resolver resolver(input, options);
+    resolver.set_inf_action(inf);
+    resolver.set_nan_action(nan);
+    resolver.set_fail_action(on_fail);
+    return resolver.resolve(payload);
 }
 
 /* Quickly convert to an int, depending on value. */
@@ -297,13 +341,15 @@ static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* 
         )) {
         return nullptr;
     }
-    if (handle_key_backwards_compatibility(on_fail, key)) {
-        return nullptr;
-    }
 
     int base = INT_MIN;
-    if (assess_integer_base_input(pybase, base)) {
-        return nullptr;
+    try {
+        assess_integer_base_input(pybase, base);
+        handle_fail_backwards_compatibility(
+            on_fail, key, default_value, raise_on_invalid
+        );
+    } catch (fastnumbers_exception& e) {
+        return e.raise_value_error();
     }
 
     UserOptions options;
@@ -312,9 +358,10 @@ static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* 
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::INT);
-    return payload.resolve(
-        input, options, nullptr, nullptr, default_value, on_fail, raise_on_invalid
-    );
+
+    Resolver resolver(input, options);
+    resolver.set_fail_action(on_fail);
+    return resolver.resolve(payload);
 }
 
 /* Safely convert to an int (even if in a string and as a float). */
@@ -349,17 +396,23 @@ fastnumbers_fast_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
         )) {
         return nullptr;
     }
-    if (handle_key_backwards_compatibility(on_fail, key)) {
-        return nullptr;
+
+    try {
+        handle_fail_backwards_compatibility(
+            on_fail, key, default_value, raise_on_invalid
+        );
+    } catch (fastnumbers_exception& e) {
+        return e.raise_value_error();
     }
 
     UserOptions options;
     options.set_underscores_allowed(allow_underscores);
 
     const Payload payload = collect_payload(input, options, UserType::FORCEINT);
-    return payload.resolve(
-        input, options, nullptr, nullptr, default_value, on_fail, raise_on_invalid
-    );
+
+    Resolver resolver(input, options);
+    resolver.set_fail_action(on_fail);
+    return resolver.resolve(payload);
 }
 
 /* Quickly determine if the input is a real. */
@@ -474,8 +527,10 @@ static PyObject* fastnumbers_isint(PyObject* self, PyObject* args, PyObject* kwa
     }
 
     int base = INT_MIN;
-    if (assess_integer_base_input(pybase, base)) {
-        return nullptr;
+    try {
+        assess_integer_base_input(pybase, base);
+    } catch (fastnumbers_exception& e) {
+        return e.raise_value_error();
     }
 
     return object_is_number(
@@ -625,8 +680,10 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
     }
 
     int base = INT_MIN;
-    if (assess_integer_base_input(pybase, base)) {
-        return nullptr;
+    try {
+        assess_integer_base_input(pybase, base);
+    } catch (fastnumbers_exception& e) {
+        return e.raise_value_error();
     }
 
     UserOptions options;
@@ -635,7 +692,9 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
     options.set_underscores_allowed(true);
 
     const Payload payload = collect_payload(input, options, UserType::INT);
-    return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
+
+    Resolver resolver(input, options);
+    return resolver.resolve(payload);
 }
 
 static PyObject* fastnumbers_float(PyObject* self, PyObject* args)
@@ -658,7 +717,9 @@ static PyObject* fastnumbers_float(PyObject* self, PyObject* args)
     options.set_underscores_allowed(true);
 
     const Payload payload = collect_payload(input, options, UserType::FLOAT);
-    return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
+
+    Resolver resolver(input, options);
+    return resolver.resolve(payload);
 }
 
 /* Behaves like float or int, but returns correct type. */
@@ -688,7 +749,9 @@ static PyObject* fastnumbers_real(PyObject* self, PyObject* args, PyObject* kwar
     options.set_underscores_allowed(true);
 
     const Payload payload = collect_payload(input, options, UserType::REAL);
-    return payload.resolve(input, options, nullptr, nullptr, nullptr, nullptr, true);
+
+    Resolver resolver(input, options);
+    return resolver.resolve(payload);
 }
 
 /* This defines the methods contained in this module. */
@@ -767,28 +830,28 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     PyModule_AddIntConstant(m, "min_exp", FN_MIN_EXP);
 
     // Selectors
-    fastnumbers_ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
-    fastnumbers_DISALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
-    fastnumbers_INPUT = PyObject_New(PyObject, &PyBaseObject_Type);
-    fastnumbers_RAISE = PyObject_New(PyObject, &PyBaseObject_Type);
-    fastnumbers_STRING_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
-    fastnumbers_NUMBER_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
-    PyModule_AddObject(m, "ALLOWED", fastnumbers_ALLOWED);
-    PyModule_AddObject(m, "DISALLOWED", fastnumbers_DISALLOWED);
-    PyModule_AddObject(m, "INPUT", fastnumbers_INPUT);
-    PyModule_AddObject(m, "RAISE", fastnumbers_RAISE);
-    PyModule_AddObject(m, "STRING_ONLY", fastnumbers_STRING_ONLY);
-    PyModule_AddObject(m, "NUMBER_ONLY", fastnumbers_NUMBER_ONLY);
+    Resolver::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
+    Resolver::DISALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
+    Resolver::INPUT = PyObject_New(PyObject, &PyBaseObject_Type);
+    Resolver::RAISE = PyObject_New(PyObject, &PyBaseObject_Type);
+    Resolver::STRING_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
+    Resolver::NUMBER_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
+    PyModule_AddObject(m, "ALLOWED", Resolver::ALLOWED);
+    PyModule_AddObject(m, "DISALLOWED", Resolver::DISALLOWED);
+    PyModule_AddObject(m, "INPUT", Resolver::INPUT);
+    PyModule_AddObject(m, "RAISE", Resolver::RAISE);
+    PyModule_AddObject(m, "STRING_ONLY", Resolver::STRING_ONLY);
+    PyModule_AddObject(m, "NUMBER_ONLY", Resolver::NUMBER_ONLY);
 
     // Constants cached for internal use
     PyObject* pos_inf_str = PyBytes_FromString("+infinity");
     PyObject* neg_inf_str = PyBytes_FromString("-infinity");
     PyObject* pos_nan_str = PyBytes_FromString("+nan");
     PyObject* neg_nan_str = PyBytes_FromString("-nan");
-    POS_INFINITY = PyFloat_FromString(pos_inf_str);
-    NEG_INFINITY = PyFloat_FromString(neg_inf_str);
-    POS_NAN = PyFloat_FromString(pos_nan_str);
-    NEG_NAN = PyFloat_FromString(neg_nan_str);
+    Resolver::POS_INFINITY = PyFloat_FromString(pos_inf_str);
+    Resolver::NEG_INFINITY = PyFloat_FromString(neg_inf_str);
+    Resolver::POS_NAN = PyFloat_FromString(pos_nan_str);
+    Resolver::NEG_NAN = PyFloat_FromString(neg_nan_str);
     Py_DecRef(pos_inf_str);
     Py_DecRef(neg_inf_str);
     Py_DecRef(pos_nan_str);
