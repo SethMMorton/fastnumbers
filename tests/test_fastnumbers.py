@@ -814,7 +814,9 @@ class TestFastInt:
     def test_given_int_string_returns_int_with_non_base_10(self, x: int) -> None:
         for base in range(2, 36 + 1):
             # Avoid recursion error because of overly simple baseN function.
-            if len(repr(x)) < 30:
+            # Avoid cases where number ends up creating infinity
+            actual = base_n(x, base)
+            if len(repr(x)) < 30 and isinstance(actual, int):
                 assert fastnumbers.fast_int(base_n(x, base), base=base) == x
         assert fastnumbers.fast_int(bin(x), base=2) == x
         assert fastnumbers.fast_int(bin(x), base=0) == x
@@ -1044,7 +1046,9 @@ class TestIsInt:
     def test_returns_true_if_given_int_string_with_non_base_10(self, x: int) -> None:
         for base in range(2, 36 + 1):
             # Avoid recursion error because of overly simple baseN function.
-            if len(repr(x)) < 30:
+            # Avoid cases where number ends up creating infinity
+            actual = base_n(x, base)
+            if len(repr(x)) < 30 and isinstance(actual, int):
                 assert fastnumbers.isint(base_n(x, base), base=base)
         assert fastnumbers.isint(bin(x), base=2)
         assert fastnumbers.isint(bin(x), base=0)
