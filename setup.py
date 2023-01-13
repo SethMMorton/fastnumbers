@@ -14,18 +14,24 @@ if sys.platform == "win32":
         "/W4",  # Equivalent to -Wall -Wpedantic on GCC/Clang
         "/wd4100",  # don't warn about unreferenced formal parameters
         "/wd4127",  # don't warn about constant conditional expressions
-        "/O2",
     ]
+    if "FN_DEBUG" in os.environ:
+        compile_args.append("/Od")
+        compile_args.append("/Z7")
+    else:
+        compile_args.append("/O2")
 else:
     compile_args = [
         "-std=c++11",
         "-Wall",
         "-Weffc++",
         "-Wpedantic",
-        "-O2",
-        # "-O0",
-        # "-g",
     ]
+    if "FN_DEBUG" in os.environ:
+        compile_args.append("-O0")
+        compile_args.append("-g")
+    else:
+        compile_args.append("-O2")
     if sys.platform == "darwin":
         compile_args.append("-Wno-c++17-extensions")
 
