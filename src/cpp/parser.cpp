@@ -1,3 +1,4 @@
+#include "fastnumbers/EnumClass.h"
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/buffer.hpp"
@@ -155,53 +156,55 @@ PyObject* CharacterParser::as_pyfloat()
     return PyFloat_FromDouble(retval);
 }
 
-bool CharacterParser::is_infinity() const
+NumberFlags CharacterParser::get_number_type() const
 {
-    return quick_detect_infinity(m_start, m_str_len);
-}
-
-bool CharacterParser::is_nan() const
-{
-    return quick_detect_nan(m_start, m_str_len);
-}
-
-bool CharacterParser::is_float() const
-{
-    if (string_contains_float(m_start, end())) {
-        return true;
-    } else if (has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores();
-        return string_contains_float(buffer.start(), buffer.end());
-    } else {
-        return false;
+    // If this value is cached, use that instead of re-calculating
+    if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {
+        return Parser::get_number_type();
     }
-}
 
-bool CharacterParser::is_int() const
-{
+    // If the string contains an infinity or NaN then we don't need to do any
+    // other fancy processing and can return now.
+    if (quick_detect_infinity(m_start, m_str_len)) {
+        return NumberType::Float | NumberType::Infinity;
+
+    } else if (quick_detect_nan(m_start, m_str_len)) {
+        return NumberType::Float | NumberType::NaN;
+    }
+
+    // If the string contains a numeric representation,
+    // report which representation type is contained.
     if (string_contains_int(m_start, end(), options().get_base())) {
-        return true;
-    } else if (has_valid_underscores()) {
+        return NumberType::Integer | NumberType::Float;
+
+    } else if (string_contains_float(m_start, end())) {
+        NumberFlags flags = NumberType::Float;
+        if (string_contains_intlike_float(m_start, end())) {
+            flags |= NumberType::IntLike;
+        }
+        return flags;
+    }
+
+    // If it still looks like there is no numeric representation in the string,
+    // check to see if it it contains underscores, and if so remove them and
+    // try a numeric representation again. No need to check for infinity and
+    // NaN here because those are not allowed to contain underscores.
+    if (has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(!options().is_default_base());
-        return string_contains_int(buffer.start(), buffer.end(), options().get_base());
-    } else {
-        return false;
+        if (string_contains_int(buffer.start(), buffer.end(), options().get_base())) {
+            return NumberType::Integer | NumberType::Float;
+        } else if (string_contains_float(buffer.start(), buffer.end())) {
+            NumberFlags flags = NumberType::Float;
+            if (string_contains_intlike_float(buffer.start(), buffer.end())) {
+                flags |= NumberType::IntLike;
+            }
+            return flags;
+        }
     }
-}
 
-bool CharacterParser::is_intlike() const
-{
-    if (string_contains_intlike_float(m_start, end())) {
-        return true;
-    } else if (has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores();
-        return string_contains_intlike_float(buffer.start(), buffer.end());
-    } else {
-        return false;
-    }
+    // If here, the string does not contain a numeric representation.
+    return NumberType::INVALID;
 }
 
 template <

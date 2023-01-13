@@ -2,6 +2,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/EnumClass.h"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/user_options.hpp"
 
@@ -17,12 +18,8 @@ public:
         , m_numeric(Py_UNICODE_TONUMERIC(uchar))
         , m_digit(Py_UNICODE_TODIGIT(uchar))
     {
-        // Evaluate if the stored number is a float or int
-        if (m_digit > -1) {
-            set_as_int_type();
-        } else if (m_numeric > -1.0) {
-            set_as_float_type();
-        }
+        // Store the type of number that was found
+        set_number_type(get_number_type());
 
         // Store the sign
         set_negative(negative);
@@ -42,7 +39,7 @@ public:
     {
         reset_error();
 
-        if (Parser::is_int()) {
+        if (get_number_type() & NumberType::Integer) {
             return sign() * m_digit;
         }
         encountered_conversion_error();
@@ -54,9 +51,11 @@ public:
     {
         reset_error();
 
-        if (Parser::is_int()) {
+        const NumberFlags ntype = get_number_type();
+
+        if (ntype & NumberType::Integer) {
             return static_cast<double>(sign() * m_digit);
-        } else if (Parser::is_float()) {
+        } else if (ntype & NumberType::Float) {
             return sign() * m_numeric;
         }
         encountered_conversion_error();
@@ -89,19 +88,29 @@ public:
         return nullptr;
     }
 
-    /// Was the passed Python object a float?
-    bool is_float() const override { return Parser::is_float() || Parser::is_int(); }
-
-    /**
-     * \brief Was the passed Python object intlike?
-     *
-     * "intlike" is defined as either an int, or a float that can be
-     * converted to an int with no loss of information.
-     */
-    bool is_intlike() const override
+    /// Check the type of the number.
+    NumberFlags get_number_type() const override
     {
-        return Parser::is_int()
-            || (Parser::is_float() && Parser::float_is_intlike(m_numeric));
+        // If this value is cached, use that instead of re-calculating
+        if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {
+            return Parser::get_number_type();
+        }
+
+        // Evaluate if the stored number is a float or int.
+        // There are no single unicode representations for infinity
+        // nor NaN so we do not have to check for that.
+        if (m_digit > -1) {
+            return NumberType::Integer | NumberType::Float;
+        } else if (m_numeric > -1.0) {
+            if (Parser::float_is_intlike(m_numeric)) {
+                return NumberType::Float | NumberType::IntLike;
+            } else {
+                return NumberType::Float;
+            }
+        }
+
+        // If here, the object is not numeric.
+        return NumberType::INVALID;
     }
 
 private:

@@ -4,6 +4,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/EnumClass.h"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/user_options.hpp"
 
@@ -17,17 +18,10 @@ public:
     explicit NumericParser(PyObject* obj, const UserOptions& options)
         : Parser(ParserType::NUMERIC, options)
         , m_obj(obj)
-        , m_user_numeric(false)
     {
         if (m_obj != nullptr) {
-            // Store whether the number is a float or integer
-            if (PyFloat_Check(m_obj)) {
-                set_as_float_type();
-            } else if (PyLong_Check(m_obj)) {
-                set_as_int_type();
-            } else if (is_user_numeric_int() || is_user_numeric_float()) {
-                m_user_numeric = true;
-            }
+            // Store the type of number that was found
+            set_number_type(get_number_type());
 
             // Increment the reference count for this object
             Py_IncRef(m_obj);
@@ -53,7 +47,7 @@ public:
     {
         reset_error();
 
-        if (Parser::is_int() || is_user_numeric_int()) {
+        if (get_number_type() & NumberType::Integer) {
             int overflow = 0;
             const long value = PyLong_AsLongAndOverflow(m_obj, &overflow);
             if (overflow) {
@@ -73,80 +67,94 @@ public:
     {
         reset_error();
 
-        if (Parser::is_float()) {
-            return get_double();
-        } else if (is_user_numeric_float()) {
+        if (get_number_type() & (NumberType::Float | NumberType::User)) {
             const double value = PyFloat_AsDouble(m_obj);
             if (value == -1.0 && PyErr_Occurred()) {
                 PyErr_Clear();
             } else {
                 return value;
             }
+        } else if (get_number_type() & NumberType::Float) {
+            return get_double();
         }
         encountered_conversion_error();
         return -1.0;
     }
 
     /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() override { return PyNumber_Long(m_obj); }
+    PyObject* as_pyint() override
+    {
+        reset_error();
+        return PyNumber_Long(m_obj);
+    }
 
     /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() override { return PyNumber_Float(m_obj); }
-
-    /// Was the passed Python object finite?
-    bool is_finite() const override
+    PyObject* as_pyfloat() override
     {
-        return Parser::is_int() || (Parser::is_float() && std::isfinite(get_double()));
+        reset_error();
+        return PyNumber_Float(m_obj);
     }
 
-    /// Was the passed Python object infinity?
-    bool is_infinity() const override
+    /// Check the type of the number.
+    NumberFlags get_number_type() const override
     {
-        return Parser::is_float() && std::isinf(get_double());
-    }
+        // If this value is cached, use that instead of re-calculating
+        if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {
+            return Parser::get_number_type();
+        }
 
-    /// Was the passed Python object NaN?
-    bool is_nan() const override
-    {
-        return Parser::is_float() && std::isnan(get_double());
-    }
+        // Return quickly if the object is strictly of float or long (int) type.
+        if (PyFloat_Check(m_obj)) {
+            return float_properties(get_double(), NumberType::Float);
+        } else if (PyLong_Check(m_obj)) {
+            return NumberType::Integer;
+        }
 
-    /**
-     * \brief Was the passed Python object intlike?
-     *
-     * "intlike" is defined as either an int, or a float that can be
-     * converted to an int with no loss of information.
-     */
-    bool is_intlike() const override
-    {
-        return Parser::is_int()
-            || (Parser::is_float() && Parser::float_is_intlike(get_double()));
-    }
+        // In addition to being strictly a float or long, an object can
+        // behave like one of those types without being one by defining
+        // the __float__, __int__, or __index__ dunder methods.
+        // Check for these, and if so return the same as above but with
+        // the additional "User" property.
+        PyNumberMethods* nmeth = Py_TYPE(m_obj)->tp_as_number;
+        if (nmeth != nullptr) {
+            if (nmeth->nb_float != nullptr) {
+                const double val = PyFloat_AsDouble(m_obj);
+                if (val == -1.0 && PyErr_Occurred()) {
+                    PyErr_Clear();
+                    // Yes, an error occurred, but it still *looks* like a float.
+                    // Attempting to retrieve the value will expose the error.
+                    return NumberType::Float | NumberType::User;
+                }
+                return float_properties(val, NumberType::Float | NumberType::User);
 
-    /// Is the object is a a user-defined numeric class?
-    bool is_user_numeric() const override { return m_user_numeric; }
+            } else if (nmeth->nb_index != nullptr || nmeth->nb_int != nullptr) {
+                return NumberType::Integer | NumberType::User;
+            }
+        }
 
-    /// Is the object is a a user-defined numeric float?
-    bool is_user_numeric_float() const override
-    {
-        return Py_TYPE(m_obj)->tp_as_number && Py_TYPE(m_obj)->tp_as_number->nb_float;
-    }
-
-    /// Is the object is a a user-defined numeric int?
-    bool is_user_numeric_int() const override
-    {
-        PyNumberMethods* m_nmeth = Py_TYPE(m_obj)->tp_as_number;
-        return m_nmeth && (m_nmeth->nb_index || m_nmeth->nb_int);
+        // If here, the object is not numeric.
+        return NumberType::INVALID;
     }
 
 private:
     /// The Python object potentially under analysis
     PyObject* m_obj;
 
-    /// Track if the object is a a user-defined numeric class
-    bool m_user_numeric;
-
 private:
     /// Return the object as a double. No error checking is performed.
     double get_double() const { return PyFloat_AS_DOUBLE(m_obj); }
+
+    /// Use the value of the float to add qualifiers
+    /// if the float is infinite, NaN, or intlike.
+    NumberFlags float_properties(const double val, NumberFlags props) const
+    {
+        if (std::isinf(val)) {
+            props |= NumberType::Infinity;
+        } else if (std::isnan(val)) {
+            props |= NumberType::NaN;
+        } else if (Parser::float_is_intlike(val)) {
+            props |= NumberType::IntLike;
+        }
+        return props;
+    }
 };

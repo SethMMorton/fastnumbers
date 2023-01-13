@@ -6,6 +6,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/EnumClass.h"
 #include "fastnumbers/user_options.hpp"
 
 /// Possible types of Parser objects
@@ -15,6 +16,19 @@ enum class ParserType {
     CHARACTER, ///< The parser is handling C-style character arrays
     UNKNOWN, ///< The incoming object unknown to the parser
 };
+
+enum class NumberType : unsigned {
+    UNSET = 0U << 0,
+    INVALID = 1U << 0,
+    Integer = 1U << 1,
+    Float = 1U << 2,
+    NaN = 1U << 3,
+    Infinity = 1U << 4,
+    IntLike = 1U << 5,
+    User = 1U << 6,
+};
+enableEnumClassBitmask(NumberType);
+using NumberFlags = bitmask<NumberType>;
 
 /**
  * \class Parser
@@ -75,46 +89,8 @@ public:
     /// Base implementation does nothing but throw a runtime error
     virtual PyObject* as_pyfloat() = 0;
 
-    /// Was the passed Python object not float or int?
-    virtual bool not_float_or_int() const
-    {
-        return m_number_type == NumberType::NOT_FLOAT_OR_INT;
-    }
-
-    /// Was the passed Python object finite?
-    virtual bool is_finite() const { return is_real() && !(is_infinity() || is_nan()); }
-
-    /// Was the passed Python object infinity?
-    virtual bool is_infinity() const { return false; }
-
-    /// Was the passed Python object NaN?
-    virtual bool is_nan() const { return false; }
-
-    /// Was the passed Python object real (e.g. float or int)?
-    virtual bool is_real() const { return is_float() || is_int(); }
-
-    /// Was the passed Python object a float?
-    virtual bool is_float() const { return m_number_type == NumberType::FLOAT; }
-
-    /// Was the passed Python object an int?
-    virtual bool is_int() const { return m_number_type == NumberType::INT; }
-
-    /**
-     * \brief Was the passed Python object intlike?
-     *
-     * "intlike" is defined as either an int, or a float that can be
-     * converted to an int with no loss of information.
-     */
-    virtual bool is_intlike() const { return is_int(); }
-
-    /// Is the object is a a user-defined numeric class?
-    virtual bool is_user_numeric() const { return false; }
-
-    /// Is the object is a a user-defined numeric float?
-    virtual bool is_user_numeric_float() const { return false; }
-
-    /// Is the object is a a user-defined numeric int?
-    virtual bool is_user_numeric_int() const { return false; }
+    /// Check the type of the number.
+    virtual NumberFlags get_number_type() const { return m_number_type; }
 
     /**
      * \brief Determine if a float is "intlike"
@@ -137,7 +113,7 @@ protected:
         const bool explicit_base_allowed = false
     )
         : m_ptype(ptype)
-        , m_number_type(NumberType::NOT_FLOAT_OR_INT)
+        , m_number_type(NumberType::UNSET)
         , m_error_type(ErrorType::NONE)
         , m_negative(false)
         , m_explicit_base_allowed(explicit_base_allowed)
@@ -147,11 +123,8 @@ protected:
     /// Define this parser as "unknown"
     void set_as_unknown_parser() { m_ptype = ParserType::UNKNOWN; }
 
-    /// The stored number type is "float"
-    void set_as_float_type() { m_number_type = NumberType::FLOAT; }
-
-    /// The stored number type is "int"
-    void set_as_int_type() { m_number_type = NumberType::INT; }
+    /// Cache the number type
+    void set_number_type(const NumberFlags ntype) { m_number_type = ntype; }
 
     /// Record that the conversion encountered an error
     void encountered_conversion_error() { m_error_type = ErrorType::CANNOT_PARSE; }
@@ -184,15 +157,8 @@ private:
     /// The type of the parser
     ParserType m_ptype;
 
-    /// The types of data this class can store
-    enum NumberType {
-        NOT_FLOAT_OR_INT,
-        FLOAT,
-        INT,
-    };
-
     /// Tracker of what type is being stored
-    NumberType m_number_type;
+    NumberFlags m_number_type;
 
     /// The types of errors this class can encounter
     enum ErrorType {
