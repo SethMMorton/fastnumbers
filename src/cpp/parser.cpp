@@ -114,7 +114,7 @@ PyObject* CharacterParser::as_pyint()
         return nullptr;
     }
 
-    // Return the value without checking python's error state - let Cython handle it
+    // Return the value without checking python's error state
     return retval;
 }
 
