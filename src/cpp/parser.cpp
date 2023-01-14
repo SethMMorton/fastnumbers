@@ -96,7 +96,7 @@ PyObject* CharacterParser::as_pyint()
         my_end,
         offset,
         [&](const char* start, const char* end) -> bool {
-            return string_contains_int(start, end, options().get_base());
+            return string_contains_what(start, end, options().get_base()) == 1;
         }
     );
     if (!is_integer) {
@@ -132,9 +132,18 @@ PyObject* CharacterParser::as_pyfloat()
     // Need to account for underscores if they exist and we are allowing them.
     double retval = -1.0;
     char* their_end = nullptr;
-    const char* my_end = end();
     Buffer buffer;
-    if (!check_string_for_number(buffer, start, my_end, offset, string_contains_float)) {
+    const char* my_end = end();
+    const bool is_float = check_string_for_number(
+        buffer,
+        start,
+        my_end,
+        offset,
+        [](const char* start, const char* end) -> bool {
+            return string_contains_what(start, end, 10) > 0;
+        }
+    );
+    if (!is_float) {
         encountered_conversion_error();
         return nullptr;
     }
@@ -174,37 +183,28 @@ NumberFlags CharacterParser::get_number_type() const
 
     // If the string contains a numeric representation,
     // report which representation type is contained.
-    if (string_contains_int(m_start, end(), options().get_base())) {
-        return NumberType::Integer | NumberType::Float;
-
-    } else if (string_contains_float(m_start, end())) {
-        NumberFlags flags = NumberType::Float;
-        if (string_contains_intlike_float(m_start, end())) {
-            flags |= NumberType::IntLike;
-        }
-        return flags;
-    }
+    int value = string_contains_what(m_start, end(), options().get_base());
 
     // If it still looks like there is no numeric representation in the string,
     // check to see if it it contains underscores, and if so remove them and
     // try a numeric representation again. No need to check for infinity and
     // NaN here because those are not allowed to contain underscores.
-    if (has_valid_underscores()) {
+    if (value == 0 and has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(!options().is_default_base());
-        if (string_contains_int(buffer.start(), buffer.end(), options().get_base())) {
-            return NumberType::Integer | NumberType::Float;
-        } else if (string_contains_float(buffer.start(), buffer.end())) {
-            NumberFlags flags = NumberType::Float;
-            if (string_contains_intlike_float(buffer.start(), buffer.end())) {
-                flags |= NumberType::IntLike;
-            }
-            return flags;
-        }
+        value = string_contains_what(buffer.start(), buffer.end(), options().get_base());
     }
 
-    // If here, the string does not contain a numeric representation.
-    return NumberType::INVALID;
+    // Map integer values to numeric flag values
+    static constexpr NumberFlags type_mapping[] = {
+        /* 0 */ NumberType::INVALID,
+        /* 1 */ NumberType::Integer | NumberType::Float,
+        /* 2 */ NumberType::Float,
+        /* 3 */ NumberType::Float | NumberType::IntLike,
+    };
+
+    // Return the found type
+    return type_mapping[value];
 }
 
 template <
