@@ -654,6 +654,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
         assert func(x) == x
 
     @given(text(min_size=2).filter(not_a_number))
+    @example("   \u2007\u2007    ")
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_of_more_than_one_char_returns_as_is(
         self, func: ConversionFuncs, x: str
@@ -1011,6 +1012,7 @@ class TestCheckingFunctions:
         assert not func(x)
 
     @given(text(min_size=2).filter(not_a_number))
+    @example("   \u2007\u2007    ")
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_of_more_than_one_char_returns_false(
         self, func: IdentificationFuncs, x: str
@@ -1194,6 +1196,7 @@ class TestQueryType:
         assert fastnumbers.query_type(x, allowed_types=(int, float)) is None
 
     @given(text(min_size=2).filter(not_a_number))
+    @example("   \u2007\u2007    ")
     def test_given_unicode_of_more_than_one_char_returns_str(self, x: str) -> None:
         assert fastnumbers.query_type(x) is str
 

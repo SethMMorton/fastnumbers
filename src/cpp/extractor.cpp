@@ -92,12 +92,14 @@ bool TextExtractor::parse_unicode_to_char()
     }
 
     // Strip whitespace from both ends of the data.
-    while (Py_UNICODE_ISSPACE(PyUnicode_READ(kind, data, index))) {
+    while (Py_UNICODE_ISSPACE(PyUnicode_READ(kind, data, index)) && len >= 0) {
         index += 1;
         len -= 1;
     }
-    while (Py_UNICODE_ISSPACE(PyUnicode_READ(kind, data, index + len - 1))) {
-        len -= 1;
+    if (len > 0) {
+        while (Py_UNICODE_ISSPACE(PyUnicode_READ(kind, data, index + len - 1))) {
+            len -= 1;
+        }
     }
 
     // Remember if it was negative
