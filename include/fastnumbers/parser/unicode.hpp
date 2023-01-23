@@ -92,7 +92,8 @@ public:
     NumberFlags get_number_type() const override
     {
         // If this value is cached, use that instead of re-calculating
-        if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {
+        static constexpr NumberFlags unset = NumberType::UNSET;
+        if (Parser::get_number_type() != unset) {
             return Parser::get_number_type();
         }
 
@@ -100,12 +101,12 @@ public:
         // There are no single unicode representations for infinity
         // nor NaN so we do not have to check for that.
         if (m_digit > -1) {
-            return NumberType::Integer | NumberType::Float;
+            return flag_wrap(NumberType::Integer | NumberType::Float);
         } else if (m_numeric > -1.0) {
             if (Parser::float_is_intlike(m_numeric)) {
-                return NumberType::Float | NumberType::IntLike;
+                return flag_wrap(NumberType::Float | NumberType::IntLike);
             } else {
-                return NumberType::Float;
+                return flag_wrap(NumberType::Float);
             }
         }
 
@@ -119,4 +120,10 @@ private:
 
     /// The potential digit value of a unicode character
     long m_digit;
+
+    /// Add FromUni to the return NumberFlags
+    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    {
+        return NumberType::FromUni | val;
+    }
 };

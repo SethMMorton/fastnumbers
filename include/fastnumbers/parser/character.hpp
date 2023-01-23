@@ -102,4 +102,10 @@ private:
         const std::size_t offset,
         Function string_contains_number
     );
+
+    /// Add FromStr to the return NumberFlags
+    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    {
+        return NumberType::FromStr | val;
+    }
 };

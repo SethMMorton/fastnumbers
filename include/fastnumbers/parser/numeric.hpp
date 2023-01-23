@@ -99,7 +99,8 @@ public:
     NumberFlags get_number_type() const override
     {
         // If this value is cached, use that instead of re-calculating
-        if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {
+        static constexpr NumberFlags unset = NumberType::UNSET;
+        if (Parser::get_number_type() != unset) {
             return Parser::get_number_type();
         }
 
@@ -107,7 +108,7 @@ public:
         if (PyFloat_Check(m_obj)) {
             return float_properties(get_double(), NumberType::Float);
         } else if (PyLong_Check(m_obj)) {
-            return NumberType::Integer;
+            return flag_wrap(NumberType::Integer);
         }
 
         // In addition to being strictly a float or long, an object can
@@ -123,12 +124,12 @@ public:
                     PyErr_Clear();
                     // Yes, an error occurred, but it still *looks* like a float.
                     // Attempting to retrieve the value will expose the error.
-                    return NumberType::Float | NumberType::User;
+                    return flag_wrap(NumberType::Float | NumberType::User);
                 }
                 return float_properties(val, NumberType::Float | NumberType::User);
 
             } else if (nmeth->nb_index != nullptr || nmeth->nb_int != nullptr) {
-                return NumberType::Integer | NumberType::User;
+                return flag_wrap(NumberType::Integer | NumberType::User);
             }
         }
 
@@ -155,6 +156,12 @@ private:
         } else if (Parser::float_is_intlike(val)) {
             props |= NumberType::IntLike;
         }
-        return props;
+        return flag_wrap(props);
+    }
+
+    /// Add FromNum to the return NumberFlags
+    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    {
+        return NumberType::FromNum | val;
     }
 };

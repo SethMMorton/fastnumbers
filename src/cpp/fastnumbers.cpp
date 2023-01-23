@@ -128,73 +128,28 @@ Payload collect_payload(PyObject* obj, const UserOptions& options, const UserTyp
     }
 }
 
-/// Check if an arbitrary PyObject is a PyNumber.
-PyObject* object_is_number(
-    PyObject* obj,
-    const UserType type,
-    int base,
-    bool allow_nan,
-    bool allow_inf,
-    bool str_only,
-    bool num_only,
-    bool allow_underscores
-)
+/// Extract the contained numeric type from a given python object
+NumberFlags
+collect_type(PyObject* obj, const UserOptions& options, const PyObject* consider)
 {
-    // Store the user options in a common interface
-    UserOptions options;
-    options.set_base(base);
-    options.set_nan_allowed_str(allow_nan);
-    options.set_inf_allowed_str(allow_inf);
-    options.set_nan_allowed_num(true);
-    options.set_inf_allowed_num(true);
-    options.set_underscores_allowed(allow_underscores);
-
-    // Attempt to extract character data from the object
+    const bool num_only = consider == Resolver::NUMBER_ONLY;
+    const bool str_only = consider == Resolver::STRING_ONLY;
     Buffer buffer;
     TextExtractor extractor(obj, buffer);
     if (num_only && (extractor.is_text() || extractor.is_unicode_character())) {
-        Py_RETURN_FALSE;
+        return NumberType::INVALID;
     } else if (str_only && extractor.is_non_text()) {
-        Py_RETURN_FALSE;
-    }
-
-    // Create a parser and use it to evaluate the user request
-    if (extractor.is_text()) {
+        return NumberType::INVALID;
+    } else if (extractor.is_text()) {
         CharacterParser cparser = extractor.text_parser(options);
-        return PyBool_FromLong(
-            Evaluator<CharacterParser>(obj, options, cparser).is_type(type)
-        );
+        return Evaluator<CharacterParser>(obj, options, cparser).number_type();
     } else if (extractor.is_unicode_character()) {
         UnicodeParser uparser = extractor.unicode_char_parser(options);
-        return PyBool_FromLong(
-            Evaluator<UnicodeParser>(obj, options, uparser).is_type(type)
-        );
+        return Evaluator<UnicodeParser>(obj, options, uparser).number_type();
     } else {
         NumericParser nparser(obj, options);
-        return PyBool_FromLong(
-            Evaluator<NumericParser>(obj, options, nparser).is_type(type)
-        );
+        return Evaluator<NumericParser>(obj, options, nparser).number_type();
     }
-}
-
-/// Ensure the type is allowed, otherwise return None
-PyObject* validate_query_type(PyObject* result, PyObject* allowed_types)
-{
-    if (allowed_types != nullptr && !PySequence_Contains(allowed_types, result)) {
-        Py_RETURN_NONE;
-    }
-    Py_IncRef(result);
-    return result;
-}
-
-/// Return the correct type to search for in the input
-template <typename T>
-PyObject* query_search_type(const T& evaluator, PyObject* input)
-{
-    return evaluator.type_is_int()
-        ? (PyObject*)&PyLong_Type
-        : (evaluator.type_is_float() ? (PyObject*)&PyFloat_Type
-                                     : (PyObject*)Py_TYPE(input));
 }
 
 // Quickly convert to an int or float, depending on value
@@ -445,16 +400,21 @@ static PyObject* fastnumbers_isreal(PyObject* self, PyObject* args, PyObject* kw
         return nullptr;
     }
 
-    return object_is_number(
-        input,
-        UserType::REAL,
-        INT_MIN,
-        allow_nan,
-        allow_inf,
-        str_only,
-        num_only,
-        allow_underscores
-    );
+    UserOptions options;
+    options.set_underscores_allowed(allow_underscores);
+
+    const PyObject* consider
+        = str_only ? Resolver::STRING_ONLY : (num_only ? Resolver::NUMBER_ONLY : NULL);
+    const NumberFlags flags = collect_type(input, options, consider);
+
+    const bool from_str = bool(flags & NumberType::FromStr);
+    const bool ok_real = bool(flags & (NumberType::Float | NumberType::Integer));
+    const bool bad_inf = from_str && !allow_inf && flags & NumberType::Infinity;
+    const bool bad_nan = from_str && !allow_nan && flags & NumberType::NaN;
+    if (ok_real && !(bad_inf || bad_nan)) {
+        Py_RETURN_TRUE;
+    }
+    Py_RETURN_FALSE;
 }
 
 /* Quickly determine if the input is a float. */
@@ -487,16 +447,21 @@ static PyObject* fastnumbers_isfloat(PyObject* self, PyObject* args, PyObject* k
         return nullptr;
     }
 
-    return object_is_number(
-        input,
-        UserType::FLOAT,
-        INT_MIN,
-        allow_nan,
-        allow_inf,
-        str_only,
-        num_only,
-        allow_underscores
-    );
+    UserOptions options;
+    options.set_underscores_allowed(allow_underscores);
+
+    const PyObject* consider
+        = str_only ? Resolver::STRING_ONLY : (num_only ? Resolver::NUMBER_ONLY : NULL);
+    const NumberFlags flags = collect_type(input, options, consider);
+
+    const bool from_str = bool(flags & NumberType::FromStr);
+    const bool ok_float = bool(flags & NumberType::Float);
+    const bool bad_inf = from_str && !allow_inf && flags & NumberType::Infinity;
+    const bool bad_nan = from_str && !allow_nan && flags & NumberType::NaN;
+    if (ok_float && !(bad_inf || bad_nan)) {
+        Py_RETURN_TRUE;
+    }
+    Py_RETURN_FALSE;
 }
 
 /* Quickly determine if the input is an int. */
@@ -533,9 +498,18 @@ static PyObject* fastnumbers_isint(PyObject* self, PyObject* args, PyObject* kwa
         return e.raise_value_error();
     }
 
-    return object_is_number(
-        input, UserType::INT, base, false, false, str_only, num_only, allow_underscores
-    );
+    UserOptions options;
+    options.set_base(base);
+    options.set_underscores_allowed(allow_underscores);
+
+    const PyObject* consider
+        = str_only ? Resolver::STRING_ONLY : (num_only ? Resolver::NUMBER_ONLY : NULL);
+    const NumberFlags flags = collect_type(input, options, consider);
+
+    if (flags & NumberType::Integer) {
+        Py_RETURN_TRUE;
+    }
+    Py_RETURN_FALSE;
 }
 
 /* Quickly determine if the input is int-like. */
@@ -563,16 +537,17 @@ static PyObject* fastnumbers_isintlike(PyObject* self, PyObject* args, PyObject*
         return nullptr;
     }
 
-    return object_is_number(
-        input,
-        UserType::INTLIKE,
-        INT_MIN,
-        false,
-        false,
-        str_only,
-        num_only,
-        allow_underscores
-    );
+    UserOptions options;
+    options.set_underscores_allowed(allow_underscores);
+
+    const PyObject* consider
+        = str_only ? Resolver::STRING_ONLY : (num_only ? Resolver::NUMBER_ONLY : NULL);
+    const NumberFlags flags = collect_type(input, options, consider);
+
+    if (flags & (NumberType::Integer | NumberType::IntLike)) {
+        Py_RETURN_TRUE;
+    }
+    Py_RETURN_FALSE;
 }
 
 /* Quickly detect the type. */
@@ -623,35 +598,26 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
     // Store the user options in a common interface
     UserOptions options;
     options.set_coerce(coerce);
-    options.set_nan_allowed_str(allow_nan);
-    options.set_inf_allowed_str(allow_inf);
-    options.set_nan_allowed_num(true);
-    options.set_inf_allowed_num(true);
     options.set_underscores_allowed(allow_underscores);
 
-    // Attempt to extract character data from the object
-    Buffer buffer;
-    TextExtractor extractor(input, buffer);
+    const NumberFlags flags = collect_type(input, options, nullptr);
 
-    // Create a parser and use it to evaluate the user request
-    PyObject* search_type = nullptr;
-    if (extractor.is_text()) {
-        CharacterParser cparser = extractor.text_parser(options);
-        search_type = query_search_type(
-            Evaluator<CharacterParser>(input, options, cparser), input
-        );
-    } else if (extractor.is_unicode_character()) {
-        UnicodeParser uparser = extractor.unicode_char_parser(options);
-        search_type = query_search_type(
-            Evaluator<UnicodeParser>(input, options, uparser), input
-        );
-    } else {
-        NumericParser nparser(input, options);
-        search_type = query_search_type(
-            Evaluator<NumericParser>(input, options, nparser), input
-        );
+    const bool from_str = bool(flags & NumberType::FromStr);
+    const bool bad_inf = from_str && !allow_inf && flags & NumberType::Infinity;
+    const bool bad_nan = from_str && !allow_nan && flags & NumberType::NaN;
+    const bool ok_intlike = options.allow_coerce() && flags & NumberType::IntLike;
+    const bool ok_float = flags & NumberType::Float && !(bad_inf || bad_nan);
+    const bool ok_int = flags & NumberType::Integer || ok_intlike;
+
+    PyObject* found_type = ok_int
+        ? (PyObject*)&PyLong_Type
+        : (ok_float ? (PyObject*)&PyFloat_Type : (PyObject*)Py_TYPE(input));
+
+    if (allowed_types != nullptr && !PySequence_Contains(allowed_types, found_type)) {
+        Py_RETURN_NONE;
     }
-    return validate_query_type(search_type, allowed_types);
+    Py_IncRef(found_type);
+    return found_type;
 }
 
 /* Drop-in replacement for int, float */

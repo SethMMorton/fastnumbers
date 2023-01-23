@@ -175,10 +175,10 @@ NumberFlags CharacterParser::get_number_type() const
     // If the string contains an infinity or NaN then we don't need to do any
     // other fancy processing and can return now.
     if (quick_detect_infinity(m_start, m_str_len)) {
-        return NumberType::Float | NumberType::Infinity;
+        return flag_wrap(NumberType::Float | NumberType::Infinity);
 
     } else if (quick_detect_nan(m_start, m_str_len)) {
-        return NumberType::Float | NumberType::NaN;
+        return flag_wrap(NumberType::Float | NumberType::NaN);
     }
 
     // If the string contains a numeric representation,
@@ -198,9 +198,9 @@ NumberFlags CharacterParser::get_number_type() const
     // Map integer values to numeric flag values
     static constexpr NumberFlags type_mapping[] = {
         /* 0 */ NumberType::INVALID,
-        /* 1 */ NumberType::Integer | NumberType::Float,
-        /* 2 */ NumberType::Float,
-        /* 3 */ NumberType::Float | NumberType::IntLike,
+        /* 1 */ flag_wrap(NumberType::Integer | NumberType::Float),
+        /* 2 */ flag_wrap(NumberType::Float),
+        /* 3 */ flag_wrap(NumberType::Float | NumberType::IntLike),
     };
 
     // Return the found type

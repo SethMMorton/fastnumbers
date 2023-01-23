@@ -26,6 +26,9 @@ enum class NumberType : unsigned {
     Infinity = 1U << 4,
     IntLike = 1U << 5,
     User = 1U << 6,
+    FromStr = 1U << 7,
+    FromUni = 1U << 8,
+    FromNum = 1U << 9,
 };
 enableEnumClassBitmask(NumberType);
 using NumberFlags = bitmask<NumberType>;

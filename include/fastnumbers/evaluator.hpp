@@ -53,58 +53,8 @@ public:
     /// Return the parser type currenly associated with the Evaluator
     ParserType parser_type() const { return m_parser.parser_type(); }
 
-    /// Was the passed Python object of the correct type?
-    bool is_type(const UserType ntype) const
-    {
-        const NumberFlags typeflags = m_parser.get_number_type();
-
-        // Dispatch to the appropriate parser function based on requested type
-        switch (ntype) {
-        case UserType::REAL:
-            return typeflags & NumberType::NaN
-                ? allow_nan()
-                : (typeflags & NumberType::Infinity
-                       ? allow_inf()
-                       : bool(typeflags & (NumberType::Integer | NumberType::Float)));
-
-        case UserType::FLOAT:
-            return typeflags & NumberType::NaN
-                ? allow_nan()
-                : (typeflags & NumberType::Infinity
-                       ? allow_inf()
-                       : bool(typeflags & NumberType::Float));
-
-        case UserType::INT:
-            return bool(typeflags & NumberType::Integer);
-
-        case UserType::INTLIKE:
-        case UserType::FORCEINT:
-            return bool(typeflags & (NumberType::Integer | NumberType::IntLike));
-
-        default:
-            Py_UNREACHABLE();
-        }
-    }
-
-    /// Is the stored type a float? Account for nan_action and inf_action.
-    bool type_is_float() const
-    {
-        const NumberFlags typeflags = m_parser.get_number_type();
-        return typeflags & NumberType::NaN
-            ? allow_nan()
-            : (typeflags & NumberType::Infinity ? allow_inf()
-                                                : bool(typeflags & NumberType::Float));
-    }
-
-    /// Is the stored type an integer? If coerce is true, is the type intlike?
-    bool type_is_int() const
-    {
-        NumberFlags to_check = NumberType::Integer;
-        if (options().allow_coerce()) {
-            to_check |= NumberType::IntLike;
-        }
-        return bool(m_parser.get_number_type() & to_check);
-    }
+    /// Return the type of number contained in the given object
+    NumberFlags number_type() const { return m_parser.get_number_type(); }
 
     /**
      * \brief Convert the stored object to the desired number type
@@ -149,14 +99,6 @@ private:
     UserOptions m_options;
 
 private:
-    /// Assess if inf is allowed
-    // Be sure to check out the template specialization in the .cpp file
-    bool allow_inf() const { return options().allow_inf_str(); }
-
-    /// Assess if nan is allowed
-    // Be sure to check out the template specialization in the .cpp file
-    bool allow_nan() const { return options().allow_nan_str(); }
-
     /// Logic for evaluating a numeric python object
     Payload from_numeric_as_type(const UserType ntype)
     {
