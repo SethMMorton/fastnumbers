@@ -104,7 +104,7 @@ PyObject* float_check_impl(
     const PyObject* consider,
     const UserType ntype,
     const bool allow_underscores,
-    const bool strict = true
+    const bool strict = false
 );
 
 /**

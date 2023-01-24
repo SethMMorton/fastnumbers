@@ -197,7 +197,7 @@ NumberFlags CharacterParser::get_number_type() const
     // Map integer values to numeric flag values
     static constexpr NumberFlags type_mapping[] = {
         /* 0 */ NumberType::INVALID,
-        /* 1 */ flag_wrap(NumberType::Integer | NumberType::Float),
+        /* 1 */ flag_wrap(NumberType::Integer),
         /* 2 */ flag_wrap(NumberType::Float),
         /* 3 */ flag_wrap(NumberType::Float | NumberType::IntLike),
     };

@@ -196,13 +196,14 @@ PyObject* int_conv_impl(PyObject* input, const UserType ntype, const int base)
 static inline void resolve_types(
     const NumberFlags& flags,
     const UserOptions& options,
+    bool& from_str,
     bool& ok_float,
     bool& ok_int,
     bool& ok_intlike
 )
 {
     // Build up the logic with individual "Boolean chunks"
-    const bool from_str = bool(flags & NumberType::FromStr);
+    from_str = bool(flags & (NumberType::FromStr | NumberType::FromUni));
     const bool from_num = bool(flags & NumberType::FromNum);
     const bool no_inf_str = from_str && !options.allow_inf_str();
     const bool no_nan_str = from_str && !options.allow_nan_str();
@@ -237,12 +238,12 @@ PyObject* float_check_impl(
 
     const NumberFlags flags = collect_type(input, options, consider);
 
-    bool ok_float, ok_int, ignored;
-    resolve_types(flags, options, ok_float, ok_int, ignored);
+    bool from_str, ok_float, ok_int, ok_intlike;
+    resolve_types(flags, options, from_str, ok_float, ok_int, ok_intlike);
 
     // We are alwasy OK with integers for REAL.
     // For FLOAT, we are OK only if not in strict mode.
-    ok_int = ntype == UserType::REAL ? ok_int : (!strict && ok_int);
+    ok_int = ntype == UserType::REAL ? ok_int : (from_str && !strict && ok_int);
 
     if (ok_float || ok_int) {
         Py_RETURN_TRUE;
@@ -266,8 +267,8 @@ PyObject* int_check_impl(
 
     const NumberFlags flags = collect_type(input, options, consider);
 
-    bool ignored, ok_int, ok_intlike;
-    resolve_types(flags, options, ignored, ok_int, ok_intlike);
+    bool from_str, ok_float, ok_int, ok_intlike;
+    resolve_types(flags, options, from_str, ok_float, ok_int, ok_intlike);
 
     // ok_intline never be true unless set_coerce was given true
     if (ok_int || ok_intlike) {
@@ -294,8 +295,8 @@ PyObject* type_query_impl(
 
     const NumberFlags flags = collect_type(input, options, nullptr);
 
-    bool ok_float, ok_int, ok_intlike;
-    resolve_types(flags, options, ok_float, ok_int, ok_intlike);
+    bool from_str, ok_float, ok_int, ok_intlike;
+    resolve_types(flags, options, from_str, ok_float, ok_int, ok_intlike);
 
     // If the input can be interpreted as a number, return that number
     // type. Otherwise, return the type of the input.

@@ -100,7 +100,7 @@ public:
         // There are no single unicode representations for infinity
         // nor NaN so we do not have to check for that.
         if (m_digit > -1) {
-            return flag_wrap(NumberType::Integer | NumberType::Float);
+            return flag_wrap(NumberType::Integer);
         } else if (m_numeric > -1.0) {
             if (Parser::float_is_intlike(m_numeric)) {
                 return flag_wrap(NumberType::Float | NumberType::IntLike);
