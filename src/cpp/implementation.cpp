@@ -232,18 +232,8 @@ PyObject* float_check_impl(
 {
     UserOptions options;
     options.set_underscores_allowed(allow_underscores);
-    options.set_inf_allowed_str(
-        inf == Selectors::ALLOWED || inf == Selectors::STRING_ONLY
-    );
-    options.set_nan_allowed_str(
-        nan == Selectors::ALLOWED || nan == Selectors::STRING_ONLY
-    );
-    options.set_inf_allowed_num(
-        inf == Selectors::ALLOWED || inf == Selectors::NUMBER_ONLY
-    );
-    options.set_nan_allowed_num(
-        nan == Selectors::ALLOWED || nan == Selectors::NUMBER_ONLY
-    );
+    options.set_inf_allowed(inf);
+    options.set_nan_allowed(nan);
 
     const NumberFlags flags = collect_type(input, options, consider);
 
@@ -299,18 +289,8 @@ PyObject* type_query_impl(
     UserOptions options;
     options.set_coerce(coerce);
     options.set_underscores_allowed(allow_underscores);
-    options.set_inf_allowed_str(
-        inf == Selectors::ALLOWED || inf == Selectors::STRING_ONLY
-    );
-    options.set_nan_allowed_str(
-        nan == Selectors::ALLOWED || nan == Selectors::STRING_ONLY
-    );
-    options.set_inf_allowed_num(
-        inf == Selectors::ALLOWED || inf == Selectors::NUMBER_ONLY
-    );
-    options.set_nan_allowed_num(
-        nan == Selectors::ALLOWED || nan == Selectors::NUMBER_ONLY
-    );
+    options.set_inf_allowed(inf);
+    options.set_nan_allowed(nan);
 
     const NumberFlags flags = collect_type(input, options, nullptr);
 

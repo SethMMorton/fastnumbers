@@ -2,6 +2,10 @@
 
 #include <limits>
 
+#include <Python.h>
+
+#include "fastnumbers/selectors.hpp"
+
 /// The conversion the user has requested
 enum class UserType {
     REAL, ///< Convert to/check a real
@@ -64,6 +68,17 @@ public:
         m_nan_allowed_num = m_nan_allowed_str = nan_allowed;
     }
 
+    /// Tell the analyzer if NaN is allowed when type checking
+    void set_nan_allowed(const PyObject* selector)
+    {
+        set_nan_allowed_num(
+            selector == Selectors::ALLOWED || selector == Selectors::NUMBER_ONLY
+        );
+        set_nan_allowed_str(
+            selector == Selectors::ALLOWED || selector == Selectors::STRING_ONLY
+        );
+    }
+
     /// Tell the analyzer if NaN is allowed for strings when type checking
     void set_nan_allowed_str(const bool nan_allowed) { m_nan_allowed_str = nan_allowed; }
 
@@ -80,6 +95,17 @@ public:
     void set_inf_allowed(const bool inf_allowed)
     {
         m_inf_allowed_num = m_inf_allowed_str = inf_allowed;
+    }
+
+    /// Tell the analyzer if infinity is allowed when type checking
+    void set_inf_allowed(const PyObject* selector)
+    {
+        set_inf_allowed_num(
+            selector == Selectors::ALLOWED || selector == Selectors::NUMBER_ONLY
+        );
+        set_inf_allowed_str(
+            selector == Selectors::ALLOWED || selector == Selectors::STRING_ONLY
+        );
     }
 
     /// Tell the analyzer if infinity is allowed for strings when type checking
