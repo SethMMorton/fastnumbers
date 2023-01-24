@@ -2,6 +2,19 @@
 
 #include <limits>
 
+/// The conversion the user has requested
+enum class UserType {
+    REAL, ///< Convert to/check a real
+    FLOAT, ///< Convert to/check a float
+    INT, ///< Convert to/check an int
+    INTLIKE, ///< Check int-like
+    FORCEINT, ///< Force conversion to int
+};
+
+/**
+ * \class UserOptions
+ * \brief Container for options the user specifies that affect evaluation
+ */
 class UserOptions final {
 public:
     UserOptions()

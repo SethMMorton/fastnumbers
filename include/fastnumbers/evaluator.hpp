@@ -8,15 +8,6 @@
 #include "fastnumbers/payload.hpp"
 #include "fastnumbers/user_options.hpp"
 
-/// The conversion the user has requested
-enum class UserType {
-    REAL, ///< Convert to/check a real
-    FLOAT, ///< Convert to/check a float
-    INT, ///< Convert to/check an int
-    INTLIKE, ///< Check int-like
-    FORCEINT, ///< Force conversion to int
-};
-
 /**
  * \class Evaluator
  * \brief Evaluate the contents of a Python object

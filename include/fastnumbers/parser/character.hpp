@@ -6,9 +6,8 @@
 
 #include <Python.h>
 
-#include "fastnumbers/EnumClass.h"
+#include "fastnumbers/buffer.hpp"
 #include "fastnumbers/parser/base.hpp"
-#include "fastnumbers/parser/buffer.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**

@@ -1,7 +1,6 @@
-#include "fastnumbers/EnumClass.h"
+#include "fastnumbers/buffer.hpp"
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/parser/base.hpp"
-#include "fastnumbers/parser/buffer.hpp"
 #include "fastnumbers/parser/character.hpp"
 #include "fastnumbers/user_options.hpp"
 

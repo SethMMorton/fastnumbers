@@ -10,6 +10,8 @@
 #include "fastnumbers/implementation.hpp"
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
+#include "fastnumbers/resolver.hpp"
+#include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**
@@ -56,8 +58,8 @@ collect_payload(PyObject* obj, const UserOptions& options, const UserType ntype)
 static inline NumberFlags
 collect_type(PyObject* obj, const UserOptions& options, const PyObject* consider)
 {
-    const bool num_only = consider == Resolver::NUMBER_ONLY;
-    const bool str_only = consider == Resolver::STRING_ONLY;
+    const bool num_only = consider == Selectors::NUMBER_ONLY;
+    const bool str_only = consider == Selectors::STRING_ONLY;
     Buffer buffer;
 
     // The text extractor is responsible for taking a python object
@@ -153,7 +155,7 @@ PyObject* float_conv_impl(PyObject* input, const UserType ntype, const bool coer
     options.set_coerce(coerce);
     options.set_unicode_allowed(false);
     options.set_underscores_allowed(true);
-    return do_resolve(options, input, Resolver::RAISE, ntype);
+    return do_resolve(options, input, Selectors::RAISE, ntype);
 }
 
 // "Full" implementation for converting integers
@@ -179,7 +181,7 @@ PyObject* int_conv_impl(PyObject* input, const UserType ntype, const int base)
     options.set_base(base);
     options.set_unicode_allowed(false);
     options.set_underscores_allowed(true);
-    return do_resolve(options, input, Resolver::RAISE, ntype);
+    return do_resolve(options, input, Selectors::RAISE, ntype);
 }
 
 /**
@@ -231,16 +233,16 @@ PyObject* float_check_impl(
     UserOptions options;
     options.set_underscores_allowed(allow_underscores);
     options.set_inf_allowed_str(
-        inf == Resolver::ALLOWED || inf == Resolver::STRING_ONLY
+        inf == Selectors::ALLOWED || inf == Selectors::STRING_ONLY
     );
     options.set_nan_allowed_str(
-        nan == Resolver::ALLOWED || nan == Resolver::STRING_ONLY
+        nan == Selectors::ALLOWED || nan == Selectors::STRING_ONLY
     );
     options.set_inf_allowed_num(
-        inf == Resolver::ALLOWED || inf == Resolver::NUMBER_ONLY
+        inf == Selectors::ALLOWED || inf == Selectors::NUMBER_ONLY
     );
     options.set_nan_allowed_num(
-        nan == Resolver::ALLOWED || nan == Resolver::NUMBER_ONLY
+        nan == Selectors::ALLOWED || nan == Selectors::NUMBER_ONLY
     );
 
     const NumberFlags flags = collect_type(input, options, consider);
@@ -298,16 +300,16 @@ PyObject* type_query_impl(
     options.set_coerce(coerce);
     options.set_underscores_allowed(allow_underscores);
     options.set_inf_allowed_str(
-        inf == Resolver::ALLOWED || inf == Resolver::STRING_ONLY
+        inf == Selectors::ALLOWED || inf == Selectors::STRING_ONLY
     );
     options.set_nan_allowed_str(
-        nan == Resolver::ALLOWED || nan == Resolver::STRING_ONLY
+        nan == Selectors::ALLOWED || nan == Selectors::STRING_ONLY
     );
     options.set_inf_allowed_num(
-        inf == Resolver::ALLOWED || inf == Resolver::NUMBER_ONLY
+        inf == Selectors::ALLOWED || inf == Selectors::NUMBER_ONLY
     );
     options.set_nan_allowed_num(
-        nan == Resolver::ALLOWED || nan == Resolver::NUMBER_ONLY
+        nan == Selectors::ALLOWED || nan == Selectors::NUMBER_ONLY
     );
 
     const NumberFlags flags = collect_type(input, options, nullptr);

@@ -6,7 +6,7 @@
 
 #include <Python.h>
 
-#include "fastnumbers/EnumClass.h"
+#include "fastnumbers/third_party/EnumClass.h"
 #include "fastnumbers/user_options.hpp"
 
 /// Possible types of Parser objects

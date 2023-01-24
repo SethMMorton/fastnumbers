@@ -8,8 +8,8 @@
 
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/docstrings.hpp"
-#include "fastnumbers/evaluator.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 #include "fastnumbers/version.hpp"
 
@@ -93,11 +93,11 @@ static inline void handle_fail_backwards_compatibility(
         if (on_fail != nullptr) {
             throw fastnumbers_exception("Cannot set both on_fail and raise_on_invalid");
         }
-        on_fail = Resolver::RAISE;
+        on_fail = Selectors::RAISE;
     }
     // fastnumbers default
     if (on_fail == nullptr) {
-        on_fail = Resolver::INPUT;
+        on_fail = Selectors::INPUT;
     }
 }
 
@@ -114,9 +114,9 @@ static inline void handle_fail_backwards_compatibility(
 static inline PyObject* create_consider(const bool str_only, const bool num_only)
 {
     if (str_only) {
-        return Resolver::STRING_ONLY;
+        return Selectors::STRING_ONLY;
     } else if (num_only) {
-        return Resolver::NUMBER_ONLY;
+        return Selectors::NUMBER_ONLY;
     } else {
         return nullptr;
     }
@@ -131,8 +131,8 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
     PyObject* default_value = nullptr;
     PyObject* on_fail = nullptr;
     PyObject* key = nullptr;
-    PyObject* inf = Resolver::ALLOWED;
-    PyObject* nan = Resolver::ALLOWED;
+    PyObject* inf = Selectors::ALLOWED;
+    PyObject* nan = Selectors::ALLOWED;
     int raise_on_invalid = false;
     int coerce = true;
     int allow_underscores = true;
@@ -184,8 +184,8 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
     PyObject* default_value = nullptr;
     PyObject* on_fail = nullptr;
     PyObject* key = nullptr;
-    PyObject* inf = Resolver::ALLOWED;
-    PyObject* nan = Resolver::ALLOWED;
+    PyObject* inf = Selectors::ALLOWED;
+    PyObject* nan = Selectors::ALLOWED;
     int raise_on_invalid = false;
     int allow_underscores = true;
     static const char* keywords[] = { "x",    "default", "raise_on_invalid",  "on_fail",
@@ -358,8 +358,8 @@ static PyObject* fastnumbers_isreal(PyObject* self, PyObject* args, PyObject* kw
 
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
-    const PyObject* inf = allow_inf ? Resolver::ALLOWED : Resolver::NUMBER_ONLY;
-    const PyObject* nan = allow_nan ? Resolver::ALLOWED : Resolver::NUMBER_ONLY;
+    const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
+    const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
     // Execute
     return float_check_impl(
@@ -401,8 +401,8 @@ static PyObject* fastnumbers_isfloat(PyObject* self, PyObject* args, PyObject* k
 
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
-    const PyObject* inf = allow_inf ? Resolver::ALLOWED : Resolver::NUMBER_ONLY;
-    const PyObject* nan = allow_nan ? Resolver::ALLOWED : Resolver::NUMBER_ONLY;
+    const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
+    const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
     // Execute
     return float_check_impl(
@@ -535,8 +535,8 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
     }
 
     // Convert old-style arguments to new-style
-    const PyObject* inf = allow_inf ? Resolver::ALLOWED : Resolver::NUMBER_ONLY;
-    const PyObject* nan = allow_nan ? Resolver::ALLOWED : Resolver::NUMBER_ONLY;
+    const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
+    const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
     // Execute
     return type_query_impl(input, allowed_types, inf, nan, allow_underscores, coerce);
@@ -694,16 +694,16 @@ static struct PyModuleDef moduledef = { PyModuleDef_HEAD_INIT,
                                         nullptr };
 
 // Initiallize static objects
-PyObject* Resolver::POS_INFINITY = nullptr;
-PyObject* Resolver::NEG_INFINITY = nullptr;
-PyObject* Resolver::POS_NAN = nullptr;
-PyObject* Resolver::NEG_NAN = nullptr;
-PyObject* Resolver::ALLOWED = nullptr;
-PyObject* Resolver::DISALLOWED = nullptr;
-PyObject* Resolver::INPUT = nullptr;
-PyObject* Resolver::RAISE = nullptr;
-PyObject* Resolver::STRING_ONLY = nullptr;
-PyObject* Resolver::NUMBER_ONLY = nullptr;
+PyObject* Selectors::POS_INFINITY = nullptr;
+PyObject* Selectors::NEG_INFINITY = nullptr;
+PyObject* Selectors::POS_NAN = nullptr;
+PyObject* Selectors::NEG_NAN = nullptr;
+PyObject* Selectors::ALLOWED = nullptr;
+PyObject* Selectors::DISALLOWED = nullptr;
+PyObject* Selectors::INPUT = nullptr;
+PyObject* Selectors::RAISE = nullptr;
+PyObject* Selectors::STRING_ONLY = nullptr;
+PyObject* Selectors::NUMBER_ONLY = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -721,28 +721,28 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     PyModule_AddIntConstant(m, "min_exp", FN_MIN_EXP);
 
     // Selectors
-    Resolver::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
-    Resolver::DISALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
-    Resolver::INPUT = PyObject_New(PyObject, &PyBaseObject_Type);
-    Resolver::RAISE = PyObject_New(PyObject, &PyBaseObject_Type);
-    Resolver::STRING_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
-    Resolver::NUMBER_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
-    PyModule_AddObject(m, "ALLOWED", Resolver::ALLOWED);
-    PyModule_AddObject(m, "DISALLOWED", Resolver::DISALLOWED);
-    PyModule_AddObject(m, "INPUT", Resolver::INPUT);
-    PyModule_AddObject(m, "RAISE", Resolver::RAISE);
-    PyModule_AddObject(m, "STRING_ONLY", Resolver::STRING_ONLY);
-    PyModule_AddObject(m, "NUMBER_ONLY", Resolver::NUMBER_ONLY);
+    Selectors::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
+    Selectors::DISALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
+    Selectors::INPUT = PyObject_New(PyObject, &PyBaseObject_Type);
+    Selectors::RAISE = PyObject_New(PyObject, &PyBaseObject_Type);
+    Selectors::STRING_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
+    Selectors::NUMBER_ONLY = PyObject_New(PyObject, &PyBaseObject_Type);
+    PyModule_AddObject(m, "ALLOWED", Selectors::ALLOWED);
+    PyModule_AddObject(m, "DISALLOWED", Selectors::DISALLOWED);
+    PyModule_AddObject(m, "INPUT", Selectors::INPUT);
+    PyModule_AddObject(m, "RAISE", Selectors::RAISE);
+    PyModule_AddObject(m, "STRING_ONLY", Selectors::STRING_ONLY);
+    PyModule_AddObject(m, "NUMBER_ONLY", Selectors::NUMBER_ONLY);
 
     // Constants cached for internal use
     PyObject* pos_inf_str = PyBytes_FromString("+infinity");
     PyObject* neg_inf_str = PyBytes_FromString("-infinity");
     PyObject* pos_nan_str = PyBytes_FromString("+nan");
     PyObject* neg_nan_str = PyBytes_FromString("-nan");
-    Resolver::POS_INFINITY = PyFloat_FromString(pos_inf_str);
-    Resolver::NEG_INFINITY = PyFloat_FromString(neg_inf_str);
-    Resolver::POS_NAN = PyFloat_FromString(pos_nan_str);
-    Resolver::NEG_NAN = PyFloat_FromString(neg_nan_str);
+    Selectors::POS_INFINITY = PyFloat_FromString(pos_inf_str);
+    Selectors::NEG_INFINITY = PyFloat_FromString(neg_inf_str);
+    Selectors::POS_NAN = PyFloat_FromString(pos_nan_str);
+    Selectors::NEG_NAN = PyFloat_FromString(neg_nan_str);
     Py_DecRef(pos_inf_str);
     Py_DecRef(neg_inf_str);
     Py_DecRef(pos_nan_str);
