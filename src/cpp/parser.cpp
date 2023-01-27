@@ -188,7 +188,7 @@ NumberFlags CharacterParser::get_number_type() const
     // check to see if it it contains underscores, and if so remove them and
     // try a numeric representation again. No need to check for infinity and
     // NaN here because those are not allowed to contain underscores.
-    if (value == 0 and has_valid_underscores()) {
+    if (value == 0 && has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(!options().is_default_base());
         value = string_contains_what(buffer.start(), buffer.end(), options().get_base());

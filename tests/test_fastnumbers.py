@@ -1220,7 +1220,9 @@ class TestCheckingFunctions:
 
 
 class TestCheckFloat:
-    """Tests for the check_float function that are too specific for the generalized tests."""
+    """
+    Tests for the check_float function that are too specific for the generalized tests.
+    """
 
     @given(integers())
     def test_returns_false_if_given_int(self, x: int) -> None:
@@ -1237,7 +1239,9 @@ class TestCheckFloat:
 
 
 class TestCheckInt:
-    """Tests for the check_int function that are too specific for the generalized tests."""
+    """
+    Tests for the check_int function that are too specific for the generalized tests.
+    """
 
     @given(floats())
     def test_returns_false_if_given_float(self, x: str) -> None:
