@@ -13,6 +13,7 @@ from typing import (
     Iterable,
     List,
     NoReturn,
+    Tuple,
     Union,
 )
 
@@ -107,54 +108,50 @@ class FastForceInt(Protocol):
         ...
 
 
-class IsReal(Protocol):
+class CheckReal(Protocol):
     def __call__(
         self,
         x: Any,
         *,
-        str_only: bool = False,
-        num_only: bool = False,
-        allow_inf: bool = False,
-        allow_nan: bool = False,
-        allow_underscores: bool = True,
+        consider: Any = None,
+        inf: Any = fastnumbers.NUMBER_ONLY,
+        nan: Any = fastnumbers.NUMBER_ONLY,
+        allow_underscores: bool = False,
     ) -> bool:
         ...
 
 
-class IsFloat(Protocol):
+class CheckFloat(Protocol):
     def __call__(
         self,
         x: Any,
         *,
-        str_only: bool = False,
-        num_only: bool = False,
-        allow_inf: bool = False,
-        allow_nan: bool = False,
-        allow_underscores: bool = True,
+        consider: Any = None,
+        inf: Any = fastnumbers.NUMBER_ONLY,
+        nan: Any = fastnumbers.NUMBER_ONLY,
+        allow_underscores: bool = False,
     ) -> bool:
         ...
 
 
-class IsInt(Protocol):
+class CheckInt(Protocol):
     def __call__(
         self,
         x: Any,
         *,
-        str_only: bool = False,
-        num_only: bool = False,
+        consider: Any = None,
         base: int = 0,
         allow_underscores: bool = True,
     ) -> bool:
         ...
 
 
-class IsIntLike(Protocol):
+class CheckIntLike(Protocol):
     def __call__(
         self,
         x: Any,
         *,
-        str_only: bool = False,
-        num_only: bool = False,
+        consider: Any = None,
         allow_underscores: bool = True,
     ) -> bool:
         ...
@@ -166,8 +163,7 @@ class Real(Protocol):
 
 
 ConversionFuncs = Union[FastReal, FastFloat, FastInt, FastForceInt]
-IdentificationFuncs = Union[IsReal, IsFloat, IsInt, IsIntLike]
-NonBuiltinFuncs = Union[ConversionFuncs, IdentificationFuncs]
+IdentificationFuncs = Union[CheckReal, CheckFloat, CheckInt, CheckIntLike]
 
 # Predefine Unicode digits, numbers, and not those.
 digits = []
@@ -268,6 +264,10 @@ class DumbIntClass(object):
 # Map function names to the actual functions,
 # for dymamic declaration of which functions test below.
 func_mapping: Dict[str, Callable[..., Any]] = {
+    "check_real": fastnumbers.check_real,
+    "check_float": fastnumbers.check_float,
+    "check_int": fastnumbers.check_int,
+    "check_intlike": fastnumbers.check_intlike,
     "fast_real": fastnumbers.fast_real,
     "fast_real_coerce_true": partial(fastnumbers.fast_real, coerce=True),
     "fast_real_coerce_false": partial(fastnumbers.fast_real, coerce=False),
@@ -289,7 +289,7 @@ def get_funcs(function_names: Iterable[str]) -> List[Callable[..., Any]]:
 
 # Common convenience functiom collections
 conversion_funcs = ["fast_real", "fast_float", "fast_int", "fast_forceint"]
-identification_funcs = ["isreal", "isfloat", "isint", "isintlike"]
+identification_funcs = ["check_real", "check_float", "check_int", "check_intlike"]
 non_builtin_funcs = conversion_funcs + identification_funcs
 
 # All ways to spell NaN, and most ways to spell infinity and negative infinity
@@ -320,19 +320,19 @@ class TestArguments:
     def test_real_no_arguments_returns_0(self) -> None:
         assert fastnumbers.real() == 0
 
-    funcs = non_builtin_funcs + ["real"]
+    funcs = non_builtin_funcs + ["real", "isreal", "isfloat", "isint", "isintlike"]
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_invalid_argument_raises_type_error(
-        self, func: Union[NonBuiltinFuncs, Real]
+        self, func: Union[Callable[[Any], Any], Real]
     ) -> None:
         with raises(TypeError):
             func(5, invalid="dummy")  # type: ignore
 
-    funcs = non_builtin_funcs
+    funcs = non_builtin_funcs + ["isreal", "isfloat", "isint", "isintlike"]
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    def test_no_arguments_raises_type_error(self, func: NonBuiltinFuncs) -> None:
+    def test_no_arguments_raises_type_error(self, func: Callable[[Any], Any]) -> None:
         with raises(TypeError):
             func()  # type: ignore
 
@@ -350,15 +350,16 @@ class TestSelectors:
     ]
 
     @mark.parametrize("x", selectors)
-    def test_selectors_have_no_type(self, x):
+    def test_selectors_have_no_type(self, x: object) -> None:
         assert type(x) is object
 
     @mark.parametrize("a, b", combinations(selectors, 2))
-    def test_selectors_are_mutually_exclusive(self, a, b):
+    def test_selectors_are_mutually_exclusive(self, a: object, b: object) -> None:
         assert a is not b
 
 
 class TestBackwardsCompatibility:
+    """Ensure "old" calling methods still match new methods"""
 
     funcs = conversion_funcs
 
@@ -368,6 +369,49 @@ class TestBackwardsCompatibility:
             func("dummy", key=len, on_fail=len)
         assert func("dummy", key=len) == 5
         assert func("dummy", key=len) == func("dummy", on_fail=len)
+
+    old_to_new_checking_pairing = []
+    func_pairs: List[Tuple[Callable[[Any], Any], Callable[[Any], Any]]] = [
+        (fastnumbers.isreal, fastnumbers.check_real),
+        (fastnumbers.isfloat, fastnumbers.check_float),
+        (fastnumbers.isint, fastnumbers.check_int),
+        (fastnumbers.isintlike, fastnumbers.check_intlike),
+    ]
+    for old, new in func_pairs:
+        old_to_new_checking_pairing += [
+            (old, new),
+            (partial(old, str_only=False, num_only=False), partial(new, consider=None)),
+            (
+                partial(old, str_only=True),
+                partial(new, consider=fastnumbers.STRING_ONLY),
+            ),
+            (
+                partial(old, num_only=True),
+                partial(new, consider=fastnumbers.NUMBER_ONLY),
+            ),
+        ]
+    for old, new in func_pairs[:2]:
+        old_to_new_checking_pairing += [
+            (partial(old, allow_inf=True), partial(new, inf=fastnumbers.ALLOWED)),
+            (partial(old, allow_inf=False), partial(new, inf=fastnumbers.NUMBER_ONLY)),
+            (partial(old, allow_nan=True), partial(new, nan=fastnumbers.ALLOWED)),
+            (partial(old, allow_nan=False), partial(new, nan=fastnumbers.NUMBER_ONLY)),
+        ]
+    old_to_new_checking_pairing += [
+        (
+            partial(fastnumbers.isint, base=2),
+            partial(fastnumbers.check_int, base=2),
+        ),
+    ]
+
+    @given(floats() | integers() | text() | binary() | tuples(floats()))
+    @parametrize("old_func, new_func", old_to_new_checking_pairing)
+    def test_old_to_new_checking_equivalence(
+        self, old_func: ConversionFuncs, new_func: ConversionFuncs, x: Any
+    ) -> None:
+        old_result = old_func(x)
+        new_result = new_func(x)
+        assert old_result == new_result
 
 
 class TestUnderscores:
@@ -391,13 +435,24 @@ class TestUnderscores:
         self, func: ConversionFuncs
     ) -> None:
         x = "1_234_567"
+        assert not func(x)
+        assert func(x, allow_underscores=True)
+        assert not func(x, allow_underscores=False)
+
+    funcs = ["isreal", "isfloat", "isint", "isintlike"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_numbers_with_underscores_identified_toggled_deprecated(
+        self, func: ConversionFuncs
+    ) -> None:
+        x = "1_234_567"
         assert func(x)
         assert func(x, allow_underscores=True)
         assert not func(x, allow_underscores=False)
 
     def test_type_with_underscores_identified_toggled(self) -> None:
         x = "1_234_567"
-        assert fastnumbers.query_type(x) is int
+        assert fastnumbers.query_type(x) is str
         assert fastnumbers.query_type(x, allow_underscores=True) is int
         assert fastnumbers.query_type(x, allow_underscores=False) is str
 
@@ -889,61 +944,73 @@ class TestCheckingFunctions:
     """
     Test the successful execution of the "checking" functions, e.g.:
 
-    - isreal
-    - isfloat
-    - isint
-    - isintlike
+    - check_real
+    - check_float
+    - check_int
+    - check_intlike
 
     """
 
     # Handling of NaN and infinity
 
-    funcs = ["isreal", "isfloat"]
+    funcs = ["check_real", "check_float"]
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", [float("nan"), float("inf"), float("-inf")])
     def test_returns_true_for_nan_and_inf(
-        self, func: Union[IsReal, IsFloat], x: float
+        self, func: Union[CheckReal, CheckFloat], x: float
     ) -> None:
         assert func(x)
+        assert func(x, nan=fastnumbers.NUMBER_ONLY, inf=fastnumbers.NUMBER_ONLY)
+        assert not func(x, nan=fastnumbers.STRING_ONLY, inf=fastnumbers.STRING_ONLY)
+        assert not func(x, nan=fastnumbers.DISALLOWED, inf=fastnumbers.DISALLOWED)
+        assert func(x, nan=fastnumbers.ALLOWED, inf=fastnumbers.ALLOWED)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", all_nan + [pad("nan"), pad("-NAN")])
     def test_returns_false_for_nan_string_unless_allow_nan_is_true(
-        self, func: Union[IsReal, IsFloat], x: str
+        self, func: Union[CheckReal, CheckFloat], x: str
     ) -> None:
         assert not func(x)
-        assert func(x, allow_nan=True)
+        assert not func(x, nan=fastnumbers.NUMBER_ONLY)  # default
+        assert not func(x, nan=fastnumbers.DISALLOWED)
+        assert func(x, nan=fastnumbers.ALLOWED)
+        assert func(x, nan=fastnumbers.STRING_ONLY)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", most_inf + neg_inf + [pad("-inf"), pad("+INFINITY")])
     def test_returns_false_for_inf_string_unless_allow_infinity_is_true(
-        self, func: Union[IsReal, IsFloat], x: str
+        self, func: Union[CheckReal, CheckFloat], x: str
     ) -> None:
         assert not func(x)
-        assert func(x, allow_inf=True)
+        assert not func(x, nan=fastnumbers.NUMBER_ONLY)  # default
+        assert not func(x, nan=fastnumbers.DISALLOWED)
+        assert func(x, inf=fastnumbers.ALLOWED)
+        assert func(x, inf=fastnumbers.STRING_ONLY)
 
     # Handling of numeric objects as input
 
-    funcs = ["isreal", "isint", "isintlike"]
+    funcs = ["check_real", "check_int", "check_intlike"]
 
     @given(integers())
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_true_if_given_int(
-        self, func: Union[IsReal, IsInt, IsIntLike], x: int
+        self, func: Union[CheckReal, CheckInt, CheckIntLike], x: int
     ) -> None:
         assert func(x)
-        assert func(x, num_only=True)
+        assert func(x, consider=None)  # default
+        assert func(x, consider=fastnumbers.NUMBER_ONLY)
 
-    funcs = ["isreal", "isfloat"]
+    funcs = ["check_real", "check_float"]
 
     @given(floats())
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_true_if_given_float(
-        self, func: Union[IsReal, IsFloat], x: float
+        self, func: Union[CheckReal, CheckFloat], x: float
     ) -> None:
         assert func(x)
-        assert func(x, num_only=True)
+        assert func(x, consider=None)  # default
+        assert func(x, consider=fastnumbers.NUMBER_ONLY)
 
     funcs = identification_funcs
 
@@ -952,20 +1019,22 @@ class TestCheckingFunctions:
     def test_returns_false_if_given_number_and_str_only_is_true(
         self, func: IdentificationFuncs, x: FloatOrInt
     ) -> None:
-        assert not func(x, str_only=True)
+        assert not func(x, consider=fastnumbers.STRING_ONLY)
 
     # Handling of strings containing numbers as input
 
-    funcs = ["isreal", "isfloat"]
+    funcs = ["check_real", "check_float"]
 
     @given(floats(allow_nan=False, allow_infinity=False).map(repr))
     @example("10." + "0" * 1050)
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_true_if_given_float_string(
-        self, func: Union[IsReal, IsFloat], x: str
+        self, func: Union[CheckReal, CheckFloat], x: str
     ) -> None:
         assert func(x)
         assert func(pad(x))  # Accepts padding
+        assert func(x, consider=None)  # default
+        assert func(x, consider=fastnumbers.STRING_ONLY)
 
     funcs = identification_funcs
 
@@ -984,13 +1053,15 @@ class TestCheckingFunctions:
     ) -> None:
         assert func(x)
         assert func(pad(x))  # Accepts padding
+        assert func(x, consider=None)  # default
+        assert func(x, consider=fastnumbers.STRING_ONLY)
 
     @given((integers() | floats(allow_nan=False, allow_infinity=False)).map(repr))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_if_given_string_and_num_only_is_true(
         self, func: IdentificationFuncs, x: str
     ) -> None:
-        assert not func(x, num_only=True)
+        assert not func(x, consider=fastnumbers.NUMBER_ONLY)
 
     @given(sampled_from(digits))
     @parametrize("func", get_funcs(funcs), ids=funcs)
@@ -1000,12 +1071,12 @@ class TestCheckingFunctions:
         assert func(x)
         assert func(pad(x))  # Accepts padding
 
-    funcs = ["isreal", "isfloat"]
+    funcs = ["check_real", "check_float"]
 
     @given(sampled_from(numeric_not_digit_not_int))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_true(
-        self, func: Union[IsReal, IsFloat], x: str
+        self, func: Union[CheckReal, CheckFloat], x: str
     ) -> None:
         assert func(x)
         assert func(pad(x))  # Accepts padding
@@ -1041,30 +1112,44 @@ class TestCheckingFunctions:
     ) -> None:
         assert not func(x)
 
-    funcs = ["isint", "isintlike"]
+    funcs = ["check_int", "check_intlike"]
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_for_nan_or_inf_string(
-        self, func: Union[IsInt, IsIntLike]
+        self, func: Union[CheckInt, CheckIntLike]
     ) -> None:
         assert not func("nan")
         assert not func("inf")
 
 
-class TestIsFloat:
-    """Tests for the isfloat function that are too specific for the generalized tests."""
+class TestCheckFloat:
+    """Tests for the check_float function that are too specific for the generalized tests."""
 
     @given(integers())
     def test_returns_false_if_given_int(self, x: int) -> None:
-        assert not fastnumbers.isfloat(x)
+        assert not fastnumbers.check_float(x)
+
+    @given(integers().map(repr))
+    def test_returns_false_if_given_int_string_and_strict_true(self, x: str) -> None:
+        assert not fastnumbers.check_float(x, strict=True)
+
+    @given(integers().map(repr))
+    def test_returns_true_if_given_int_string_and_strict_false(self, x: str) -> None:
+        assert fastnumbers.check_float(x)
+        assert fastnumbers.check_float(x, strict=False)  # default
 
 
-class TestIsInt:
-    """Tests for the isint function that are too specific for the generalized tests."""
+class TestCheckInt:
+    """Tests for the check_int function that are too specific for the generalized tests."""
 
     @given(floats())
     def test_returns_false_if_given_float(self, x: str) -> None:
-        assert not fastnumbers.isint(x)
+        assert not fastnumbers.check_int(x)
+
+    @given(integers())
+    def test_returns_true_if_given_int_with_base(self, x: int) -> None:
+        for base in range(2, 36 + 1):
+            assert fastnumbers.check_int(x, base=base)
 
     @given(integers())
     def test_returns_true_if_given_int_string_with_non_base_10(self, x: int) -> None:
@@ -1073,85 +1158,85 @@ class TestIsInt:
             # Avoid cases where number ends up creating infinity
             actual = base_n(x, base)
             if len(repr(x)) < 30 and isinstance(actual, int):
-                assert fastnumbers.isint(base_n(x, base), base=base)
-        assert fastnumbers.isint(bin(x), base=2)
-        assert fastnumbers.isint(bin(x), base=0)
-        assert fastnumbers.isint(oct(x), base=8)
-        assert fastnumbers.isint(oct(x), base=0)
-        assert fastnumbers.isint(oct(x).replace("0o", "0"), base=8)
+                assert fastnumbers.check_int(base_n(x, base), base=base)
+        assert fastnumbers.check_int(bin(x), base=2)
+        assert fastnumbers.check_int(bin(x), base=0)
+        assert fastnumbers.check_int(oct(x), base=8)
+        assert fastnumbers.check_int(oct(x), base=0)
+        assert fastnumbers.check_int(oct(x).replace("0o", "0"), base=8)
         if x != 0:
-            assert not fastnumbers.isint(oct(x).replace("0o", "0"), base=0)
-        assert fastnumbers.isint(hex(x), base=16)
-        assert fastnumbers.isint(hex(x), base=0)
+            assert not fastnumbers.check_int(oct(x).replace("0o", "0"), base=0)
+        assert fastnumbers.check_int(hex(x), base=16)
+        assert fastnumbers.check_int(hex(x), base=0)
         # Force unicode path
-        assert fastnumbers.isint(hex(x).replace("0", "\uFF10"), base=0)
+        assert fastnumbers.check_int(hex(x).replace("0", "\uFF10"), base=0)
 
     def test_underscores(self) -> None:
-        assert fastnumbers.isint("0_0_0")
-        assert fastnumbers.isint("0_0_0", base=0)
-        assert fastnumbers.isint("4_2")
-        assert fastnumbers.isint("4_2", base=0)
-        assert fastnumbers.isint("1_0000_0000")
-        assert fastnumbers.isint("1_0000_0000", base=0)
-        assert fastnumbers.isint("0b1001_0100", base=0)
-        assert fastnumbers.isint("0xffff_ffff", base=0)
-        assert fastnumbers.isint("0o5_7_7", base=0)
-        assert fastnumbers.isint("0b_0", base=0)
-        assert fastnumbers.isint("0x_f", base=0)
-        assert fastnumbers.isint("0o_5", base=0)
+        assert fastnumbers.check_int("0_0_0", allow_underscores=True)
+        assert fastnumbers.check_int("0_0_0", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("4_2", allow_underscores=True)
+        assert fastnumbers.check_int("4_2", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("1_0000_0000", allow_underscores=True)
+        assert fastnumbers.check_int("1_0000_0000", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("0b1001_0100", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("0xffff_ffff", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("0o5_7_7", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("0b_0", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("0x_f", base=0, allow_underscores=True)
+        assert fastnumbers.check_int("0o_5", base=0, allow_underscores=True)
 
         # Underscores in the base selector:
-        assert not fastnumbers.isint("0_b0")
-        assert not fastnumbers.isint("0_b0", base=0)
-        assert not fastnumbers.isint("0_xf")
-        assert not fastnumbers.isint("0_xf", base=0)
-        assert not fastnumbers.isint("0_o5")
-        assert not fastnumbers.isint("0_o5", base=0)
+        assert not fastnumbers.check_int("0_b0", allow_underscores=True)
+        assert not fastnumbers.check_int("0_b0", base=0, allow_underscores=True)
+        assert not fastnumbers.check_int("0_xf", allow_underscores=True)
+        assert not fastnumbers.check_int("0_xf", base=0, allow_underscores=True)
+        assert not fastnumbers.check_int("0_o5", allow_underscores=True)
+        assert not fastnumbers.check_int("0_o5", base=0, allow_underscores=True)
 
         # Old-style octal, still disallowed if base guess is needed:
-        assert not fastnumbers.isint("0_7", base=0)
-        assert not fastnumbers.isint("09_99", base=0)
+        assert not fastnumbers.check_int("0_7", base=0, allow_underscores=True)
+        assert not fastnumbers.check_int("09_99", base=0, allow_underscores=True)
 
         # Two underscores:
-        assert not fastnumbers.isint("0b1001__0100", base=0)
-        assert not fastnumbers.isint("0xffff__ffff", base=0)
+        assert not fastnumbers.check_int("0b1001__0100", base=0, allow_underscores=True)
+        assert not fastnumbers.check_int("0xffff__ffff", base=0, allow_underscores=True)
 
     @given(floats(allow_nan=False, allow_infinity=False).map(repr))
     def test_returns_false_if_given_float_string(self, x: str) -> None:
-        assert not fastnumbers.isint(x)
-        assert not fastnumbers.isint(pad(x))
+        assert not fastnumbers.check_int(x)
+        assert not fastnumbers.check_int(pad(x))
         for base in range(2, 36 + 1):
             if len(x) < 30:
-                assert not fastnumbers.isint(x, base=base)
+                assert not fastnumbers.check_int(x, base=base)
 
     @given(sampled_from(numeric_not_digit_not_int))
     def test_given_unicode_numeral_returns_false(self, x: str) -> None:
-        assert not fastnumbers.isint(x)
+        assert not fastnumbers.check_int(x)
 
 
-class TestIsIntLike:
+class TestCheckIntLike:
     """
-    Tests for the isintlike function that are too specific for the generalized tests.
+    Tests for the check_intlike function that are too specific for the generalized tests.
     """
 
     @given(floats().filter(not_an_integer))
     def test_returns_false_if_given_non_integer_float(self, x: float) -> None:
-        assert not fastnumbers.isintlike(x)
+        assert not fastnumbers.check_intlike(x)
 
     @given(floats().filter(an_integer))
     def test_returns_true_if_given_integer_float(self, x: float) -> None:
-        assert fastnumbers.isintlike(x)
+        assert fastnumbers.check_intlike(x)
 
     @given(
         floats(allow_nan=False, allow_infinity=False).filter(not_an_integer).map(repr)
     )
     def test_returns_false_if_given_non_integer_float_string(self, x: str) -> None:
-        assert not fastnumbers.isintlike(x)
-        assert not fastnumbers.isintlike(pad(x))  # Accepts padding
+        assert not fastnumbers.check_intlike(x)
+        assert not fastnumbers.check_intlike(pad(x))  # Accepts padding
 
     @given(sampled_from(numeric_not_digit_not_int))
     def test_given_unicode_non_digit_numeral_returns_false(self, x: str) -> None:
-        assert not fastnumbers.isintlike(x)
+        assert not fastnumbers.check_intlike(x)
 
     @given(
         sampled_from(numeric_not_digit).filter(
@@ -1159,8 +1244,8 @@ class TestIsIntLike:
         )
     )
     def test_given_unicode_digit_numeral_returns_true(self, x: str) -> None:
-        assert fastnumbers.isintlike(x)
-        assert fastnumbers.isintlike(pad(x))  # Accepts padding
+        assert fastnumbers.check_intlike(x)
+        assert fastnumbers.check_intlike(pad(x))  # Accepts padding
 
 
 class TestQueryType:

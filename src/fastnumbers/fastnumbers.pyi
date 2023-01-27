@@ -1,5 +1,15 @@
 from builtins import float as pyfloat, int as pyint
-from typing import Any, Callable, Optional, Sequence, Type, TypeVar, Union, overload
+from typing import (
+    Any,
+    Callable,
+    NewType,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+    overload,
+)
 
 from typing_extensions import Protocol
 
@@ -35,6 +45,23 @@ Default = TypeVar("Default")
 Inf = TypeVar("Inf")
 Nan = TypeVar("Nan")
 TransformType = TypeVar("TransformType")
+
+ALLOWED_T = NewType("ALLOWED_T", object)
+DISALLOWED_T = NewType("DISALLOWED_T", object)
+INPUT_T = NewType("INPUT_T", object)
+RAISE_T = NewType("RAISE_T", object)
+STRING_ONLY_T = NewType("STRING_ONLY_T", object)
+NUMBER_ONLY_T = NewType("NUMBER_ONLY_T", object)
+ConsiderType = Union[STRING_ONLY_T, NUMBER_ONLY_T, None]
+InfNanCheckType = Union[STRING_ONLY_T, NUMBER_ONLY_T, ALLOWED_T, DISALLOWED_T]
+
+# Selectors
+ALLOWED: ALLOWED_T
+DISALLOWED: DISALLOWED_T
+INPUT: INPUT_T
+RAISE: RAISE_T
+STRING_ONLY: STRING_ONLY_T
+NUMBER_ONLY: NUMBER_ONLY_T
 
 # Fast real
 @overload
@@ -439,6 +466,36 @@ def fast_forceint(
 
 # Checking
 
+def check_real(
+    x: Any,
+    *,
+    consider: ConsiderType = None,
+    inf: InfNanCheckType = NUMBER_ONLY,
+    nan: InfNanCheckType = NUMBER_ONLY,
+    allow_underscores: bool = False,
+) -> bool: ...
+def check_float(
+    x: Any,
+    *,
+    consider: ConsiderType = None,
+    inf: InfNanCheckType = NUMBER_ONLY,
+    nan: InfNanCheckType = NUMBER_ONLY,
+    strict: bool = False,
+    allow_underscores: bool = False,
+) -> bool: ...
+def check_int(
+    x: Any,
+    *,
+    consider: ConsiderType = None,
+    base: Union[pyint, HasIndex] = 0,
+    allow_underscores: bool = False,
+) -> bool: ...
+def check_intlike(
+    x: Any,
+    *,
+    consider: ConsiderType = None,
+    allow_underscores: bool = False,
+) -> bool: ...
 def isreal(
     x: Any,
     *,
@@ -448,6 +505,9 @@ def isreal(
     allow_nan: bool = False,
     allow_underscores: bool = True,
 ) -> bool: ...
+
+# Deprecated checking
+
 def isfloat(
     x: Any,
     *,
@@ -481,7 +541,7 @@ def query_type(
     allow_inf: bool = False,
     allow_nan: bool = False,
     coerce: bool = False,
-    allow_underscores: bool = True,
+    allow_underscores: bool = False,
 ) -> Union[Type[QueryInputType], Type[pyint], Type[pyfloat]]: ...
 @overload
 def query_type(
@@ -491,7 +551,7 @@ def query_type(
     allow_nan: bool = False,
     coerce: bool = False,
     allowed_types: Sequence[Type[Any]],
-    allow_underscores: bool = True,
+    allow_underscores: bool = False,
 ) -> Optional[Union[Type[QueryInputType], Type[pyint], Type[pyfloat]]]: ...
 
 # Buitin replacements

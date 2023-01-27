@@ -1,10 +1,23 @@
 Unreleased
 ---
 
+### Added
+- Added `check_real`, `check_float`, `check_int`, and `check_intlike`
+ to provide a more flexible interface than `isreal`, `isfloat`, `isint`,
+ and `isintlike`, respectively (Issues
+ [#37](https://github.com/SethMMorton/fastnumbers/issues/37) and
+ [#39](https://github.com/SethMMorton/fastnumbers/issues/39))
+
 ### Changed
+- `query_type` now sets `allow_underscors` to `False` by default
 - Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45)
   and [#56](https://github.com/SethMMorton/fastnumbers/issues/56))
 - Removed support for Python 3.6
+
+### Deprecated
+- `isreal`, `isfloat`, `isint`, and `isintlike` are deprecated in
+  favor of `check_real`, `check_float`, `check_int`, and `check_intlike`,
+  though they will never be removed from the API
 
 [3.2.1] - 2021-11-02
 ---

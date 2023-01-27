@@ -294,231 +294,231 @@ def test_fast_forceint() -> None:
     assert fastnumbers.fast_forceint("invalid", on_fail=len) == 7
 
 
-def test_isreal() -> None:
+def test_check_real() -> None:
     # 1. float number
-    assert fastnumbers.isreal(-367.3268)
-    assert not fastnumbers.isreal(-367.3268, str_only=True)
-    assert fastnumbers.isreal(-367.3268, num_only=True)
+    assert fastnumbers.check_real(-367.3268)
+    assert not fastnumbers.check_real(-367.3268, consider=fastnumbers.STRING_ONLY)
+    assert fastnumbers.check_real(-367.3268, consider=fastnumbers.NUMBER_ONLY)
     # 2. signed float string
-    assert fastnumbers.isreal("+367.3268")
-    assert fastnumbers.isreal("+367.3268", str_only=True)
-    assert not fastnumbers.isreal("+367.3268", num_only=True)
+    assert fastnumbers.check_real("+367.3268")
+    assert fastnumbers.check_real("+367.3268", consider=fastnumbers.STRING_ONLY)
+    assert not fastnumbers.check_real("+367.3268", consider=fastnumbers.NUMBER_ONLY)
     # 3. float string with exponents
-    assert fastnumbers.isreal("-367.3268e207")
+    assert fastnumbers.check_real("-367.3268e207")
     # 4. float string with padded whitespace
-    assert fastnumbers.isreal("   -367.04   ")
+    assert fastnumbers.check_real("   -367.04   ")
     # 5. int number
-    assert fastnumbers.isreal(499)
+    assert fastnumbers.check_real(499)
     # 6. signed int string
-    assert fastnumbers.isreal("-499")
+    assert fastnumbers.check_real("-499")
     # 7. int string with padded whitespace
-    assert fastnumbers.isreal("   +3001   ")
+    assert fastnumbers.check_real("   +3001   ")
     # 8. long number
-    assert fastnumbers.isreal(35892482945872302493)
+    assert fastnumbers.check_real(35892482945872302493)
     # 9. long string
-    assert fastnumbers.isreal("35892482945872302493")
+    assert fastnumbers.check_real("35892482945872302493")
     # 10. return type
-    assert fastnumbers.isreal(4029) is True
-    assert fastnumbers.isreal(4029, str_only=True) is False
-    assert fastnumbers.isreal("4029") is True
-    assert fastnumbers.isreal("4029", str_only=True) is True
-    assert fastnumbers.isreal("hey") is False
+    assert fastnumbers.check_real(4029) is True
+    assert fastnumbers.check_real(4029, consider=fastnumbers.STRING_ONLY) is False
+    assert fastnumbers.check_real("4029") is True
+    assert fastnumbers.check_real("4029", consider=fastnumbers.STRING_ONLY) is True
+    assert fastnumbers.check_real("hey") is False
     # 11. Invalid type
-    assert not fastnumbers.isreal(["hey"])
+    assert not fastnumbers.check_real(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isreal("not_a_number")
+    assert not fastnumbers.check_real("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isreal("26.8 lb")
+    assert not fastnumbers.check_real("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isreal("inf")
-    assert fastnumbers.isreal("inf", allow_inf=True)
-    assert fastnumbers.isreal("-iNFinity", allow_inf=True)
+    assert not fastnumbers.check_real("inf")
+    assert fastnumbers.check_real("inf", inf=fastnumbers.ALLOWED)
+    assert fastnumbers.check_real("-iNFinity", inf=fastnumbers.ALLOWED)
     # 15. NaN
-    assert not fastnumbers.isreal("nan")
-    assert fastnumbers.isreal("nan", allow_nan=True)
-    assert fastnumbers.isreal("-NaN", allow_nan=True)
+    assert not fastnumbers.check_real("nan")
+    assert fastnumbers.check_real("nan", nan=fastnumbers.ALLOWED)
+    assert fastnumbers.check_real("-NaN", nan=fastnumbers.ALLOWED)
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isreal("+")
-    assert not fastnumbers.isreal("-")
-    assert not fastnumbers.isreal("e")
-    assert not fastnumbers.isreal("e8")
-    assert not fastnumbers.isreal(".")
+    assert not fastnumbers.check_real("+")
+    assert not fastnumbers.check_real("-")
+    assert not fastnumbers.check_real("e")
+    assert not fastnumbers.check_real("e8")
+    assert not fastnumbers.check_real(".")
     # 18. Unicode numbers
-    assert fastnumbers.isreal("⑦")
-    assert fastnumbers.isreal("⁸")
-    assert fastnumbers.isreal("⅔")
-    assert fastnumbers.isreal("Ⅴ")
+    assert fastnumbers.check_real("⑦")
+    assert fastnumbers.check_real("⁸")
+    assert fastnumbers.check_real("⅔")
+    assert fastnumbers.check_real("Ⅴ")
 
 
-def test_isfloat() -> None:
+def test_check_float() -> None:
     # 1. float number
-    assert fastnumbers.isfloat(-367.3268)
-    assert not fastnumbers.isfloat(-367.3268, str_only=True)
-    assert fastnumbers.isfloat(-367.3268, num_only=True)
+    assert fastnumbers.check_float(-367.3268)
+    assert not fastnumbers.check_float(-367.3268, consider=fastnumbers.STRING_ONLY)
+    assert fastnumbers.check_float(-367.3268, consider=fastnumbers.NUMBER_ONLY)
     # 2. signed float string
-    assert fastnumbers.isfloat("+367.3268")
-    assert fastnumbers.isfloat("+367.3268", str_only=True)
-    assert not fastnumbers.isfloat("+367.3268", num_only=True)
+    assert fastnumbers.check_float("+367.3268")
+    assert fastnumbers.check_float("+367.3268", consider=fastnumbers.STRING_ONLY)
+    assert not fastnumbers.check_float("+367.3268", consider=fastnumbers.NUMBER_ONLY)
     # 3. float string with exponents
-    assert fastnumbers.isfloat("-367.3268e207")
+    assert fastnumbers.check_float("-367.3268e207")
     # 4. float string with padded whitespace
-    assert fastnumbers.isfloat("   -367.04   ")
+    assert fastnumbers.check_float("   -367.04   ")
     # 5. int number
-    assert not fastnumbers.isfloat(499)
+    assert not fastnumbers.check_float(499)
     # 6. signed int string
-    assert fastnumbers.isfloat("-499")
+    assert fastnumbers.check_float("-499")
     # 7. int string with padded whitespace
-    assert fastnumbers.isfloat("   +3001   ")
+    assert fastnumbers.check_float("   +3001   ")
     # 8. long number
-    assert not fastnumbers.isfloat(35892482945872302493)
+    assert not fastnumbers.check_float(35892482945872302493)
     # 9. long string
-    assert fastnumbers.isfloat("35892482945872302493")
+    assert fastnumbers.check_float("35892482945872302493")
     # 10. return type
-    assert fastnumbers.isfloat(4029) is False
-    assert fastnumbers.isfloat(4029.0) is True
-    assert fastnumbers.isfloat(4029.0, str_only=True) is False
-    assert fastnumbers.isfloat("4029") is True
-    assert fastnumbers.isfloat("4029", str_only=True) is True
+    assert fastnumbers.check_float(4029) is False
+    assert fastnumbers.check_float(4029.0) is True
+    assert fastnumbers.check_float(4029.0, consider=fastnumbers.STRING_ONLY) is False
+    assert fastnumbers.check_float("4029") is True
+    assert fastnumbers.check_float("4029", consider=fastnumbers.STRING_ONLY) is True
     # 11. Invalid type
-    assert not fastnumbers.isfloat(["hey"])
+    assert not fastnumbers.check_float(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isfloat("not_a_number")
+    assert not fastnumbers.check_float("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isfloat("26.8 lb")
+    assert not fastnumbers.check_float("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isfloat("inf")
-    assert fastnumbers.isfloat("inf", allow_inf=True)
-    assert fastnumbers.isfloat("-infinity", allow_inf=True)
-    assert fastnumbers.isfloat("-INFINITY", allow_inf=True)
+    assert not fastnumbers.check_float("inf")
+    assert fastnumbers.check_float("inf", inf=fastnumbers.ALLOWED)
+    assert fastnumbers.check_float("-infinity", inf=fastnumbers.ALLOWED)
+    assert fastnumbers.check_float("-INFINITY", inf=fastnumbers.ALLOWED)
     # 15. NaN
-    assert not fastnumbers.isfloat("nAn")
-    assert fastnumbers.isfloat("nan", allow_nan=True)
-    assert fastnumbers.isfloat("-NaN", allow_nan=True)
+    assert not fastnumbers.check_float("nAn")
+    assert fastnumbers.check_float("nan", nan=fastnumbers.ALLOWED)
+    assert fastnumbers.check_float("-NaN", nan=fastnumbers.ALLOWED)
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isfloat("+")
-    assert not fastnumbers.isfloat("-")
-    assert not fastnumbers.isfloat("e")
-    assert not fastnumbers.isfloat("e8")
-    assert not fastnumbers.isfloat(".")
+    assert not fastnumbers.check_float("+")
+    assert not fastnumbers.check_float("-")
+    assert not fastnumbers.check_float("e")
+    assert not fastnumbers.check_float("e8")
+    assert not fastnumbers.check_float(".")
     # 18. Unicode numbers
-    assert fastnumbers.isfloat("⑦")
-    assert fastnumbers.isfloat("⁸")
-    assert fastnumbers.isfloat("⅔")
-    assert fastnumbers.isfloat("Ⅴ")
+    assert fastnumbers.check_float("⑦")
+    assert fastnumbers.check_float("⁸")
+    assert fastnumbers.check_float("⅔")
+    assert fastnumbers.check_float("Ⅴ")
 
 
-def test_isint() -> None:
+def test_check_int() -> None:
     # 1. float number
-    assert not fastnumbers.isint(-367.3268)
+    assert not fastnumbers.check_int(-367.3268)
     # 2. signed float string
-    assert not fastnumbers.isint("+367.3268")
+    assert not fastnumbers.check_int("+367.3268")
     # 3. float string with exponents
-    assert not fastnumbers.isint("-367.3268e207")
+    assert not fastnumbers.check_int("-367.3268e207")
     # 4. float string with padded whitespace
-    assert not fastnumbers.isint("   -367.04   ")
+    assert not fastnumbers.check_int("   -367.04   ")
     # 5. int number
-    assert fastnumbers.isint(499)
-    assert not fastnumbers.isint(499, str_only=True)
-    assert fastnumbers.isint(499, num_only=True)
+    assert fastnumbers.check_int(499)
+    assert not fastnumbers.check_int(499, consider=fastnumbers.STRING_ONLY)
+    assert fastnumbers.check_int(499, consider=fastnumbers.NUMBER_ONLY)
     # 6. signed int string
-    assert fastnumbers.isint("-499")
-    assert fastnumbers.isint("-499", str_only=True)
-    assert not fastnumbers.isint("-499", num_only=True)
+    assert fastnumbers.check_int("-499")
+    assert fastnumbers.check_int("-499", consider=fastnumbers.STRING_ONLY)
+    assert not fastnumbers.check_int("-499", consider=fastnumbers.NUMBER_ONLY)
     # 7. int string with padded whitespace
-    assert fastnumbers.isint("   +3001   ")
+    assert fastnumbers.check_int("   +3001   ")
     # 8. long number
-    assert fastnumbers.isint(35892482945872302493)
+    assert fastnumbers.check_int(35892482945872302493)
     # 9. long string
-    assert fastnumbers.isint("35892482945872302493")
+    assert fastnumbers.check_int("35892482945872302493")
     # 10. return type
-    assert fastnumbers.isint(4029) is True
-    assert fastnumbers.isint(4029, str_only=True) is False
-    assert fastnumbers.isint("4029") is True
-    assert fastnumbers.isint("4029", str_only=True) is True
-    assert fastnumbers.isint("4029.50") is False
-    assert fastnumbers.isint(4029.50) is False
+    assert fastnumbers.check_int(4029) is True
+    assert fastnumbers.check_int(4029, consider=fastnumbers.STRING_ONLY) is False
+    assert fastnumbers.check_int("4029") is True
+    assert fastnumbers.check_int("4029", consider=fastnumbers.STRING_ONLY) is True
+    assert fastnumbers.check_int("4029.50") is False
+    assert fastnumbers.check_int(4029.50) is False
     # 11. Invalid type
-    assert not fastnumbers.isint(["hey"])
+    assert not fastnumbers.check_int(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isint("not_a_number")
+    assert not fastnumbers.check_int("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isint("26.8 lb")
+    assert not fastnumbers.check_int("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isint("inf")
+    assert not fastnumbers.check_int("inf")
     # 15. NaN
-    assert not fastnumbers.isint("nan")
+    assert not fastnumbers.check_int("nan")
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isint("+")
-    assert not fastnumbers.isint("-")
-    assert not fastnumbers.isint("e")
-    assert not fastnumbers.isint("e8")
-    assert not fastnumbers.isint(".")
+    assert not fastnumbers.check_int("+")
+    assert not fastnumbers.check_int("-")
+    assert not fastnumbers.check_int("e")
+    assert not fastnumbers.check_int("e8")
+    assert not fastnumbers.check_int(".")
     # 18. Unicode numbers
-    assert fastnumbers.isint("⑦")
-    assert fastnumbers.isint("⁸")
-    assert not fastnumbers.isint("⅔")
-    assert not fastnumbers.isint("Ⅴ")
+    assert fastnumbers.check_int("⑦")
+    assert fastnumbers.check_int("⁸")
+    assert not fastnumbers.check_int("⅔")
+    assert not fastnumbers.check_int("Ⅴ")
 
 
-def test_isintlike() -> None:
+def test_check_intlike() -> None:
     # 1. float number
-    assert not fastnumbers.isintlike(-367.3268)
-    assert fastnumbers.isintlike(-367.0)
-    assert not fastnumbers.isintlike(-367.0, str_only=True)
-    assert fastnumbers.isintlike(-367.0, num_only=True)
+    assert not fastnumbers.check_intlike(-367.3268)
+    assert fastnumbers.check_intlike(-367.0)
+    assert not fastnumbers.check_intlike(-367.0, consider=fastnumbers.STRING_ONLY)
+    assert fastnumbers.check_intlike(-367.0, consider=fastnumbers.NUMBER_ONLY)
     # 2. signed float string
-    assert not fastnumbers.isintlike("+367.3268")
-    assert fastnumbers.isintlike("+367.0")
-    assert fastnumbers.isintlike("+367.0", str_only=True)
-    assert not fastnumbers.isintlike("+367.0", num_only=True)
+    assert not fastnumbers.check_intlike("+367.3268")
+    assert fastnumbers.check_intlike("+367.0")
+    assert fastnumbers.check_intlike("+367.0", consider=fastnumbers.STRING_ONLY)
+    assert not fastnumbers.check_intlike("+367.0", consider=fastnumbers.NUMBER_ONLY)
     # 3. float string with exponents
-    assert fastnumbers.isintlike("-367.3268e207")
-    assert not fastnumbers.isintlike("145343E-4")
-    assert fastnumbers.isintlike("14534.000000000e4")
-    assert fastnumbers.isintlike("1400000E-4")
-    assert not fastnumbers.isintlike("140E-4")
-    assert fastnumbers.isintlike("14.E4")
-    assert fastnumbers.isintlike("14E4")
+    assert fastnumbers.check_intlike("-367.3268e207")
+    assert not fastnumbers.check_intlike("145343E-4")
+    assert fastnumbers.check_intlike("14534.000000000e4")
+    assert fastnumbers.check_intlike("1400000E-4")
+    assert not fastnumbers.check_intlike("140E-4")
+    assert fastnumbers.check_intlike("14.E4")
+    assert fastnumbers.check_intlike("14E4")
     # 4. float string with padded whitespace
-    assert not fastnumbers.isintlike("   -367.04   ")
+    assert not fastnumbers.check_intlike("   -367.04   ")
     # 5. int number
-    assert fastnumbers.isintlike(499)
+    assert fastnumbers.check_intlike(499)
     # 6. signed int string
-    assert fastnumbers.isintlike("-499")
+    assert fastnumbers.check_intlike("-499")
     # 7. int string with padded whitespace
-    assert fastnumbers.isintlike("   +3001   ")
+    assert fastnumbers.check_intlike("   +3001   ")
     # 8. long number
-    assert fastnumbers.isintlike(35892482945872302493)
+    assert fastnumbers.check_intlike(35892482945872302493)
     # 9. long string
-    assert fastnumbers.isintlike("35892482945872302493")
+    assert fastnumbers.check_intlike("35892482945872302493")
     # 10. return type
-    assert fastnumbers.isintlike(4029) is True
-    assert fastnumbers.isintlike(4029, str_only=True) is False
-    assert fastnumbers.isintlike("4029") is True
-    assert fastnumbers.isintlike("4029", str_only=True) is True
-    assert fastnumbers.isintlike("4029.50") is False
-    assert fastnumbers.isintlike(4029.50) is False
+    assert fastnumbers.check_intlike(4029) is True
+    assert fastnumbers.check_intlike(4029, consider=fastnumbers.STRING_ONLY) is False
+    assert fastnumbers.check_intlike("4029") is True
+    assert fastnumbers.check_intlike("4029", consider=fastnumbers.STRING_ONLY) is True
+    assert fastnumbers.check_intlike("4029.50") is False
+    assert fastnumbers.check_intlike(4029.50) is False
     # 11. Invalid type
-    assert not fastnumbers.isintlike(["hey"])
+    assert not fastnumbers.check_intlike(["hey"])
     # 12. Invalid input string
-    assert not fastnumbers.isintlike("not_a_number")
+    assert not fastnumbers.check_intlike("not_a_number")
     # 13. Invalid input string with numbers
-    assert not fastnumbers.isintlike("26.8 lb")
+    assert not fastnumbers.check_intlike("26.8 lb")
     # 14. Infinity
-    assert not fastnumbers.isintlike("inf")
+    assert not fastnumbers.check_intlike("inf")
     # 15. NaN
-    assert not fastnumbers.isintlike("nan")
+    assert not fastnumbers.check_intlike("nan")
     # 16. Sign/'e'/'.' only
-    assert not fastnumbers.isintlike("+")
-    assert not fastnumbers.isintlike("-")
-    assert not fastnumbers.isintlike("e")
-    assert not fastnumbers.isintlike("e8")
-    assert not fastnumbers.isintlike(".")
+    assert not fastnumbers.check_intlike("+")
+    assert not fastnumbers.check_intlike("-")
+    assert not fastnumbers.check_intlike("e")
+    assert not fastnumbers.check_intlike("e8")
+    assert not fastnumbers.check_intlike(".")
     # 18. Unicode numbers
-    assert fastnumbers.isintlike("⑦")
-    assert fastnumbers.isintlike("⁸")
-    assert not fastnumbers.isintlike("⅔")
-    assert fastnumbers.isintlike("Ⅴ")
+    assert fastnumbers.check_intlike("⑦")
+    assert fastnumbers.check_intlike("⁸")
+    assert not fastnumbers.check_intlike("⅔")
+    assert fastnumbers.check_intlike("Ⅴ")
 
 
 def test_type() -> None:

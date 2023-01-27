@@ -66,6 +66,38 @@ The "Checking" Functions
 These functions return a Boolean value that indicates if the input
 can return a certain number type or not.
 
+:func:`~fastnumbers.check_real`
++++++++++++++++++++++++++++++++
+
+.. autofunction:: check_real
+
+:func:`~fastnumbers.check_float`
+++++++++++++++++++++++++++++++++
+
+.. autofunction:: check_float
+
+:func:`~fastnumbers.check_int`
+++++++++++++++++++++++++++++++
+
+.. autofunction:: check_int
+
+:func:`~fastnumbers.check_intlike`
+++++++++++++++++++++++++++++++++++
+
+.. autofunction:: check_intlike
+
+:func:`~fastnumbers.query_type`
++++++++++++++++++++++++++++++++
+
+.. autofunction:: query_type
+
+Deprecated "Checking" Functions
+-------------------------------
+
+These functions have a less flexible interface than ``check_*`` functions,
+but otherwise do the same thing. New code should prefer the ``check_*``
+functions instead, but the below functions will never be removed.
+
 :func:`~fastnumbers.isreal`
 +++++++++++++++++++++++++++
 
@@ -85,8 +117,3 @@ can return a certain number type or not.
 ++++++++++++++++++++++++++++++
 
 .. autofunction:: isintlike
-
-:func:`~fastnumbers.query_type`
-+++++++++++++++++++++++++++++++
-
-.. autofunction:: query_type

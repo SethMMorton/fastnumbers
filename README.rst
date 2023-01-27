@@ -217,86 +217,93 @@ Checking Functions
 
 - `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
 
-``isfloat`` will be used to demonstrate the functionality of the
-``is*`` functions, as well as the ``query_type`` function.
+``check_float`` will be used to demonstrate the functionality of the
+``check_*`` functions, as well as the ``query_type`` function.
 
 .. code-block:: python
 
-    >>> from fastnumbers import isfloat
+    >>> from fastnumbers import check_float
+    >>> from fastnumbers import ALLOWED, DISALLOWED, NUMBER_ONLY, STRING_ONLY
     >>> # Check that a string can be converted to a float
-    >>> isfloat('56')
+    >>> check_float('56')
     True
-    >>> isfloat('56.07')
+    >>> check_float('56', strict=True)
+    False
+    >>> check_float('56.07')
     True
-    >>> isfloat('56.07 lb')
+    >>> check_float('56.07 lb')
     False
     >>>
     >>> # Check if a given number is a float
-    >>> isfloat(56.07)
+    >>> check_float(56.07)
     True
-    >>> isfloat(56)
+    >>> check_float(56)
     False
     >>>
     >>> # Specify if only strings or only numbers are allowed
-    >>> isfloat(56.07, str_only=True)
+    >>> check_float(56.07, consider=STRING_ONLY)
     False
-    >>> isfloat('56.07', num_only=True)
+    >>> check_float('56.07', consider=NUMBER_ONLY)
     False
     >>>
-    >>> # Customize handling for nan or inf
-    >>> isfloat('nan')
+    >>> # Customize handling for nan or inf (see API for more details)
+    >>> check_float('nan')
     False
-    >>> isfloat('nan', allow_nan=True)
+    >>> check_float('nan', nan=ALLOWED)
     True
+    >>> check_float(float('nan'))
+    True
+    >>> check_float(float('nan'), nan=DISALLOWED)
+    False
 
-``isint`` works the same as ``isfloat``, but for integers.
+``check_int`` works the same as ``check_float``, but for integers.
 
 .. code-block:: python
 
-    >>> from fastnumbers import isint
-    >>> isint('56')
+    >>> from fastnumbers import check_int
+    >>> check_int('56')
     True
-    >>> isint(56)
+    >>> check_int(56)
     True
-    >>> isint('56.0')
+    >>> check_int('56.0')
     False
-    >>> isint(56.0)
+    >>> check_int(56.0)
     False
 
-``isreal`` is very permissive - any float or integer is accepted.
+``check_real`` is very permissive - any float or integer is accepted.
 
 .. code-block:: python
 
-    >>> from fastnumbers import isreal
-    >>> isreal('56.0')
+    >>> from fastnumbers import check_real
+    >>> check_real('56.0')
     True
-    >>> isreal('56')
+    >>> check_real('56')
     True
-    >>> isreal(56.0)
+    >>> check_real(56.0)
     True
-    >>> isreal(56)
+    >>> check_real(56)
     True
 
-``isintlike`` checks if a number is "int-like", if it has no
+``check_intlike`` checks if a number is "int-like", if it has no
 fractional component.
 
-.. code-block::
+.. code-block:: python
 
-    >>> from fastnumbers import isintlike
-    >>> isintlike('56.0')
+    >>> from fastnumbers import check_intlike
+    >>> check_intlike('56.0')
     True
-    >>> isintlike('56.7')
+    >>> check_intlike('56.7')
     False
-    >>> isintlike(56.0)
+    >>> check_intlike(56.0)
     True
-    >>> isintlike(56.7)
+    >>> check_intlike(56.7)
     False
 
 The ``query_type`` function can be used if you need to determine if
 a value is one of many types, rather than whether or not it is one specific
 type.
 
-.. code-block::
+.. code-block:: python
 
     >>> from fastnumbers import query_type
     >>> query_type('56.0')
@@ -349,7 +356,7 @@ actually shadow the built-in ``int`` function, you can do
       ...
     ValueError: invalid literal for float(): bad input
 
-``real`` is is provided to give a float or int depending
+``real`` is provided to give a float or int depending
 on the fractional component of the input.
 
 .. code-block:: python
