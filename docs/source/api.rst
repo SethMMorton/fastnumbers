@@ -40,25 +40,25 @@ Each of these functions will quickly convert strings to numbers
 They are guaranteed to return results identical to the built-in
 ``float`` or ``int`` functions.
 
-:func:`~fastnumbers.fast_real`
-++++++++++++++++++++++++++++++
-
-.. autofunction:: fast_real
-
-:func:`~fastnumbers.fast_float`
-+++++++++++++++++++++++++++++++
-
-.. autofunction:: fast_float
-
-:func:`~fastnumbers.fast_int`
+:func:`~fastnumbers.try_real`
 +++++++++++++++++++++++++++++
 
-.. autofunction:: fast_int
+.. autofunction:: try_real
 
-:func:`~fastnumbers.fast_forceint`
-++++++++++++++++++++++++++++++++++
+:func:`~fastnumbers.try_float`
+++++++++++++++++++++++++++++++
 
-.. autofunction:: fast_forceint
+.. autofunction:: try_float
+
+:func:`~fastnumbers.try_int`
+++++++++++++++++++++++++++++
+
+.. autofunction:: try_int
+
+:func:`~fastnumbers.try_forceint`
++++++++++++++++++++++++++++++++++
+
+.. autofunction:: try_forceint
 
 The "Checking" Functions
 ------------------------
@@ -90,6 +90,33 @@ can return a certain number type or not.
 +++++++++++++++++++++++++++++++
 
 .. autofunction:: query_type
+
+Deprecated "Error-Handling" Functions
+--------------------------------------
+
+These functions have a less flexible interface than ``try_*`` functions,
+but otherwise do the same thing. New code should prefer the ``try_*``
+functions instead, but the below functions will never be removed.
+
+:func:`~fastnumbers.fast_real`
+++++++++++++++++++++++++++++++
+
+.. autofunction:: fast_real
+
+:func:`~fastnumbers.fast_float`
++++++++++++++++++++++++++++++++
+
+.. autofunction:: fast_float
+
+:func:`~fastnumbers.fast_int`
++++++++++++++++++++++++++++++
+
+.. autofunction:: fast_int
+
+:func:`~fastnumbers.fast_forceint`
+++++++++++++++++++++++++++++++++++
+
+.. autofunction:: fast_forceint
 
 Deprecated "Checking" Functions
 -------------------------------

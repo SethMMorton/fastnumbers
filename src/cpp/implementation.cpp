@@ -118,6 +118,37 @@ static inline PyObject* do_resolve(
  * \param options User-specified options on how to determine type
  * \param input The python object to consider for conversion
  * \param on_fail The value indicating what action to take on failure to convert
+ * \param on_type_error The value indicating what action to take on invalid type
+ * \param inf The value indicating what action to take when an infinity is encountered
+ * \param nan The value indicating what action to take when an NaN is encountered
+ * \param ntype The desired type of the converted object
+ *
+ * \return Converted python object or nullptr with appropriate error set
+ */
+static inline PyObject* do_resolve(
+    const UserOptions& options,
+    PyObject* input,
+    PyObject* on_fail,
+    PyObject* on_type_error,
+    PyObject* inf,
+    PyObject* nan,
+    const UserType ntype
+)
+{
+    Resolver resolver(input, options);
+    resolver.set_inf_action(inf);
+    resolver.set_nan_action(nan);
+    resolver.set_fail_action(on_fail);
+    resolver.set_type_error_action(on_type_error);
+    return resolver.resolve(collect_payload(input, options, ntype));
+}
+
+/**
+ * \brief Resolve the input into the appropriate return object
+ *
+ * \param options User-specified options on how to determine type
+ * \param input The python object to consider for conversion
+ * \param on_fail The value indicating what action to take on failure to convert
  * \param ntype The desired type of the converted object
  *
  * \return Converted python object or nullptr with appropriate error set
@@ -128,6 +159,31 @@ static inline PyObject* do_resolve(
 {
     Resolver resolver(input, options);
     resolver.set_fail_action(on_fail);
+    return resolver.resolve(collect_payload(input, options, ntype));
+}
+
+/**
+ * \brief Resolve the input into the appropriate return object
+ *
+ * \param options User-specified options on how to determine type
+ * \param input The python object to consider for conversion
+ * \param on_fail The value indicating what action to take on failure to convert
+ * \param on_type_error The value indicating what action to take on invalid type
+ * \param ntype The desired type of the converted object
+ *
+ * \return Converted python object or nullptr with appropriate error set
+ */
+static inline PyObject* do_resolve(
+    const UserOptions& options,
+    PyObject* input,
+    PyObject* on_fail,
+    PyObject* on_type_error,
+    const UserType ntype
+)
+{
+    Resolver resolver(input, options);
+    resolver.set_fail_action(on_fail);
+    resolver.set_type_error_action(on_type_error);
     return resolver.resolve(collect_payload(input, options, ntype));
 }
 
@@ -146,6 +202,24 @@ PyObject* float_conv_impl(
     options.set_coerce(coerce);
     options.set_underscores_allowed(allow_underscores);
     return do_resolve(options, input, on_fail, inf, nan, ntype);
+}
+
+// "Fuller" implementation for converting floats
+PyObject* float_conv_impl(
+    PyObject* input,
+    PyObject* on_fail,
+    PyObject* on_type_error,
+    PyObject* inf,
+    PyObject* nan,
+    const UserType ntype,
+    const bool allow_underscores,
+    const bool coerce
+)
+{
+    UserOptions options;
+    options.set_coerce(coerce);
+    options.set_underscores_allowed(allow_underscores);
+    return do_resolve(options, input, on_fail, on_type_error, inf, nan, ntype);
 }
 
 // "Reduced" implementation for converting floats
@@ -172,6 +246,23 @@ PyObject* int_conv_impl(
     options.set_unicode_allowed(options.is_default_base());
     options.set_underscores_allowed(allow_underscores);
     return do_resolve(options, input, on_fail, ntype);
+}
+
+// "Fuller" implementation for converting integers
+PyObject* int_conv_impl(
+    PyObject* input,
+    PyObject* on_fail,
+    PyObject* on_type_error,
+    const UserType ntype,
+    const bool allow_underscores,
+    const int base
+)
+{
+    UserOptions options;
+    options.set_base(base);
+    options.set_unicode_allowed(options.is_default_base());
+    options.set_underscores_allowed(allow_underscores);
+    return do_resolve(options, input, on_fail, on_type_error, ntype);
 }
 
 // "Reduced" implementation for converting integers

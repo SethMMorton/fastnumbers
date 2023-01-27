@@ -26,6 +26,10 @@ from .fastnumbers import (
     min_exp,
     query_type,
     real,
+    try_float,
+    try_forceint,
+    try_int,
+    try_real,
 )
 
 __all__ = [
@@ -56,4 +60,8 @@ __all__ = [
     "min_exp",
     "query_type",
     "real",
+    "try_float",
+    "try_forceint",
+    "try_int",
+    "try_real",
 ]

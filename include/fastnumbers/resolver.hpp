@@ -82,13 +82,11 @@ public:
         case ActionType::NEG_NAN_ACTION:
             return nan_action(true);
 
-        // Raise an exception due passing an invalid type to convert to
-        // an integer or float, or if using an explicit integer base
-        // where it shouldn't be used
+        // These actions are indicative of TypeErrors
         case ActionType::ERROR_BAD_TYPE_INT:
         case ActionType::ERROR_BAD_TYPE_FLOAT:
         case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE:
-            return raise_appropriate_exception(atype);
+            return type_error_action(atype);
 
         default:
             return fail_action(atype);
@@ -164,7 +162,7 @@ private:
         if (m_fail == Selectors::RAISE) {
             return raise_appropriate_exception(atype);
         }
-        return fail_action_impl();
+        return fail_action_impl(m_fail);
     }
 
     /// Return the appropriate value if a conversion failure occured and
@@ -174,7 +172,7 @@ private:
         if (m_fail == Selectors::RAISE) {
             return nullptr; // an error has already been set
         }
-        return fail_action_impl();
+        return fail_action_impl(m_fail);
     }
 
     /// Return the appropriate value if a type error occured
@@ -183,17 +181,17 @@ private:
         if (m_type_error == Selectors::RAISE) {
             return raise_appropriate_exception(atype);
         }
-        return fail_action_impl();
+        return fail_action_impl(m_type_error);
     }
 
     /// Implementation for non-raising fail action
-    PyObject* fail_action_impl() const
+    PyObject* fail_action_impl(PyObject* actionable) const
     {
         PyErr_Clear();
-        if (PyCallable_Check(m_fail)) {
-            return PyObject_CallFunctionObjArgs(m_fail, m_input, nullptr);
+        if (PyCallable_Check(actionable)) {
+            return PyObject_CallFunctionObjArgs(actionable, m_input, nullptr);
         } else { // handles INPUT and a custom default value
-            return increment_reference(m_fail);
+            return increment_reference(actionable);
         }
     }
 

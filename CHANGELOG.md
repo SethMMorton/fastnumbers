@@ -7,17 +7,27 @@ Unreleased
  and `isintlike`, respectively (Issues
  [#37](https://github.com/SethMMorton/fastnumbers/issues/37) and
  [#39](https://github.com/SethMMorton/fastnumbers/issues/39))
+- Added `try_real`, `try_float`, `try_int`, and `try_forceint`
+ to provide a more flexible interface than `fast_real`, `fast_float`, `fast_int`,
+ and `fast_forceint`, respectively (Issues
+ [#37](https://github.com/SethMMorton/fastnumbers/issues/37) and
+ [#40](https://github.com/SethMMorton/fastnumbers/issues/40))
 
 ### Changed
-- `query_type` now sets `allow_underscors` to `False` by default
+- `query_type` now sets `allow_underscores` to `False` by default
 - Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45)
   and [#56](https://github.com/SethMMorton/fastnumbers/issues/56))
-- Removed support for Python 3.6
 
 ### Deprecated
 - `isreal`, `isfloat`, `isint`, and `isintlike` are deprecated in
   favor of `check_real`, `check_float`, `check_int`, and `check_intlike`,
   though they will never be removed from the API
+- `fast_real`, `fast_float`, `fast_int`, and `fast_forceint` are deprecated in
+  favor of `try_real`, `try_float`, `try_int`, and `try_forceint`,
+  though they will never be removed from the API
+
+### Removed
+- Support for Python 3.6
 
 [3.2.1] - 2021-11-02
 ---
