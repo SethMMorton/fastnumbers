@@ -2,6 +2,23 @@
 
 #include <limits>
 
+#include <Python.h>
+
+#include "fastnumbers/selectors.hpp"
+
+/// The conversion the user has requested
+enum class UserType {
+    REAL, ///< Convert to/check a real
+    FLOAT, ///< Convert to/check a float
+    INT, ///< Convert to/check an int
+    INTLIKE, ///< Check int-like
+    FORCEINT, ///< Force conversion to int
+};
+
+/**
+ * \class UserOptions
+ * \brief Container for options the user specifies that affect evaluation
+ */
 class UserOptions final {
 public:
     UserOptions()
@@ -9,8 +26,10 @@ public:
         , m_default_base(true)
         , m_underscore_allowed(false)
         , m_coerce(false)
-        , m_nan_allowed(false)
-        , m_inf_allowed(false)
+        , m_nan_allowed_str(false)
+        , m_nan_allowed_num(false)
+        , m_inf_allowed_str(false)
+        , m_inf_allowed_num(false)
         , m_unicode_allowed(true)
     { }
     UserOptions(const UserOptions&) = default;
@@ -44,16 +63,62 @@ public:
     bool allow_coerce() const { return m_coerce; }
 
     /// Tell the analyzer if NaN is allowed when type checking
-    void set_nan_allowed(const bool nan_allowed) { m_nan_allowed = nan_allowed; }
+    void set_nan_allowed(const bool nan_allowed)
+    {
+        m_nan_allowed_num = m_nan_allowed_str = nan_allowed;
+    }
+
+    /// Tell the analyzer if NaN is allowed when type checking
+    void set_nan_allowed(const PyObject* selector)
+    {
+        set_nan_allowed_num(
+            selector == Selectors::ALLOWED || selector == Selectors::NUMBER_ONLY
+        );
+        set_nan_allowed_str(
+            selector == Selectors::ALLOWED || selector == Selectors::STRING_ONLY
+        );
+    }
+
+    /// Tell the analyzer if NaN is allowed for strings when type checking
+    void set_nan_allowed_str(const bool nan_allowed) { m_nan_allowed_str = nan_allowed; }
+
+    /// Tell the analyzer if NaN is allowed for numbers when type checking
+    void set_nan_allowed_num(const bool nan_allowed) { m_nan_allowed_num = nan_allowed; }
 
     /// Indicate if "NaN" is a valid input string
-    bool allow_nan() const { return m_nan_allowed; }
+    bool allow_nan_str() const { return m_nan_allowed_str; }
+
+    /// Indicate if "NaN" is a valid input number
+    bool allow_nan_num() const { return m_nan_allowed_num; }
 
     /// Tell the analyzer if infinity is allowed when type checking
-    void set_inf_allowed(const bool inf_allowed) { m_inf_allowed = inf_allowed; }
+    void set_inf_allowed(const bool inf_allowed)
+    {
+        m_inf_allowed_num = m_inf_allowed_str = inf_allowed;
+    }
+
+    /// Tell the analyzer if infinity is allowed when type checking
+    void set_inf_allowed(const PyObject* selector)
+    {
+        set_inf_allowed_num(
+            selector == Selectors::ALLOWED || selector == Selectors::NUMBER_ONLY
+        );
+        set_inf_allowed_str(
+            selector == Selectors::ALLOWED || selector == Selectors::STRING_ONLY
+        );
+    }
+
+    /// Tell the analyzer if infinity is allowed for strings when type checking
+    void set_inf_allowed_str(const bool inf_allowed) { m_inf_allowed_str = inf_allowed; }
+
+    /// Tell the analyzer if infinity is allowed for numbers when type checking
+    void set_inf_allowed_num(const bool inf_allowed) { m_inf_allowed_num = inf_allowed; }
 
     /// Indicate if "inf" is a valid input string
-    bool allow_inf() const { return m_inf_allowed; }
+    bool allow_inf_str() const { return m_inf_allowed_str; }
+
+    /// Indicate if "inf" is a valid input number
+    bool allow_inf_num() const { return m_inf_allowed_num; }
 
     /// Tell the analyzer if unicode characters are allowed as input
     void set_unicode_allowed(const bool unicode_allowed)
@@ -77,11 +142,17 @@ private:
     /// Whether or not floats should be coerced to integers if user wants REAL
     bool m_coerce;
 
-    /// Whether or not an NaN is allowed
-    bool m_nan_allowed;
+    /// Whether or not an NaN is allowed for strings
+    bool m_nan_allowed_str;
 
-    /// Whether or not an infinity is allowed
-    bool m_inf_allowed;
+    /// Whether or not an NaN is allowed for numbers
+    bool m_nan_allowed_num;
+
+    /// Whether or not an infinity is allowed for strings
+    bool m_inf_allowed_str;
+
+    /// Whether or not an infinity is allowed for numbers
+    bool m_inf_allowed_num;
 
     /// Whether or not a unicode character is allowed
     bool m_unicode_allowed;

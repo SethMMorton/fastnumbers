@@ -65,18 +65,22 @@ static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
 /* EXPOSED FUNCTIONS */
 /*********************/
 
-bool string_contains_int(const char* str, const char* end, int base)
+int string_contains_what(const char* str, const char* end, int base)
 {
+    /* Define possible return values */
+    static constexpr int INVALID = 0;
+    static constexpr int INTEGER = 1;
+    static constexpr int FLOAT = 2;
+    static constexpr int INTLIKE_FLOAT = 3;
+
     if (base == 0) {
         base = detect_base(str, end);
     }
 
-    /* If base 10, take fast route. */
-    if (base == 10) {
-        return parse_integer_components(str) && str == end;
-    } else if (base == -1) {
-        return false;
-    } else {
+    /* Special-case non-base-10 integer detection */
+    if (base < 0) {
+        return INVALID;
+    } else if (base != 10) {
         const std::size_t len = static_cast<std::size_t>(end - str);
 
         /* Skip leading characters for non-base 10 ints. */
@@ -90,25 +94,16 @@ bool string_contains_int(const char* str, const char* end, int base)
             str += 1;
             valid = true;
         }
-        return valid && str == end;
+        return (valid && str == end) ? INTEGER : INVALID;
     }
-}
 
-bool string_contains_float(const char* str, const char* end)
-{
-    bool valid = parse_integer_components(str);
-    valid = parse_decimal_components(str) || valid;
-    if (valid) {
-        valid = parse_exponent_components(str);
-    }
-    return valid && str == end;
-}
-
-bool string_contains_intlike_float(const char* str, const char* end)
-{
     /* Before decimal. Keep track of number of digits read. */
+    int value = INVALID;
     const char* int_start = str;
     bool valid = parse_integer_components(str);
+    if (valid) {
+        value = INTEGER;
+    }
 
     /* Decimal part of float. Keep track of number of digits read */
     /* as well as beginning and end locations. */
@@ -122,11 +117,15 @@ bool string_contains_intlike_float(const char* str, const char* end)
             )
         || valid;
     const char* decimal_end = str;
+    if (valid && decimal_end != decimal_start) {
+        value = FLOAT;
+    }
 
     /* Exponential part of float. Parse the magnitude. */
     uint32_t expon = 0;
     bool exp_negative = false;
     if (valid) {
+        const char* exp_start = str;
         valid = parse_exponent_components(
             str,
             [&exp_negative](const char) {
@@ -134,14 +133,22 @@ bool string_contains_intlike_float(const char* str, const char* end)
             },
             [&expon](const char c) {
                 expon *= 10;
-                expon += ascii2int<int32_t>(c);
+                expon += ascii2int<uint32_t>(c);
             }
         );
+        const char* exp_end = str;
+        if (valid && exp_end != exp_start) {
+            value = FLOAT;
+        }
     }
 
+    /* If the parsing was not valid or we are not at the end of the string
+     * then the string is invalid.
+     * Othewise, do a check to see if it is an *intlike* float.
+     */
     if (!valid || str != end) {
-        return false;
-    } else {
+        return INVALID;
+    } else if (value == FLOAT) {
         /* If we "move the decimal place" left or right depending on
          * exponent sign and magnitude, all digits after the decimal
          * must be zero.
@@ -153,11 +160,16 @@ bool string_contains_intlike_float(const char* str, const char* end)
             : number_trailing_zeros(decimal_start + 1, decimal_end);
 
         if (exp_negative) {
-            return expon <= int_trailing_zeros && dec_length == dec_trailing_zeros;
+            if (expon <= int_trailing_zeros && dec_length == dec_trailing_zeros) {
+                value = INTLIKE_FLOAT;
+            }
         } else {
-            return expon >= (dec_length - dec_trailing_zeros);
+            if (expon >= (dec_length - dec_trailing_zeros)) {
+                value = INTLIKE_FLOAT;
+            }
         }
     }
+    return value;
 }
 
 long parse_int(const char* str, const char* end, bool& error)
@@ -208,7 +220,7 @@ double parse_float(const char* str, const char* end, bool& error)
             },
             [&expon](const char c) {
                 expon *= 10;
-                expon += ascii2int<int16_t>(c);
+                expon += ascii2int<int32_t>(c);
             }
         );
         expon *= exp_sign;

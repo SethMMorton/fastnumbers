@@ -40,6 +40,64 @@ Each of these functions will quickly convert strings to numbers
 They are guaranteed to return results identical to the built-in
 ``float`` or ``int`` functions.
 
+:func:`~fastnumbers.try_real`
++++++++++++++++++++++++++++++
+
+.. autofunction:: try_real
+
+:func:`~fastnumbers.try_float`
+++++++++++++++++++++++++++++++
+
+.. autofunction:: try_float
+
+:func:`~fastnumbers.try_int`
+++++++++++++++++++++++++++++
+
+.. autofunction:: try_int
+
+:func:`~fastnumbers.try_forceint`
++++++++++++++++++++++++++++++++++
+
+.. autofunction:: try_forceint
+
+The "Checking" Functions
+------------------------
+
+These functions return a Boolean value that indicates if the input
+can return a certain number type or not.
+
+:func:`~fastnumbers.check_real`
++++++++++++++++++++++++++++++++
+
+.. autofunction:: check_real
+
+:func:`~fastnumbers.check_float`
+++++++++++++++++++++++++++++++++
+
+.. autofunction:: check_float
+
+:func:`~fastnumbers.check_int`
+++++++++++++++++++++++++++++++
+
+.. autofunction:: check_int
+
+:func:`~fastnumbers.check_intlike`
+++++++++++++++++++++++++++++++++++
+
+.. autofunction:: check_intlike
+
+:func:`~fastnumbers.query_type`
++++++++++++++++++++++++++++++++
+
+.. autofunction:: query_type
+
+Deprecated "Error-Handling" Functions
+--------------------------------------
+
+These functions have a less flexible interface than ``try_*`` functions,
+but otherwise do the same thing. New code should prefer the ``try_*``
+functions instead, but the below functions will never be removed.
+
 :func:`~fastnumbers.fast_real`
 ++++++++++++++++++++++++++++++
 
@@ -60,11 +118,12 @@ They are guaranteed to return results identical to the built-in
 
 .. autofunction:: fast_forceint
 
-The "Checking" Functions
-------------------------
+Deprecated "Checking" Functions
+-------------------------------
 
-These functions return a Boolean value that indicates if the input
-can return a certain number type or not.
+These functions have a less flexible interface than ``check_*`` functions,
+but otherwise do the same thing. New code should prefer the ``check_*``
+functions instead, but the below functions will never be removed.
 
 :func:`~fastnumbers.isreal`
 +++++++++++++++++++++++++++
@@ -85,8 +144,3 @@ can return a certain number type or not.
 ++++++++++++++++++++++++++++++
 
 .. autofunction:: isintlike
-
-:func:`~fastnumbers.query_type`
-+++++++++++++++++++++++++++++++
-
-.. autofunction:: query_type

@@ -8,15 +8,6 @@
 #include "fastnumbers/payload.hpp"
 #include "fastnumbers/user_options.hpp"
 
-/// The conversion the user has requested
-enum class UserType {
-    REAL, ///< Convert to/check a real
-    FLOAT, ///< Convert to/check a float
-    INT, ///< Convert to/check an int
-    INTLIKE, ///< Check int-like
-    FORCEINT, ///< Force conversion to int
-};
-
 /**
  * \class Evaluator
  * \brief Evaluate the contents of a Python object
@@ -31,10 +22,6 @@ public:
         , m_options(options)
     {
         Py_XINCREF(m_obj);
-        if (m_parser.parser_type() == ParserType::NUMERIC) {
-            m_options.set_nan_allowed(true);
-            m_options.set_inf_allowed(true);
-        }
     }
 
     // Other constructors, destructors, and assignment
@@ -57,45 +44,8 @@ public:
     /// Return the parser type currenly associated with the Evaluator
     ParserType parser_type() const { return m_parser.parser_type(); }
 
-    /// Was the passed Python object of the correct type?
-    bool is_type(const UserType ntype) const
-    {
-        // Dispatch to the appropriate parser function based on requested type
-        switch (ntype) {
-        case UserType::REAL:
-            return (options().allow_nan() && m_parser.is_nan())
-                || (options().allow_inf() && m_parser.is_infinity())
-                || m_parser.is_real();
-
-        case UserType::FLOAT:
-            return (options().allow_nan() && m_parser.is_nan())
-                || (options().allow_inf() && m_parser.is_infinity())
-                || m_parser.is_float();
-
-        case UserType::INT:
-            return m_parser.is_int();
-
-        case UserType::INTLIKE:
-        case UserType::FORCEINT:
-            return m_parser.is_intlike();
-
-        default:
-            Py_UNREACHABLE();
-        }
-    }
-
-    /// Is the stored type a float? Account for nan_action and inf_action.
-    bool type_is_float() const
-    {
-        return (options().allow_nan() && m_parser.is_nan())
-            || (options().allow_inf() && m_parser.is_infinity()) || m_parser.is_float();
-    }
-
-    /// Is the stored type an integer? If coerce is true, is the type intlike?
-    bool type_is_int() const
-    {
-        return options().allow_coerce() ? m_parser.is_intlike() : m_parser.is_int();
-    }
+    /// Return the type of number contained in the given object
+    NumberFlags number_type() const { return m_parser.get_number_type(); }
 
     /**
      * \brief Convert the stored object to the desired number type
@@ -143,8 +93,12 @@ private:
     /// Logic for evaluating a numeric python object
     Payload from_numeric_as_type(const UserType ntype)
     {
+        const NumberFlags typeflags = m_parser.get_number_type();
+        const NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
+        const NumberFlags is_intlike = NumberType::Integer | NumberType::IntLike;
+
         // If not a numeric type it is a type error
-        if (m_parser.not_float_or_int() && !m_parser.is_user_numeric()) {
+        if (typeflags & NumberType::INVALID) {
             return typed_error(ntype);
         }
 
@@ -152,12 +106,12 @@ private:
         // on the user requested type
         switch (ntype) {
         case UserType::REAL:
-            if (options().allow_coerce() && m_parser.is_intlike()) {
+            if (options().allow_coerce() && (typeflags & is_intlike)) {
                 return Payload(m_parser.as_pyint());
-            } else if (m_parser.is_nan() || m_parser.is_infinity()) {
+            } else if (typeflags & nan_or_inf) {
                 return Payload(handle_nan_and_inf());
-            } else if (m_parser.is_user_numeric()) {
-                if (m_parser.is_user_numeric_float()) {
+            } else if (typeflags & NumberType::User) {
+                if (typeflags & NumberType::Float) {
                     return Payload(m_parser.as_pyfloat());
                 } else {
                     return Payload(m_parser.as_pyint());
@@ -168,7 +122,7 @@ private:
             }
 
         case UserType::FLOAT:
-            if (m_parser.is_nan() || m_parser.is_infinity()) {
+            if (typeflags & nan_or_inf) {
                 return Payload(handle_nan_and_inf());
             } else {
                 return Payload(m_parser.as_pyfloat());
@@ -211,13 +165,16 @@ private:
     /// Logic for evaluating a text python object as a float or integer
     Payload from_text_as_int_or_float(const bool force_int)
     {
+        const NumberFlags typeflags = m_parser.get_number_type();
+        const NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
+
         // Integers are returned as-is
         // NaN and infinity are illegal with force_int
         // Otherwise, grab as a float and convert to int if required
-        if (m_parser.is_int()) {
+        if (typeflags & NumberType::Integer) {
             return from_text_as_int();
 
-        } else if (force_int && (m_parser.is_infinity() || m_parser.is_nan())) {
+        } else if (force_int && (typeflags & nan_or_inf)) {
             return Payload(ActionType::ERROR_INVALID_INT);
 
         } else {
@@ -245,10 +202,12 @@ private:
     /// Logic for evaluating a text python object as a float
     Payload from_text_as_float()
     {
+        const NumberFlags typeflags = m_parser.get_number_type();
+
         // Special-case handling of infinity and NaN
-        if (m_parser.is_infinity()) {
+        if (typeflags & NumberType::Infinity) {
             return Payload(inf_action(m_parser.is_negative()));
-        } else if (m_parser.is_nan()) {
+        } else if (typeflags & NumberType::NaN) {
             return Payload(nan_action(m_parser.is_negative()));
         }
 
@@ -331,7 +290,9 @@ private:
         }
 
         // Assume infinity or NaN.
-        return m_parser.is_nan() ? nan_action(value < 0.0) : inf_action(value < 0.0);
+        const NumberFlags typeflags = m_parser.get_number_type();
+        return typeflags & NumberType::NaN ? nan_action(value < 0.0)
+                                           : inf_action(value < 0.0);
     }
 
     /// Helper function to convert to Python float objects

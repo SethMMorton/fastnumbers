@@ -30,36 +30,20 @@ long parse_int(const char* str, const char* end, bool& error);
 double parse_float(const char* str, const char* end, bool& error);
 
 /**
- * \brief Check if a string could be converted to an integer
+ * \brief Check if a string could be converted to some numeric type
  *
  * Assumes no sign or whitespace.
  *
  * \param str The string to parse, assumed to be non-NULL
  * \param end The end of the string being checked
- * \param base The base to assume when checking the integer
+ * \param base The base to assume when checking an integer, set to 10
+ *             unless you know it *must* be an integer.
+ * \return 0 - invalid
+ *         1 - integer
+ *         2 - float
+ *         3 - "intlike" float
  */
-bool string_contains_int(const char* str, const char* end, int base);
-
-/**
- * \brief Check if a string could be converted to a float
- *
- * Assumes no sign or whitespace.
- *
- * \param str The string to parse, assumed to be non-NULL
- * \param end The end of the string being checked
- */
-bool string_contains_float(const char* str, const char* end);
-
-/**
- * \brief Check if a string could be converted to a float that
- *        could be losslessly converted to an integer
- *
- * Assumes no sign or whitespace.
- *
- * \param str The string to parse, assumed to be non-NULL
- * \param end The end of the string being checked
- */
-bool string_contains_intlike_float(const char* str, const char* end);
+int string_contains_what(const char* str, const char* end, int base);
 
 /**
  * \brief Remove underscores in a numeric-representing string

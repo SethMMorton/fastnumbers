@@ -6,8 +6,8 @@
 
 #include <Python.h>
 
+#include "fastnumbers/buffer.hpp"
 #include "fastnumbers/parser/base.hpp"
-#include "fastnumbers/parser/buffer.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**
@@ -46,28 +46,8 @@ public:
     /// Convert the stored object to a python float (check error state)
     PyObject* as_pyfloat() override;
 
-    /// Was the passed Python object infinity?
-    bool is_infinity() const override;
-
-    /// Was the passed Python object NaN?
-    bool is_nan() const override;
-
-    /// Was the passed Python object real (e.g. float or int)?
-    bool is_real() const override { return is_float(); }
-
-    /// Was the passed Python object a float?
-    bool is_float() const override;
-
-    /// Was the passed Python object an int?
-    bool is_int() const override;
-
-    /**
-     * \brief Was the passed Python object intlike?
-     *
-     * "intlike" is defined as either an int, or a float that can be
-     * converted to an int with no loss of information.
-     */
-    bool is_intlike() const override;
+    /// Check the type of the number.
+    NumberFlags get_number_type() const override;
 
 private:
     /// The potential start of the character array
@@ -121,4 +101,10 @@ private:
         const std::size_t offset,
         Function string_contains_number
     );
+
+    /// Add FromStr to the return NumberFlags
+    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    {
+        return NumberType::FromStr | val;
+    }
 };

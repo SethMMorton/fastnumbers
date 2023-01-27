@@ -1,6 +1,6 @@
+#include "fastnumbers/buffer.hpp"
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/parser/base.hpp"
-#include "fastnumbers/parser/buffer.hpp"
 #include "fastnumbers/parser/character.hpp"
 #include "fastnumbers/user_options.hpp"
 
@@ -95,7 +95,7 @@ PyObject* CharacterParser::as_pyint()
         my_end,
         offset,
         [&](const char* start, const char* end) -> bool {
-            return string_contains_int(start, end, options().get_base());
+            return string_contains_what(start, end, options().get_base()) == 1;
         }
     );
     if (!is_integer) {
@@ -131,9 +131,18 @@ PyObject* CharacterParser::as_pyfloat()
     // Need to account for underscores if they exist and we are allowing them.
     double retval = -1.0;
     char* their_end = nullptr;
-    const char* my_end = end();
     Buffer buffer;
-    if (!check_string_for_number(buffer, start, my_end, offset, string_contains_float)) {
+    const char* my_end = end();
+    const bool is_float = check_string_for_number(
+        buffer,
+        start,
+        my_end,
+        offset,
+        [](const char* start, const char* end) -> bool {
+            return string_contains_what(start, end, 10) > 0;
+        }
+    );
+    if (!is_float) {
         encountered_conversion_error();
         return nullptr;
     }
@@ -155,53 +164,46 @@ PyObject* CharacterParser::as_pyfloat()
     return PyFloat_FromDouble(retval);
 }
 
-bool CharacterParser::is_infinity() const
+NumberFlags CharacterParser::get_number_type() const
 {
-    return quick_detect_infinity(m_start, m_str_len);
-}
-
-bool CharacterParser::is_nan() const
-{
-    return quick_detect_nan(m_start, m_str_len);
-}
-
-bool CharacterParser::is_float() const
-{
-    if (string_contains_float(m_start, end())) {
-        return true;
-    } else if (has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores();
-        return string_contains_float(buffer.start(), buffer.end());
-    } else {
-        return false;
+    // If this value is cached, use that instead of re-calculating
+    if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {
+        return Parser::get_number_type();
     }
-}
 
-bool CharacterParser::is_int() const
-{
-    if (string_contains_int(m_start, end(), options().get_base())) {
-        return true;
-    } else if (has_valid_underscores()) {
+    // If the string contains an infinity or NaN then we don't need to do any
+    // other fancy processing and can return now.
+    if (quick_detect_infinity(m_start, m_str_len)) {
+        return flag_wrap(NumberType::Float | NumberType::Infinity);
+
+    } else if (quick_detect_nan(m_start, m_str_len)) {
+        return flag_wrap(NumberType::Float | NumberType::NaN);
+    }
+
+    // If the string contains a numeric representation,
+    // report which representation type is contained.
+    int value = string_contains_what(m_start, end(), options().get_base());
+
+    // If it still looks like there is no numeric representation in the string,
+    // check to see if it it contains underscores, and if so remove them and
+    // try a numeric representation again. No need to check for infinity and
+    // NaN here because those are not allowed to contain underscores.
+    if (value == 0 && has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(!options().is_default_base());
-        return string_contains_int(buffer.start(), buffer.end(), options().get_base());
-    } else {
-        return false;
+        value = string_contains_what(buffer.start(), buffer.end(), options().get_base());
     }
-}
 
-bool CharacterParser::is_intlike() const
-{
-    if (string_contains_intlike_float(m_start, end())) {
-        return true;
-    } else if (has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores();
-        return string_contains_intlike_float(buffer.start(), buffer.end());
-    } else {
-        return false;
-    }
+    // Map integer values to numeric flag values
+    static constexpr NumberFlags type_mapping[] = {
+        /* 0 */ NumberType::INVALID,
+        /* 1 */ flag_wrap(NumberType::Integer),
+        /* 2 */ flag_wrap(NumberType::Float),
+        /* 3 */ flag_wrap(NumberType::Float | NumberType::IntLike),
+    };
+
+    // Return the found type
+    return type_mapping[value];
 }
 
 template <

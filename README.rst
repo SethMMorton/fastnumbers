@@ -44,8 +44,21 @@ of decreasing importance as to why the module was created):
        - **PLEASE** read the quick start for these functions to fully
          understand the caveats before using them.
 
-**NOTICE**: As of ``fastnumbers`` version X.Y.Z, only Python >= 3.7 is
+**NOTICE**: As of ``fastnumbers`` version 4.0.0, only Python >= 3.7 is
 supported.
+
+**NOTICE**: As of ``fastnumbers`` version 4.0.0, the functions ``fast_real``,
+``fast_float``, ``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``,
+``isint``, and ``isintlike`` have been deprecated and are replaced with
+``try_real``, ``try_float``, ``try_int``, ``try_forceint``, ``check_real``,
+``check_float``, ``check_int``, and ``check_intlike``, respectively. These
+new functions have more flexible APIs and have names that better reflect
+the intent of the functions. The old functions can still be used (they will
+*never* be removed from ``fastnumbers``), but the new ones should be
+preferred for new development.
+
+**NOTICE**: As of ``fastnumbers`` version 4.0.0, ``query_type`` now sets
+``allow_underscores`` to ``False`` by default instead of ``True``.
 
 Quick Start
 -----------
@@ -64,117 +77,144 @@ Error-Handling Functions
 
 - `Error-handling function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-error-handling-functions>`_
 
-``fast_float`` will be used to demonstrate the functionality of the
-``fast_*`` functions.
+``try_float`` will be used to demonstrate the functionality of the
+``try_*`` functions.
 
 .. code-block:: python
 
-    >>> from fastnumbers import fast_float
+    >>> from fastnumbers import RAISE, try_float
     >>> # Convert string to a float
-    >>> fast_float('56.07')
+    >>> try_float('56.07')
     56.07
     >>> # Integers are converted to floats
-    >>> fast_float(54)
+    >>> try_float(54)
     54.0
     >>>
     >>> # Unconvertable string returned as-is by default
-    >>> fast_float('bad input')
+    >>> try_float('bad input')
     'bad input'
     >>> # Unconvertable strings can trigger a default value
-    >>> fast_float('bad input', default=0)
-    0
-    >>> # 'default' is also the first optional positional arg
-    >>> fast_float('bad input', 0)
+    >>> try_float('bad input', on_fail=0)
     0
     >>>
     >>> # One can ask inf or nan to be substituted with another value
-    >>> fast_float('nan')
+    >>> try_float('nan')
     nan
-    >>> fast_float('nan', nan=0.0)
+    >>> try_float('nan', nan=0.0)
     0.0
-    >>> fast_float(float('nan'), nan=0.0)
+    >>> try_float(float('nan'), nan=0.0)
     0.0
-    >>> fast_float('56.07', nan=0.0)
+    >>> try_float('56.07', nan=0.0)
     56.07
     >>>
     >>> # The default built-in float behavior can be triggered with
-    >>> # "raise_on_invalid" set to True.
-    >>> fast_float('bad input', raise_on_invalid=True) #doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> # RAISE given to "on_fail".
+    >>> try_float('bad input', on_fail=RAISE) #doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): bad input
     >>>
     >>> # A function can be used to return an alternate value for invalid input
-    >>> fast_float('bad input', on_fail=len)
+    >>> try_float('bad input', on_fail=len)
     9
-    >>> fast_float(54, on_fail=len)
+    >>> try_float(54, on_fail=len)
     54.0
     >>>
     >>> # Single unicode characters can be converted.
-    >>> fast_float('\u2164')  # Roman numeral 5 (V)
+    >>> try_float('\u2164')  # Roman numeral 5 (V)
     5.0
-    >>> fast_float('\u2466')  # 7 enclosed in a circle
+    >>> try_float('\u2466')  # 7 enclosed in a circle
     7.0
 
-``fast_int`` behaves the same as ``fast_float``, but for integers.
+``try_int`` behaves the same as ``try_float``, but for integers.
 
 .. code-block:: python
 
-    >>> from fastnumbers import fast_int
-    >>> fast_int('1234')
+    >>> from fastnumbers import try_int
+    >>> try_int('1234')
     1234
-    >>> fast_int('\u2466')
+    >>> try_int('\u2466')
     7
 
-``fast_real`` is like ``fast_float`` or ``fast_int`` depending
+``try_real`` is like ``try_float`` or ``try_int`` depending
 on if there is any fractional component of thi return value.
 
 .. code-block:: python
 
-    >>> from fastnumbers import fast_real
-    >>> fast_real('56')
+    >>> from fastnumbers import try_real
+    >>> try_real('56')
     56
-    >>> fast_real('56.0')
+    >>> try_real('56.0')
     56
-    >>> fast_real('56.0', coerce=False)
+    >>> try_real('56.0', coerce=False)
     56.0
-    >>> fast_real('56.07')
+    >>> try_real('56.07')
     56.07
-    >>> fast_real(56.07)
+    >>> try_real(56.07)
     56.07
-    >>> fast_real(56.0)
+    >>> try_real(56.0)
     56
-    >>> fast_real(56.0, coerce=False)
+    >>> try_real(56.0, coerce=False)
     56.0
     >>>
     >>>
 
-``fast_forceint`` always returns an integer.
+``try_forceint`` always returns an integer.
 
 .. code-block:: python
 
-    >>> from fastnumbers import fast_forceint
-    >>> fast_forceint('56')
+    >>> from fastnumbers import try_forceint
+    >>> try_forceint('56')
     56
-    >>> fast_forceint('56.0')
+    >>> try_forceint('56.0')
     56
-    >>> fast_forceint('56.07')
+    >>> try_forceint('56.07')
     56
-    >>> fast_forceint(56.07)
+    >>> try_forceint(56.07)
     56
 
 About the ``on_fail`` option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``on_fail`` option is a way for you to do *anything* in the event that
-the given input cannot be converted to a number. Here are a couple of ideas
-to get you thinking.
+the given input cannot be converted to a number. It can
+
+* return given object as-is if set to ``fastnumbers.INPUT`` (this is the default)
+* raise a ``ValueError`` if set to ``fastnumbers.RAISE``
+* return a default value if given any non-callable object
+* call a function with the given object if given a single-argument callable
+
+Below are a couple of ideas to get you thinking.
+
+**NOTE**:: There is also an ``on_type_error`` option that behaves the same as
+``on_fail`` except that a) it is triggered when the given object is of an
+invalid type and b) the default value is ``fastnumbers.RAISE``, not
+``fastnumbers.INPUT``.
 
 .. code-block:: python
 
-    >>> from fastnumbers import fast_float
-    >>> # Simple case, send the input through some function to generate a number.
-    >>> fast_float('invalid input', on_fail=lambda x: float(x.count('i')))  # count the 'i's
+    >>> from fastnumbers import INPUT, RAISE, try_float
+    >>> # You want to convert strings that can be converted to numbers, but
+    >>> # leave the rest as strings. Use fastnumbers.INPUT (the default)
+    >>> try_float('45.6')
+    45.6
+    >>> try_float('invalid input')
+    'invalid input'
+    >>> try_float('invalid input', on_fail=INPUT)
+    'invalid input'
+    >>>
+    >>>
+    >>>
+    >>> # You want to convert any invalid string to NaN
+    >>> try_float('45.6', on_fail=float('nan'))
+    45.6
+    >>> try_float('invalid input', on_fail=float('nan'))
+    nan
+    >>>
+    >>>
+    >>>
+    >>> # Simple callable case, send the input through some function to generate a number.
+    >>> try_float('invalid input', on_fail=lambda x: float(x.count('i')))  # count the 'i's
     3.0
     >>>
     >>>
@@ -184,13 +224,13 @@ to get you thinking.
     >>> # e.g. the input could be '45' or '(45)'. Also, suppose that if it
     >>> # still cannot be converted to a number we want to raise an exception.
     >>> def strip_parens_and_try_again(x):
-    ...     return fast_float(x.strip('()'), raise_on_invalid=True)
+    ...     return try_float(x.strip('()'), on_fail=RAISE)
     ...
-    >>> fast_float('45', on_fail=strip_parens_and_try_again)
+    >>> try_float('45', on_fail=strip_parens_and_try_again)
     45.0
-    >>> fast_float('(45)', on_fail=strip_parens_and_try_again)
+    >>> try_float('(45)', on_fail=strip_parens_and_try_again)
     45.0
-    >>> fast_float('invalid input', on_fail=strip_parens_and_try_again) #doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> try_float('invalid input', on_fail=strip_parens_and_try_again) #doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
       ...
     ValueError: invalid literal for float(): invalid input
@@ -203,12 +243,12 @@ to get you thinking.
     ...     log_method("The input {!r} is not valid!".format(x))
     ...     return default
     ...
-    >>> fast_float('45', on_fail=log_and_default)
+    >>> try_float('45', on_fail=log_and_default)
     45.0
-    >>> fast_float('invalid input', on_fail=log_and_default)
+    >>> try_float('invalid input', on_fail=log_and_default)
     The input 'invalid input' is not valid!
     0.0
-    >>> fast_float('invalid input', on_fail=lambda x: log_and_default(x, default=float('nan')))
+    >>> try_float('invalid input', on_fail=lambda x: log_and_default(x, default=float('nan')))
     The input 'invalid input' is not valid!
     nan
 
@@ -217,86 +257,93 @@ Checking Functions
 
 - `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
 
-``isfloat`` will be used to demonstrate the functionality of the
-``is*`` functions, as well as the ``query_type`` function.
+``check_float`` will be used to demonstrate the functionality of the
+``check_*`` functions, as well as the ``query_type`` function.
 
 .. code-block:: python
 
-    >>> from fastnumbers import isfloat
+    >>> from fastnumbers import check_float
+    >>> from fastnumbers import ALLOWED, DISALLOWED, NUMBER_ONLY, STRING_ONLY
     >>> # Check that a string can be converted to a float
-    >>> isfloat('56')
+    >>> check_float('56')
     True
-    >>> isfloat('56.07')
+    >>> check_float('56', strict=True)
+    False
+    >>> check_float('56.07')
     True
-    >>> isfloat('56.07 lb')
+    >>> check_float('56.07 lb')
     False
     >>>
     >>> # Check if a given number is a float
-    >>> isfloat(56.07)
+    >>> check_float(56.07)
     True
-    >>> isfloat(56)
+    >>> check_float(56)
     False
     >>>
     >>> # Specify if only strings or only numbers are allowed
-    >>> isfloat(56.07, str_only=True)
+    >>> check_float(56.07, consider=STRING_ONLY)
     False
-    >>> isfloat('56.07', num_only=True)
+    >>> check_float('56.07', consider=NUMBER_ONLY)
     False
     >>>
-    >>> # Customize handling for nan or inf
-    >>> isfloat('nan')
+    >>> # Customize handling for nan or inf (see API for more details)
+    >>> check_float('nan')
     False
-    >>> isfloat('nan', allow_nan=True)
+    >>> check_float('nan', nan=ALLOWED)
     True
+    >>> check_float(float('nan'))
+    True
+    >>> check_float(float('nan'), nan=DISALLOWED)
+    False
 
-``isint`` works the same as ``isfloat``, but for integers.
+``check_int`` works the same as ``check_float``, but for integers.
 
 .. code-block:: python
 
-    >>> from fastnumbers import isint
-    >>> isint('56')
+    >>> from fastnumbers import check_int
+    >>> check_int('56')
     True
-    >>> isint(56)
+    >>> check_int(56)
     True
-    >>> isint('56.0')
+    >>> check_int('56.0')
     False
-    >>> isint(56.0)
+    >>> check_int(56.0)
     False
 
-``isreal`` is very permissive - any float or integer is accepted.
+``check_real`` is very permissive - any float or integer is accepted.
 
 .. code-block:: python
 
-    >>> from fastnumbers import isreal
-    >>> isreal('56.0')
+    >>> from fastnumbers import check_real
+    >>> check_real('56.0')
     True
-    >>> isreal('56')
+    >>> check_real('56')
     True
-    >>> isreal(56.0)
+    >>> check_real(56.0)
     True
-    >>> isreal(56)
+    >>> check_real(56)
     True
 
-``isintlike`` checks if a number is "int-like", if it has no
+``check_intlike`` checks if a number is "int-like", if it has no
 fractional component.
 
-.. code-block::
+.. code-block:: python
 
-    >>> from fastnumbers import isintlike
-    >>> isintlike('56.0')
+    >>> from fastnumbers import check_intlike
+    >>> check_intlike('56.0')
     True
-    >>> isintlike('56.7')
+    >>> check_intlike('56.7')
     False
-    >>> isintlike(56.0)
+    >>> check_intlike(56.0)
     True
-    >>> isintlike(56.7)
+    >>> check_intlike(56.7)
     False
 
 The ``query_type`` function can be used if you need to determine if
 a value is one of many types, rather than whether or not it is one specific
 type.
 
-.. code-block::
+.. code-block:: python
 
     >>> from fastnumbers import query_type
     >>> query_type('56.0')
@@ -349,7 +396,7 @@ actually shadow the built-in ``int`` function, you can do
       ...
     ValueError: invalid literal for float(): bad input
 
-``real`` is is provided to give a float or int depending
+``real`` is provided to give a float or int depending
 on the fractional component of the input.
 
 .. code-block:: python
