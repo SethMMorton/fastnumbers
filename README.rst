@@ -8,12 +8,12 @@ fastnumbers
     :target: https://pypi.org/project/fastnumbers/
 
 .. image:: https://img.shields.io/pypi/l/fastnumbers.svg
-    :target: https://github.com/SethMMorton/fastnumbers/blob/master/LICENSE
+    :target: https://github.com/SethMMorton/fastnumbers/blob/main/LICENSE
 
 .. image:: https://github.com/SethMMorton/fastnumbers/workflows/Tests/badge.svg
     :target: https://github.com/SethMMorton/fastnumbers/workflows
 
-.. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/SethMMorton/fastnumbers
 
 Super-fast and clean conversions to numbers.
@@ -39,7 +39,7 @@ of decreasing importance as to why the module was created):
        ``float`` that on average are *up to* 2x faster. These functions
        should behave *identically* to the Python built-ins except for a few
        specific corner-cases as mentioned in the
-       `API documentation for those functions <https://fastnumbers.readthedocs.io/en/master/api.html#the-built-in-replacement-functions>`_.
+       `API documentation for those functions <https://fastnumbers.readthedocs.io/en/main/api.html#the-built-in-replacement-functions>`_.
 
        - **PLEASE** read the quick start for these functions to fully
          understand the caveats before using them.
@@ -75,7 +75,7 @@ using the ``fastnumbers`` API.
 Error-Handling Functions
 ++++++++++++++++++++++++
 
-- `Error-handling function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-error-handling-functions>`_
+- `Error-handling function API <https://fastnumbers.readthedocs.io/en/main/api.html#the-error-handling-functions>`_
 
 ``try_float`` will be used to demonstrate the functionality of the
 ``try_*`` functions.
@@ -255,7 +255,7 @@ invalid type and b) the default value is ``fastnumbers.RAISE``, not
 Checking Functions
 ++++++++++++++++++
 
-- `Checking function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-checking-functions>`_
+- `Checking function API <https://fastnumbers.readthedocs.io/en/main/api.html#the-checking-functions>`_
 
 ``check_float`` will be used to demonstrate the functionality of the
 ``check_*`` functions, as well as the ``query_type`` function.
@@ -365,7 +365,7 @@ type.
 Drop-in Replacement Functions
 +++++++++++++++++++++++++++++
 
-- `Drop-in replacement function API <https://fastnumbers.readthedocs.io/en/master/api.html#the-built-in-replacement-functions>`_
+- `Drop-in replacement function API <https://fastnumbers.readthedocs.io/en/main/api.html#the-built-in-replacement-functions>`_
 
 **PLEASE** do not take it for granted that these functions will provide you
 with a speedup - they may not. Every platform, compiler, and data-set is
@@ -497,5 +497,5 @@ Seth M. Morton
 History
 -------
 
-Please visit the changelog `on GitHub <https://github.com/SethMMorton/fastnumbers/blob/master/CHANGELOG.md>`_
-or `in the documentation <https://fastnumbers.readthedocs.io/en/master/changelog.html>`_.
+Please visit the changelog `on GitHub <https://github.com/SethMMorton/fastnumbers/blob/main/CHANGELOG.md>`_
+or `in the documentation <https://fastnumbers.readthedocs.io/en/main/changelog.html>`_.
