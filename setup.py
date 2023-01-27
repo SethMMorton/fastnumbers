@@ -16,11 +16,9 @@ if sys.platform == "win32":
         "/wd4100",  # don't warn about unreferenced formal parameters
         "/wd4127",  # don't warn about constant conditional expressions
     ]
-    if "FN_DEBUG" in os.environ:
+    if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("/Od")
         compile_args.append("/Z7")
-    else:
-        compile_args.append("/O2")
 else:
     compile_args = [
         "-std=c++14",
@@ -28,11 +26,9 @@ else:
         "-Weffc++",
         "-Wpedantic",
     ]
-    if "FN_DEBUG" in os.environ:
+    if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("-O0")
         compile_args.append("-g")
-    else:
-        compile_args.append("-O2")
     if sys.platform == "darwin":
         compile_args.append("-Wno-c++17-extensions")
 

@@ -11,6 +11,10 @@ import sys
 my_python = sys.argv[1]
 other_args = sys.argv[2:]
 try:
+    # Don't use gdb unless requesting debugging mode
+    if not "FN_DEBUG" in os.environ:
+        raise OSError
+
     # Attempt to run pytest with debugger
     os.execlp(
         "gdb",
