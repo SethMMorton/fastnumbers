@@ -7,9 +7,6 @@ This file contains some files useful for development.
   that `bumpversion` cannot. Requires [`bump2version`](https://github.com/c4urself/bump2version),
   which is the maintained fork of [`bumpversion`](https://github.com/peritus/bumpversion).
   Not intended to be called directly, but rather by `tox -e bump`.
-- `ci-install-python.bash` - Code to install Python on Windows in Travis-CI.
-- `ci-update-path.bash` - Sourcing this file in Travis-CI will ensure Python is
-  on the PATH in Windows.
 - `clean.py` - This file cleans most files that are created during development.
   Run in the project home directory.
   Not intended to be called directly, but rather by `tox -e clean`.
@@ -19,6 +16,7 @@ This file contains some files useful for development.
   whereby it cannot run tests on extension modules. This file
   makes a local copy of `doctest.py` and patches it to be able to run
   on extension modules.
+- `test-runner.py` - Run tests in `gdb` if requested, otherwise just run regularly
 - `requirements.in` - Our direct requirements to run tests.
 - `requirements.txt` - All pinned requirements to run tests.
 - `run_coverage.sh` - A small shell one-liner placed into a file that
