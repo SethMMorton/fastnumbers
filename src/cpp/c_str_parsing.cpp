@@ -5,6 +5,7 @@
 // from both sides of the string, and that the sign has been removed.
 
 #include "fastnumbers/c_str_parsing.hpp"
+#include "fastnumbers/third_party/fast_float.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -19,28 +20,6 @@ static inline T ascii2int(const char c)
 
 /// A function that accepts an argument and does nothing
 static inline void do_nothing(const char) { }
-
-/// Map to the approprate scaling factor for an exponent value
-constexpr long double POWER_OF_TEN_SCALING_FACTOR[] = {
-    1E0L,   1E1L,   1E2L,   1E3L,   1E4L,   1E5L,   1E6L,   1E7L,   1E8L,   1E9L,
-    1E10L,  1E11L,  1E12L,  1E13L,  1E14L,  1E15L,  1E16L,  1E17L,  1E18L,  1E19L,
-    1E20L,  1E21L,  1E22L,  1E23L,  1E24L,  1E25L,  1E26L,  1E27L,  1E28L,  1E29L,
-    1E30L,  1E31L,  1E32L,  1E33L,  1E34L,  1E35L,  1E36L,  1E37L,  1E38L,  1E39L,
-    1E40L,  1E41L,  1E42L,  1E43L,  1E44L,  1E45L,  1E46L,  1E47L,  1E48L,  1E49L,
-    1E50L,  1E51L,  1E52L,  1E53L,  1E54L,  1E55L,  1E56L,  1E57L,  1E58L,  1E59L,
-    1E60L,  1E61L,  1E62L,  1E63L,  1E64L,  1E65L,  1E66L,  1E67L,  1E68L,  1E69L,
-    1E70L,  1E71L,  1E72L,  1E73L,  1E74L,  1E75L,  1E76L,  1E77L,  1E78L,  1E79L,
-    1E80L,  1E81L,  1E82L,  1E83L,  1E84L,  1E85L,  1E86L,  1E87L,  1E88L,  1E89L,
-    1E90L,  1E91L,  1E92L,  1E93L,  1E94L,  1E95L,  1E96L,  1E97L,  1E98L,  1E99L,
-    1E100L, 1E101L, 1E102L, 1E103L, 1E104L, 1E105L, 1E106L, 1E107L, 1E108L, 1E109L,
-    1E110L, 1E111L, 1E112L, 1E113L, 1E114L, 1E115L, 1E116L, 1E117L, 1E118L, 1E119L,
-    1E120L, 1E121L, 1E122L, 1E123L, 1E124L, 1E125L, 1E126L, 1E127L, 1E128L, 1E129L,
-    1E130L, 1E131L, 1E132L, 1E133L, 1E134L, 1E135L, 1E136L, 1E137L, 1E138L, 1E139L,
-    1E140L, 1E141L, 1E142L, 1E143L, 1E144L, 1E145L, 1E146L, 1E147L, 1E148L, 1E149L,
-};
-constexpr int32_t LEN_EXP_ARRAY
-    = sizeof(POWER_OF_TEN_SCALING_FACTOR) / sizeof(POWER_OF_TEN_SCALING_FACTOR[0]);
-constexpr int32_t MAX_EXP_VALUE = LEN_EXP_ARRAY - 1;
 
 // FORWARD DECLARATIONS
 template <typename Function>
@@ -187,58 +166,19 @@ long parse_int(const char* str, const char* end, bool& error, bool& overflow)
 
 double parse_float(const char* str, const char* end, bool& error)
 {
-    /* Parse integer part. */
-    uint64_t intvalue = 0UL;
-    bool valid = parse_integer_components(str, [&intvalue](const char c) {
-        intvalue *= 10UL;
-        intvalue += ascii2int<uint64_t>(c);
-    });
-
-    /* Parse decimal part. */
-    uint32_t decimal_len = 0;
-    valid = parse_decimal_components(
-                str,
-                [&intvalue, &decimal_len](const char c) {
-                    intvalue *= 10UL;
-                    intvalue += ascii2int<uint64_t>(c);
-                    decimal_len += 1U;
-                }
-            )
-        || valid;
-
-    /* Parse exponential part. */
-    int32_t expon = 0;
-    if (valid) {
-        int32_t exp_sign = 1;
-        valid = parse_exponent_components(
-            str,
-            [&exp_sign](const char c) {
-                if (c == '-') {
-                    exp_sign = -1;
-                }
-            },
-            [&expon](const char c) {
-                expon *= 10;
-                expon += ascii2int<int32_t>(c);
-            }
-        );
-        expon *= exp_sign;
+    // parse_float is not supposed to accept signed values, but from_chars
+    // will accept negative signs. To prevent accidental success on e.g. "+-3.14"
+    // we short-cicuit on a leading negative sign.
+    if (*str == '-') {
+        error = true;
+        return -1.0;
     }
-    expon -= decimal_len; /* Adjust the exponent by the # of decimal places */
 
-    error = !valid || str != end;
-    if (expon < 0) {
-        expon = std::abs(expon);
-        return static_cast<double>(
-            static_cast<long double>(intvalue)
-            / POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)]
-        );
-    } else {
-        return static_cast<double>(
-            static_cast<long double>(intvalue)
-            * POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)]
-        );
-    }
+    // Use a very fast and accurate string to double parser
+    double value;
+    const fast_float::from_chars_result res = fast_float::from_chars(str, end, value);
+    error = !(res.ptr == end && res.ec == std::errc());
+    return value;
 }
 
 void remove_valid_underscores(char* str, const char*& end, const bool based)
