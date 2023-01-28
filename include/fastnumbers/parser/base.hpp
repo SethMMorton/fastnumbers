@@ -71,29 +71,31 @@ public:
     }
 
     /// Is the stored number negative?
-    bool is_negative() const { return m_negative; }
+    virtual bool is_negative() const { return m_negative; }
 
     /// Access the user-given options for parsing
     const UserOptions& options() const { return m_options; }
 
-    /// Convert the stored object to a long (check error state)
-    /// Base implementation does nothing but throw a runtime error
-    virtual long as_int() = 0;
-
-    /// Convert the stored object to a double (check error state)
-    /// Base implementation does nothing but throw a runtime error
-    virtual double as_float() = 0;
-
     /// Convert the stored object to a python int (check error state)
-    /// Base implementation does nothing but throw a runtime error
     virtual PyObject* as_pyint() = 0;
 
     /// Convert the stored object to a python float (check error state)
-    /// Base implementation does nothing but throw a runtime error
     virtual PyObject* as_pyfloat() = 0;
 
     /// Check the type of the number.
     virtual NumberFlags get_number_type() const { return m_number_type; }
+
+    /// Check if the number is INF
+    virtual bool peek_inf() const { return false; }
+
+    /// Check if the number is NaN
+    virtual bool peek_nan() const { return false; }
+
+    /// Check if the should be parsed as an integer
+    virtual bool peek_try_as_int() const
+    {
+        return bool(get_number_type() & NumberType::Integer);
+    }
 
     /**
      * \brief Determine if a float is "intlike"

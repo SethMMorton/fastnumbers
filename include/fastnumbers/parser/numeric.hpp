@@ -13,6 +13,10 @@
  */
 class NumericParser final : public Parser {
 public:
+    /// Cached instance of zero for use in identifying negative numbers
+    static PyObject* PYTHON_ZERO;
+
+public:
     /// Construct with a Python object
     explicit NumericParser(PyObject* obj, const UserOptions& options)
         : Parser(ParserType::NUMERIC, options)
@@ -41,43 +45,19 @@ public:
     /// Descructor decreases reference count of the stored object
     ~NumericParser() { Py_XDECREF(m_obj); };
 
-    /// Convert the stored object to a long (check error state)
-    long as_int() override
+    /// Is the stored number negative?
+    bool is_negative() const override
     {
-        reset_error();
-
-        if (get_number_type() & NumberType::Integer) {
-            int overflow = 0;
-            const long value = PyLong_AsLongAndOverflow(m_obj, &overflow);
-            if (overflow) {
-                encountered_potential_overflow_error();
-                return -1L;
-            } else if (value == -1 && PyErr_Occurred()) {
-                PyErr_Clear();
-            }
-            return value;
+        // For floats, compare in C++-land.
+        // For everything else use Python's logic.
+        const NumberFlags flags = get_number_type();
+        if (flags & NumberType::Float && !(flags & NumberType::User)) {
+            return get_double() < 0;
+        } else if (!(flags & NumberType::INVALID)) {
+            return PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT);
+        } else {
+            return Parser::is_negative();
         }
-        encountered_conversion_error();
-        return -1L;
-    }
-
-    /// Convert the stored object to a double (check error state)
-    double as_float() override
-    {
-        reset_error();
-
-        if (get_number_type() & (NumberType::Float | NumberType::User)) {
-            const double value = PyFloat_AsDouble(m_obj);
-            if (value == -1.0 && PyErr_Occurred()) {
-                PyErr_Clear();
-            } else {
-                return value;
-            }
-        } else if (get_number_type() & NumberType::Float) {
-            return get_double();
-        }
-        encountered_conversion_error();
-        return -1.0;
     }
 
     /// Convert the stored object to a python int (check error state)
@@ -134,6 +114,12 @@ public:
 
         // If here, the object is not numeric.
         return NumberType::INVALID;
+    }
+
+    /// Check if the should be parsed as an integer
+    bool peek_try_as_int() const override
+    {
+        return bool(get_number_type() & NumberType::Integer);
     }
 
 private:

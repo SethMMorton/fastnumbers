@@ -15,8 +15,9 @@ constexpr std::size_t ASCII_MAX = 127;
  * \param str The string to parse, assumed to be non-NULL
  * \param end The end of the string being checked
  * \param error Flag to indicate if there was a parsing error
+ * \param overflow Flag to indicate if the string was long enough to overflow
  */
-long parse_int(const char* str, const char* end, bool& error);
+long parse_int(const char* str, const char* end, bool& error, bool& overflow);
 
 /**
  * \brief Convert a string to a double type
@@ -174,23 +175,6 @@ inline bool is_likely_int(const char* str, std::size_t len)
     return len > 0 && is_valid_digit(*str);
 }
 
-/**
- * \brief Detect if a string probably contains a float
- *
- * This is not a 100% assurance, but it is a gross check that
- * makes sure the string starts with a digit or '.' followed
- * by a digit..
- *
- * \param str The string to check, assumed to be non-NULL
- * \param len The length of the string
- */
-inline bool is_likely_float(const char* str, std::size_t len)
-{
-    return len > 0
-        && (is_valid_digit(*str)
-            || (*str == '.' && len > 1 && is_valid_digit(*(str + 1))));
-}
-
 // Define the number of digits in a float that fastnumbers is willing
 // to attempt to convert itself. For Clang and GNUC, it is known
 // that DBL_DIG - 4 works. It is known that DBL_DIG - 6 works for MSVC.
@@ -230,22 +214,3 @@ constexpr long FN_MIN_EXP = -19;
 #undef FASTNUMBERS_WIDE_EXP_RANGE
 
 #endif
-
-/**
- * \brief Guess if an int will overflow.
- *
- * \param start The string to check, assumed to be non-NULL
- * \param len The length of the string
- */
-inline bool int_might_overflow(const char*, const std::size_t len)
-{
-    return len > FN_MAX_INT_LEN;
-}
-
-/**
- * \brief Guess if a float will overflow.
- *
- * \param start The string to check, assumed to be non-NULL
- * \param len The length of the string
- */
-bool float_might_overflow(const char* start, const std::size_t len);

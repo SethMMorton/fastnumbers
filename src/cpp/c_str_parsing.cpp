@@ -53,8 +53,6 @@ template <typename NFunction, typename Function>
 static inline bool
 parse_exponent_components(const char*& str, NFunction sign_callback, Function callback);
 static inline bool parse_exponent_components(const char*& str);
-static inline bool neg_exp_ok(const char* str, std::size_t len);
-static inline bool pos_exp_ok(const char* str, std::size_t len);
 static inline uint32_t number_trailing_zeros(const char* start, const char* end);
 static inline int detect_base(const char* str, const char* end);
 static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
@@ -172,9 +170,10 @@ int string_contains_what(const char* str, const char* end, int base)
     return value;
 }
 
-long parse_int(const char* str, const char* end, bool& error)
+long parse_int(const char* str, const char* end, bool& error, bool& overflow)
 {
     long value = 0L;
+    overflow = (end - str) > FN_MAX_INT_LEN;
 
     /* Convert digits, if any. */
     bool valid = parse_integer_components(str, [&value](const char c) {
@@ -240,53 +239,6 @@ double parse_float(const char* str, const char* end, bool& error)
             * POWER_OF_TEN_SCALING_FACTOR[std::min(expon, MAX_EXP_VALUE)]
         );
     }
-}
-
-bool float_might_overflow(const char* start, const std::size_t len)
-{
-    // Locate the decimal place (if any).
-    const char* decimal_loc = static_cast<const char*>(std::memchr(start, '.', len));
-    const bool has_decimal = static_cast<bool>(decimal_loc);
-
-    // Find the exponent (if any) in the input.
-    // It is always after the exponent, usually close to the end, so
-    // we will start from the back. No need to include the stop
-    // location since that is either a decimal or the first digit
-    // which cannot be 'e' or 'E'.
-    const char* ptr = nullptr;
-    const char* exp = nullptr;
-    const char* stop = decimal_loc ? decimal_loc : start;
-    for (ptr = start + len - 1; ptr > stop; ptr--) {
-        if (*ptr == 'e' || *ptr == 'E') {
-            exp = ptr;
-            break;
-        }
-    }
-
-    // If the number of pre-exponent digits is greater than the known
-    // value it might overflow.
-    const std::size_t decimal_offset = static_cast<std::size_t>(has_decimal);
-    const std::size_t len_pre_exp = exp ? (exp - start) : len;
-    if (len_pre_exp - decimal_offset > FN_DBL_DIG) {
-        return true;
-    }
-
-    // If an exponent was found, ensure it is within chosen range.
-    if (exp) {
-        const bool neg = *(++exp) == '-'; // First remove 'e' or 'E'.
-        std::size_t exp_len = len - (exp - start);
-        if (is_sign(*exp)) {
-            exp += 1;
-            exp_len -= 1;
-        }
-        const bool exp_ok = neg ? neg_exp_ok(exp, exp_len) : pos_exp_ok(exp, exp_len);
-        if (!exp_ok) {
-            return true;
-        }
-    }
-
-    // Won't overflow
-    return false;
 }
 
 void remove_valid_underscores(char* str, const char*& end, const bool based)
@@ -462,42 +414,6 @@ bool parse_exponent_components(
 bool parse_exponent_components(const char*& str)
 {
     return parse_exponent_components(str, do_nothing, do_nothing);
-}
-
-#ifndef FASTNUMBERS_WIDE_EXP_RANGE
-/// Helper to check if an exponent number is in the allowed range
-static inline bool _exp_ok(const char* str, std::size_t len)
-{
-    return len == 1 || (len == 2 && (*str <= '1' || (*str == '1' && *(str + 1) <= '9')));
-}
-#endif
-
-/**
- * \brief Check if a negative exponent number is in the allowed range
- * \param str The string to check, assumed to be non-NULL
- * \param len The length of the string
- */
-bool neg_exp_ok(const char* str, std::size_t len)
-{
-#ifdef FASTNUMBERS_WIDE_EXP_RANGE
-    return len == 1 || (len == 2 && (*str <= '8' || (*str == '9' && *(str + 1) <= '8')));
-#else
-    return _exp_ok(str, len);
-#endif
-}
-
-/**
- * \brief Check if a positive exponent number is in the allowed range
- * \param str The string to check, assumed to be non-NULL
- * \param len The length of the string
- */
-bool pos_exp_ok(const char* str, std::size_t len)
-{
-#ifdef FASTNUMBERS_WIDE_EXP_RANGE
-    return len > 0 && len <= 2;
-#else
-    return _exp_ok(str, len);
-#endif
 }
 
 /**

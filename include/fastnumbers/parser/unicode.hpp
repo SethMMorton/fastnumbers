@@ -33,42 +33,12 @@ public:
     UnicodeParser& operator=(const UnicodeParser&) = default;
     ~UnicodeParser() = default;
 
-    /// Convert the stored object to a long (check error state)
-    long as_int() override
-    {
-        reset_error();
-
-        if (get_number_type() & NumberType::Integer) {
-            return sign() * m_digit;
-        }
-        encountered_conversion_error();
-        return -1L;
-    }
-
-    /// Convert the stored object to a double (check error state)
-    double as_float() override
-    {
-        reset_error();
-
-        const NumberFlags ntype = get_number_type();
-
-        if (ntype & NumberType::Integer) {
-            return static_cast<double>(sign() * m_digit);
-        } else if (ntype & NumberType::Float) {
-            return sign() * m_numeric;
-        }
-        encountered_conversion_error();
-        return -1.0;
-    }
-
     /// Convert the stored object to a python int (check error state)
     PyObject* as_pyint() override
     {
         reset_error();
-
-        const long value = as_int();
-        if (!errored()) {
-            return PyLong_FromLong(value);
+        if (get_number_type() & NumberType::Integer) {
+            return PyLong_FromLong(sign() * m_digit);
         }
         encountered_conversion_error();
         return nullptr;
@@ -79,10 +49,14 @@ public:
     {
         reset_error();
 
-        const double value = as_float();
-        if (!errored()) {
-            return PyFloat_FromDouble(value);
+        const NumberFlags ntype = get_number_type();
+
+        if (ntype & NumberType::Integer) {
+            return PyFloat_FromDouble(static_cast<double>(sign() * m_digit));
+        } else if (ntype & NumberType::Float) {
+            return PyFloat_FromDouble(sign() * m_numeric);
         }
+
         encountered_conversion_error();
         return nullptr;
     }
@@ -111,6 +85,12 @@ public:
 
         // If here, the object is not numeric.
         return NumberType::INVALID;
+    }
+
+    /// Check if the should be parsed as an integer
+    bool peek_try_as_int() const override
+    {
+        return bool(get_number_type() & NumberType::Integer);
     }
 
 private:

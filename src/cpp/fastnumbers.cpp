@@ -11,6 +11,7 @@
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 #include "fastnumbers/version.hpp"
@@ -1201,6 +1202,7 @@ PyObject* Selectors::INPUT = nullptr;
 PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
+PyObject* NumericParser::PYTHON_ZERO = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1244,6 +1246,7 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     Py_DecRef(neg_inf_str);
     Py_DecRef(pos_nan_str);
     Py_DecRef(neg_nan_str);
+    NumericParser::PYTHON_ZERO = PyLong_FromLong(0L);
 
     return m;
 }
