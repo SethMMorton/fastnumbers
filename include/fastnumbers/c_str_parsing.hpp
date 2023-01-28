@@ -14,10 +14,11 @@ constexpr std::size_t ASCII_MAX = 127;
  *
  * \param str The string to parse, assumed to be non-NULL
  * \param end The end of the string being checked
+ * \param base The base to assume when checking an integer, 0 is "guess".
  * \param error Flag to indicate if there was a parsing error
  * \param overflow Flag to indicate if the string was long enough to overflow
  */
-long parse_int(const char* str, const char* end, bool& error, bool& overflow);
+long parse_int(const char* str, const char* end, int base, bool& error, bool& overflow);
 
 /**
  * \brief Convert a string to a double type

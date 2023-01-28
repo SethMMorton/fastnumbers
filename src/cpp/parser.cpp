@@ -71,27 +71,26 @@ PyObject* CharacterParser::as_pyint()
 {
     reset_error();
 
-    // If looking for base 10, we can support the fast path
-    // integer parsing. We use this method even if the result overflows,
+    // We use the fast path method even if the result overflows,
     // so that we can determine if the integer was at least valid.
     // If it was valid but overflowed, we use Python's parser, otherwise
-    // return an error early.
-    bool error = true;
-    bool likely_overflow = true;
-    long result;
-    if (options().get_base() == 10) {
-        result = parse_int(m_start, end(), error, likely_overflow);
-        if (error && has_valid_underscores()) {
-            Buffer buffer(m_start, m_str_len);
-            buffer.remove_valid_underscores();
-            result = parse_int(buffer.start(), buffer.end(), error, likely_overflow);
-        }
-        if (error) {
-            encountered_conversion_error();
-            return nullptr;
-        }
+    // return an error.
+    // The only thing special handling we need is underscores.
+    bool error;
+    bool overflow;
+    long result = parse_int(m_start, end(), options().get_base(), error, overflow);
+    if (error && has_valid_underscores()) {
+        Buffer buffer(m_start, m_str_len);
+        buffer.remove_valid_underscores(options().get_base() != 10);
+        result = parse_int(
+            buffer.start(), buffer.end(), options().get_base(), error, overflow
+        );
     }
-    if (!error && !likely_overflow) {
+    if (error) {
+        encountered_conversion_error();
+        return nullptr;
+    }
+    if (!overflow) {
         return PyLong_FromLong(sign() * result);
     }
 

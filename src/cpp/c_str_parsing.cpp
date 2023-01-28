@@ -7,6 +7,7 @@
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/third_party/fast_float.h"
 #include <algorithm>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -149,17 +150,50 @@ int string_contains_what(const char* str, const char* end, int base)
     return value;
 }
 
-long parse_int(const char* str, const char* end, bool& error, bool& overflow)
+long parse_int(const char* str, const char* end, int base, bool& error, bool& overflow)
 {
-    long value = 0L;
-    overflow = (end - str) > FN_MAX_INT_LEN;
+    const std::size_t len = static_cast<std::size_t>(end - str);
 
-    /* Convert digits, if any. */
+    // If the base needs to be guessed, do so now and get it over with.
+    if (base == 0) {
+        base = detect_base(str, end);
+    }
+
+    // Negative bases are illegal.
+    if (base < 0) {
+        overflow = false;
+        error = true;
+        return -1;
+    }
+
+    // Use std::from_chars for all but base-10.
+    if (base != 10) {
+        // Skip leading characters for non-base 10 ints.
+        if (len > 1 && str[0] == '0' && is_base_prefix(str[1], base)) {
+            str += 2;
+        }
+
+        // Use a very fast and accurate string to integer parser
+        // that will report back if there was an overflow (which
+        // we propagete back to the user).
+        long value;
+        const std::from_chars_result res = std::from_chars(str, end, value, base);
+        error = res.ptr != end || res.ec == std::errc::invalid_argument;
+        overflow = res.ec == std::errc::result_out_of_range;
+        return value;
+    }
+
+    // We use our own method for base-10 because we can omit some overflow
+    // checking and get faster results.
+    // We just assume overflow if the length of the string is over a certain value.
+    overflow = len > FN_MAX_INT_LEN;
+
+    // Convert digits.
+    long value = 0L;
     bool valid = parse_integer_components(str, [&value](const char c) {
         value *= 10L;
         value += ascii2int<long>(c);
     });
-
     error = !valid || str != end;
     return value;
 }
