@@ -17,11 +17,9 @@
  */
 inline void strip_trailing_whitespace(const char* start, const char*& end)
 {
-    end -= 1;
-    while (start < end && is_whitespace(*end)) {
+    while (start < end && is_whitespace(*(end - 1))) {
         end -= 1;
     }
-    end += 1;
 }
 
 CharacterParser::CharacterParser(

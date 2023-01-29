@@ -12,13 +12,6 @@
 #include <cstdint>
 #include <cstring>
 
-/// Convert a character to an integer in the desired type
-template <typename T>
-static inline T ascii2int(const char c)
-{
-    return static_cast<T>(c - '0');
-}
-
 /// A function that accepts an argument and does nothing
 static inline void do_nothing(const char) { }
 
@@ -111,7 +104,7 @@ int string_contains_what(const char* str, const char* end, int base)
             },
             [&expon](const char c) {
                 expon *= 10;
-                expon += ascii2int<uint32_t>(c);
+                expon += to_digit<uint32_t>(c);
             }
         );
         const char* exp_end = str;
@@ -192,7 +185,7 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
     long value = 0L;
     bool valid = parse_integer_components(str, [&value](const char c) {
         value *= 10L;
-        value += ascii2int<long>(c);
+        value += to_digit<long>(c);
     });
     error = !valid || str != end;
     return value;
@@ -422,11 +415,14 @@ int detect_base(const char* str, const char* end)
     const std::size_t len = static_cast<std::size_t>(end - str);
     if (str[0] != '0' || len == 1) {
         return 10;
-    } else if (str[1] == 'x' || str[1] == 'X') {
+    }
+
+    const char lowered = lowercase(str[1]);
+    if (lowered == 'x') {
         return 16;
-    } else if (str[1] == 'o' || str[1] == 'O') {
+    } else if (lowered == 'o') {
         return 8;
-    } else if (str[1] == 'b' || str[1] == 'B') {
+    } else if (lowered == 'b') {
         return 2;
     } else
         /* "old" (C-style) octal literal illegal in 3.x. */
@@ -448,8 +444,8 @@ bool is_valid_digit_arbitrary_base(const char c, const int base)
     if (base < 10) {
         return c >= '0' && c <= (static_cast<int>('0') + base);
     } else {
+        const char lowered = lowercase(c);
         const char offset = static_cast<char>(base) - 10;
-        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'a' + offset)
-            || (c >= 'A' && c <= 'A' + offset);
+        return is_valid_digit(c) || (lowered >= 'a' && lowered <= 'a' + offset);
     }
 }

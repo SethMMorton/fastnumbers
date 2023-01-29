@@ -1,11 +1,38 @@
 #pragma once
 
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 
-/// Largest allowed value for an ASCII character
-constexpr std::size_t ASCII_MAX = 127;
+/// Table of what characters are classified as whitespace
+constexpr bool WHITESPACE_TABLE[]
+    = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/// Table of what characters are classified as digits
+constexpr int DIGIT_TABLE[]
+    = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 /**
  * \brief Convert a string to a long type
@@ -79,27 +106,52 @@ constexpr long FN_MAX_INT_LEN
     = std::numeric_limits<unsigned long>::max() == 9223372036854775807 ? 18 : 9;
 
 /**
+ * \brief Lowercase a character - does no error checking
+ */
+constexpr inline char lowercase(const char c)
+{
+    // The ASCII standard was quite clever... upper- and lower-case
+    // letters only differ from each other by the 32 bit, otherwise
+    // they are identical. ORing the 32-bit forces lowercase.
+    return static_cast<char>(c | 32);
+}
+
+/**
  * \brief Determine if a character is whitespace
  */
-inline bool is_whitespace(const char c)
+constexpr inline bool is_whitespace(const char c)
 {
-    const unsigned char cu = static_cast<unsigned char>(c);
-    return ::isspace(cu) && cu < ASCII_MAX;
+    // Using a table was determined through performance testing to be
+    // many times faster than std::isspace, and twice as fast as using
+    // a switch statement.
+    return WHITESPACE_TABLE[static_cast<uint8_t>(c)];
+}
+
+/**
+ * \brief Convert a character to a digit, returns -1 on failure.
+ */
+template <typename T>
+constexpr inline T to_digit(const char c)
+{
+    // Using a table was determined through performance testing to be
+    // three times faster than c - '0' or a switch statement.
+    return static_cast<T>(DIGIT_TABLE[static_cast<uint8_t>(c)]);
 }
 
 /**
  * \brief Determine if a character represents a digit
  */
-inline bool is_valid_digit(const char c)
+constexpr inline bool is_valid_digit(const char c)
 {
-    const unsigned char cu = static_cast<unsigned char>(c);
-    return ::isdigit(cu) && cu < ASCII_MAX;
+    // Using a table was determined through performance testing to be
+    // faster than std::isdigit or a switch statement.
+    return to_digit<int>(c) >= 0;
 }
 
 /**
  * \brief Determine if a character is '-' or '+'
  */
-inline bool is_sign(const char c)
+constexpr inline bool is_sign(const char c)
 {
     return c == '-' || c == '+';
 }
@@ -107,19 +159,25 @@ inline bool is_sign(const char c)
 /**
  * \brief Determine if a character a prefix for base 2, 8, or 16
  */
-inline bool is_base_prefix(const char c)
+constexpr inline bool is_base_prefix(const char c)
 {
-    return c == 'x' || c == 'X' || c == 'o' || c == 'O' || c == 'b' || c == 'B';
+    // The ASCII standard was quite clever... upper- and lower-case
+    // letters only differ from each other by the 32 bit, otherwise
+    // they are identical.
+    // So, we can OR the 32 bit to force the character to be
+    // lowercase and then just check against the lowercase characters.
+    const char lowered = lowercase(c);
+    return (lowered == 'x') || (lowered == 'o') || (lowered == 'b');
 }
 
 /**
  * \brief Determine if a character a prefix for a specific base 2, 8, or 16
  */
-inline bool is_base_prefix(const char c, const int base)
+constexpr inline bool is_base_prefix(const char c, const int base)
 {
-    return (base == 16 && (c == 'x' || c == 'X'))
-        || (base == 8 && (c == 'o' || c == 'O'))
-        || (base == 2 && (c == 'b' || c == 'B'));
+    const char lowered = lowercase(c);
+    return (base == 16 && (lowered == 'x')) || (base == 8 && (lowered == 'o'))
+        || (base == 2 && (lowered == 'b'));
 }
 
 /**
@@ -131,17 +189,31 @@ inline bool is_base_prefix(const char c, const int base)
  * \param str The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-inline bool quick_detect_infinity(const char* str, const std::size_t len)
+constexpr inline bool quick_detect_infinity(const char* str, const std::size_t len)
 {
+    // The ASCII standard was quite clever... upper- and lower-case
+    // letters only differ from each other by the 32 bit, otherwise
+    // they are identical. So, we can use the XOR operator against
+    // lowercase "inf" and accumulate the results - if all bits are
+    // zero or if only the 32 bit is one that means that the string
+    // contained a case-insensitive INF.
     switch (len) {
-    case 3:
-        return (str[0] == 'i' || str[0] == 'I') && (str[1] == 'n' || str[1] == 'N')
-            && (str[2] == 'f' || str[2] == 'F');
-    case 8:
-        return (str[0] == 'i' || str[0] == 'I') && (str[1] == 'n' || str[1] == 'N')
-            && (str[2] == 'f' || str[2] == 'F') && (str[3] == 'i' || str[3] == 'I')
-            && (str[4] == 'n' || str[4] == 'N') && (str[5] == 'i' || str[5] == 'I')
-            && (str[6] == 't' || str[6] == 'T') && (str[7] == 'y' || str[7] == 'Y');
+    case 3: {
+        const uint8_t accumulator = (str[0] ^ 'i') | (str[1] ^ 'n') | (str[2] ^ 'f');
+        return accumulator == 0 || accumulator == 32;
+    }
+    case 8: {
+        uint8_t accumulator = 0;
+        accumulator |= (str[0] ^ 'i');
+        accumulator |= (str[1] ^ 'n');
+        accumulator |= (str[2] ^ 'f');
+        accumulator |= (str[3] ^ 'i');
+        accumulator |= (str[4] ^ 'n');
+        accumulator |= (str[5] ^ 'i');
+        accumulator |= (str[6] ^ 't');
+        accumulator |= (str[7] ^ 'y');
+        return accumulator == 0 || accumulator == 32;
+    }
     default:
         return false;
     }
@@ -156,10 +228,19 @@ inline bool quick_detect_infinity(const char* str, const std::size_t len)
  * \param str The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-inline bool quick_detect_nan(const char* str, const std::size_t len)
+constexpr inline bool quick_detect_nan(const char* str, const std::size_t len)
 {
-    return len == 3 && (str[0] == 'n' || str[0] == 'N')
-        && (str[1] == 'a' || str[1] == 'A') && (str[2] == 'n' || str[2] == 'N');
+    if (len != 3) {
+        return false;
+    }
+    // The ASCII standard was quite clever... upper- and lower-case
+    // letters only differ from each other by the 32 bit, otherwise
+    // they are identical. So, we can use the XOR operator against
+    // lowercase "nan" and accumulate the results - if all bits are
+    // zero or if only the 32 bit is one that means that the string
+    // contained a case-insensitive NaN.
+    const uint8_t accumulator = (str[0] ^ 'n') | (str[1] ^ 'a') | (str[2] ^ 'n');
+    return accumulator == 0 || accumulator == 32;
 }
 
 /**
@@ -171,7 +252,7 @@ inline bool quick_detect_nan(const char* str, const std::size_t len)
  * \param str The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-inline bool is_likely_int(const char* str, std::size_t len)
+constexpr inline bool is_likely_int(const char* str, std::size_t len)
 {
     return len > 0 && is_valid_digit(*str);
 }
