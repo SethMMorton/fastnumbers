@@ -9,7 +9,6 @@
 #include <Python.h>
 
 #include "fastnumbers/argparse.hpp"
-#include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/implementation.hpp"
 #include "fastnumbers/parser/numeric.hpp"
@@ -1157,10 +1156,6 @@ PyMODINIT_FUNC PyInit_fastnumbers()
 
     // Add module level constants.
     PyModule_AddStringConstant(m, "__version__", FASTNUMBERS_VERSION);
-    PyModule_AddIntConstant(m, "max_int_len", FN_MAX_INT_LEN);
-    PyModule_AddIntConstant(m, "dig", FN_DBL_DIG);
-    PyModule_AddIntConstant(m, "max_exp", FN_MAX_EXP);
-    PyModule_AddIntConstant(m, "min_exp", FN_MIN_EXP);
 
     // Selectors
     Selectors::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);

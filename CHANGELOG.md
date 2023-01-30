@@ -30,6 +30,8 @@ Unreleased
 
 ### Removed
 - Support for Python 3.6
+- Removed the undocumentente `dig`, `max_exp`, `min_exp`, and `max_int_len`
+  module-level constants, as they are now meaningless
 
 [3.2.1] - 2021-11-02
 ---

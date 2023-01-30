@@ -19,6 +19,21 @@ static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
 
 // END FORWARD DECLARATIONS, BEGIN DEFINITITONS
 
+/**
+ * \brief Maximum number of digits we allow in an integer for conversion
+ *
+ * The number of digits in an int that fastnumbers is willing
+ * to attempt to convert itself. This is entirely based on the size
+ * of a this compiler's long, since the long is what Python uses to
+ * represent an int under the hood - use one less than the maximum
+ * length of a long.
+ *
+ * 64-bit int max == 9223372036854775807; len('9223372036854775807') - 1 == 18
+ * 32-bit int max == 2147483647; len('2147483647') - 1 == 9
+ */
+constexpr long FN_MAX_INT_LEN
+    = std::numeric_limits<unsigned long>::max() == 9223372036854775807 ? 18 : 9;
+
 /*********************/
 /* EXPOSED FUNCTIONS */
 /*********************/

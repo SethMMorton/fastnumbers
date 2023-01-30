@@ -92,21 +92,6 @@ int string_contains_what(const char* str, const char* end, int base);
 void remove_valid_underscores(char* str, const char*& end, const bool based);
 
 /**
- * \brief Maximum number of digits we allow in an integer for conversion
- *
- * The number of digits in an int that fastnumbers is willing
- * to attempt to convert itself. This is entirely based on the size
- * of a this compiler's long, since the long is what Python uses to
- * represent an int under the hood - use one less than the maximum
- * length of a long.
- *
- * 64-bit int max == 9223372036854775807; len('9223372036854775807') - 1 == 18
- * 32-bit int max == 2147483647; len('2147483647') - 1 == 9
- */
-constexpr long FN_MAX_INT_LEN
-    = std::numeric_limits<unsigned long>::max() == 9223372036854775807 ? 18 : 9;
-
-/**
  * \brief Lowercase a character - does no error checking
  */
 constexpr inline char lowercase(const char c)
@@ -299,43 +284,3 @@ constexpr inline bool is_likely_int(const char* str, std::size_t len)
 {
     return len > 0 && is_valid_digit(*str);
 }
-
-// Define the number of digits in a float that fastnumbers is willing
-// to attempt to convert itself. For Clang and GNUC, it is known
-// that DBL_DIG - 4 works. It is known that DBL_DIG - 6 works for MSVC.
-// To be safe, any compiler not known during fastnumbers testing will
-// use DBL_DIG - 6.
-// Also define the largest and smallest exponent that
-// fastnumbers is willing attempt to convert itself. For Clang and GNUC,
-// it is known that larger numbers work than MSVC.
-// To be safe, any compiler not known during fastnumbers testing will
-// use the smaller numbers.
-#if defined(__clang__) || defined(__GNUC__)
-
-/// Number of float digits fastnumbers will convert itself
-constexpr long FN_DBL_DIG = std::numeric_limits<double>::digits10 - 4;
-
-/// Most positive exponent fastumbers will convert itself
-constexpr long FN_MAX_EXP = 99;
-
-/// Most negative exponent fastumbers will convert itself
-constexpr long FN_MIN_EXP = -98;
-
-/// Allow the preprocessor to be able to dispatch on this decision
-#define FASTNUMBERS_WIDE_EXP_RANGE
-
-#else
-
-/// Number of float digits fastnumbers will convert itself
-constexpr long FN_DBL_DIG = std::numeric_limits<double>::digits10 - 6;
-
-/// Most positive exponent fastumbers will convert itself
-constexpr long FN_MAX_EXP = 19;
-
-/// Most negative exponent fastumbers will convert itself
-constexpr long FN_MIN_EXP = -19;
-
-/// Allow the preprocessor to be able to dispatch on this decision
-#undef FASTNUMBERS_WIDE_EXP_RANGE
-
-#endif
