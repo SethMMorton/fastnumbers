@@ -17,6 +17,8 @@ Unreleased
 - `query_type` now sets `allow_underscores` to `False` by default
 - Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45)
   and [#56](https://github.com/SethMMorton/fastnumbers/issues/56))
+- All functions now use use `METH_FASTCALL` for pass arguments from
+  Python to C (Issue [#59](https://github.com/SethMMorton/fastnumbers/issues/59))
 
 ### Deprecated
 - `isreal`, `isfloat`, `isint`, and `isintlike` are deprecated in
