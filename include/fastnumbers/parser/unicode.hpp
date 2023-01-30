@@ -61,6 +61,40 @@ public:
         return nullptr;
     }
 
+    /**
+     * \brief Convert the stored object to a python float but possible
+     *        coerce to an integer (check error state)
+     * \param force_int Force the output to integer (takes precidence)
+     * \param coerce Return as integer if the float is int-like
+     */
+    PyObject* as_pyfloat(const bool force_int, const bool coerce) override
+    {
+        reset_error();
+
+        const NumberFlags ntype = get_number_type();
+
+        // Quit here if not a valid number
+        if (!(ntype & (NumberType::Integer | NumberType::Float))) {
+            encountered_conversion_error();
+            return nullptr;
+        }
+
+        if (force_int) {
+            return (ntype & NumberType::Integer) ? PyLong_FromLong(sign() * m_digit)
+                                                 : PyLong_FromDouble(sign() * m_numeric);
+        } else if (coerce) {
+            return (ntype & NumberType::Integer)
+                ? PyLong_FromLong(sign() * m_digit)
+                : ((ntype & NumberType::IntLike)
+                       ? PyLong_FromDouble(sign() * m_numeric)
+                       : PyFloat_FromDouble(sign() * m_numeric));
+        } else {
+            return (ntype & NumberType::Integer)
+                ? PyFloat_FromDouble(static_cast<double>(sign() * m_digit))
+                : PyFloat_FromDouble(sign() * m_numeric);
+        }
+    }
+
     /// Check the type of the number.
     NumberFlags get_number_type() const override
     {

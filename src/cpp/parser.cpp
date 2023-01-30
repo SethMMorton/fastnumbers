@@ -107,7 +107,7 @@ PyObject* CharacterParser::as_pyint()
     return retval;
 }
 
-PyObject* CharacterParser::as_pyfloat()
+double CharacterParser::as_double()
 {
     reset_error();
 
@@ -123,9 +123,35 @@ PyObject* CharacterParser::as_pyfloat()
     }
     if (error) {
         encountered_conversion_error();
+        return -1.0;
+    }
+    return sign() * result;
+}
+
+PyObject* CharacterParser::as_pyfloat()
+{
+    const double result = as_double();
+    return errored() ? nullptr : PyFloat_FromDouble(result);
+}
+
+PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)
+{
+    const double result = as_double();
+
+    // Fail fast on error
+    if (errored()) {
         return nullptr;
     }
-    return PyFloat_FromDouble(static_cast<double>(sign()) * result);
+
+    // force_int takes precidence, and coerce conditionally returns as an integer
+    if (force_int) {
+        return PyLong_FromDouble(result);
+    } else if (coerce) {
+        return Parser::float_is_intlike(result) ? PyLong_FromDouble(result)
+                                                : PyFloat_FromDouble(result);
+    } else {
+        return PyFloat_FromDouble(result);
+    }
 }
 
 NumberFlags CharacterParser::get_number_type() const

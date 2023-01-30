@@ -41,6 +41,14 @@ public:
     /// Convert the stored object to a python float (check error state)
     PyObject* as_pyfloat() override;
 
+    /**
+     * \brief Convert the stored object to a python float but possible
+     *        coerce to an integer (check error state)
+     * \param force_int Force the output to integer (takes precidence)
+     * \param coerce Return as integer if the float is int-like
+     */
+    PyObject* as_pyfloat(const bool force_int, const bool coerce) override;
+
     /// Check the type of the number.
     NumberFlags get_number_type() const override;
 
@@ -94,6 +102,9 @@ private:
     {
         return m_start == nullptr ? nullptr : (m_start + m_str_len);
     }
+
+    /// The string as a double (check error state)
+    double as_double();
 
     /// Add FromStr to the return NumberFlags
     static constexpr NumberFlags flag_wrap(const NumberFlags val)

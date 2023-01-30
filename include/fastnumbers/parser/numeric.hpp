@@ -74,6 +74,28 @@ public:
         return PyNumber_Float(m_obj);
     }
 
+    /**
+     * \brief Convert the stored object to a python float but possible
+     *        coerce to an integer (check error state)
+     * \param force_int Force the output to integer (takes precidence)
+     * \param coerce Return as integer if the float is int-like
+     */
+    PyObject* as_pyfloat(const bool force_int, const bool coerce) override
+    {
+        reset_error();
+        if (force_int) {
+            return PyNumber_Long(m_obj);
+        } else if (coerce) {
+            if (get_number_type() & (NumberType::IntLike | NumberType::Integer)) {
+                return PyNumber_Long(m_obj);
+            } else {
+                return PyNumber_Float(m_obj);
+            }
+        } else {
+            return PyNumber_Float(m_obj);
+        }
+    }
+
     /// Check the type of the number.
     NumberFlags get_number_type() const override
     {
