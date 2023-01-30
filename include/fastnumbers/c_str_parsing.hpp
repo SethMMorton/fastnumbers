@@ -128,6 +128,14 @@ constexpr inline bool is_whitespace(const char c)
 }
 
 /**
+ * \brief Advance a string's pointer while whitespace is found
+ */
+#define consume_whitespace(str, end)                                                    \
+    while ((str) != (end) && is_whitespace(*(str))) {                                   \
+        str += 1;                                                                       \
+    }
+
+/**
  * \brief Convert a character to a digit, returns -1 on failure.
  */
 template <typename T>
@@ -147,6 +155,14 @@ constexpr inline bool is_valid_digit(const char c)
     // faster than std::isdigit or a switch statement.
     return to_digit<int>(c) >= 0;
 }
+
+/**
+ * \brief Advance a string's pointer while digits are found
+ */
+#define consume_digits(str, end)                                                        \
+    while ((str) != (end) && is_valid_digit(*(str))) {                                  \
+        str += 1;                                                                       \
+    }
 
 /**
  * \brief Determine if a character is '-' or '+'

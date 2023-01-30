@@ -1188,6 +1188,7 @@ class TestCheckingFunctions:
     @example("e")
     @example("e8")
     @example(".")
+    @example(b"0e\x00")
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_if_given_non_number_string(
         self, func: IdentificationFuncs, x: str

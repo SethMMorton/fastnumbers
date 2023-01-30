@@ -12,20 +12,7 @@
 #include <cstdint>
 #include <cstring>
 
-/// A function that accepts an argument and does nothing
-static inline void do_nothing(const char) { }
-
 // FORWARD DECLARATIONS
-template <typename Function>
-static inline bool parse_integer_components(const char*& str, Function callback);
-static inline bool parse_integer_components(const char*& str);
-template <typename Function>
-static inline bool parse_decimal_components(const char*& str, Function callback);
-static inline bool parse_decimal_components(const char*& str);
-template <typename NFunction, typename Function>
-static inline bool
-parse_exponent_components(const char*& str, NFunction sign_callback, Function callback);
-static inline bool parse_exponent_components(const char*& str);
 static inline uint32_t number_trailing_zeros(const char* start, const char* end);
 static inline int detect_base(const char* str, const char* end);
 static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
@@ -38,92 +25,110 @@ static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
 
 int string_contains_what(const char* str, const char* end, int base)
 {
-    /* Define possible return values */
+    const std::size_t len = static_cast<std::size_t>(end - str);
+
+    // Define possible return values
     static constexpr int INVALID = 0;
     static constexpr int INTEGER = 1;
     static constexpr int FLOAT = 2;
     static constexpr int INTLIKE_FLOAT = 3;
 
+    // If the base needs to be guessed, do so now and get it over with.
     if (base == 0) {
         base = detect_base(str, end);
     }
 
-    /* Special-case non-base-10 integer detection */
-    if (base < 0) {
+    // Negative bases are illegal. So is zero length.
+    if (base < 0 || len == 0) {
         return INVALID;
-    } else if (base != 10) {
-        const std::size_t len = static_cast<std::size_t>(end - str);
+    }
 
-        /* Skip leading characters for non-base 10 ints. */
+    // Special-case non-base 10.
+    if (base != 10) {
+        // Skip leading characters for non-base 10 ints.
         if (len > 1 && str[0] == '0' && is_base_prefix(str[1], base)) {
             str += 2;
         }
 
-        /* The rest behaves as normal. */
-        bool valid = false;
-        while (is_valid_digit_arbitrary_base(*str, base)) {
+        // The rest behaves as normal.
+        const char* digit_start = str;
+        while (str != end && is_valid_digit_arbitrary_base(*str, base)) {
             str += 1;
-            valid = true;
         }
-        return (valid && str == end) ? INTEGER : INVALID;
+        return (str == end && str != digit_start) ? INTEGER : INVALID;
     }
 
-    /* Before decimal. Keep track of number of digits read. */
+    // Before decimal. Keep track of the start location.
+    bool valid = false;
     int value = INVALID;
     const char* int_start = str;
-    bool valid = parse_integer_components(str);
-    if (valid) {
+    consume_digits(str, end);
+    if (str != int_start) {
+        valid = true;
         value = INTEGER;
     }
 
-    /* Decimal part of float. Keep track of number of digits read */
-    /* as well as beginning and end locations. */
+    // Decimal part of float. Keep track of number of digits read
+    // as well as beginning and end locations.
     const char* decimal_start = str;
     uint32_t dec_length = 0;
-    valid = parse_decimal_components(
-                str,
-                [&dec_length](const char) {
-                    dec_length += 1;
-                }
-            )
-        || valid;
+    if (str != end && *str == '.') {
+        str += 1;
+        const char* dec_digits_start = str;
+        consume_digits(str, end);
+        dec_length = static_cast<uint32_t>(str - dec_digits_start);
+        valid = valid || dec_length > 0;
+    }
     const char* decimal_end = str;
+
+    // If there are any decimal components then we are looking at a float.
     if (valid && decimal_end != decimal_start) {
         value = FLOAT;
     }
 
-    /* Exponential part of float. Parse the magnitude. */
+    // Exponential part of float. Parse the magnitude.
     uint32_t expon = 0;
     bool exp_negative = false;
     if (valid) {
         const char* exp_start = str;
-        valid = parse_exponent_components(
-            str,
-            [&exp_negative](const char) {
-                exp_negative = true;
-            },
-            [&expon](const char c) {
-                expon *= 10;
-                expon += to_digit<uint32_t>(c);
+        if (str != end && (*str == 'e' || *str == 'E')) {
+
+            // Skip the 'e' and any sign that might be present.
+            str += 1;
+            if (str != end && is_sign(*str)) {
+                exp_negative = *str == '-';
+                str += 1;
             }
-        );
+
+            // Parse the exponent as a digit.
+            const char* exp_digit_start = str;
+            int32_t this_char_as_digit = 0L;
+            while (str != end && (this_char_as_digit = to_digit<int32_t>(*str)) >= 0) {
+                expon *= 10L;
+                expon += this_char_as_digit;
+                str += 1;
+            }
+
+            // If all we found was e.g. "e" or "e-" then it's not valid.
+            valid = str != exp_digit_start;
+        }
         const char* exp_end = str;
-        if (valid && exp_end != exp_start) {
+
+        // If we found an exponent AND it was parsed validly then this is a float.
+        if (exp_end != exp_start && valid) {
             value = FLOAT;
         }
     }
 
-    /* If the parsing was not valid or we are not at the end of the string
-     * then the string is invalid.
-     * Othewise, do a check to see if it is an *intlike* float.
-     */
+    // If the parsing was not valid or we are not at the end of the string
+    // then the string is invalid.
+    // Othewise, do a check to see if it is an *intlike* float.
     if (!valid || str != end) {
         return INVALID;
     } else if (value == FLOAT) {
-        /* If we "move the decimal place" left or right depending on
-         * exponent sign and magnitude, all digits after the decimal
-         * must be zero.
-         */
+        // If we "move the decimal place" left or right depending on
+        // exponent sign and magnitude, all digits after the decimal
+        // must be zero.
         const unsigned int_trailing_zeros
             = number_trailing_zeros(int_start, decimal_start);
         const unsigned dec_trailing_zeros = decimal_start == decimal_end
@@ -152,8 +157,8 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
         base = detect_base(str, end);
     }
 
-    // Negative bases are illegal.
-    if (base < 0) {
+    // Negative bases are illegal. So is zero-length
+    if (base < 0 || len == 0) {
         overflow = false;
         error = true;
         return -1;
@@ -181,13 +186,21 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
     // We just assume overflow if the length of the string is over a certain value.
     overflow = len > FN_MAX_INT_LEN;
 
-    // Convert digits.
+    // If an overflow is going to happen, just evaluate that this looks like
+    // an integer. Otherwise, actually calculate the value contained in the string.
     long value = 0L;
-    bool valid = parse_integer_components(str, [&value](const char c) {
-        value *= 10L;
-        value += to_digit<long>(c);
-    });
-    error = !valid || str != end;
+    if (overflow) {
+        consume_digits(str, end);
+    } else {
+        // Convert digits.
+        long this_char_as_digit = 0L;
+        while (str != end && (this_char_as_digit = to_digit<long>(*str)) >= 0) {
+            value *= 10L;
+            value += this_char_as_digit;
+            str += 1;
+        }
+    }
+    error = str != end;
     return value;
 }
 
@@ -196,7 +209,7 @@ double parse_float(const char* str, const char* end, bool& error)
     // parse_float is not supposed to accept signed values, but from_chars
     // will accept negative signs. To prevent accidental success on e.g. "+-3.14"
     // we short-cicuit on a leading negative sign.
-    if (*str == '-') {
+    if (str != end && *str == '-') {
         error = true;
         return -1.0;
     }
@@ -258,11 +271,11 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
         }
 
         // Now search for simpler valid underscores.
-        // use hex as the base because it is the most inclusive.
+        // use base 36 as the base because it is the most inclusive.
         for (; i < len; i++) {
             if (str[i] == '_' && i > 0 && i < len - 1
-                && is_valid_digit_arbitrary_base(str[i - 1], 16)
-                && is_valid_digit_arbitrary_base(str[i + 1], 16)) {
+                && is_valid_digit_arbitrary_base(str[i - 1], 36)
+                && is_valid_digit_arbitrary_base(str[i + 1], 36)) {
                 offset += 1;
                 continue;
             }
@@ -284,104 +297,6 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
 /**************************/
 /* IMPLEMENTATION DETAILS */
 /**************************/
-
-/**
- * \brief Scan a string while integer components are found
- *
- * A user-defined callback function can be provided to perform
- * an operation when a digit is found.
- *
- * \param str The string to inspect. Assumed to be non-NULL
- * \param callback A function to call for each digit character.
- *                 Must accept a single char and return void.
- *
- * \returns true if at least one character was read as a digit
- */
-template <typename Function>
-bool parse_integer_components(const char*& str, Function callback)
-{
-    const char* start = str;
-    while (is_valid_digit(*str)) {
-        callback(*str);
-        str += 1;
-    }
-    return str != start; // return whether or not a valid digit was found
-}
-
-bool parse_integer_components(const char*& str)
-{
-    return parse_integer_components(str, do_nothing);
-}
-
-/**
- * \brief Scan a string for decimal parts of a float
- *
- * It is basically the same as parse_integer_components except
- * that it allows a single '.' at the front of the string.
- *
- * A user-defined callback function can be provided to perform
- * an operation when a digit is found.
- *
- * \param str The string to inspect. Assumed to be non-NULL
- * \param callback A function to call for each digit character.
- *                 Must accept a single char and return void.
- *
- * \returns true if at least one character was read as a digit
- */
-template <typename Function>
-bool parse_decimal_components(const char*& str, Function callback)
-{
-    if (*str == '.') {
-        str += 1;
-        return parse_integer_components(str, callback);
-    }
-    return false;
-}
-
-bool parse_decimal_components(const char*& str)
-{
-    return parse_decimal_components(str, do_nothing);
-}
-
-/**
- * \brief Scan a string for exponents parts of a float
- *
- * Require that the string starts with 'e' or 'E', then
- * require that an (optionally signed) string of digits follows.
- *
- * A user-defined callback function can be provided to perform
- * an operation when a sign is found.
- *
- * A user-defined callback function can be provided to perform
- * an operation when a digit is found.
- *
- * \param str The string to inspect. Assumed to be non-NULL
- * \param callback A function to call for each digit character.
- *                 Must accept a single char and return void.
- *
- * \returns true if at least one character was read as a digit OR
- *          if nothing was read
- */
-template <typename NFunction, typename Function>
-bool parse_exponent_components(
-    const char*& str, NFunction sign_callback, Function callback
-)
-{
-    if (*str == 'e' || *str == 'E') {
-        str += 1;
-        if (is_sign(*str)) {
-            sign_callback(*str);
-            str += 1;
-        }
-        return parse_integer_components(str, callback);
-    }
-    return true;
-}
-
-bool parse_exponent_components(const char*& str)
-{
-    return parse_exponent_components(str, do_nothing, do_nothing);
-}
 
 /**
  * \brief Check the number of zeros at the end of a number
