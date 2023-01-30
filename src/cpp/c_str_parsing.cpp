@@ -19,21 +19,6 @@ static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
 
 // END FORWARD DECLARATIONS, BEGIN DEFINITITONS
 
-/**
- * \brief Maximum number of digits we allow in an integer for conversion
- *
- * The number of digits in an int that fastnumbers is willing
- * to attempt to convert itself. This is entirely based on the size
- * of a this compiler's long, since the long is what Python uses to
- * represent an int under the hood - use one less than the maximum
- * length of a long.
- *
- * 64-bit int max == 9223372036854775807; len('9223372036854775807') - 1 == 18
- * 32-bit int max == 2147483647; len('2147483647') - 1 == 9
- */
-constexpr long FN_MAX_INT_LEN
-    = std::numeric_limits<unsigned long>::max() == 9223372036854775807 ? 18 : 9;
-
 /*********************/
 /* EXPOSED FUNCTIONS */
 /*********************/
@@ -162,7 +147,8 @@ int string_contains_what(const char* str, const char* end, int base)
     return value;
 }
 
-long parse_int(const char* str, const char* end, int base, bool& error, bool& overflow)
+int64_t
+parse_int(const char* str, const char* end, int base, bool& error, bool& overflow)
 {
     const std::size_t len = static_cast<std::size_t>(end - str);
 
@@ -188,7 +174,7 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
         // Use a very fast and accurate string to integer parser
         // that will report back if there was an overflow (which
         // we propagete back to the user).
-        long value;
+        int64_t value;
         const std::from_chars_result res = std::from_chars(str, end, value, base);
         error = res.ptr != end || res.ec == std::errc::invalid_argument;
         overflow = res.ec == std::errc::result_out_of_range;
@@ -197,12 +183,17 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
 
     // We use our own method for base-10 because we can omit some overflow
     // checking and get faster results.
+    //
     // We just assume overflow if the length of the string is over a certain value.
-    overflow = len > FN_MAX_INT_LEN;
+    // The number of digits chosen for overflow is 18 - this is one less than the
+    // maximumlength of a 64-bit integer.
+    //
+    // 64-bit int max == 9223372036854775807; len('9223372036854775807') - 1 == 18
+    overflow = len > 18;
 
     // If an overflow is going to happen, just evaluate that this looks like
     // an integer. Otherwise, actually calculate the value contained in the string.
-    long value = 0L;
+    int64_t value = 0L;
     if (overflow) {
         consume_digits(str, len);
     } else {
@@ -220,8 +211,8 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
         }
 
         // Convert digits the remaining digits one-at-a-time.
-        long this_char_as_digit = 0L;
-        while (str != end && (this_char_as_digit = to_digit<long>(*str)) >= 0) {
+        int64_t this_char_as_digit = 0L;
+        while (str != end && (this_char_as_digit = to_digit<int64_t>(*str)) >= 0) {
             value = value * 10L + this_char_as_digit;
             str += 1;
         }

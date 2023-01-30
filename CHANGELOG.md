@@ -19,6 +19,8 @@ Unreleased
   and [#56](https://github.com/SethMMorton/fastnumbers/issues/56))
 - All functions now use use `METH_FASTCALL` for pass arguments from
   Python to C (Issue [#59](https://github.com/SethMMorton/fastnumbers/issues/59))
+- Always parse integers using `int64_t` instead of using `long` to ensure
+  we can always quickly parse at least 18 digits
 
 ### Deprecated
 - `isreal`, `isfloat`, `isint`, and `isintlike` are deprecated in

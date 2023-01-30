@@ -4,7 +4,6 @@
 #include <cctype>
 #include <cstdint>
 #include <cstring>
-#include <limits>
 
 /// Table of what characters are classified as whitespace
 constexpr bool WHITESPACE_TABLE[]
@@ -36,7 +35,7 @@ constexpr int DIGIT_TABLE[]
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 /**
- * \brief Convert a string to a long type
+ * \brief Convert a string to a 64-bit int type
  *
  * Assumes no sign or whitespace. No overflow checking is performed.
  *
@@ -46,7 +45,8 @@ constexpr int DIGIT_TABLE[]
  * \param error Flag to indicate if there was a parsing error
  * \param overflow Flag to indicate if the string was long enough to overflow
  */
-long parse_int(const char* str, const char* end, int base, bool& error, bool& overflow);
+int64_t
+parse_int(const char* str, const char* end, int base, bool& error, bool& overflow);
 
 /**
  * \brief Convert a string to a double type

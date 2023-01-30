@@ -3,6 +3,8 @@
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/character.hpp"
 #include "fastnumbers/user_options.hpp"
+#include <Python.h>
+#include <limits>
 
 /**
  * \brief Remove whitespace at the end of a string
@@ -20,6 +22,16 @@ inline void strip_trailing_whitespace(const char* start, const char*& end)
     while (start < end && is_whitespace(*(end - 1))) {
         end -= 1;
     }
+}
+
+/// Convert a 64-int with the appropriate function depending on the compiler's long size
+inline PyObject* pyobject_from_int64(const int64_t value)
+{
+    if constexpr (std::numeric_limits<long>::max() == std::numeric_limits<int64_t>::max()) {
+        return PyLong_FromLong(static_cast<long>(value));
+    } else {
+        return PyLong_FromLongLong(static_cast<long long>(value));
+    };
 }
 
 CharacterParser::CharacterParser(
@@ -76,7 +88,7 @@ PyObject* CharacterParser::as_pyint()
     // The only thing special handling we need is underscores.
     bool error;
     bool overflow;
-    long result = parse_int(m_start, end(), options().get_base(), error, overflow);
+    int64_t result = parse_int(m_start, end(), options().get_base(), error, overflow);
     if (error && has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(options().get_base() != 10);
@@ -89,7 +101,7 @@ PyObject* CharacterParser::as_pyint()
         return nullptr;
     }
     if (!overflow) {
-        return PyLong_FromLong(sign() * result);
+        return pyobject_from_int64(sign() * result);
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
