@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
 import copy
-import sys
-import re
 import math
+import re
+import sys
 import timeit
 
 # If given an file path as an argument, cause print to write
@@ -374,7 +374,8 @@ timer.add_function("try_float", "fastnumbers", "from fastnumbers import try_floa
 timer.time_functions()
 
 timer = Timer(
-    "Timing comparison of `float` (but coerce to `int` if possible) functions with error handling"
+    "Timing comparison of `float` (but coerce to `int` if possible) "
+    "functions with error handling"
 )
 timer.add_function("real_try", "try/except", "from __main__ import real_try")
 timer.add_function("real_re", "regex", "from __main__ import real_re")

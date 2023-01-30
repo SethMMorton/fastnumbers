@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 # Find the build location and add that to the path
 import math
-import sys
-from typing import Callable, Iterator, List, cast
+from typing import cast
 
-import pytest
 from pytest import raises
 
 import fastnumbers
