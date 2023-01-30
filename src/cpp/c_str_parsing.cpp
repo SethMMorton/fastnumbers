@@ -62,7 +62,7 @@ int string_contains_what(const char* str, const char* end, int base)
     bool valid = false;
     int value = INVALID;
     const char* int_start = str;
-    consume_digits(str, end);
+    consume_digits(str, len);
     if (str != int_start) {
         valid = true;
         value = INTEGER;
@@ -75,7 +75,7 @@ int string_contains_what(const char* str, const char* end, int base)
     if (str != end && *str == '.') {
         str += 1;
         const char* dec_digits_start = str;
-        consume_digits(str, end);
+        consume_digits(str, static_cast<std::size_t>(end - str));
         dec_length = static_cast<uint32_t>(str - dec_digits_start);
         valid = valid || dec_length > 0;
     }
@@ -104,8 +104,7 @@ int string_contains_what(const char* str, const char* end, int base)
             const char* exp_digit_start = str;
             int32_t this_char_as_digit = 0L;
             while (str != end && (this_char_as_digit = to_digit<int32_t>(*str)) >= 0) {
-                expon *= 10L;
-                expon += this_char_as_digit;
+                expon = expon * 10L + this_char_as_digit;
                 str += 1;
             }
 
@@ -190,13 +189,25 @@ long parse_int(const char* str, const char* end, int base, bool& error, bool& ov
     // an integer. Otherwise, actually calculate the value contained in the string.
     long value = 0L;
     if (overflow) {
-        consume_digits(str, end);
+        consume_digits(str, len);
     } else {
-        // Convert digits.
+        // Attempt to read eight characters at a time and parse as digits.
+        // Loop over the character array in steps of eight. Stop processing
+        // if not all eight characters are digits.
+        const std::size_t number_of_eights = len / 8;
+        for (std::size_t i = 0; i < number_of_eights; ++i) {
+            if (fast_float::is_made_of_eight_digits_fast(str)) {
+                value = value * 100000000 + fast_float::parse_eight_digits_unrolled(str);
+                str += 8;
+            } else {
+                break;
+            }
+        }
+
+        // Convert digits the remaining digits one-at-a-time.
         long this_char_as_digit = 0L;
         while (str != end && (this_char_as_digit = to_digit<long>(*str)) >= 0) {
-            value *= 10L;
-            value += this_char_as_digit;
+            value = value * 10L + this_char_as_digit;
             str += 1;
         }
     }

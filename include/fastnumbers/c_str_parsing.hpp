@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fastnumbers/third_party/fast_float.h"
 #include <cctype>
 #include <cstdint>
 #include <cstring>
@@ -130,10 +131,12 @@ constexpr inline bool is_whitespace(const char c)
 /**
  * \brief Advance a string's pointer while whitespace is found
  */
-#define consume_whitespace(str, end)                                                    \
-    while ((str) != (end) && is_whitespace(*(str))) {                                   \
-        str += 1;                                                                       \
+constexpr inline void consume_whitespace(const char*& str, const char* end)
+{
+    while (str != end && is_whitespace(*str)) {
+        str += 1;
     }
+}
 
 /**
  * \brief Convert a character to a digit, returns -1 on failure.
@@ -159,10 +162,34 @@ constexpr inline bool is_valid_digit(const char c)
 /**
  * \brief Advance a string's pointer while digits are found
  */
-#define consume_digits(str, end)                                                        \
-    while ((str) != (end) && is_valid_digit(*(str))) {                                  \
-        str += 1;                                                                       \
+constexpr inline void consume_digits(const char*& str, const char* end)
+{
+    while (str != end && is_valid_digit(*str)) {
+        str += 1;
     }
+}
+
+/**
+ * \brief Advance a string's pointer while digits are found
+ *        and attempt to read multiple digits at a time if possible
+ */
+inline void consume_digits(const char*& str, const std::size_t len)
+{
+    // Attempt to read eight characters at a time to determine
+    // if they are digits. Loop over the character array in steps
+    // of eight. Stop processing if not all eight characters are digits.
+    const std::size_t number_of_eights = len / 8;
+    for (std::size_t i = 0; i < number_of_eights; ++i) {
+        if (fast_float::is_made_of_eight_digits_fast(str)) {
+            str += 8;
+        } else {
+            break;
+        }
+    }
+
+    // Read the remainder of digits one-at-a-time.
+    consume_digits(str, str + len);
+}
 
 /**
  * \brief Determine if a character is '-' or '+'

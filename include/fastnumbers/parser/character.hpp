@@ -64,8 +64,7 @@ public:
         // Attempt to simply see if all the characters are digits.
         // If so it is an integer.
         const char* str = m_start;
-        const char* str_end = end();
-        consume_digits(str, str_end);
+        consume_digits(str, m_str_len);
         return str != m_start && str == (m_start + m_str_len);
     }
 
