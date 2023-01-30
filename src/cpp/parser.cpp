@@ -195,11 +195,3 @@ NumberFlags CharacterParser::get_number_type() const
     // Return the found type
     return type_mapping[value];
 }
-
-// TODO: why is this not in the buffer.h?
-void Buffer::remove_valid_underscores(const bool based)
-{
-    const char* new_end = end();
-    ::remove_valid_underscores(start(), new_end, based);
-    m_len = static_cast<std::size_t>(new_end - start());
-}

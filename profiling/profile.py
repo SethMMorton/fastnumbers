@@ -45,6 +45,7 @@ class Timer(object):
         ("not_a_number", "Non-number String"),
         ("-4", "Small Int String"),
         ("-41053", "Int String"),
+        ("358924829458", "Medium Int String"),
         ("35892482945872302493947939485729", "Large Int String"),
         ("-4.1", "Small Float String"),
         ("-41053.543034e34", "Float String"),

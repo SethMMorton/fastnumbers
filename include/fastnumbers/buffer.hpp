@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fastnumbers/c_str_parsing.hpp"
 #include <cstring>
 #include <limits>
 
@@ -64,7 +65,12 @@ public:
 
     /// Remove underscores that are syntactically valid in a number,
     /// possibly accounting for non-base-10 integers
-    void remove_valid_underscores(const bool based);
+    void remove_valid_underscores(const bool based)
+    {
+        const char* new_end = end();
+        ::remove_valid_underscores(start(), new_end, based);
+        m_len = static_cast<std::size_t>(new_end - start());
+    }
 
     /// The largest amount of data the buffer can contain
     std::size_t max_size() const { return std::numeric_limits<std::size_t>::max(); }
