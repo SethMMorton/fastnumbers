@@ -359,7 +359,7 @@ timer.time_functions(repeat=100)
 timer = Timer("Timing comparison of `float` functions")
 timer.add_function("float", "builtin")
 timer.add_function("float", "fastnumbers", "from fastnumbers import float")
-timer.time_functions(repeat=100)
+timer.time_functions(repeat=50)
 
 timer = Timer("Timing comparison of `int` functions with error handling")
 timer.add_function("int_try", "try/except", "from __main__ import int_try")
