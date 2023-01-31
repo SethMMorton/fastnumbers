@@ -8,9 +8,10 @@
 
 #include <Python.h>
 
-#include "fastnumbers/c_str_parsing.hpp"
+#include "fastnumbers/argparse.hpp"
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 #include "fastnumbers/version.hpp"
@@ -238,7 +239,9 @@ static inline void validate_consider(const PyObject* selector)
 /**
  * \brief Quickly convert to an int or float, depending on value, with error handling
  */
-static PyObject* fastnumbers_try_real(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_try_real(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* inf = Selectors::ALLOWED;
@@ -247,28 +250,21 @@ static PyObject* fastnumbers_try_real(PyObject* self, PyObject* args, PyObject* 
     PyObject* on_type_error = Selectors::RAISE;
     int coerce = true;
     int allow_underscores = false;
-    static const char* keywords[] = {
-        "x",    "inf", "nan", "on_fail", "on_type_error", "coerce", "allow_underscores",
-        nullptr
-    };
-    static const char* format = "O|$OOOOpp:try_real";
 
     // Read the function argument
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &inf,
-            &nan,
-            &on_fail,
-            &on_type_error,
-            &coerce,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("try_float", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$coerce", true, &coerce,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -294,7 +290,9 @@ static PyObject* fastnumbers_try_real(PyObject* self, PyObject* args, PyObject* 
 /**
  * \brief Quickly convert to an int or float, depending on value, with error handling
  */
-static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_fast_real(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -305,29 +303,23 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
     int raise_on_invalid = false;
     int coerce = true;
     int allow_underscores = true;
-    static const char* keywords[]
-        = { "x",   "default", "raise_on_invalid",  "on_fail", "inf",
-            "nan", "coerce",  "allow_underscores", "key",     nullptr };
-    static const char* format = "O|O$pOOOppO:fast_real";
 
     // Read the function argument
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &default_value,
-            &raise_on_invalid,
-            &on_fail,
-            &inf,
-            &nan,
-            &coerce,
-            &allow_underscores,
-            &key
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("fast_real", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "|default", false, &default_value,
+                           "$raise_on_invalid", true, &raise_on_invalid,
+                           "$on_fail", false, &on_fail,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$coerce", true, &coerce,
+                           "$allow_underscores", true, &allow_underscores,
+                           "$key", false, &key,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -345,7 +337,9 @@ static PyObject* fastnumbers_fast_real(PyObject* self, PyObject* args, PyObject*
 /**
  * \brief Quickly convert to a float, with error handling
  */
-static PyObject* fastnumbers_try_float(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_try_float(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* inf = Selectors::ALLOWED;
@@ -353,26 +347,20 @@ static PyObject* fastnumbers_try_float(PyObject* self, PyObject* args, PyObject*
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     int allow_underscores = false;
-    static const char* keywords[] = { "x",       "inf",           "nan",
-                                      "on_fail", "on_type_error", "allow_underscores",
-                                      nullptr };
-    static const char* format = "O|$OOOOp:try_float";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &inf,
-            &nan,
-            &on_fail,
-            &on_type_error,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("try_float", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -391,7 +379,9 @@ static PyObject* fastnumbers_try_float(PyObject* self, PyObject* args, PyObject*
 /**
  * \brief Quickly convert to a float, with error handling
  */
-static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_fast_float(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -401,28 +391,22 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
     PyObject* nan = Selectors::ALLOWED;
     int raise_on_invalid = false;
     int allow_underscores = true;
-    static const char* keywords[] = { "x",    "default", "raise_on_invalid",  "on_fail",
-                                      "inf",  "nan",     "allow_underscores", "key",
-                                      nullptr };
-    static const char* format = "O|O$pOOOpO:fast_float";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &default_value,
-            &raise_on_invalid,
-            &on_fail,
-            &inf,
-            &nan,
-            &allow_underscores,
-            &key
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("fast_float", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "|default", false, &default_value,
+                           "$raise_on_invalid", true, &raise_on_invalid,
+                           "$on_fail", false, &on_fail,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$allow_underscores", true, &allow_underscores,
+                           "$key", false, &key,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -440,31 +424,28 @@ static PyObject* fastnumbers_fast_float(PyObject* self, PyObject* args, PyObject
 /**
  * \brief Quickly convert to an int, with error handling
  */
-static PyObject* fastnumbers_try_int(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_try_int(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     PyObject* pybase = nullptr;
     int allow_underscores = false;
-    static const char* keywords[]
-        = { "x", "on_fail", "on_type_error", "base", "allow_underscores", nullptr };
-    static const char* format = "O|$OOOp:try_int";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &on_fail,
-            &on_type_error,
-            &pybase,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("try_int", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$base", false, &pybase,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -482,7 +463,9 @@ static PyObject* fastnumbers_try_int(PyObject* self, PyObject* args, PyObject* k
 /**
  * \brief Quickly convert to an int, with error handling
  */
-static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_fast_int(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -491,27 +474,21 @@ static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* 
     PyObject* pybase = nullptr;
     int raise_on_invalid = false;
     int allow_underscores = true;
-    static const char* keywords[]
-        = { "x",   "default", "raise_on_invalid", "on_fail", "base", "allow_underscores",
-            "key", nullptr };
-    static const char* format = "O|O$pOOpO:fast_int";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &default_value,
-            &raise_on_invalid,
-            &on_fail,
-            &pybase,
-            &allow_underscores,
-            &key
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("fast_int", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "|default", false, &default_value,
+                           "$raise_on_invalid", true, &raise_on_invalid,
+                           "$on_fail", false, &on_fail,
+                           "$base", false, &pybase,
+                           "$allow_underscores", true, &allow_underscores,
+                           "$key", false, &key,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -528,30 +505,26 @@ static PyObject* fastnumbers_fast_int(PyObject* self, PyObject* args, PyObject* 
 /**
  * \brief Quickly convert to an int (even if input is float), with error handling
  */
-static PyObject*
-fastnumbers_try_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_try_forceint(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     int allow_underscores = false;
-    static const char* keywords[]
-        = { "x", "on_fail", "on_type_error", "allow_underscores", nullptr };
-    static const char* format = "O|$OOp:try_forceint";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &on_fail,
-            &on_type_error,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("try_forceint", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -568,8 +541,9 @@ fastnumbers_try_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
 /**
  * \brief Quickly convert to an int (even if input is float), with error handling
  */
-static PyObject*
-fastnumbers_fast_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_fast_forceint(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -577,26 +551,20 @@ fastnumbers_fast_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* key = nullptr;
     int raise_on_invalid = false;
     int allow_underscores = true;
-    static const char* keywords[]
-        = { "x",   "default", "raise_on_invalid", "on_fail", "allow_underscores",
-            "key", nullptr };
-    static const char* format = "O|O$pOpO:fast_forceint";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &default_value,
-            &raise_on_invalid,
-            &on_fail,
-            &allow_underscores,
-            &key
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("fast_forceint", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "|default", false, &default_value,
+                           "$raise_on_invalid", true, &raise_on_invalid,
+                           "$on_fail", false, &on_fail,
+                           "$allow_underscores", true, &allow_underscores,
+                           "$key", false, &key,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -612,31 +580,28 @@ fastnumbers_fast_forceint(PyObject* self, PyObject* args, PyObject* kwargs)
 /**
  * \brief Quickly determine if the input is a real.
  */
-static PyObject* fastnumbers_check_real(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_check_real(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
     PyObject* inf = Selectors::NUMBER_ONLY;
     PyObject* nan = Selectors::NUMBER_ONLY;
     int allow_underscores = false;
-    static const char* keywords[]
-        = { "x", "consider", "inf", "nan", "allow_underscores", nullptr };
-    static const char* format = "O|$OOOp:check_real";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &consider,
-            &inf,
-            &nan,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("check_real", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$consider", false, &consider,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -654,7 +619,9 @@ static PyObject* fastnumbers_check_real(PyObject* self, PyObject* args, PyObject
 /**
  * \brief Quickly determine if the input is a real.
  */
-static PyObject* fastnumbers_isreal(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_isreal(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     int str_only = false;
@@ -662,26 +629,20 @@ static PyObject* fastnumbers_isreal(PyObject* self, PyObject* args, PyObject* kw
     int allow_inf = false;
     int allow_nan = false;
     int allow_underscores = true;
-    static const char* keywords[]
-        = { "x",         "str_only",          "num_only", "allow_inf",
-            "allow_nan", "allow_underscores", nullptr };
-    static const char* format = "O|$ppppp:isreal";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &str_only,
-            &num_only,
-            &allow_inf,
-            &allow_nan,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("isreal", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$str_only", true, &str_only,
+                           "$num_only", true, &num_only,
+                           "$allow_inf", true, &allow_inf,
+                           "$allow_nan", true, &allow_nan,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
@@ -701,8 +662,9 @@ static PyObject* fastnumbers_isreal(PyObject* self, PyObject* args, PyObject* kw
 /**
  * \brief Quickly determine if the input is a float.
  */
-static PyObject*
-fastnumbers_check_float(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_check_float(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
@@ -710,25 +672,20 @@ fastnumbers_check_float(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* nan = Selectors::NUMBER_ONLY;
     int strict = false;
     int allow_underscores = false;
-    static const char* keywords[]
-        = { "x", "consider", "inf", "nan", "strict", "allow_underscores", nullptr };
-    static const char* format = "O|$OOOpp:check_float";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &consider,
-            &inf,
-            &nan,
-            &strict,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("check_float", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$consider", false, &consider,
+                           "$strict", true, &strict,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -746,7 +703,9 @@ fastnumbers_check_float(PyObject* self, PyObject* args, PyObject* kwargs)
 /**
  * \brief Quickly determine if the input is a float.
  */
-static PyObject* fastnumbers_isfloat(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_isfloat(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     int str_only = false;
@@ -754,26 +713,20 @@ static PyObject* fastnumbers_isfloat(PyObject* self, PyObject* args, PyObject* k
     int allow_inf = false;
     int allow_nan = false;
     int allow_underscores = true;
-    static const char* keywords[]
-        = { "x",         "str_only",          "num_only", "allow_inf",
-            "allow_nan", "allow_underscores", nullptr };
-    static const char* format = "O|$ppppp:isfloat";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &str_only,
-            &num_only,
-            &allow_inf,
-            &allow_nan,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("isfloat", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$str_only", true, &str_only,
+                           "$num_only", true, &num_only,
+                           "$allow_inf", true, &allow_inf,
+                           "$allow_nan", true, &allow_nan,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
@@ -793,29 +746,26 @@ static PyObject* fastnumbers_isfloat(PyObject* self, PyObject* args, PyObject* k
 /**
  * \brief Quickly determine if the input is an int.
  */
-static PyObject* fastnumbers_check_int(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_check_int(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
     PyObject* pybase = nullptr;
     int allow_underscores = false;
-    static const char* keywords[]
-        = { "x", "consider", "base", "allow_underscores", nullptr };
-    static const char* format = "O|$OOp:check_int";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &consider,
-            &pybase,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("check_int", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$consider", false, &consider,
+                           "$base", false, &pybase,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -830,31 +780,28 @@ static PyObject* fastnumbers_check_int(PyObject* self, PyObject* args, PyObject*
 /**
  * \brief Quickly determine if the input is an int.
  */
-static PyObject* fastnumbers_isint(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_isint(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* pybase = nullptr;
     int str_only = false;
     int num_only = false;
     int allow_underscores = true;
-    static const char* keywords[]
-        = { "x", "str_only", "num_only", "base", "allow_underscores", nullptr };
-    static const char* format = "O|$ppOp:isint";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &str_only,
-            &num_only,
-            &pybase,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("isint", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$str_only", true, &str_only,
+                           "$num_only", true, &num_only,
+                           "$base", false, &pybase,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
@@ -871,27 +818,24 @@ static PyObject* fastnumbers_isint(PyObject* self, PyObject* args, PyObject* kwa
 /**
  * \brief Quickly determine if the input is an int or int-like float.
  */
-static PyObject*
-fastnumbers_check_intlike(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_check_intlike(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
-    int allow_underscores = false;
-    static const char* keywords[] = { "x", "consider", "allow_underscores", nullptr };
-    static const char* format = "O|$Op:check_intlike";
+    bool allow_underscores = false;
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &consider,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("check_intlike", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$consider", false, &consider,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
     try {
@@ -905,29 +849,26 @@ fastnumbers_check_intlike(PyObject* self, PyObject* args, PyObject* kwargs)
 /**
  * \brief Quickly determine if the input is an int or int-like float.
  */
-static PyObject* fastnumbers_isintlike(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_isintlike(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
-    int str_only = false;
-    int num_only = false;
-    int allow_underscores = true;
-    static const char* keywords[]
-        = { "x", "str_only", "num_only", "allow_underscores", nullptr };
-    static const char* format = "O|$ppp:isintlike";
+    bool str_only = false;
+    bool num_only = false;
+    bool allow_underscores = true;
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &str_only,
-            &num_only,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("isintlike", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$str_only", true, &str_only,
+                           "$num_only", true, &num_only,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
@@ -943,7 +884,9 @@ static PyObject* fastnumbers_isintlike(PyObject* self, PyObject* args, PyObject*
 /**
  * \brief Quickly determine the type
  */
-static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_query_type(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* allowed_types = nullptr;
@@ -951,26 +894,20 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
     int allow_inf = false;
     int allow_nan = false;
     int allow_underscores = false;
-    static const char* keywords[] = { "x",      "allow_inf",     "allow_nan",
-                                      "coerce", "allowed_types", "allow_underscores",
-                                      nullptr };
-    static const char* format = "O|$pppOp:type";
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args,
-            kwargs,
-            format,
-            const_cast<char**>(keywords),
-            &input,
-            &allow_inf,
-            &allow_nan,
-            &coerce,
-            &allowed_types,
-            &allow_underscores
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("query_type", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$allow_inf", true, &allow_inf,
+                           "$allow_nan", true, &allow_nan,
+                           "$coerce", true, &coerce,
+                           "$allowed_types", false, &allowed_types,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // Allowed types must be a non-empty sequence.
     if (allowed_types != nullptr) {
@@ -1005,15 +942,19 @@ static PyObject* fastnumbers_query_type(PyObject* self, PyObject* args, PyObject
 /**
  * \brief Drop-in replacement for float
  */
-static PyObject* fastnumbers_float(PyObject* self, PyObject* args)
+static PyObject*
+fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args)
 {
     PyObject* input = nullptr;
-    static const char* format = "|O:float";
 
     // Read the function argument - do not accept it as a keyword argument
-    if (!PyArg_ParseTuple(args, format, &input)) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("float", args, len_args, nullptr,
+                           "|", false,  &input,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // No arguments returns 0.0
     if (input == nullptr) {
@@ -1031,21 +972,22 @@ static PyObject* fastnumbers_float(PyObject* self, PyObject* args)
 /**
  * \brief Drop-in replacement for int
  */
-static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_int(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     PyObject* pybase = nullptr;
-    static const char* format = "|OO:int";
-
-    // Do not accept number as a keyword argument
-    static const char* keywords[] = { "", "base", nullptr };
 
     // Read the function argument
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, format, const_cast<char**>(keywords), &input, &pybase
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("int", args, len_args, kwnames,
+                           "|", false,  &input,
+                           "|base", false, &pybase,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // No arguments returns 0
     if (input == nullptr) {
@@ -1068,21 +1010,22 @@ static PyObject* fastnumbers_int(PyObject* self, PyObject* args, PyObject* kwarg
 /**
  * \brief Behaves like float or int, but returns correct type
  */
-static PyObject* fastnumbers_real(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* fastnumbers_real(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
 {
     PyObject* input = nullptr;
     int coerce = true;
-    static const char* format = "|O$p:real";
-
-    // Do not accept number as a keyword argument
-    static const char* keywords[] = { "", "coerce", nullptr };
 
     // Read the function arguments
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, format, const_cast<char**>(keywords), &input, &coerce
-        )) {
-        return nullptr;
-    }
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("real", args, len_args, kwnames,
+                           "|", false,  &input,
+                           "$coerce", true, &coerce,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
 
     // No arguments returns 0.0 or 0 depending on the state of coerce
     if (input == nullptr) {
@@ -1101,80 +1044,80 @@ static PyObject* fastnumbers_real(PyObject* self, PyObject* args, PyObject* kwar
 static PyMethodDef FastnumbersMethods[] = {
     { "try_real",
       (PyCFunction)fastnumbers_try_real,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       try_real__doc__ },
     { "fast_real",
       (PyCFunction)fastnumbers_fast_real,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       fast_real__doc__ },
     { "try_float",
       (PyCFunction)fastnumbers_try_float,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       try_float__doc__ },
     { "fast_float",
       (PyCFunction)fastnumbers_fast_float,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       fast_float__doc__ },
     { "try_int",
       (PyCFunction)fastnumbers_try_int,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       try_int__doc__ },
     { "fast_int",
       (PyCFunction)fastnumbers_fast_int,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       fast_int__doc__ },
     { "try_forceint",
       (PyCFunction)fastnumbers_try_forceint,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       try_forceint__doc__ },
     { "fast_forceint",
       (PyCFunction)fastnumbers_fast_forceint,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       fast_forceint__doc__ },
     { "check_real",
       (PyCFunction)fastnumbers_check_real,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       check_real__doc__ },
     { "isreal",
       (PyCFunction)fastnumbers_isreal,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       isreal__doc__ },
     { "check_float",
       (PyCFunction)fastnumbers_check_float,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       check_float__doc__ },
     { "isfloat",
       (PyCFunction)fastnumbers_isfloat,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       isfloat__doc__ },
     { "isint",
       (PyCFunction)fastnumbers_isint,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       isint__doc__ },
     { "check_int",
       (PyCFunction)fastnumbers_check_int,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       check_int__doc__ },
     { "isintlike",
       (PyCFunction)fastnumbers_isintlike,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       isintlike__doc__ },
     { "check_intlike",
       (PyCFunction)fastnumbers_check_intlike,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       check_intlike__doc__ },
     { "query_type",
       (PyCFunction)fastnumbers_query_type,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       query_type__doc__ },
     { "int",
       (PyCFunction)fastnumbers_int,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       fastnumbers_int__doc__ },
-    { "float", (PyCFunction)fastnumbers_float, METH_VARARGS, fastnumbers_float__doc__ },
+    { "float", (PyCFunction)fastnumbers_float, METH_FASTCALL, fastnumbers_float__doc__ },
     { "real",
       (PyCFunction)fastnumbers_real,
-      METH_VARARGS | METH_KEYWORDS,
+      METH_FASTCALL | METH_KEYWORDS,
       fastnumbers_real__doc__ },
     { nullptr, nullptr, 0, nullptr } /* Sentinel */
 };
@@ -1201,6 +1144,7 @@ PyObject* Selectors::INPUT = nullptr;
 PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
+PyObject* NumericParser::PYTHON_ZERO = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1212,10 +1156,6 @@ PyMODINIT_FUNC PyInit_fastnumbers()
 
     // Add module level constants.
     PyModule_AddStringConstant(m, "__version__", FASTNUMBERS_VERSION);
-    PyModule_AddIntConstant(m, "max_int_len", FN_MAX_INT_LEN);
-    PyModule_AddIntConstant(m, "dig", FN_DBL_DIG);
-    PyModule_AddIntConstant(m, "max_exp", FN_MAX_EXP);
-    PyModule_AddIntConstant(m, "min_exp", FN_MIN_EXP);
 
     // Selectors
     Selectors::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
@@ -1244,6 +1184,7 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     Py_DecRef(neg_inf_str);
     Py_DecRef(pos_nan_str);
     Py_DecRef(neg_nan_str);
+    NumericParser::PYTHON_ZERO = PyLong_FromLong(0L);
 
     return m;
 }

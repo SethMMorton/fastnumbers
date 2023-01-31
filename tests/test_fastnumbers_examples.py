@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 # Find the build location and add that to the path
 import math
-import sys
-from typing import Callable, Iterator, List, cast
+from typing import cast
 
-import pytest
 from pytest import raises
 
 import fastnumbers
@@ -560,25 +558,3 @@ def test_type() -> None:
     assert fastnumbers.query_type("⁸") is int
     assert fastnumbers.query_type("⅔") is float
     assert fastnumbers.query_type("Ⅴ") is float
-
-
-@pytest.fixture()
-def tprint(capsys: pytest.CaptureFixture[str]) -> Iterator[Callable[[str], None]]:
-    """
-    Fixture for printing info after test, not supressed by pytest stdout/stderr capture
-    """
-    lines: List[str] = []
-    yield lines.append
-
-    with capsys.disabled():
-        for line in lines:
-            sys.stdout.write("\n{}".format(line))
-
-
-def test_print_limits(tprint: Callable[[str], None]) -> None:
-    tprint("\nFASNUMBERS NUMERICAL LIMITS FOR THIS COMPILER BEFORE PYTHON FALLBACK:")
-    tprint("MAXIMUM INTEGER LENTH: {}".format(fastnumbers.max_int_len))
-    tprint("MAX NUMBER FLOAT DIGITS: {}".format(fastnumbers.dig))
-    tprint("MAXIMUM FLOAT EXPONENT: {}".format(fastnumbers.max_exp))
-    tprint("MINIMUM FLOAT EXPONENT: {}".format(fastnumbers.min_exp))
-    tprint("")

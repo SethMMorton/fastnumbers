@@ -7,6 +7,7 @@
 #include <Python.h>
 
 #include "fastnumbers/buffer.hpp"
+#include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/user_options.hpp"
 
@@ -34,24 +35,45 @@ public:
     CharacterParser& operator=(const CharacterParser&) = default;
     ~CharacterParser() = default;
 
-    /// Convert the stored object to a long (check error state)
-    long as_int() override;
-
-    /// Convert the stored object to a double (check error state)
-    double as_float() override;
-
     /// Convert the stored object to a python int (check error state)
     PyObject* as_pyint() override;
 
     /// Convert the stored object to a python float (check error state)
     PyObject* as_pyfloat() override;
 
+    /**
+     * \brief Convert the stored object to a python float but possible
+     *        coerce to an integer (check error state)
+     * \param force_int Force the output to integer (takes precidence)
+     * \param coerce Return as integer if the float is int-like
+     */
+    PyObject* as_pyfloat(const bool force_int, const bool coerce) override;
+
     /// Check the type of the number.
     NumberFlags get_number_type() const override;
+
+    /// Check if the number is INF
+    bool peek_inf() const override { return quick_detect_infinity(m_start, m_str_len); }
+
+    /// Check if the number is NaN
+    bool peek_nan() const override { return quick_detect_nan(m_start, m_str_len); }
+
+    /// Check if the should be parsed as an integer
+    bool peek_try_as_int() const override
+    {
+        // Attempt to simply see if all the characters are digits.
+        // If so it is an integer.
+        const char* str = m_start;
+        consume_digits(str, m_str_len);
+        return str != m_start && str == (m_start + m_str_len);
+    }
 
 private:
     /// The potential start of the character array
     const char* m_start;
+
+    /// The original start of the character array
+    const char* m_start_orig;
 
     /// The original end of the character array
     const char* m_end_orig;
@@ -80,27 +102,8 @@ private:
         return m_start == nullptr ? nullptr : (m_start + m_str_len);
     }
 
-    /// Template for conversion to base types
-    template <
-        typename T,
-        typename CheckFunction,
-        typename OverflowCheckFunction,
-        typename ConvertFunction>
-    T as_type(
-        CheckFunction check_function,
-        OverflowCheckFunction overflow_check_function,
-        ConvertFunction convert_function
-    );
-
-    /// Template for checking that in input contains a type, accounting for underscores
-    template <typename Function>
-    bool check_string_for_number(
-        Buffer& buffer,
-        const char*& start,
-        const char*& new_end,
-        const std::size_t offset,
-        Function string_contains_number
-    );
+    /// The string as a double (check error state)
+    double as_double();
 
     /// Add FromStr to the return NumberFlags
     static constexpr NumberFlags flag_wrap(const NumberFlags val)

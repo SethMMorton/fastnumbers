@@ -94,8 +94,7 @@ private:
     Payload from_numeric_as_type(const UserType ntype)
     {
         const NumberFlags typeflags = m_parser.get_number_type();
-        const NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
-        const NumberFlags is_intlike = NumberType::Integer | NumberType::IntLike;
+        constexpr NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
 
         // If not a numeric type it is a type error
         if (typeflags & NumberType::INVALID) {
@@ -106,10 +105,10 @@ private:
         // on the user requested type
         switch (ntype) {
         case UserType::REAL:
-            if (options().allow_coerce() && (typeflags & is_intlike)) {
-                return Payload(m_parser.as_pyint());
-            } else if (typeflags & nan_or_inf) {
+            if (typeflags & nan_or_inf) {
                 return Payload(handle_nan_and_inf());
+            } else if (options().allow_coerce()) {
+                return Payload(m_parser.as_pyfloat(false, true));
             } else if (typeflags & NumberType::User) {
                 if (typeflags & NumberType::Float) {
                     return Payload(m_parser.as_pyfloat());
@@ -165,62 +164,49 @@ private:
     /// Logic for evaluating a text python object as a float or integer
     Payload from_text_as_int_or_float(const bool force_int)
     {
-        const NumberFlags typeflags = m_parser.get_number_type();
-        const NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
-
         // Integers are returned as-is
         // NaN and infinity are illegal with force_int
         // Otherwise, grab as a float and convert to int if required
-        if (typeflags & NumberType::Integer) {
+        if (m_parser.peek_try_as_int()) {
             return from_text_as_int();
 
-        } else if (force_int && (typeflags & nan_or_inf)) {
+        } else if (force_int && (m_parser.peek_inf() || m_parser.peek_nan())) {
             return Payload(ActionType::ERROR_INVALID_INT);
 
         } else {
-            Payload payload = from_text_as_float();
-
-            // If the returned value is a double or a python float, annotate
-            // whether it should be an integer and then return.
-            const bool is_python = payload.get_action() == ActionType::PY_OBJECT
-                && payload.to_pyobject() != nullptr;
-            if (is_python) {
-                const double value = PyFloat_AS_DOUBLE(payload.to_pyobject());
-                Py_DECREF(payload.to_pyobject());
-                return Payload(
-                    value,
-                    force_int
-                        || (options().allow_coerce() && Parser::float_is_intlike(value))
-                );
+            // Special-case handling of infinity and NaN
+            if (m_parser.peek_inf()) {
+                return Payload(inf_action(m_parser.is_negative()));
+            } else if (m_parser.peek_nan()) {
+                return Payload(nan_action(m_parser.is_negative()));
             }
 
-            // Otherwise return the payload as-is.
-            return payload;
+            // Otherwise, attempt to convert to a python float
+            // and optionally make as integer and if not signal an error.
+            PyObject* result = m_parser.as_pyfloat(force_int, options().allow_coerce());
+            if (m_parser.errored()) {
+                return Payload(ActionType::ERROR_INVALID_FLOAT);
+            }
+            return Payload(result);
         }
     }
 
     /// Logic for evaluating a text python object as a float
     Payload from_text_as_float()
     {
-        const NumberFlags typeflags = m_parser.get_number_type();
-
         // Special-case handling of infinity and NaN
-        if (typeflags & NumberType::Infinity) {
+        if (m_parser.peek_inf()) {
             return Payload(inf_action(m_parser.is_negative()));
-        } else if (typeflags & NumberType::NaN) {
+        } else if (m_parser.peek_nan()) {
             return Payload(nan_action(m_parser.is_negative()));
         }
 
-        // Otherwise, attempt to naively parse if possible, otherwise
-        // use the python conversion function
-        const double result = m_parser.as_float();
+        // Otherwise, attempt to convert to a python float
+        // and if not signal an error.
+        PyObject* result = m_parser.as_pyfloat();
         if (m_parser.errored()) {
-            return m_parser.potential_overflow()
-                ? to_pyfloat()
-                : Payload(ActionType::ERROR_INVALID_FLOAT);
+            return Payload(ActionType::ERROR_INVALID_FLOAT);
         }
-
-        // Successful naive conversion
         return Payload(result);
     }
 
@@ -234,19 +220,14 @@ private:
             if (m_parser.illegal_explicit_base()) {
                 return Payload(ActionType::ERROR_ILLEGAL_EXPLICIT_BASE);
             }
-            return to_pyint();
         }
 
-        // Otherwise, attempt to naively parse if possible, otherwise
-        // use the python conversion function
-        const long result = m_parser.as_int();
+        // Otherwise, attempt to convert to a python int
+        // and if not signal an error.
+        PyObject* result = m_parser.as_pyint();
         if (m_parser.errored()) {
-            return m_parser.potential_overflow()
-                ? to_pyint()
-                : Payload(ActionType::ERROR_INVALID_INT);
+            return Payload(ActionType::ERROR_INVALID_INT);
         }
-
-        // Successful naive conversion
         return Payload(result);
     }
 
@@ -283,35 +264,9 @@ private:
     /// Helper to properly respond to NaN and infinity
     ActionType handle_nan_and_inf()
     {
-        // Exctract the double from the parser, accounting for errors
-        const double value = m_parser.as_float();
-        if (m_parser.errored()) {
-            return ActionType::ERROR_BAD_TYPE_FLOAT;
-        }
-
         // Assume infinity or NaN.
         const NumberFlags typeflags = m_parser.get_number_type();
-        return typeflags & NumberType::NaN ? nan_action(value < 0.0)
-                                           : inf_action(value < 0.0);
-    }
-
-    /// Helper function to convert to Python float objects
-    Payload to_pyfloat()
-    {
-        PyObject* result = m_parser.as_pyfloat();
-        if (m_parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_FLOAT);
-        }
-        return Payload(result);
-    }
-
-    /// Helper function to convert to Python int objects
-    Payload to_pyint()
-    {
-        PyObject* result = m_parser.as_pyint();
-        if (m_parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_INT);
-        }
-        return Payload(result);
+        return typeflags & NumberType::NaN ? nan_action(m_parser.is_negative())
+                                           : inf_action(m_parser.is_negative());
     }
 };

@@ -3,6 +3,8 @@
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/character.hpp"
 #include "fastnumbers/user_options.hpp"
+#include <Python.h>
+#include <limits>
 
 /**
  * \brief Remove whitespace at the end of a string
@@ -17,11 +19,19 @@
  */
 inline void strip_trailing_whitespace(const char* start, const char*& end)
 {
-    end -= 1;
-    while (start < end && is_whitespace(*end)) {
+    while (start < end && is_whitespace(*(end - 1))) {
         end -= 1;
     }
-    end += 1;
+}
+
+/// Convert a 64-int with the appropriate function depending on the compiler's long size
+inline PyObject* pyobject_from_int64(const int64_t value)
+{
+    if constexpr (std::numeric_limits<long>::max() == std::numeric_limits<int64_t>::max()) {
+        return PyLong_FromLong(static_cast<long>(value));
+    } else {
+        return PyLong_FromLongLong(static_cast<long long>(value));
+    };
 }
 
 CharacterParser::CharacterParser(
@@ -32,6 +42,7 @@ CharacterParser::CharacterParser(
 )
     : Parser(ParserType::CHARACTER, options, explict_base_allowed)
     , m_start(nullptr)
+    , m_start_orig(nullptr)
     , m_end_orig(nullptr)
     , m_str_len(0)
 {
@@ -42,7 +53,7 @@ CharacterParser::CharacterParser(
     }
 
     // Store the start and end point of the character array
-    m_start = str;
+    m_start = m_start_orig = str;
     const char* end = m_end_orig = str + len;
 
     // Strip leading whitespace
@@ -66,50 +77,40 @@ CharacterParser::CharacterParser(
     m_str_len = static_cast<std::size_t>(end - m_start);
 }
 
-long CharacterParser::as_int()
-{
-    return as_type<long>(is_likely_int, int_might_overflow, parse_int);
-}
-
-double CharacterParser::as_float()
-{
-    return as_type<double>(is_likely_float, float_might_overflow, parse_float);
-}
-
 PyObject* CharacterParser::as_pyint()
 {
     reset_error();
 
-    // If the number is negative, include the sign as part of the string
-    const std::size_t offset = std::size_t(is_negative());
-    const char* start = m_start - offset;
-
-    // Attempt to pre-detect if the string is a valid integer.
-    // it is cheaper to do this than to let Python do that and construct an exception.
-    // Need to account for underscores if they exist and we are allowing them.
-    Buffer buffer;
-    const char* my_end = m_end_orig;
-    const bool is_integer = check_string_for_number(
-        buffer,
-        start,
-        my_end,
-        offset,
-        [&](const char* start, const char* end) -> bool {
-            return string_contains_what(start, end, options().get_base()) == 1;
-        }
-    );
-    if (!is_integer) {
+    // We use the fast path method even if the result overflows,
+    // so that we can determine if the integer was at least valid.
+    // If it was valid but overflowed, we use Python's parser, otherwise
+    // return an error.
+    // The only thing special handling we need is underscores.
+    bool error;
+    bool overflow;
+    int64_t result = parse_int(m_start, end(), options().get_base(), error, overflow);
+    if (error && has_valid_underscores()) {
+        Buffer buffer(m_start, m_str_len);
+        buffer.remove_valid_underscores(options().get_base() != 10);
+        result = parse_int(
+            buffer.start(), buffer.end(), options().get_base(), error, overflow
+        );
+    }
+    if (error) {
         encountered_conversion_error();
         return nullptr;
+    }
+    if (!overflow) {
+        return pyobject_from_int64(sign() * result);
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
     char* their_end = nullptr;
-    PyObject* retval = PyLong_FromString(start, &their_end, options().get_base());
+    PyObject* retval = PyLong_FromString(m_start_orig, &their_end, options().get_base());
 
     // Check the parsed end against the original end - if they don't match
     // there was a parsing error.
-    if (their_end != my_end && retval != nullptr) {
+    if (their_end != m_end_orig && retval != nullptr) {
         encountered_conversion_error();
         return nullptr;
     }
@@ -118,50 +119,51 @@ PyObject* CharacterParser::as_pyint()
     return retval;
 }
 
-PyObject* CharacterParser::as_pyfloat()
+double CharacterParser::as_double()
 {
     reset_error();
 
-    // If the number is negative, include the sign as part of the string
-    const std::size_t offset = std::size_t(is_negative());
-    const char* start = m_start - offset;
-
-    // Attempt to pre-detect if the string is a valid integer.
-    // it is cheaper to do this than to let Python do that and construct an exception.
-    // Need to account for underscores if they exist and we are allowing them.
-    double retval = -1.0;
-    char* their_end = nullptr;
-    Buffer buffer;
-    const char* my_end = end();
-    const bool is_float = check_string_for_number(
-        buffer,
-        start,
-        my_end,
-        offset,
-        [](const char* start, const char* end) -> bool {
-            return string_contains_what(start, end, 10) > 0;
-        }
-    );
-    if (!is_float) {
-        encountered_conversion_error();
-        return nullptr;
+    // The C++ parser is robust enough to handle any double properly,
+    // so there is no need to fall back on Python's parser.
+    // The only thing special handling we need is underscores.
+    bool error;
+    double result = parse_float(m_start, end(), error);
+    if (error && has_valid_underscores()) {
+        Buffer buffer(m_start, m_str_len);
+        buffer.remove_valid_underscores();
+        result = parse_float(buffer.start(), buffer.end(), error);
     }
-    strip_trailing_whitespace(start, my_end);
-
-    // Parse and record the location where parsing ended (excluding trailing whitespace)
-    retval = PyOS_string_to_double(start, &their_end, nullptr);
-
-    // If an exception was raised propagate it. If the full string was not parsed, raise
-    // an error also.
-    if (retval == -1.0 && PyErr_Occurred()) {
-        return nullptr;
-    } else if (their_end != my_end) {
+    if (error) {
         encountered_conversion_error();
+        return -1.0;
+    }
+    return sign() * result;
+}
+
+PyObject* CharacterParser::as_pyfloat()
+{
+    const double result = as_double();
+    return errored() ? nullptr : PyFloat_FromDouble(result);
+}
+
+PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)
+{
+    const double result = as_double();
+
+    // Fail fast on error
+    if (errored()) {
         return nullptr;
     }
 
-    // Return the value as a python object
-    return PyFloat_FromDouble(retval);
+    // force_int takes precidence, and coerce conditionally returns as an integer
+    if (force_int) {
+        return PyLong_FromDouble(result);
+    } else if (coerce) {
+        return Parser::float_is_intlike(result) ? PyLong_FromDouble(result)
+                                                : PyFloat_FromDouble(result);
+    } else {
+        return PyFloat_FromDouble(result);
+    }
 }
 
 NumberFlags CharacterParser::get_number_type() const
@@ -204,92 +206,4 @@ NumberFlags CharacterParser::get_number_type() const
 
     // Return the found type
     return type_mapping[value];
-}
-
-template <
-    typename T,
-    typename CheckFunction,
-    typename OverflowCheckFunction,
-    typename ConvertFunction>
-T CharacterParser::as_type(
-    CheckFunction check_function,
-    OverflowCheckFunction overflow_check_function,
-    ConvertFunction convert_function
-)
-{
-    reset_error();
-
-    // Do a quick check if the input likely contains the desired type
-    if (check_function(m_start, m_str_len)) {
-
-        // If the number will be too long report an overflow error
-        if (overflow_check_function(m_start, m_str_len)) {
-            if (has_invalid_underscores()) {
-                encountered_conversion_error();
-            } else {
-                encountered_potential_overflow_error();
-            }
-            return static_cast<T>(-1);
-        }
-
-        // Convert to the desired type - handle the special case
-        // of underscores in the string by removing them and trying again
-        bool error = false;
-        T result = convert_function(m_start, end(), error);
-        if (!error) {
-            return sign() * result;
-        } else if (has_valid_underscores()) {
-            Buffer buffer(m_start, m_str_len);
-            buffer.remove_valid_underscores();
-            result = convert_function(buffer.start(), buffer.end(), error);
-            if (!error) {
-                return sign() * result;
-            }
-        }
-    }
-
-    // Any non-success above ends up here, record as failure
-    encountered_conversion_error();
-    return static_cast<T>(-1);
-}
-
-template <typename Function>
-bool CharacterParser::check_string_for_number(
-    Buffer& buffer,
-    const char*& start,
-    const char*& original_end,
-    const std::size_t offset,
-    Function string_contains_number
-)
-{
-    if (!string_contains_number(m_start, end())) {
-        // If it does not contain a number, see if it is because of underscores.
-        // If so, remove them and try again.
-        // Otherwise, it does not contain a number.
-        if (has_valid_underscores()) {
-            const std::size_t len = static_cast<std::size_t>(original_end - start);
-            buffer.copy(start, len);
-            buffer.remove_valid_underscores(options().get_base() != 10);
-            const char* b_start = buffer.start() + offset;
-            const char* b_end = buffer.end();
-            strip_trailing_whitespace(b_start, b_end);
-            if (!string_contains_number(b_start, b_end)) {
-                return false;
-            }
-            start = buffer.start();
-            original_end = buffer.end();
-        } else {
-            return false;
-        }
-    }
-
-    // If here, the string for sure contains the number
-    return true;
-}
-
-void Buffer::remove_valid_underscores(const bool based)
-{
-    const char* new_end = end();
-    ::remove_valid_underscores(start(), new_end, based);
-    m_len = static_cast<std::size_t>(new_end - start());
 }

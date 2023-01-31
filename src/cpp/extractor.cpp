@@ -3,7 +3,6 @@
 
 #include <Python.h>
 
-#include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/extractor.hpp"
 #include "fastnumbers/parser.hpp"
 
@@ -125,6 +124,7 @@ bool TextExtractor::parse_unicode_to_char()
     // character.
     long u_as_decimal = 0;
     const Py_ssize_t data_len = len + index;
+    static constexpr uint8_t ASCII_MAX = 127;
     for (; index < data_len; index++) {
         const Py_UCS4 u = (Py_UCS4)PyUnicode_READ(kind, data, index);
         if (u < ASCII_MAX) {

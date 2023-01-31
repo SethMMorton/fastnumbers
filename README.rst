@@ -30,13 +30,14 @@ Super-fast and clean conversions to numbers.
 ``fastnumbers`` is a module with the following three objectives (in order
 of decreasing importance as to why the module was created):
 
-    #. Provide a set of convenience functions that wrap the above
-       ``int`` and ``float`` replacements and provides easy, concise,
-       powerful, fast and flexible error handling.
+    #. Provide a set of convenience functions that wrap calls to
+       ``int`` and ``float`` and provides easy, concise, powerful, fast
+       and flexible error handling.
     #. Provide a set of functions that can be used to rapidly identify if
        an input *could* be converted to *int* or *float*.
     #. Provide drop-in replacements for the Python built-in ``int`` and
-       ``float`` that on average are *up to* 2x faster. These functions
+       ``float`` that are on par or faster with the Python equivalents
+       (see the `Timing_` section for details). These functions
        should behave *identically* to the Python built-ins except for a few
        specific corner-cases as mentioned in the
        `API documentation for those functions <https://fastnumbers.readthedocs.io/en/main/api.html#the-built-in-replacement-functions>`_.
@@ -156,8 +157,6 @@ on if there is any fractional component of thi return value.
     56
     >>> try_real(56.0, coerce=False)
     56.0
-    >>>
-    >>>
 
 ``try_forceint`` always returns an integer.
 
@@ -372,7 +371,10 @@ with a speedup - they may not. Every platform, compiler, and data-set is
 different, and you should perform a timing test on your system with your data
 to evaluate if you will see a benefit. As you can see from the data linked in
 the `Timing`_ section, the amount of speedup you will get is particularly
-data-dependent.
+data-dependent. *In general* you will see a performance boost for floats (and
+this boost increases as the size of the float increases), but for integers it
+is largely dependent on the length of the integer. You will likely *not* see
+a performance boost if the input are already numbers instead of strings.
 
 **NOTE**: in the below examples, we use ``from fastnumbers import int`` instead
 of ``import fastnumbers``. This is because calling ``fastnumbers.int()`` is a
@@ -413,39 +415,33 @@ Timing
 ------
 
 Just how much faster is ``fastnumbers`` than a pure python implementation?
-Please see the following Jupyter notebooks for timing information on various
-Python versions.
-
-    - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_35.ipynb
-    - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_36.ipynb
-    - https://nbviewer.jupyter.org/github/SethMMorton/fastnumbers/blob/master/TIMING_37.ipynb
+Please look https://github.com/SethMMorton/fastnumbers/tree/main/profiling.
 
 High-Level Algorithm
 --------------------
 
-CPython goes to great lengths to ensure that your string input is converted to a
-number *correctly* (you can prove this to yourself by examining the source code
-for
-`integer conversions <https://github.com/python/cpython/blob/e349bf23584eef20e0d1e1b2989d9b1430f15507/Objects/longobject.c#L2213>`_
-and for
-`float conversions <https://github.com/python/cpython/blob/e349bf23584eef20e0d1e1b2989d9b1430f15507/Python/dtoa.c#L1434>`_),
-but this extra effort is only needed for very large
-integers or for floats with many digits or large exponents. For integers, if
-the result could fit into a C ``long`` then a naive algorithm of < 10 lines
-of C code is sufficient. For floats, if the number does not require high
-precision or does not have a large exponent (such as "-123.45e6") then a
-short naive algorithm is also possible.
+For integers, CPython goes to great lengths to ensure that your string input
+is converted to a number *correctly* and *losslessly* (you can prove this to
+yourself by examining the source code for
+`integer conversions <https://github.com/python/cpython/blob/e349bf23584eef20e0d1e1b2989d9b1430f15507/Objects/longobject.c#L2213>`_).
+This extra effort is only needed for integers that cannot fit into a 64-bit
+integer data type - for those that can, a naive algorithm of < 10 lines
+of C code is sufficient and significantly faster. ``fastnumbers`` uses a
+heuristic to determine if the input can be safely converted with the much
+faster naive algorithm, and if so it does so, falling back on
+the CPython implementation for longer input strings.
+Most real-world numbers pass the heuristic and so you should generally see
+improved performance with ``fastnumbers`` for integers.
 
-These naive algorithms are quite fast, but the performance improvement comes
-at the expense of being unsafe (no protection against overflow or round-off
-errors). ``fastnumbers`` uses a heuristic to determine if the input can be
-safely converted with the much faster naive algorithm. These heuristics are
-extremely conservative - if there is *any* chance that the naive result would
-not give *exactly* the same result as the built-in functions then it will fall
-back on CPython's conversion function. For this reason, ``fastnumbers`` is aways
-*at least as fast* as CPython's built-in ``float`` and ``int`` functions, and
-oftentimes is significantly faster because most real-world numbers pass the
-heuristic.
+For floats, ``fastnumbers`` utilizes the ultra-fast
+`fast_float::from_chars <https://github.com/fastfloat/fast_float>`_ function
+to convert strings representing floats into a C ``double`` both quickly *and
+safely* - the conversion provides the same accuracy as the CPython
+`float conversion function <https://github.com/python/cpython/blob/e349bf23584eef20e0d1e1b2989d9b1430f15507/Python/dtoa.c#L1434>`_
+but instead of scaling linearly with length of the input string it seems
+to have roughly constant performance. By completely bypassing the CPython
+converter we get significant performance gains with no penalty, so you
+should always see improved performance with ``fastnumbers`` for floats.
 
 Installation
 ------------

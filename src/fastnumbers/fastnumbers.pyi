@@ -14,10 +14,6 @@ from typing import (
 from typing_extensions import Protocol
 
 __version__: str
-max_int_len: pyint
-dig: pyint
-max_exp: pyint
-min_exp: pyint
 
 class HasIndex(Protocol):
     def __index__(self) -> pyint: ...

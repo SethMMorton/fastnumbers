@@ -11,7 +11,7 @@ from setuptools import Extension, find_packages, setup
 # Compilation arguments are platform-dependent
 if sys.platform == "win32":
     compile_args = [
-        "/std:c++14",
+        "/std:c++17",
         "/W4",  # Equivalent to -Wall -Wpedantic on GCC/Clang
         "/wd4100",  # don't warn about unreferenced formal parameters
         "/wd4127",  # don't warn about constant conditional expressions
@@ -21,7 +21,7 @@ if sys.platform == "win32":
         compile_args.append("/Z7")
 else:
     compile_args = [
-        "-std=c++14",
+        "-std=c++17",
         "-Wall",
         "-Weffc++",
         "-Wpedantic",
@@ -29,8 +29,6 @@ else:
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("-O0")
         compile_args.append("-g")
-    if sys.platform == "darwin":
-        compile_args.append("-Wno-c++17-extensions")
 
 
 ext = [
