@@ -384,10 +384,16 @@ class TestBackwardsCompatibility:
 
     old_to_new_conversion_pairing = []
     func_pairs: List[Tuple[Callable[[Any], Any], Callable[[Any], Any]]] = [
-        (fastnumbers.fast_real, fastnumbers.try_real),
-        (fastnumbers.fast_float, fastnumbers.try_float),
-        (fastnumbers.fast_int, fastnumbers.try_int),
-        (fastnumbers.fast_forceint, fastnumbers.try_forceint),
+        (partial(fastnumbers.fast_real, allow_underscores=False), fastnumbers.try_real),
+        (
+            partial(fastnumbers.fast_float, allow_underscores=False),
+            fastnumbers.try_float,
+        ),
+        (partial(fastnumbers.fast_int, allow_underscores=False), fastnumbers.try_int),
+        (
+            partial(fastnumbers.fast_forceint, allow_underscores=False),
+            fastnumbers.try_forceint,
+        ),
     ]
     for old, new in func_pairs:
         old_to_new_conversion_pairing += [
@@ -426,10 +432,16 @@ class TestBackwardsCompatibility:
 
     old_to_new_checking_pairing = []
     func_pairs = [
-        (fastnumbers.isreal, fastnumbers.check_real),
-        (fastnumbers.isfloat, fastnumbers.check_float),
-        (fastnumbers.isint, fastnumbers.check_int),
-        (fastnumbers.isintlike, fastnumbers.check_intlike),
+        (partial(fastnumbers.isreal, allow_underscores=False), fastnumbers.check_real),
+        (
+            partial(fastnumbers.isfloat, allow_underscores=False),
+            fastnumbers.check_float,
+        ),
+        (partial(fastnumbers.isint, allow_underscores=False), fastnumbers.check_int),
+        (
+            partial(fastnumbers.isintlike, allow_underscores=False),
+            fastnumbers.check_intlike,
+        ),
     ]
     for old, new in func_pairs:
         old_to_new_checking_pairing += [
