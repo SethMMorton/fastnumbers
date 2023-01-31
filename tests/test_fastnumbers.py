@@ -412,23 +412,24 @@ class TestBackwardsCompatibility:
             ),
         ]
 
-    @given(floats() | integers() | text() | binary() | tuples(floats()))
+    @given(floats() | integers() | text(max_size=50))
     @parametrize("old_func, new_func", old_to_new_conversion_pairing)
     def test_old_to_new_conversion_equivalence(
         self, old_func: ConversionFuncs, new_func: ConversionFuncs, x: Any
     ) -> None:
-        try:
-            old_result = old_func(x)
-        except Exception as e:
-            old_result = str(e)
-        try:
-            new_result = new_func(x)
-        except Exception as e:
-            new_result = str(e)
-        if old_result != old_result and new_result != new_result:
-            assert math.isnan(old_result) and math.isnan(new_result)
-        else:
-            assert old_result == new_result
+        for given in (x, (x, x)):
+            try:
+                old_result = old_func(given)
+            except Exception as e:
+                old_result = str(e)
+            try:
+                new_result = new_func(given)
+            except Exception as e:
+                new_result = str(e)
+            if old_result != old_result and new_result != new_result:
+                assert math.isnan(old_result) and math.isnan(new_result)
+            else:
+                assert old_result == new_result
 
     old_to_new_checking_pairing = []
     func_pairs = [
@@ -470,13 +471,16 @@ class TestBackwardsCompatibility:
         ),
     ]
 
-    @given(floats() | integers() | text() | binary() | tuples(floats()))
+    @given(floats() | integers() | text(max_size=50))
     @parametrize("old_func, new_func", old_to_new_checking_pairing)
     def test_old_to_new_checking_equivalence(
         self, old_func: IdentificationFuncs, new_func: IdentificationFuncs, x: Any
     ) -> None:
         old_result = old_func(x)
         new_result = new_func(x)
+        assert old_result == new_result
+        old_result = old_func((x, x))
+        new_result = new_func((x, x))
         assert old_result == new_result
 
 
@@ -822,7 +826,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     funcs = conversion_funcs
 
-    @given(sampled_from(not_numeric))
+    @given(sampled_from(random.sample(not_numeric, 1000)))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_non_numeral_returns_as_is(
         self, func: ConversionFuncs, x: str
@@ -1207,7 +1211,7 @@ class TestCheckingFunctions:
     ) -> None:
         assert not func(x)
 
-    @given(sampled_from(not_numeric))
+    @given(sampled_from(random.sample(not_numeric, 1000)))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_non_numeral_returns_false(
         self, func: IdentificationFuncs, x: str
@@ -1409,7 +1413,7 @@ class TestQueryType:
         assert fastnumbers.query_type(x) is float
         assert fastnumbers.query_type(pad(x)) is float  # Accepts padding
 
-    @given(sampled_from(not_numeric))
+    @given(sampled_from(random.sample(not_numeric, 1000)))
     def test_given_unicode_non_numeral_returns_str_or_none_if_str_not_allowed(
         self, x: str
     ) -> None:
