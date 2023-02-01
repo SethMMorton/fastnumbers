@@ -417,13 +417,13 @@ class TestBackwardsCompatibility:
     def test_old_to_new_conversion_equivalence(
         self, old_func: ConversionFuncs, new_func: ConversionFuncs, x: Any
     ) -> None:
-        for given in (x, (x, x)):
+        for value in (x, (x, x)):
             try:
-                old_result = old_func(given)
+                old_result = old_func(value)
             except Exception as e:
                 old_result = str(e)
             try:
-                new_result = new_func(given)
+                new_result = new_func(value)
             except Exception as e:
                 new_result = str(e)
             if old_result != old_result and new_result != new_result:

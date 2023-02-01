@@ -1,14 +1,11 @@
 include README.rst
 include *.md
-include *.ipynb
-include .travis.yml
-include appveyor.yml
 include LICENSE
 include setup.py
 include setup.cfg
 include tox.ini
-include *.pyi
 include pyproject.toml
+include .readthedocs.yaml
 graft src
 graft include
 graft tests
