@@ -1,8 +1,8 @@
 # Release Checklist
 
-- [ ] Get master to the appropriate code release state.
-      [Travis CI](https://travis-ci.com/SethMMorton/fastnumbers) must be passing:
-      [![Build Status](https://travis-ci.com/SethMMorton/fastnumbers.svg?branch=master)](https://travis-ci.com/SethMMorton/fastnumbers)
+- [ ] Get main to the appropriate code release state.
+      [GitHub Actions](https://github.com/SethMMorton/fastnumbers/actions) must be passing:
+      [![Build Status](https://github.com/SethMMorton/fastnumbers/workflows/Tests/badge.svg)](https://github.com/SethMMorton/fastnumbers/actions)
 
 - [ ] Ensure that the `CHANGELOG.md` includes the changes made since last release.
       Please follow the style outlined in https://keepachangelog.com/.
@@ -23,16 +23,13 @@
     git push
     ```
 
-- [ ] Check that the [Travis CI build](https://travis-ci.com/SethMMorton/fastnumbers) has
-      deployed correctly to [the test PyPI](https://test.pypi.org/project/fastnumbers/#history).
-
 - [ ] Push the tag:
 
     ```bash
     git push --tags
     ```
 
-- [ ] Check that the tagged [Travis CI build](https://travis-ci.com/SethMMorton/fastnumbers) has
+- [ ] Check that the tagged [GitHub Actions build](https://github.com/SethMMorton/fastnumbers/actions) has
       deployed correctly to [PyPI](https://pypi.org/project/fastnumbers/#history).
 
 - [ ] Check installation:
