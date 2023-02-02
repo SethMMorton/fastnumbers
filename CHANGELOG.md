@@ -15,12 +15,18 @@ Unreleased
 
 ### Changed
 - `query_type` now sets `allow_underscores` to `False` by default
-- Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45)
-  and [#56](https://github.com/SethMMorton/fastnumbers/issues/56))
+- Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45),
+  [#56](https://github.com/SethMMorton/fastnumbers/issues/56),
+  [#55](https://github.com/SethMMorton/fastnumbers/issues/55), and
+  [#35](https://github.com/SethMMorton/fastnumbers/issues/35))
 - All functions now use use `METH_FASTCALL` for pass arguments from
   Python to C (Issue [#59](https://github.com/SethMMorton/fastnumbers/issues/59))
 - Always parse integers using `int64_t` instead of using `long` to ensure
   we can always quickly parse at least 18 digits
+- Parsing floats now always uses the fast and robust parser
+  [`fast_float::from_chars()`](https://github.com/fastfloat/fast_float)
+  (Issues [#57](https://github.com/SethMMorton/fastnumbers/issues/57) and
+  [#28](https://github.com/SethMMorton/fastnumbers/issues/28))
 
 ### Deprecated
 - `isreal`, `isfloat`, `isint`, and `isintlike` are deprecated in
