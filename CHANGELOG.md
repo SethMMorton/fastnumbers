@@ -15,6 +15,7 @@ Unreleased
  and `fast_forceint`, respectively (Issues
  [#37](https://github.com/SethMMorton/fastnumbers/issues/37) and
  [#40](https://github.com/SethMMorton/fastnumbers/issues/40))
+- Added Python 3.11 support
 
 ### Changed
 - `query_type` now sets `allow_underscores` to `False` by default
@@ -22,7 +23,7 @@ Unreleased
   [#56](https://github.com/SethMMorton/fastnumbers/issues/56),
   [#55](https://github.com/SethMMorton/fastnumbers/issues/55), and
   [#35](https://github.com/SethMMorton/fastnumbers/issues/35))
-- All functions now use use `METH_FASTCALL` for pass arguments from
+- All functions now use use `METH_FASTCALL` to pass arguments from
   Python to C (Issue [#59](https://github.com/SethMMorton/fastnumbers/issues/59))
 - Always parse integers using `int64_t` instead of using `long` to ensure
   we can always quickly parse at least 18 digits
@@ -41,7 +42,7 @@ Unreleased
 
 ### Removed
 - Support for Python 3.6
-- Removed the undocumentente `dig`, `max_exp`, `min_exp`, and `max_int_len`
+- Removed the undocumented `dig`, `max_exp`, `min_exp`, and `max_int_len`
   module-level constants, as they are now meaningless
 
 [3.2.1] - 2021-11-02
