@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[4.0.0] - 2023-02-01
+---
+
 ### Added
 - Added `check_real`, `check_float`, `check_int`, and `check_intlike`
  to provide a more flexible interface than `isreal`, `isfloat`, `isint`,
@@ -389,6 +392,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[4.0.0]: https://github.com/SethMMorton/fastnumbers/compare/3.2.1...4.0.0
 [3.2.1]: https://github.com/SethMMorton/fastnumbers/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/SethMMorton/fastnumbers/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/SethMMorton/fastnumbers/compare/3.0.0...3.1.0

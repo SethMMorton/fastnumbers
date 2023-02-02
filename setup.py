@@ -45,7 +45,7 @@ ext = [
 # All other data is in the setup.cfg file.
 setup(
     name="fastnumbers",
-    version="3.2.1",
+    version="4.0.0",
     python_requires=">=3.7",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
