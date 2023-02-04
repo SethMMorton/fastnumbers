@@ -254,7 +254,7 @@ static PyObject* fastnumbers_try_real(
     // Read the function argument
     FN_PREPARE_ARGPARSER;
     // clang-format off
-    if (fn_parse_arguments("try_float", args, len_args, kwnames,
+    if (fn_parse_arguments("try_real", args, len_args, kwnames,
                            "x", false,  &input,
                            "$inf", false, &inf,
                            "$nan", false, &nan,
