@@ -238,6 +238,16 @@ def base_n(
     return "-" + val if neg else val
 
 
+def capture_result(  # type: ignore [no-untyped-def]
+    func: ConversionFuncs, *args, **kwargs
+) -> Any:
+    """Execute a function, and either return the result or the exception message"""
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        return str(e).replace("map_try", "try")  # normalize error message
+
+
 class DumbFloatClass(object):
     def __float__(self) -> NoReturn:
         raise ValueError("something here might go wrong")
@@ -418,14 +428,8 @@ class TestBackwardsCompatibility:
         self, old_func: ConversionFuncs, new_func: ConversionFuncs, x: Any
     ) -> None:
         for value in (x, (x, x)):
-            try:
-                old_result = old_func(value)
-            except Exception as e:
-                old_result = str(e)
-            try:
-                new_result = new_func(value)
-            except Exception as e:
-                new_result = str(e)
+            old_result = capture_result(old_func, value)
+            new_result = capture_result(new_func, value)
             if old_result != old_result and new_result != new_result:
                 assert math.isnan(old_result) and math.isnan(new_result)
             else:
@@ -1490,3 +1494,103 @@ class TestQueryType:
     ) -> None:
         assert fastnumbers.query_type(x) is type(x)
         assert fastnumbers.query_type(x, allowed_types=(float, int, str)) is None
+
+
+class TestMappingFunctions:
+    """Ensure that mapping functions operate on iterables"""
+
+    @given(lists(floats() | integers() | text(max_size=50), min_size=1, max_size=50))
+    @parametrize(
+        "nomapper, mapper",
+        [
+            (fastnumbers.try_real, fastnumbers.map_try_real),
+            (fastnumbers.try_float, fastnumbers.map_try_float),
+            (fastnumbers.try_int, fastnumbers.map_try_int),
+            (fastnumbers.try_forceint, fastnumbers.map_try_forceint),
+        ],
+    )
+    @parametrize(
+        "kwargs",
+        [
+            {},
+            {"inf": fastnumbers.RAISE},
+            {"nan": fastnumbers.RAISE},
+            {"on_fail": fastnumbers.RAISE},
+            {"base": 16},
+            {"coerce": True},
+        ],
+    )
+    def test_mapping_non_mapping_behave_the_same(self, nomapper, mapper, kwargs, x):
+        nomapper = partial(nomapper, **kwargs)
+        mapper = partial(mapper, **kwargs)
+        non_mapping = capture_result(lambda y: list(map(nomapper, y)), x)
+        mapping = capture_result(mapper, x)
+        if non_mapping != non_mapping and mapping != mapping:
+            assert math.isnan(non_mapping) and math.isnan(mapping)
+        else:
+            assert non_mapping == mapping
+
+    @parametrize(
+        "nomapper, mapper",
+        [
+            (fastnumbers.try_real, fastnumbers.map_try_real),
+            (fastnumbers.try_float, fastnumbers.map_try_float),
+            (fastnumbers.try_int, fastnumbers.map_try_int),
+            (fastnumbers.try_forceint, fastnumbers.map_try_forceint),
+        ],
+    )
+    def test_mapping_non_mapping_behave_the_same_with_invalid_types(
+        self, nomapper, mapper
+    ):
+        x = ["7", "5", None]
+        non_mapping = capture_result(lambda y: list(map(nomapper, y)), x)
+        mapping = capture_result(mapper, x)
+        assert non_mapping == mapping
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    @parametrize(
+        "iterable_gen",
+        [
+            lambda: ["6", "4", "590"],
+            lambda: ("6", "4", "590"),
+            lambda: {"6", "4", "590"},
+            lambda: iter(["6", "4", "590"]),
+            lambda: (x for x in ["6", "4", "590"]),
+        ],
+    )
+    def test_mapping_handles_any_iterable(self, func, iterable_gen):
+        expected = [4, 6, 590]
+        result = sorted(func(iterable_gen()))  # sorted needed b/c of set
+        assert result == expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    @parametrize(
+        "iterable_gen",
+        [
+            lambda: [],
+            lambda: (),
+            lambda: set(),
+            lambda: iter([]),
+            lambda: (x for x in []),
+        ],
+    )
+    def test_mapping_handles_empty_iterable(self, func, iterable_gen):
+        expected = []
+        result = func(iterable_gen())
+        assert result == expected
