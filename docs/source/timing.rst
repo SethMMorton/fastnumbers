@@ -10,4 +10,5 @@ Timing
     :local:
 
 Just how much faster is ``fastnumbers`` than a pure python implementation?
-Please look https://github.com/SethMMorton/fastnumbers/tree/main/profiling.
+This data has moved to
+https://github.com/SethMMorton/fastnumbers/tree/main/profiling.

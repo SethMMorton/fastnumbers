@@ -17,3 +17,6 @@ Some general observations about the results:
   slightly slower than CPython.
 - When numbers are provided (as opposed to strings), the Python built-ins
   are usually faster.
+- If you need to convert a list of data, using the `map_try_*` functions
+  is 2x faster than using `try_*` in a list comprehension, and about
+  1.5x faster than using `try_*` with `map`.

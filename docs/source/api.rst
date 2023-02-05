@@ -45,20 +45,40 @@ They are guaranteed to return results identical to the built-in
 
 .. autofunction:: try_real
 
+:func:`~fastnumbers.map_try_real`
++++++++++++++++++++++++++++++++++
+
+.. autofunction:: map_try_real
+
 :func:`~fastnumbers.try_float`
 ++++++++++++++++++++++++++++++
 
 .. autofunction:: try_float
+
+:func:`~fastnumbers.map_try_float`
+++++++++++++++++++++++++++++++++++
+
+.. autofunction:: map_try_float
 
 :func:`~fastnumbers.try_int`
 ++++++++++++++++++++++++++++
 
 .. autofunction:: try_int
 
+:func:`~fastnumbers.map_try_int`
+++++++++++++++++++++++++++++++++
+
+.. autofunction:: map_try_int
+
 :func:`~fastnumbers.try_forceint`
 +++++++++++++++++++++++++++++++++
 
 .. autofunction:: try_forceint
+
+:func:`~fastnumbers.map_try_forceint`
++++++++++++++++++++++++++++++++++++++
+
+.. autofunction:: map_try_forceint
 
 The "Checking" Functions
 ------------------------
