@@ -1,12 +1,18 @@
 Unreleased
 ---
 
+### Added
+- Added `map_try_real`, `map_try_float`, `map_try_int`, and `map_try_forceint`
+  to enable very fast conversions of lists or other iterables (Issues
+ [#61](https://github.com/SethMMorton/fastnumbers/issues/61) and
+ [#63](https://github.com/SethMMorton/fastnumbers/issues/63))
+
 [4.0.1] - 2023-02-05
 ---
 
 ### Fixed
 - Removed a nasty memory leak that would cause every number returned
-  from `fastnumbers` to never get freed.
+  from `fastnumbers` to never get freed
 
 [4.0.0] - 2023-02-01
 ---
