@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[4.0.1] - 2023-02-05
+---
+
 ### Fixed
 - Removed a nasty memory leak that would cause every number returned
   from `fastnumbers` to never get freed.
@@ -397,6 +400,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[4.0.1]: https://github.com/SethMMorton/fastnumbers/compare/4.0.0...4.0.1
 [4.0.0]: https://github.com/SethMMorton/fastnumbers/compare/3.2.1...4.0.0
 [3.2.1]: https://github.com/SethMMorton/fastnumbers/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/SethMMorton/fastnumbers/compare/3.1.0...3.2.0
