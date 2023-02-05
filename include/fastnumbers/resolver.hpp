@@ -63,7 +63,7 @@ public:
             if (retval == nullptr) {
                 return fail_action();
             }
-            return retval;  // do not increment, already has a refcount
+            return retval; // do not increment, already has a refcount
         }
 
         // Return the appropriate value for when infinity is found
