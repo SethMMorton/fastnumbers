@@ -11,6 +11,7 @@
 #include "fastnumbers/argparse.hpp"
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/iteration.hpp"
 #include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
@@ -62,6 +63,8 @@ static inline PyObject* convert_exception(PyObject* obj, const std::string& s)
 static inline PyObject* handle_exceptions(PyObject* input)
 try {
     throw;
+} catch (const just_return_null_exception&) {
+    return nullptr;
 } catch (const fastnumbers_exception& e) {
     return e.raise_value_error();
 } catch (const std::exception& e) {
@@ -248,94 +251,19 @@ template <typename Function>
 static PyObject*
 iterate_python_object(PyObject* input, PyObject*& item, Function convert)
 {
-    // Create the list that will be used to return the results
-    PyObject* return_list = nullptr;
-    Py_ssize_t length_hint = PyObject_LengthHint(input, 0);
-    if (length_hint < 0) {
-        return nullptr;
-    }
-    if ((return_list = PyList_New(length_hint)) == nullptr) {
-        return nullptr;
-    }
+    // Create a python list into which to store the return values
+    ListManager list_manager(input);
 
-    /**
-     * \brief Add the converted result into a list
-     * \param list The list object to populate
-     * \param i The index of the current list element to populate
-     * \param result The value to insert into the list
-     * \return nullptr on error, otherwise returns result as-is
-     */
-    auto populate = [](PyObject* list, Py_ssize_t i, PyObject* result) -> PyObject* {
-        // If the incoming value is NULL we can stop quickly.
-        if (result == nullptr) {
-            return nullptr;
-        }
+    // The helper for iterating over the Python iterable
+    PyIterableManager iter_manager(input, item, convert);
 
-        // The list may have been pre-allocated using the length hint.
-        // If so, the elements will be just populated with NULL.
-        // If the current index equals the list size, that means we are
-        // at the end of the list and we can just use append. Otherwise,
-        // we insert the object directly into the list, replacing NULL.
-        if (PyList_GET_SIZE(list) == i) {
-            if (PyList_Append(list, result)) {
-                return nullptr;
-            }
-        } else {
-            PyList_SET_ITEM(list, i, result);
-        }
-
-        // We really only will care about the return result if it is NULL.
-        return result;
-    };
-
-    // If we were given a list or a tuple we can use a faster method of
-    // iterating over the input objects, otherwise we use the iterator protocol.
-    PyObject* value = nullptr;
-    Py_ssize_t index = 0;
-    if (PyList_Check(input) || PyTuple_Check(input)) {
-        // Access the data in the input sequence directly,
-        // and iterate over it in a standard C-style for loop,
-        // convert each item and then check for errors.
-        Py_ssize_t s = PySequence_Fast_GET_SIZE(input); // *should* equal length_hint
-        for (index = 0; index < s; ++index) {
-            item = PySequence_Fast_GET_ITEM(input, index); // borrowed
-            value = convert(item);
-            if (populate(return_list, index, value) == nullptr) {
-                return nullptr;
-            }
-        }
-    } else {
-        // If here, the object is not a list or a tuple, and
-        // we hope it is an iterator.
-        PyObject* iterator = nullptr;
-        if ((iterator = PyObject_GetIter(input)) == nullptr) {
-            return nullptr;
-        }
-
-        // If here, the object has an iterator protocol and we
-        // are using it. We loop over each element of the iterator
-        // converting them and checking for errors. We have to be
-        // careful of derementing the new references that we have gotten.
-        while ((item = PyIter_Next(iterator))) {
-            try {
-                value = convert(item);
-                Py_DECREF(item);
-            } catch (...) {
-                Py_DECREF(item);
-                Py_DECREF(iterator);
-                throw;
-            }
-            if (populate(return_list, index, value) == nullptr) {
-                Py_DECREF(iterator);
-                return nullptr;
-            }
-            index += 1;
-        }
-        Py_DECREF(iterator);
+    // For each element in the Python iterable, convert it and append to the list
+    for (auto& value : iter_manager) {
+        list_manager.append(value);
     }
 
-    // No matter how we built the list, return it
-    return return_list;
+    // Return the list to the user
+    return list_manager.get();
 }
 
 /**
@@ -1435,6 +1363,7 @@ PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
 PyObject* NumericParser::PYTHON_ZERO = nullptr;
+PyObject* Sigils::ITERATOR = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1460,6 +1389,9 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     PyModule_AddObject(m, "RAISE", Selectors::RAISE);
     PyModule_AddObject(m, "STRING_ONLY", Selectors::STRING_ONLY);
     PyModule_AddObject(m, "NUMBER_ONLY", Selectors::NUMBER_ONLY);
+
+    // Sigils
+    Sigils::ITERATOR = PyObject_New(PyObject, &PyBaseObject_Type);
 
     // Constants cached for internal use
     PyObject* pos_inf_str = PyBytes_FromString("+infinity");
