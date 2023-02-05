@@ -1,6 +1,10 @@
 Unreleased
 ---
 
+### Fixed
+- Removed a nasty memory leak that would cause every number returned
+  from `fastnumbers` to never get freed.
+
 [4.0.0] - 2023-02-01
 ---
 
