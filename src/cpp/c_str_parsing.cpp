@@ -269,9 +269,7 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
     // by two numbers" algorithm kicks in.
     else {
         i = offset = 0;
-        if (is_sign(*str)) {
-            i += 1;
-        }
+
         // Skip leading characters for non-base 10 ints.
         if ((len - i) > 1 && str[i] == '0' && is_base_prefix(str[i + 1])) {
             // An underscore after the prefix is allowed, e.g. 0x_d4.
