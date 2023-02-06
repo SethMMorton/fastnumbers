@@ -37,13 +37,26 @@ of decreasing importance as to why the module was created):
        an input *could* be converted to *int* or *float*.
     #. Provide drop-in replacements for the Python built-in ``int`` and
        ``float`` that are on par or faster with the Python equivalents
-       (see the `Timing_` section for details). These functions
+       (see the `Timing`_ section for details). These functions
        should behave *identically* to the Python built-ins except for a few
        specific corner-cases as mentioned in the
        `API documentation for those functions <https://fastnumbers.readthedocs.io/en/stable/api.html#the-built-in-replacement-functions>`_.
 
        - **PLEASE** read the quick start for these functions to fully
          understand the caveats before using them.
+
+**What kind of speedups can you expect?** Here are some highlights, but please
+see the `Timing`_ section for the raw data if you want details.
+
+    - Up to 2x faster conversion of strings to integers than the built-in
+      ``int()`` function
+    - Up to 5x faster conversion of strings to floats than the built-in
+      ``float()`` function (possibly greater for very long strings)
+    - Up to 10x faster handling of errors during conversion than using
+      user-side error handling
+    - On top of the above, operations on a list of strings to to convert
+      (with the ``map_try_*`` functions) is 2x faster than the equivalent
+      list comprehension.
 
 **NOTICE**: As of ``fastnumbers`` version 4.0.0, only Python >= 3.7 is
 supported.
@@ -77,6 +90,8 @@ Error-Handling Functions
 ++++++++++++++++++++++++
 
 - `Error-handling function API <https://fastnumbers.readthedocs.io/en/stable/api.html#the-error-handling-functions>`_
+- `Fast operations on lists and other iterables`_
+- `About the on_fail option`_
 
 ``try_float`` will be used to demonstrate the functionality of the
 ``try_*`` functions.
@@ -171,6 +186,27 @@ on if there is any fractional component of thi return value.
     56
     >>> try_forceint(56.07)
     56
+
+Fast operations on lists and other iterables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each of the ``try_*`` functions have an equivalent ``map_try_*`` function
+that has an identical signiture but accepts an iterable of items to convert
+and returns a list. Using ``try_float`` as an example, the following
+are all functionally equivalent.
+
+.. code-block:: python
+
+    >>> from fastnumbers import map_try_float, try_float
+    >>> iterable = ["5", "4.5", "34567.6", "32"]
+    >>> map_try_float(iterable) == list(map(try_float, iterable))
+    True
+    >>> map_try_float(iterable) == [try_float(x) for x in iterable]
+    True
+
+The difference is that ``map_try_float`` is 2x the speed of the list
+comprehension method, and 1.5x the speed of the ``map`` method. The reason
+is that it avoids Python function call overhead on each iteration.
 
 About the ``on_fail`` option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -11,6 +11,7 @@
 #include "fastnumbers/argparse.hpp"
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/iteration.hpp"
 #include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
@@ -62,6 +63,8 @@ static inline PyObject* convert_exception(PyObject* obj, const std::string& s)
 static inline PyObject* handle_exceptions(PyObject* input)
 try {
     throw;
+} catch (const just_return_null_exception&) {
+    return nullptr;
 } catch (const fastnumbers_exception& e) {
     return e.raise_value_error();
 } catch (const std::exception& e) {
@@ -234,6 +237,33 @@ static inline void validate_consider(const PyObject* selector)
             "fastnumbers.STRING_ONLY"
         );
     }
+}
+
+/**
+ * \brief Iterate over the elements of a collection and convert each one
+ * \param input The given input object that should be iterable
+ * \param item The reference to a PyObject* that will use to hold the input's
+ *             items - this is used for possible error reporting
+ * \param convert A function accepting a single argument that performs the conversion
+ * \return A new python list containing the converted results, or NULL on error
+ */
+template <typename Function>
+static PyObject*
+iterate_python_object(PyObject* input, PyObject*& item, Function convert)
+{
+    // Create a python list into which to store the return values
+    ListManager list_manager(input);
+
+    // The helper for iterating over the Python iterable
+    PyIterableManager iter_manager(input, item, convert);
+
+    // For each element in the Python iterable, convert it and append to the list
+    for (auto& value : iter_manager) {
+        list_manager.append(value);
+    }
+
+    // Return the list to the user
+    return list_manager.get();
 }
 
 /**
@@ -1040,6 +1070,178 @@ static PyObject* fastnumbers_real(
     }
 }
 
+static PyObject* fastnumbers_map_try_real(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
+{
+    PyObject* input = nullptr;
+    PyObject* inf = Selectors::ALLOWED;
+    PyObject* nan = Selectors::ALLOWED;
+    PyObject* on_fail = Selectors::INPUT;
+    PyObject* on_type_error = Selectors::RAISE;
+    int coerce = true;
+    int allow_underscores = false;
+
+    // Read the function argument
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("map_try_real", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$coerce", true, &coerce,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
+
+    // Execute main logic in a try-block to convert C++ exceptions
+    PyObject* item = nullptr;
+    try {
+        validate_not_disallow(inf);
+        validate_not_disallow(nan);
+        validate_not_allow_disallow_str_only_num_only(on_fail);
+        validate_not_allow_disallow_str_only_num_only(on_type_error);
+        auto convert = [&](PyObject* x) -> PyObject* {
+            return float_conv_impl(
+                x,
+                on_fail,
+                on_type_error,
+                inf,
+                nan,
+                UserType::REAL,
+                allow_underscores,
+                coerce
+            );
+        };
+        return iterate_python_object(input, item, convert);
+    } catch (...) {
+        return handle_exceptions(item != nullptr ? item : input);
+    }
+}
+
+static PyObject* fastnumbers_map_try_float(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
+{
+    PyObject* input = nullptr;
+    PyObject* inf = Selectors::ALLOWED;
+    PyObject* nan = Selectors::ALLOWED;
+    PyObject* on_fail = Selectors::INPUT;
+    PyObject* on_type_error = Selectors::RAISE;
+    int allow_underscores = false;
+
+    // Read the function arguments
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("map_try_float", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
+
+    // Execute main logic in a try-block to convert C++ exceptions
+    PyObject* item = nullptr;
+    try {
+        validate_not_disallow(inf);
+        validate_not_disallow(nan);
+        validate_not_allow_disallow_str_only_num_only(on_fail);
+        validate_not_allow_disallow_str_only_num_only(on_type_error);
+        auto convert = [&](PyObject* x) -> PyObject* {
+            return float_conv_impl(
+                x, on_fail, on_type_error, inf, nan, UserType::FLOAT, allow_underscores
+            );
+        };
+        return iterate_python_object(input, item, convert);
+    } catch (...) {
+        return handle_exceptions(item != nullptr ? item : input);
+    }
+}
+
+static PyObject* fastnumbers_map_try_int(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
+{
+    PyObject* input = nullptr;
+    PyObject* on_fail = Selectors::INPUT;
+    PyObject* on_type_error = Selectors::RAISE;
+    PyObject* pybase = nullptr;
+    int allow_underscores = false;
+
+    // Read the function arguments
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("map_try_int", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$base", false, &pybase,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
+
+    // Execute main logic in a try-block to convert C++ exceptions
+    PyObject* item = nullptr;
+    try {
+        validate_not_allow_disallow_str_only_num_only(on_fail);
+        validate_not_allow_disallow_str_only_num_only(on_type_error);
+        const int base = assess_integer_base_input(pybase);
+        auto convert = [&](PyObject* x) -> PyObject* {
+            return int_conv_impl(
+                x, on_fail, on_type_error, UserType::INT, allow_underscores, base
+            );
+        };
+        return iterate_python_object(input, item, convert);
+    } catch (...) {
+        return handle_exceptions(item != nullptr ? item : input);
+    }
+}
+
+static PyObject* fastnumbers_map_try_forceint(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
+{
+    PyObject* input = nullptr;
+    PyObject* on_fail = Selectors::INPUT;
+    PyObject* on_type_error = Selectors::RAISE;
+    int allow_underscores = false;
+
+    // Read the function arguments
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("map_try_forceint", args, len_args, kwnames,
+                           "x", false,  &input,
+                           "$on_fail", false, &on_fail,
+                           "$on_type_error", false, &on_type_error,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
+
+    // Execute main logic in a try-block to convert C++ exceptions
+    PyObject* item = nullptr;
+    try {
+        validate_not_allow_disallow_str_only_num_only(on_fail);
+        validate_not_allow_disallow_str_only_num_only(on_type_error);
+        auto convert = [&](PyObject* x) -> PyObject* {
+            return int_conv_impl(
+                x, on_fail, on_type_error, UserType::FORCEINT, allow_underscores
+            );
+        };
+        return iterate_python_object(input, item, convert);
+    } catch (...) {
+        return handle_exceptions(item != nullptr ? item : input);
+    }
+}
+
 // Define the methods contained in this module
 static PyMethodDef FastnumbersMethods[] = {
     { "try_real",
@@ -1119,6 +1321,22 @@ static PyMethodDef FastnumbersMethods[] = {
       (PyCFunction)fastnumbers_real,
       METH_FASTCALL | METH_KEYWORDS,
       fastnumbers_real__doc__ },
+    { "map_try_real",
+      (PyCFunction)fastnumbers_map_try_real,
+      METH_FASTCALL | METH_KEYWORDS,
+      map_try_real__doc__ },
+    { "map_try_float",
+      (PyCFunction)fastnumbers_map_try_float,
+      METH_FASTCALL | METH_KEYWORDS,
+      map_try_float__doc__ },
+    { "map_try_int",
+      (PyCFunction)fastnumbers_map_try_int,
+      METH_FASTCALL | METH_KEYWORDS,
+      map_try_int__doc__ },
+    { "map_try_forceint",
+      (PyCFunction)fastnumbers_map_try_forceint,
+      METH_FASTCALL | METH_KEYWORDS,
+      map_try_forceint__doc__ },
     { nullptr, nullptr, 0, nullptr } /* Sentinel */
 };
 
@@ -1145,6 +1363,7 @@ PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
 PyObject* NumericParser::PYTHON_ZERO = nullptr;
+PyObject* Sigils::ITERATOR = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1170,6 +1389,9 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     PyModule_AddObject(m, "RAISE", Selectors::RAISE);
     PyModule_AddObject(m, "STRING_ONLY", Selectors::STRING_ONLY);
     PyModule_AddObject(m, "NUMBER_ONLY", Selectors::NUMBER_ONLY);
+
+    // Sigils
+    Sigils::ITERATOR = PyObject_New(PyObject, &PyBaseObject_Type);
 
     // Constants cached for internal use
     PyObject* pos_inf_str = PyBytes_FromString("+infinity");

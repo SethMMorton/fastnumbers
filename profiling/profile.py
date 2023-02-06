@@ -1,10 +1,13 @@
 #! /usr/bin/env python
 
 import copy
+import gc
 import math
 import re
 import sys
 import timeit
+
+import fastnumbers
 
 # If given an file path as an argument, cause print to write
 # to stdout and it.
@@ -54,24 +57,21 @@ class Timer(object):
         (-41053.543028758302e100, "Float"),
     )
 
-    # Formatting strings.
-    FUNCTION_CALL_FMT = "{}({!r})"
-
     def __init__(self, title):
         print("### " + title)
         print()
         self.functions = []
 
-    def add_function(self, func, label, setup="pass"):
+    def add_function(self, func, label, setup="pass", iterable=False):
         """Add a function to be timed and compared."""
-        self.functions.append((func, setup, label))
+        self.functions.append((func, setup, label, iterable))
 
     def time_functions(self, repeat=5):
         """Time all the given functions against all input then display results."""
 
         # Collect the function labels to make the header of this table.
         # Show that the units are seconds for each.
-        function_labels = [label + " (ms)" for _, _, label in self.functions]
+        function_labels = [label + " (ms)" for _, _, label, _ in self.functions]
 
         # Construct the table strings, formatted in Markdown.
         # Store each line as a string element in a list.
@@ -82,8 +82,12 @@ class Timer(object):
         # For each value, time each function and collect the results.
         for value, value_label in self.THINGS_TO_TIME:
             row = []
-            for func, setup, _ in self.functions:
-                call = self.FUNCTION_CALL_FMT.format(func, value)
+            for func, setup, _, iterable in self.functions:
+                if iterable:
+                    setup += f"; iterable = [{value!r}] * 50"
+                    call = f"{func}(iterable)"
+                else:
+                    call = f"{func}({value!r})"
                 try:
                     row.append(self._timeit(call, setup, repeat))
                 except (ValueError, TypeError):
@@ -104,6 +108,7 @@ class Timer(object):
         # Show the results in a table.
         print(str(table))
         print()
+        gc.collect()
 
     @staticmethod
     def mean(x):
@@ -348,6 +353,14 @@ def check_intlike_try(x):
         return a == float(x)
 
 
+def fn_listcomp(iterable, func=fastnumbers.try_float):
+    return [func(x) for x in iterable]
+
+
+def fn_map(iterable, func=fastnumbers.try_float):
+    return list(map(func, iterable))
+
+
 print(sys.version_info)
 print()
 
@@ -359,7 +372,7 @@ timer.time_functions(repeat=100)
 timer = Timer("Timing comparison of `float` functions")
 timer.add_function("float", "builtin")
 timer.add_function("float", "fastnumbers", "from fastnumbers import float")
-timer.time_functions(repeat=50)
+timer.time_functions(repeat=100)
 
 timer = Timer("Timing comparison of `int` functions with error handling")
 timer.add_function("int_try", "try/except", "from __main__ import int_try")
@@ -421,5 +434,30 @@ timer.add_function(
 timer.add_function("check_intlike_re", "regex", "from __main__ import check_intlike_re")
 timer.add_function(
     "check_intlike", "fastnumbers", "from fastnumbers import check_intlike"
+)
+timer.time_functions()
+
+
+timer = Timer(
+    "Timing comparison of `map_try_float` vs. iterating over "
+    "`try_float` for a 50 element list"
+)
+timer.add_function(
+    "fn_listcomp",
+    "[try_float(x) for x in iterable]",
+    "from __main__ import fn_listcomp",
+    iterable=True,
+)
+timer.add_function(
+    "fn_map",
+    "list(map(try_float, iterable))",
+    "from __main__ import fn_map",
+    iterable=True,
+)
+timer.add_function(
+    "map_try_float",
+    "map_try_float(iterable)",
+    "from fastnumbers import map_try_float",
+    iterable=True,
 )
 timer.time_functions()
