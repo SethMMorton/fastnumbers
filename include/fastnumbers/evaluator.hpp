@@ -70,6 +70,7 @@ public:
         case ParserType::CHARACTER:
             return from_text_as_type(ntype);
         }
+        Py_UNREACHABLE();
     }
 
 private:
@@ -126,6 +127,7 @@ private:
                                                 : m_parser.as_pyint()
             );
         }
+        Py_UNREACHABLE();
     }
 
     /// Logic for evaluating a text python object
@@ -144,6 +146,7 @@ private:
         case UserType::INT:
             return from_text_as_int();
         }
+        Py_UNREACHABLE();
     }
 
     /// Logic for evaluating a text python object as a float or integer
