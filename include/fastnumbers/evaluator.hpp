@@ -128,7 +128,10 @@ private:
             if (!options().is_default_base()) {
                 return Payload(ActionType::ERROR_INVALID_BASE);
             }
-            return Payload(m_parser.as_pyint());
+            return Payload(
+                (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
+                                                : m_parser.as_pyint()
+            );
 
         default:
             Py_UNREACHABLE();
