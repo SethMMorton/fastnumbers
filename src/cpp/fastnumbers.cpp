@@ -34,28 +34,17 @@ public:
     }
 };
 
-/// Convert a char array to a Python exception
-static inline PyObject* convert_exception(PyObject* obj, const char* msg)
+/// Convert a C++ error to a Python exception
+static inline PyObject* convert_exception(PyObject* obj, const std::exception& exc)
 {
+    // This will ideally never get coverage, and that's OK
     PyErr_Format(
         PyExc_SystemError,
         "fastnumbers with input '%.R' has thrown an unexpected C++ exception: %s",
         obj,
-        msg
+        exc.what()
     );
     return nullptr;
-}
-
-/// Convert a C++ error to a Python exception
-static inline PyObject* convert_exception(PyObject* obj, const std::exception& exc)
-{
-    return convert_exception(obj, exc.what());
-}
-
-/// Convert a string to a Python exception
-static inline PyObject* convert_exception(PyObject* obj, const std::string& s)
-{
-    return convert_exception(obj, s.data());
 }
 
 /// Handle all exceptions from running fastnumbers logic.
@@ -69,12 +58,6 @@ try {
     return e.raise_value_error();
 } catch (const std::exception& e) {
     return convert_exception(input, e);
-} catch (const std::string& msg) {
-    return convert_exception(input, msg);
-} catch (const char* msg) {
-    return convert_exception(input, msg);
-} catch (...) {
-    return convert_exception(input, "Unknown C++ exception");
 }
 
 /**
