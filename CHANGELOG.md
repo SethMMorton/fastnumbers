@@ -7,6 +7,10 @@ Unreleased
  [#61](https://github.com/SethMMorton/fastnumbers/issues/61) and
  [#63](https://github.com/SethMMorton/fastnumbers/issues/63))
 
+### Fixed
+- Increased code coverage and fixed missing headers in codecov reaport
+  (Issue [#64](https://github.com/SethMMorton/fastnumbers/pull/64))
+
 [4.0.1] - 2023-02-05
 ---
 
