@@ -23,10 +23,18 @@ public:
         , m_obj(obj)
     {
         // Store the type of number that was found
-        set_number_type(get_number_type());
+        const NumberFlags flags = get_number_type();
+        set_number_type(flags);
 
         // Increment the reference count for this object
         Py_INCREF(m_obj);
+
+        // Record the sign
+        if (flags & NumberType::Float && !(flags & NumberType::User)) {
+            set_negative(get_double() < 0);
+        } else if (!(flags & (NumberType::INVALID | NumberType::User))) {
+            set_negative(PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT));
+        }
     }
 
     // No default constructor
@@ -39,21 +47,6 @@ public:
 
     /// Descructor decreases reference count of the stored object
     ~NumericParser() { Py_DECREF(m_obj); };
-
-    /// Is the stored number negative?
-    bool is_negative() const override
-    {
-        // For floats, compare in C++-land.
-        // For everything else use Python's logic.
-        const NumberFlags flags = get_number_type();
-        if (flags & NumberType::Float && !(flags & NumberType::User)) {
-            return get_double() < 0;
-        } else if (!(flags & NumberType::INVALID)) {
-            return PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT);
-        } else {
-            return Parser::is_negative();
-        }
-    }
 
     /// Convert the stored object to a python int (check error state)
     PyObject* as_pyint() override

@@ -70,7 +70,7 @@ public:
     }
 
     /// Is the stored number negative?
-    virtual bool is_negative() const { return m_negative; }
+    bool is_negative() const { return m_negative; }
 
     /// Access the user-given options for parsing
     const UserOptions& options() const { return m_options; }
