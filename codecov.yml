@@ -1,2 +1,4 @@
 ignore:
   - "include/fastnumbers/third_party"
+  - "include/fastnumbers/argparse.hpp"
+  - "src/cpp/argparse.cpp"
