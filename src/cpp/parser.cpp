@@ -105,15 +105,9 @@ PyObject* CharacterParser::as_pyint()
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
-    char* their_end = nullptr;
-    PyObject* retval = PyLong_FromString(m_start_orig, &their_end, options().get_base());
-
-    // Check the parsed end against the original end - if they don't match
-    // there was a parsing error.
-    if (their_end != m_end_orig && retval != nullptr) {
-        encountered_conversion_error();
-        return nullptr;
-    }
+    // No need to do input validation with the second argument because we already know
+    // the input is valid from above.
+    PyObject* retval = PyLong_FromString(m_start_orig, nullptr, options().get_base());
 
     // Return the value without checking python's error state
     return retval;
