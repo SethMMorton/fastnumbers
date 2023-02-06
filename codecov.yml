@@ -1,0 +1,2 @@
+ignore:
+  - "include/fastnumbers/third_party"

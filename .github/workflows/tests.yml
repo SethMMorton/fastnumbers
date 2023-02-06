@@ -41,15 +41,26 @@ jobs:
         # Need no optimization for code coverage
         run: echo CFLAGS="--coverage -O0" >> $GITHUB_ENV
 
+      - name: Build and Install Using pip
+        if: matrix.os != 'ubuntu-latest'
+        run: |
+          python setup.py build  # to see compilation output
+          python -m pip install -e.
+
+      - name: Build and Install Using setuptools
+        if: matrix.os == 'ubuntu-latest'
+        run: python setup.py install  # to see the compilation output and get coverage
+
       - name: Run Tests
         run: |
-          python -m pip install --editable .
           python -m doctest fastnumbers
           pytest --hypothesis-profile=slow-tests --doctest-glob=README.rst
 
       - name: Upload to CodeCov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
+        with:
+          gcov: true
 
   tests_aarch64:
     name: Tests on aarch64

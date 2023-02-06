@@ -5,6 +5,7 @@ include setup.py
 include setup.cfg
 include tox.ini
 include pyproject.toml
+include codecov.yml
 include .readthedocs.yaml
 graft src
 graft include
