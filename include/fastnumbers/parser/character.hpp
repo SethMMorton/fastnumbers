@@ -38,16 +38,14 @@ public:
     /// Convert the stored object to a python int (check error state)
     PyObject* as_pyint() override;
 
-    /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() override;
-
     /**
-     * \brief Convert the stored object to a python float but possible
+     * \brief Convert the stored object to a python float but possibly
      *        coerce to an integer (check error state)
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    PyObject* as_pyfloat(const bool force_int, const bool coerce) override;
+    PyObject*
+    as_pyfloat(const bool force_int = false, const bool coerce = false) override;
 
     /// Check the type of the number.
     NumberFlags get_number_type() const override;

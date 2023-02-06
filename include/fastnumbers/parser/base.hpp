@@ -79,16 +79,14 @@ public:
     /// Convert the stored object to a python int (check error state)
     virtual PyObject* as_pyint() = 0;
 
-    /// Convert the stored object to a python float (check error state)
-    virtual PyObject* as_pyfloat() = 0;
-
     /**
-     * \brief Convert the stored object to a python float but possible
+     * \brief Convert the stored object to a python float but possibly
      *        coerce to an integer (check error state)
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    virtual PyObject* as_pyfloat(const bool force_int, const bool coerce) = 0;
+    virtual PyObject* as_pyfloat(const bool force_int = false, const bool coerce = false)
+        = 0;
 
     /// Check the type of the number.
     virtual NumberFlags get_number_type() const { return m_number_type; }

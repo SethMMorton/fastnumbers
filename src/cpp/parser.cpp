@@ -134,12 +134,6 @@ double CharacterParser::as_double()
     return sign() * result;
 }
 
-PyObject* CharacterParser::as_pyfloat()
-{
-    const double result = as_double();
-    return errored() ? nullptr : PyFloat_FromDouble(result);
-}
-
 PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)
 {
     const double result = as_double();
