@@ -384,7 +384,6 @@ class TestArguments:
     funcs = non_builtin_funcs + [
         "query_type",
         "int",
-        "float",
         "real",
         "fast_real",
         "fast_float",
@@ -400,8 +399,12 @@ class TestArguments:
     def test_invalid_argument_raises_type_error(
         self, func: Union[Callable[[Any], Any], Real]
     ) -> None:
-        with raises(TypeError):
+        with raises(TypeError, match="got an unexpected keyword argument 'invalid'"):
             func(5, invalid="dummy")  # type: ignore
+
+    def test_invalid_argument_raises_type_error_no_kwargs(self) -> None:
+        with raises(TypeError, match="takes no keyword arguments"):
+            fastnumbers.float("5", invalid="dummy")  # type: ignore
 
     funcs = non_builtin_funcs + [
         "query_type",
@@ -417,8 +420,30 @@ class TestArguments:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_no_arguments_raises_type_error(self, func: Callable[[Any], Any]) -> None:
-        with raises(TypeError):
+        with raises(TypeError, match="missing required argument 'x'"):
             func()  # type: ignore
+
+    def test_invalid_argument_and_missing_positional(self) -> None:
+        with raises(TypeError, match="missing required argument 'x'"):
+            fastnumbers.try_float(on_fail=0.0)  # type: ignore
+
+    def test_positional_as_kwarg_is_ok(self) -> None:
+        assert fastnumbers.try_float(x="5") == 5.0
+
+    def test_duplicate_argument(self) -> None:
+        msg = r"argument for .* given by name \('x'\) and position"
+        with raises(TypeError, match=msg):
+            fastnumbers.try_float("5", x="4")  # type: ignore
+
+    def test_too_many_positional_arguments1(self) -> None:
+        msg = r"takes 1 positional arguments but 2 were given"
+        with raises(TypeError, match=msg):
+            fastnumbers.try_float("5", "4")  # type: ignore
+
+    def test_too_many_positional_arguments2(self) -> None:
+        msg = r"takes from 0 to 1 positional arguments but 2 were given"
+        with raises(TypeError, match=msg):
+            fastnumbers.float("5", "4")  # type: ignore
 
 
 class TestSelectors:
