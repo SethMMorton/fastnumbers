@@ -81,12 +81,13 @@ bool TextExtractor::parse_unicode_to_char()
     Py_ssize_t len = PyUnicode_GET_LENGTH(m_obj);
     Py_ssize_t index = 0;
 
+    // Default the results to "nothing" so we don't have to for each error case below
+    m_char_buffer.start()[0] = '\0';
+    m_str = m_char_buffer.start();
+
     // Ensure input is a valid unicode object.
-    // If true, then not OK for conversion.
+    // If true, then not OK for conversion - unclear how this can happen...
     if (PyUnicode_READY(m_obj)) {
-        m_char_buffer.start()[0] = '\0';
-        m_str = m_char_buffer.start();
-        m_str_len = 0;
         return true;
     }
 
@@ -106,9 +107,6 @@ bool TextExtractor::parse_unicode_to_char()
 
     // Protect against attempting to allocate too much memory
     if (static_cast<std::size_t>(len) + 1 > m_char_buffer.max_size()) {
-        m_char_buffer.start()[0] = '\0';
-        m_str = m_char_buffer.start();
-        m_str_len = 0;
         return true;
     }
 
@@ -136,11 +134,11 @@ bool TextExtractor::parse_unicode_to_char()
         } else {
             if (len == 1) {
                 m_uchar = u;
+                m_str = nullptr;
                 return true;
             }
             buffer[0] = '\0';
             m_str = buffer;
-            m_str_len = 0;
             return true;
         }
         buffer_index += 1;
