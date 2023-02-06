@@ -14,8 +14,6 @@ enum class ActionType {
     ERROR_INVALID_INT, ///< Raise invalid int exception
     ERROR_INVALID_FLOAT, ///< Raise invalid float exception
     ERROR_INVALID_BASE, ///< Raise invalid base exception
-    ERROR_INFINITY_TO_INT, ///< Raise oveflow for infintity to int
-    ERROR_NAN_TO_INT, ///< Raise NaN to int exception
     ERROR_BAD_TYPE_INT, ///< Raise invalid type for int
     ERROR_BAD_TYPE_FLOAT, ///< Raise invalid type for float
     ERROR_ILLEGAL_EXPLICIT_BASE, ///< Raise illegal explict base exception
