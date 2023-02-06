@@ -46,12 +46,6 @@ CharacterParser::CharacterParser(
     , m_end_orig(nullptr)
     , m_str_len(0)
 {
-    // Skip if this character array points to nothing
-    if (str == nullptr) {
-        set_as_unknown_parser();
-        return;
-    }
-
     // Store the start and end point of the character array
     m_start = m_start_orig = str;
     const char* end = m_end_orig = str + len;

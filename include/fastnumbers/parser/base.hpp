@@ -14,7 +14,6 @@ enum class ParserType {
     NUMERIC, ///< The parser is handling numeric Python objects
     UNICODE, ///< The parser is handling single unicode characters
     CHARACTER, ///< The parser is handling C-style character arrays
-    UNKNOWN, ///< The incoming object unknown to the parser
 };
 
 enum class NumberType : unsigned {
@@ -45,7 +44,7 @@ public:
     // Constructors, destructors, and assignment
     // There is no constructor with arguments
     Parser(const UserOptions& options)
-        : Parser(ParserType::UNKNOWN, options)
+        : Parser(ParserType::NUMERIC, options)
     { }
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
@@ -130,9 +129,6 @@ protected:
         , m_explicit_base_allowed(explicit_base_allowed)
         , m_options(options)
     { }
-
-    /// Define this parser as "unknown"
-    void set_as_unknown_parser() { m_ptype = ParserType::UNKNOWN; }
 
     /// Cache the number type
     void set_number_type(const NumberFlags ntype) { m_number_type = ntype; }

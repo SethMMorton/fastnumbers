@@ -24,7 +24,7 @@ public:
         , m_negative(false)
         , m_explicit_base_allowed(true)
     {
-        Py_XINCREF(m_obj);
+        Py_INCREF(m_obj);
         PyNumberMethods* nmeth = Py_TYPE(m_obj)->tp_as_number;
         const bool user_numeric
             = nmeth && (nmeth->nb_index || nmeth->nb_int || nmeth->nb_float);
@@ -38,7 +38,7 @@ public:
     TextExtractor(const TextExtractor&) = delete;
     TextExtractor(TextExtractor&&) = delete;
     TextExtractor& operator=(const TextExtractor&) = delete;
-    ~TextExtractor() { Py_XDECREF(m_obj); }
+    ~TextExtractor() { Py_DECREF(m_obj); }
 
     /// Is text stored in this extractor?
     bool is_text() const { return m_str != nullptr; }

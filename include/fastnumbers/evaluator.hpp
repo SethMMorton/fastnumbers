@@ -21,21 +21,21 @@ public:
         , m_parser(parser)
         , m_options(options)
     {
-        Py_XINCREF(m_obj);
+        Py_INCREF(m_obj);
     }
 
     // Other constructors, destructors, and assignment
     Evaluator(const Evaluator&) = delete;
     Evaluator(Evaluator&&) = delete;
     Evaluator& operator=(const Evaluator&) = delete;
-    ~Evaluator() { Py_XDECREF(m_obj); }
+    ~Evaluator() { Py_DECREF(m_obj); }
 
     /// Assign a new object to analyze
     void set_object(PyObject* obj)
     {
-        Py_XDECREF(m_obj);
+        Py_DECREF(m_obj);
         m_obj = obj;
-        Py_XINCREF(m_obj);
+        Py_INCREF(m_obj);
     }
 
     /// Access the user-given options for evaluating
@@ -69,14 +69,7 @@ public:
             /* DELIBERATE FALL-THROUGH */
         case ParserType::CHARACTER:
             return from_text_as_type(ntype);
-
-        case ParserType::UNKNOWN:
-        default:
-            break;
         }
-
-        // If here, the input type is not valid
-        return typed_error(ntype);
     }
 
 private:
@@ -132,9 +125,6 @@ private:
                 (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
                                                 : m_parser.as_pyint()
             );
-
-        default:
-            Py_UNREACHABLE();
         }
     }
 
@@ -153,9 +143,6 @@ private:
 
         case UserType::INT:
             return from_text_as_int();
-
-        default:
-            Py_UNREACHABLE();
         }
     }
 

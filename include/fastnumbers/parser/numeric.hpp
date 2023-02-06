@@ -22,16 +22,11 @@ public:
         : Parser(ParserType::NUMERIC, options)
         , m_obj(obj)
     {
-        if (m_obj != nullptr) {
-            // Store the type of number that was found
-            set_number_type(get_number_type());
+        // Store the type of number that was found
+        set_number_type(get_number_type());
 
-            // Increment the reference count for this object
-            Py_IncRef(m_obj);
-        } else {
-            // If given a null object, make the parser unknown
-            set_as_unknown_parser();
-        }
+        // Increment the reference count for this object
+        Py_INCREF(m_obj);
     }
 
     // No default constructor
@@ -43,7 +38,7 @@ public:
     NumericParser& operator=(const NumericParser&) = default;
 
     /// Descructor decreases reference count of the stored object
-    ~NumericParser() { Py_XDECREF(m_obj); };
+    ~NumericParser() { Py_DECREF(m_obj); };
 
     /// Is the stored number negative?
     bool is_negative() const override
