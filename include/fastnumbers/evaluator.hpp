@@ -109,15 +109,10 @@ private:
                 return Payload(handle_nan_and_inf());
             } else if (options().allow_coerce()) {
                 return Payload(m_parser.as_pyfloat(false, true));
-            } else if (typeflags & NumberType::User) {
-                if (typeflags & NumberType::Float) {
-                    return Payload(m_parser.as_pyfloat());
-                } else {
-                    return Payload(m_parser.as_pyint());
-                }
+            } else if (typeflags & NumberType::Float) {
+                return Payload(m_parser.as_pyfloat());
             } else {
-                Py_IncRef(m_obj);
-                return Payload(m_obj);
+                return Payload(m_parser.as_pyint());
             }
 
         case UserType::FLOAT:
