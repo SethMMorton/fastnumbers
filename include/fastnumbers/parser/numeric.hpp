@@ -22,15 +22,18 @@ public:
         : Parser(ParserType::NUMERIC, options)
         , m_obj(obj)
     {
-        if (m_obj != nullptr) {
-            // Store the type of number that was found
-            set_number_type(get_number_type());
+        // Store the type of number that was found
+        const NumberFlags flags = get_number_type();
+        set_number_type(flags);
 
-            // Increment the reference count for this object
-            Py_IncRef(m_obj);
-        } else {
-            // If given a null object, make the parser unknown
-            set_as_unknown_parser();
+        // Increment the reference count for this object
+        Py_INCREF(m_obj);
+
+        // Record the sign
+        if (flags & NumberType::Float && !(flags & NumberType::User)) {
+            set_negative(get_double() < 0);
+        } else if (!(flags & (NumberType::INVALID | NumberType::User))) {
+            set_negative(PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT));
         }
     }
 
@@ -43,22 +46,7 @@ public:
     NumericParser& operator=(const NumericParser&) = default;
 
     /// Descructor decreases reference count of the stored object
-    ~NumericParser() { Py_XDECREF(m_obj); };
-
-    /// Is the stored number negative?
-    bool is_negative() const override
-    {
-        // For floats, compare in C++-land.
-        // For everything else use Python's logic.
-        const NumberFlags flags = get_number_type();
-        if (flags & NumberType::Float && !(flags & NumberType::User)) {
-            return get_double() < 0;
-        } else if (!(flags & NumberType::INVALID)) {
-            return PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT);
-        } else {
-            return Parser::is_negative();
-        }
-    }
+    ~NumericParser() { Py_DECREF(m_obj); };
 
     /// Convert the stored object to a python int (check error state)
     PyObject* as_pyint() override
@@ -67,20 +55,14 @@ public:
         return PyNumber_Long(m_obj);
     }
 
-    /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() override
-    {
-        reset_error();
-        return PyNumber_Float(m_obj);
-    }
-
     /**
-     * \brief Convert the stored object to a python float but possible
+     * \brief Convert the stored object to a python float but possibly
      *        coerce to an integer (check error state)
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    PyObject* as_pyfloat(const bool force_int, const bool coerce) override
+    PyObject*
+    as_pyfloat(const bool force_int = false, const bool coerce = false) override
     {
         reset_error();
         if (force_int) {
@@ -136,12 +118,6 @@ public:
 
         // If here, the object is not numeric.
         return NumberType::INVALID;
-    }
-
-    /// Check if the should be parsed as an integer
-    bool peek_try_as_int() const override
-    {
-        return bool(get_number_type() & NumberType::Integer);
     }
 
 private:

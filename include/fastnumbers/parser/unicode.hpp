@@ -44,30 +44,14 @@ public:
         return nullptr;
     }
 
-    /// Convert the stored object to a python float (check error state)
-    PyObject* as_pyfloat() override
-    {
-        reset_error();
-
-        const NumberFlags ntype = get_number_type();
-
-        if (ntype & NumberType::Integer) {
-            return PyFloat_FromDouble(static_cast<double>(sign() * m_digit));
-        } else if (ntype & NumberType::Float) {
-            return PyFloat_FromDouble(sign() * m_numeric);
-        }
-
-        encountered_conversion_error();
-        return nullptr;
-    }
-
     /**
-     * \brief Convert the stored object to a python float but possible
+     * \brief Convert the stored object to a python float but possibly
      *        coerce to an integer (check error state)
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    PyObject* as_pyfloat(const bool force_int, const bool coerce) override
+    PyObject*
+    as_pyfloat(const bool force_int = false, const bool coerce = false) override
     {
         reset_error();
 
@@ -119,12 +103,6 @@ public:
 
         // If here, the object is not numeric.
         return NumberType::INVALID;
-    }
-
-    /// Check if the should be parsed as an integer
-    bool peek_try_as_int() const override
-    {
-        return bool(get_number_type() & NumberType::Integer);
     }
 
 private:

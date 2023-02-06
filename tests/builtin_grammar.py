@@ -21,6 +21,7 @@ VALID_UNDERSCORE_LITERALS = [
     "0b_0",
     "0x_f",
     "0o_5",
+    "-0o_5",  # added for fastnumbers
     "1_00_00j",
     "1_00_00.5j",
     "1_00_00e5_1j",

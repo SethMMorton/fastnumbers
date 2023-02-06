@@ -250,17 +250,6 @@ private:
             );
             break;
 
-        case ActionType::ERROR_INFINITY_TO_INT:
-            // Raise an exception due to attempting to convert infininty to an integer
-            PyErr_SetString(
-                PyExc_OverflowError, "cannot convert float infinity to integer"
-            );
-            break;
-
-        case ActionType::ERROR_NAN_TO_INT:
-            // Raise an exception due to attempting to convert NaN to an integer
-            PyErr_SetString(PyExc_ValueError, "cannot convert float NaN to integer");
-
         default:
             Py_UNREACHABLE();
         }

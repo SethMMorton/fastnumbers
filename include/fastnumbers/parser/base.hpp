@@ -14,7 +14,6 @@ enum class ParserType {
     NUMERIC, ///< The parser is handling numeric Python objects
     UNICODE, ///< The parser is handling single unicode characters
     CHARACTER, ///< The parser is handling C-style character arrays
-    UNKNOWN, ///< The incoming object unknown to the parser
 };
 
 enum class NumberType : unsigned {
@@ -45,7 +44,7 @@ public:
     // Constructors, destructors, and assignment
     // There is no constructor with arguments
     Parser(const UserOptions& options)
-        : Parser(ParserType::UNKNOWN, options)
+        : Parser(ParserType::NUMERIC, options)
     { }
     Parser(const Parser&) = default;
     Parser(Parser&&) = default;
@@ -71,7 +70,7 @@ public:
     }
 
     /// Is the stored number negative?
-    virtual bool is_negative() const { return m_negative; }
+    bool is_negative() const { return m_negative; }
 
     /// Access the user-given options for parsing
     const UserOptions& options() const { return m_options; }
@@ -79,16 +78,14 @@ public:
     /// Convert the stored object to a python int (check error state)
     virtual PyObject* as_pyint() = 0;
 
-    /// Convert the stored object to a python float (check error state)
-    virtual PyObject* as_pyfloat() = 0;
-
     /**
-     * \brief Convert the stored object to a python float but possible
+     * \brief Convert the stored object to a python float but possibly
      *        coerce to an integer (check error state)
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    virtual PyObject* as_pyfloat(const bool force_int, const bool coerce) = 0;
+    virtual PyObject* as_pyfloat(const bool force_int = false, const bool coerce = false)
+        = 0;
 
     /// Check the type of the number.
     virtual NumberFlags get_number_type() const { return m_number_type; }
@@ -132,9 +129,6 @@ protected:
         , m_explicit_base_allowed(explicit_base_allowed)
         , m_options(options)
     { }
-
-    /// Define this parser as "unknown"
-    void set_as_unknown_parser() { m_ptype = ParserType::UNKNOWN; }
 
     /// Cache the number type
     void set_number_type(const NumberFlags ntype) { m_number_type = ntype; }

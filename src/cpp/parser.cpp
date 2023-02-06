@@ -46,12 +46,6 @@ CharacterParser::CharacterParser(
     , m_end_orig(nullptr)
     , m_str_len(0)
 {
-    // Skip if this character array points to nothing
-    if (str == nullptr) {
-        set_as_unknown_parser();
-        return;
-    }
-
     // Store the start and end point of the character array
     m_start = m_start_orig = str;
     const char* end = m_end_orig = str + len;
@@ -105,15 +99,9 @@ PyObject* CharacterParser::as_pyint()
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
-    char* their_end = nullptr;
-    PyObject* retval = PyLong_FromString(m_start_orig, &their_end, options().get_base());
-
-    // Check the parsed end against the original end - if they don't match
-    // there was a parsing error.
-    if (their_end != m_end_orig && retval != nullptr) {
-        encountered_conversion_error();
-        return nullptr;
-    }
+    // No need to do input validation with the second argument because we already know
+    // the input is valid from above.
+    PyObject* retval = PyLong_FromString(m_start_orig, nullptr, options().get_base());
 
     // Return the value without checking python's error state
     return retval;
@@ -138,12 +126,6 @@ double CharacterParser::as_double()
         return -1.0;
     }
     return sign() * result;
-}
-
-PyObject* CharacterParser::as_pyfloat()
-{
-    const double result = as_double();
-    return errored() ? nullptr : PyFloat_FromDouble(result);
 }
 
 PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)

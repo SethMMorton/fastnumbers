@@ -337,6 +337,9 @@ func_mapping: Dict[str, Callable[..., Any]] = {
     "isint": fastnumbers.isint,
     "isintlike": fastnumbers.isintlike,
     "real": fastnumbers.real,
+    "float": fastnumbers.float,
+    "int": fastnumbers.int,
+    "query_type": fastnumbers.query_type,
 }
 
 
@@ -379,6 +382,8 @@ class TestArguments:
         assert fastnumbers.real() == 0
 
     funcs = non_builtin_funcs + [
+        "query_type",
+        "int",
         "real",
         "fast_real",
         "fast_float",
@@ -394,10 +399,15 @@ class TestArguments:
     def test_invalid_argument_raises_type_error(
         self, func: Union[Callable[[Any], Any], Real]
     ) -> None:
-        with raises(TypeError):
+        with raises(TypeError, match="got an unexpected keyword argument 'invalid'"):
             func(5, invalid="dummy")  # type: ignore
 
+    def test_invalid_argument_raises_type_error_no_kwargs(self) -> None:
+        with raises(TypeError, match="takes no keyword arguments"):
+            fastnumbers.float("5", invalid="dummy")  # type: ignore
+
     funcs = non_builtin_funcs + [
+        "query_type",
         "fast_real",
         "fast_float",
         "fast_int",
@@ -410,8 +420,30 @@ class TestArguments:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_no_arguments_raises_type_error(self, func: Callable[[Any], Any]) -> None:
-        with raises(TypeError):
+        with raises(TypeError, match="missing required argument 'x'"):
             func()  # type: ignore
+
+    def test_invalid_argument_and_missing_positional(self) -> None:
+        with raises(TypeError, match="missing required argument 'x'"):
+            fastnumbers.try_float(on_fail=0.0)  # type: ignore
+
+    def test_positional_as_kwarg_is_ok(self) -> None:
+        assert fastnumbers.try_float(x="5") == 5.0
+
+    def test_duplicate_argument(self) -> None:
+        msg = r"argument for .* given by name \('x'\) and position"
+        with raises(TypeError, match=msg):
+            fastnumbers.try_float("5", x="4")  # type: ignore
+
+    def test_too_many_positional_arguments1(self) -> None:
+        msg = r"takes 1 positional arguments but 2 were given"
+        with raises(TypeError, match=msg):
+            fastnumbers.try_float("5", "4")  # type: ignore
+
+    def test_too_many_positional_arguments2(self) -> None:
+        msg = r"takes from 0 to 1 positional arguments but 2 were given"
+        with raises(TypeError, match=msg):
+            fastnumbers.float("5", "4")  # type: ignore
 
 
 class TestSelectors:
@@ -426,13 +458,116 @@ class TestSelectors:
         fastnumbers.NUMBER_ONLY,
     ]
 
-    @mark.parametrize("x", selectors)
+    @parametrize("x", selectors)
     def test_selectors_have_no_type(self, x: object) -> None:
         assert type(x) is object
 
-    @mark.parametrize("a, b", combinations(selectors, 2))
+    @parametrize("a, b", combinations(selectors, 2))
     def test_selectors_are_mutually_exclusive(self, a: object, b: object) -> None:
         assert a is not b
+
+    funcs = ["try_real", "try_float"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "inf",
+        [fastnumbers.DISALLOWED, fastnumbers.STRING_ONLY, fastnumbers.NUMBER_ONLY],
+    )
+    def test_selectors_are_rejected_when_invalid_inf_conv(
+        self, func: Union[TryReal, TryFloat], inf: object
+    ) -> None:
+        with raises(ValueError, match="'inf' and 'nan' cannot be"):
+            func("5", inf=inf)
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "nan",
+        [fastnumbers.DISALLOWED, fastnumbers.STRING_ONLY, fastnumbers.NUMBER_ONLY],
+    )
+    def test_selectors_are_rejected_when_invalid_nan_conv(
+        self, func: Union[TryReal, TryFloat], nan: object
+    ) -> None:
+        with raises(ValueError, match="'inf' and 'nan' cannot be"):
+            func("5", nan=nan)
+
+    funcs = ["check_real", "check_float"]
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "inf",
+        [fastnumbers.INPUT, fastnumbers.RAISE, str, float, int],
+    )
+    def test_selectors_are_rejected_when_invalid_inf_check(
+        self, func: Union[CheckReal, CheckFloat], inf: object
+    ) -> None:
+        with raises(ValueError, match="allowed values for 'inf' and 'nan'"):
+            func("5", inf=inf)
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "nan",
+        [fastnumbers.INPUT, fastnumbers.RAISE, str, float, int],
+    )
+    def test_selectors_are_rejected_when_invalid_nan_check(
+        self, func: Union[CheckReal, CheckFloat], nan: object
+    ) -> None:
+        with raises(ValueError, match="allowed values for 'inf' and 'nan'"):
+            func("5", nan=nan)
+
+    funcs = identification_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "consider",
+        [
+            fastnumbers.DISALLOWED,
+            fastnumbers.ALLOWED,
+            fastnumbers.INPUT,
+            fastnumbers.RAISE,
+            float,
+            int,
+            str,
+        ],
+    )
+    def test_selectors_are_rejected_when_invalid_for_consider(
+        self, func: IdentificationFuncs, consider: object
+    ) -> None:
+        with raises(ValueError, match="allowed values for 'consider'"):
+            func("5", consider=consider)
+
+    funcs = conversion_funcs
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "on_fail",
+        [
+            fastnumbers.DISALLOWED,
+            fastnumbers.ALLOWED,
+            fastnumbers.NUMBER_ONLY,
+            fastnumbers.STRING_ONLY,
+        ],
+    )
+    def test_selectors_are_rejected_when_invalid_for_on_fail(
+        self, func: ConversionFuncs, on_fail: object
+    ) -> None:
+        with raises(ValueError, match="values for 'on_fail' and 'on_type_error'"):
+            func("5", on_fail=on_fail)
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    @parametrize(
+        "on_type_error",
+        [
+            fastnumbers.DISALLOWED,
+            fastnumbers.ALLOWED,
+            fastnumbers.NUMBER_ONLY,
+            fastnumbers.STRING_ONLY,
+        ],
+    )
+    def test_selectors_are_rejected_when_invalid_for_on_type_error(
+        self, func: ConversionFuncs, on_type_error: object
+    ) -> None:
+        with raises(ValueError, match="values for 'on_fail' and 'on_type_error'"):
+            func("5", on_type_error=on_type_error)
 
 
 class TestBackwardsCompatibility:
@@ -446,6 +581,13 @@ class TestBackwardsCompatibility:
             func("dummy", key=len, on_fail=len)
         assert func("dummy", key=len) == 5
         assert func("dummy", key=len) == func("dummy", on_fail=len)
+
+    @parametrize("func", get_funcs(funcs), ids=funcs)
+    def test_new_invalid_parings(self, func: Any) -> None:
+        with raises(ValueError, match="Cannot set both on_fail and default"):
+            func("5", default=0.0, on_fail=0.0)
+        with raises(ValueError, match="Cannot set both on_fail and raise_on_invalid"):
+            func("5", raise_on_invalid=True, on_fail=0.0)
 
     old_to_new_conversion_pairing = []
     func_pairs: List[Tuple[Callable[[Any], Any], Callable[[Any], Any]]] = [
@@ -1427,6 +1569,14 @@ class TestCheckIntLike:
 
 class TestQueryType:
     """Tests for the query_type function."""
+
+    def test_allowed_type_must_be_a_sequence(self) -> None:
+        with raises(TypeError, match="allowed_type is not a sequence type"):
+            fastnumbers.query_type("5", allowed_types={str: float})  # type: ignore
+
+    def test_allowed_type_must_non_empty(self) -> None:
+        with raises(ValueError, match="allowed_type must not be an empty sequence"):
+            fastnumbers.query_type("5", allowed_types=[])
 
     @given(integers())
     def test_returns_int_if_given_int(self, x: int) -> None:
