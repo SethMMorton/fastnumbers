@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <utility>
 
 #include <Python.h>
 
@@ -15,16 +16,16 @@ public:
 };
 
 /**
- * \class ListManager
+ * \class ListBuilder
  * \brief Handles the details of creating and managing a Python list
  */
-class ListManager {
+class ListBuilder {
 public:
     /**
      * \brief Construct the manager with a list of a fixed size
      * \param length The initial length of the list to construct
      */
-    explicit ListManager(const Py_ssize_t length)
+    explicit ListBuilder(const Py_ssize_t length)
         : m_list(PyList_New(length))
         , m_index(0)
     {
@@ -38,17 +39,17 @@ public:
      *         on a hint from another object
      * \param length The object with the length hint
      */
-    explicit ListManager(PyObject* length_hint_base)
-        : ListManager(get_length_hint(length_hint_base))
+    explicit ListBuilder(PyObject* length_hint_base)
+        : ListBuilder(get_length_hint(length_hint_base))
     { }
 
     // Deleted
-    ListManager(const ListManager&) = delete;
-    ListManager(ListManager&&) = delete;
-    ListManager& operator=(const ListManager&) = delete;
+    ListBuilder(const ListBuilder&) = delete;
+    ListBuilder(ListBuilder&&) = delete;
+    ListBuilder& operator=(const ListBuilder&) = delete;
 
     // Default
-    ~ListManager() = default;
+    ~ListBuilder() = default;
 
     /**
      * \brief Add an item to the end of the list
@@ -101,19 +102,22 @@ private:
     }
 };
 
+/// Track the state of the iteration
+enum class IterState {
+    CONTINUE, ///< Keep the iteration going
+    STOP, ///< Stop the iteration
+};
+
 /**
- * \class PyIterableManager
+ * \class IterableManager
  * \brief Makes iteration over a Python iterable with a ranged for loop possible
  */
 template <typename Function>
-class PyIterableManager {
+class IterableManager {
 public:
     /// Constructor
-    explicit PyIterableManager(
-        PyObject* potential_iterable, PyObject*& item, Function convert
-    )
+    explicit IterableManager(PyObject* potential_iterable, Function convert)
         : m_object(potential_iterable)
-        , m_item(item)
         , m_iterator(nullptr)
         , m_index(0)
         , m_seq_size(0)
@@ -129,16 +133,16 @@ public:
     }
 
     /// Destructor
-    ~PyIterableManager() { Py_XDECREF(m_iterator); }
+    ~IterableManager() { Py_XDECREF(m_iterator); }
 
     // Deleted
-    PyIterableManager(const PyIterableManager&) = delete;
-    PyIterableManager(PyIterableManager&&) = delete;
-    PyIterableManager& operator=(const PyIterableManager&) = delete;
+    IterableManager(const IterableManager&) = delete;
+    IterableManager(IterableManager&&) = delete;
+    IterableManager& operator=(const IterableManager&) = delete;
 
     /**
      * \class ItemIterator
-     * \brief An iterator over the PyIterableManager
+     * \brief An iterator over the IterableManager
      */
     class ItemIterator {
     public:
@@ -153,9 +157,20 @@ public:
          * \brief Construct the ItemIterator and obtain the first
          *        ViolationData if available.
          */
-        explicit ItemIterator(PyIterableManager* parent)
+        explicit ItemIterator(IterableManager* parent)
             : m_parent(parent)
-            , m_payload(m_parent != nullptr ? m_parent->next() : Sigils::ITERATOR)
+            , m_payload(nullptr)
+            , m_state(IterState::STOP)
+        {
+            // Prime the iterator
+            if (m_parent != nullptr) {
+                this->operator++();
+            }
+        }
+
+        /// Default constructor
+        ItemIterator()
+            : ItemIterator(nullptr)
         { }
 
         // Default other constructors/destructors
@@ -164,23 +179,25 @@ public:
         ItemIterator& operator=(const ItemIterator& other) = default;
         ~ItemIterator() = default;
 
-        /// Access the PyIterableManager data
+        /// Access the IterableManager data
         reference operator*() { return m_payload; }
 
-        /// Access the PyIterableManager data as a pointer
+        /// Access the IterableManager data as a pointer
         pointer operator->() { return &m_payload; }
 
         /// Increment the ItemIterator
         ItemIterator& operator++()
         {
-            m_payload = m_parent->next();
+            if (m_parent != nullptr) {
+                std::tie(m_payload, m_state) = m_parent->next();
+            }
             return *this;
         }
 
         /// Compare two ItemIterator objects for equality.
         bool operator==(const ItemIterator& rhs) const
         {
-            return m_payload == rhs.m_payload;
+            return m_payload == rhs.m_payload && m_state == rhs.m_state;
         }
 
         /// Compare two ItemIterator objects for inequality.
@@ -188,28 +205,27 @@ public:
 
     private:
         /// A pointer to the object that instantiated the iterator
-        PyIterableManager* m_parent;
+        IterableManager* m_parent;
 
         /// The data returned by the parent for the current iteration
         PyObject* m_payload;
+
+        /// State indicating if iteration should stop or not
+        IterState m_state;
     };
 
     /// Convenient name for the ItemIterator
     typedef ItemIterator iterator;
 
-    /// Return an iterator over the PyIterableManager
+    /// Return an iterator over the IterableManager
     iterator begin() { return iterator(this); };
 
-    /// The end of the iterator over the PyIterableManager
-    iterator end() { return iterator(nullptr); };
+    /// The end of the iterator over the IterableManager
+    iterator end() { return iterator(); };
 
 private:
     /// The object that is currently being iterated over
     PyObject* m_object;
-
-    /// The current item being returned - needs to be a refernce to a parent
-    /// scoped object because this is used for error message.
-    PyObject*& m_item;
 
     /// NULL if a fast sequence (e.g. list/tuple), the iterator object otherwise
     PyObject* m_iterator;
@@ -224,45 +240,47 @@ private:
     Function m_convert;
 
 private:
-    PyObject* next()
+    std::pair<PyObject*, IterState> next()
     {
+        PyObject* item = nullptr;
+
         // If no iterator is stored, then the object was a fast sequence and
         // we can access the data directly.
         if (m_iterator == nullptr) {
             // When at the end of the sequence, return the sigil
             if (m_index == m_seq_size) {
-                return Sigils::ITERATOR;
+                return std::make_pair(nullptr, IterState::STOP);
             }
 
             // Access the data in the input sequence directly.
             // The returned object is a borrowed reference, so we do not
             // need to manage the reference counts.
-            m_item = PySequence_Fast_GET_ITEM(m_object, m_index);
+            item = PySequence_Fast_GET_ITEM(m_object, m_index);
 
             // Before moving on, increment our internal counter.
             m_index += 1;
 
             // Conver the item to the correct value and return.
-            return m_convert(m_item);
+            return std::make_pair(m_convert(item), IterState::CONTINUE);
         }
 
         // Otherwise, the object was an iterator and we use the iteration
         // protocol to get each next item.
         // When a nullptr is returned then it is the end of the iteration
         // and we return return the sigil.
-        if ((m_item = PyIter_Next(m_iterator)) == nullptr) {
-            return Sigils::ITERATOR;
+        if ((item = PyIter_Next(m_iterator)) == nullptr) {
+            return std::make_pair(nullptr, IterState::STOP);
         }
 
         // Convert the item and return the value. When complete we must decrease
         // the item reference count (because it was not returned as a borrowed
         // reference), so some error handling must be done to ensure it happens.
         try {
-            return m_convert(m_item);
+            return std::make_pair(m_convert(item), IterState::CONTINUE);
         } catch (...) {
-            Py_DECREF(m_item);
+            Py_DECREF(item);
             throw;
         }
-        Py_DECREF(m_item);
+        Py_DECREF(item);
     }
 };

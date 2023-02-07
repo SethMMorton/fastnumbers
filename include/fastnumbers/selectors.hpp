@@ -34,9 +34,3 @@ struct Selectors {
     /// Selector to only allow numbers
     static PyObject* NUMBER_ONLY;
 };
-
-/// Namespace for sigils
-struct Sigils {
-    /// Used to determine when we are done with iteration
-    static PyObject* ITERATOR;
-};

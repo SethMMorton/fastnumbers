@@ -225,28 +225,25 @@ static inline void validate_consider(const PyObject* selector)
 /**
  * \brief Iterate over the elements of a collection and convert each one
  * \param input The given input object that should be iterable
- * \param item The reference to a PyObject* that will use to hold the input's
- *             items - this is used for possible error reporting
  * \param convert A function accepting a single argument that performs the conversion
  * \return A new python list containing the converted results, or NULL on error
  */
 template <typename Function>
-static PyObject*
-iterate_python_object(PyObject* input, PyObject*& item, Function convert)
+static PyObject* iterate_python_object(PyObject* input, Function convert)
 {
     // Create a python list into which to store the return values
-    ListManager list_manager(input);
+    ListBuilder list_builder(input);
 
     // The helper for iterating over the Python iterable
-    PyIterableManager iter_manager(input, item, convert);
+    IterableManager iter_manager(input, convert);
 
     // For each element in the Python iterable, convert it and append to the list
     for (auto& value : iter_manager) {
-        list_manager.append(value);
+        list_builder.append(value);
     }
 
     // Return the list to the user
-    return list_manager.get();
+    return list_builder.get();
 }
 
 /**
@@ -1081,7 +1078,6 @@ static PyObject* fastnumbers_map_try_real(
     // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
-    PyObject* item = nullptr;
     try {
         validate_not_disallow(inf);
         validate_not_disallow(nan);
@@ -1099,9 +1095,9 @@ static PyObject* fastnumbers_map_try_real(
                 coerce
             );
         };
-        return iterate_python_object(input, item, convert);
+        return iterate_python_object(input, convert);
     } catch (...) {
-        return handle_exceptions(item != nullptr ? item : input);
+        return handle_exceptions(input);
     }
 }
 
@@ -1131,7 +1127,6 @@ static PyObject* fastnumbers_map_try_float(
     // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
-    PyObject* item = nullptr;
     try {
         validate_not_disallow(inf);
         validate_not_disallow(nan);
@@ -1142,9 +1137,9 @@ static PyObject* fastnumbers_map_try_float(
                 x, on_fail, on_type_error, inf, nan, UserType::FLOAT, allow_underscores
             );
         };
-        return iterate_python_object(input, item, convert);
+        return iterate_python_object(input, convert);
     } catch (...) {
-        return handle_exceptions(item != nullptr ? item : input);
+        return handle_exceptions(input);
     }
 }
 
@@ -1172,7 +1167,6 @@ static PyObject* fastnumbers_map_try_int(
     // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
-    PyObject* item = nullptr;
     try {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
@@ -1182,9 +1176,9 @@ static PyObject* fastnumbers_map_try_int(
                 x, on_fail, on_type_error, UserType::INT, allow_underscores, base
             );
         };
-        return iterate_python_object(input, item, convert);
+        return iterate_python_object(input, convert);
     } catch (...) {
-        return handle_exceptions(item != nullptr ? item : input);
+        return handle_exceptions(input);
     }
 }
 
@@ -1210,7 +1204,6 @@ static PyObject* fastnumbers_map_try_forceint(
     // clang-format on
 
     // Execute main logic in a try-block to convert C++ exceptions
-    PyObject* item = nullptr;
     try {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
@@ -1219,9 +1212,9 @@ static PyObject* fastnumbers_map_try_forceint(
                 x, on_fail, on_type_error, UserType::FORCEINT, allow_underscores
             );
         };
-        return iterate_python_object(input, item, convert);
+        return iterate_python_object(input, convert);
     } catch (...) {
-        return handle_exceptions(item != nullptr ? item : input);
+        return handle_exceptions(input);
     }
 }
 
@@ -1345,7 +1338,6 @@ PyObject* Selectors::INPUT = nullptr;
 PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
-PyObject* Sigils::ITERATOR = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1371,9 +1363,6 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     PyModule_AddObject(m, "RAISE", Selectors::RAISE);
     PyModule_AddObject(m, "STRING_ONLY", Selectors::STRING_ONLY);
     PyModule_AddObject(m, "NUMBER_ONLY", Selectors::NUMBER_ONLY);
-
-    // Sigils
-    Sigils::ITERATOR = PyObject_New(PyObject, &PyBaseObject_Type);
 
     // Constants cached for internal use
     PyObject* pos_inf_str = PyBytes_FromString("+infinity");
