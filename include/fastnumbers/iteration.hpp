@@ -119,12 +119,14 @@ public:
     explicit IterableManager(PyObject* potential_iterable, Function convert)
         : m_object(potential_iterable)
         , m_iterator(nullptr)
+        , m_fast_sequence(nullptr)
         , m_index(0)
         , m_seq_size(0)
         , m_convert(convert)
     {
         if (PyList_Check(m_object) || PyTuple_Check(m_object)) {
-            m_seq_size = PySequence_Fast_GET_SIZE(m_object);
+            m_fast_sequence = m_object;
+            m_seq_size = PySequence_Fast_GET_SIZE(m_fast_sequence);
         } else {
             if ((m_iterator = PyObject_GetIter(m_object)) == nullptr) {
                 throw just_return_null_exception();
@@ -133,12 +135,66 @@ public:
     }
 
     /// Destructor
-    ~IterableManager() { Py_XDECREF(m_iterator); }
+    ~IterableManager()
+    {
+        Py_XDECREF(m_iterator);
+
+        // It's possible the fast sequence *is* the object... only decrement
+        // the reference if this is not the case.
+        if (m_fast_sequence != m_object) {
+            Py_XDECREF(m_fast_sequence);
+        }
+    }
 
     // Deleted
     IterableManager(const IterableManager&) = delete;
     IterableManager(IterableManager&&) = delete;
     IterableManager& operator=(const IterableManager&) = delete;
+
+    /// Return the size of the managed sequence, potentially copying iterable
+    /// data into a list in order to find the size.
+    Py_ssize_t get_size()
+    {
+        if (m_fast_sequence != nullptr) {
+            return m_seq_size;
+        } else if (PySequence_Check(m_object)) {
+            return PySequence_Size(m_object);
+        } else {
+            require_fast_sequence();
+            return m_seq_size;
+        }
+    }
+
+    /// Force the input to be a sequence, converting an iterable to a list if needed.
+    void require_fast_sequence()
+    {
+        // Nothing to do if already a sequence
+        if (PySequence_Check(m_object)) {
+            return;
+        }
+
+        // Create a list into which we will insert the data from our iterator
+        PyObject* local_storage = PyList_New(0);
+        if (local_storage == nullptr) {
+            throw just_return_null_exception();
+        }
+
+        // This function is the closest we can get to list.extend in the
+        // C-API. It returns a new reference to possibly the same object
+        // that was input. So we, decrement the input and keep the output,
+        // even though they may be the same object.
+        m_fast_sequence = PySequence_InPlaceConcat(local_storage, m_object);
+        Py_DECREF(local_storage);
+        if (m_fast_sequence == nullptr) {
+            throw just_return_null_exception();
+        }
+
+        // Now that we are here, we can free the iterator if it had been created,
+        // and store the new sequence length.
+        Py_XDECREF(m_iterator);
+        m_iterator = nullptr;
+        m_seq_size = PyList_GET_SIZE(m_fast_sequence);
+    }
 
     /**
      * \class ItemIterator
@@ -230,6 +286,9 @@ private:
     /// NULL if a fast sequence (e.g. list/tuple), the iterator object otherwise
     PyObject* m_iterator;
 
+    /// NULL if not a fast sequence (e.g. list/tuple), the fast sequence object otherwise
+    PyObject* m_fast_sequence;
+
     /// The location we are in the sequence, if the input is a sequence
     Py_ssize_t m_index;
 
@@ -255,7 +314,7 @@ private:
             // Access the data in the input sequence directly.
             // The returned object is a borrowed reference, so we do not
             // need to manage the reference counts.
-            item = PySequence_Fast_GET_ITEM(m_object, m_index);
+            item = PySequence_Fast_GET_ITEM(m_fast_sequence, m_index);
 
             // Before moving on, increment our internal counter.
             m_index += 1;
