@@ -2,6 +2,7 @@
  * This file contains the functions that directly interface with the Python interpreter.
  */
 #include <exception>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -228,14 +229,14 @@ static inline void validate_consider(const PyObject* selector)
  * \param convert A function accepting a single argument that performs the conversion
  * \return A new python list containing the converted results, or NULL on error
  */
-template <typename Function>
-static PyObject* iterate_python_object(PyObject* input, Function convert)
+static PyObject*
+iterate_python_object(PyObject* input, std::function<PyObject*(PyObject*)> convert)
 {
     // Create a python list into which to store the return values
     ListBuilder list_builder(input);
 
     // The helper for iterating over the Python iterable
-    IterableManager iter_manager(input, convert);
+    IterableManager<PyObject*> iter_manager(input, convert);
 
     // For each element in the Python iterable, convert it and append to the list
     for (auto& value : iter_manager) {

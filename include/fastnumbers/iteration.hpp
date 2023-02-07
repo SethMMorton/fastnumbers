@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <stdexcept>
 #include <utility>
 
@@ -112,11 +113,13 @@ enum class IterState {
  * \class IterableManager
  * \brief Makes iteration over a Python iterable with a ranged for loop possible
  */
-template <typename Function>
+template <typename PayloadType>
 class IterableManager {
 public:
     /// Constructor
-    explicit IterableManager(PyObject* potential_iterable, Function convert)
+    explicit IterableManager(
+        PyObject* potential_iterable, std::function<PayloadType(PyObject*)> convert
+    )
         : m_object(potential_iterable)
         , m_iterator(nullptr)
         , m_fast_sequence(nullptr)
@@ -165,37 +168,6 @@ public:
         }
     }
 
-    /// Force the input to be a sequence, converting an iterable to a list if needed.
-    void require_fast_sequence()
-    {
-        // Nothing to do if already a sequence
-        if (PySequence_Check(m_object)) {
-            return;
-        }
-
-        // Create a list into which we will insert the data from our iterator
-        PyObject* local_storage = PyList_New(0);
-        if (local_storage == nullptr) {
-            throw just_return_null_exception();
-        }
-
-        // This function is the closest we can get to list.extend in the
-        // C-API. It returns a new reference to possibly the same object
-        // that was input. So we, decrement the input and keep the output,
-        // even though they may be the same object.
-        m_fast_sequence = PySequence_InPlaceConcat(local_storage, m_object);
-        Py_DECREF(local_storage);
-        if (m_fast_sequence == nullptr) {
-            throw just_return_null_exception();
-        }
-
-        // Now that we are here, we can free the iterator if it had been created,
-        // and store the new sequence length.
-        Py_XDECREF(m_iterator);
-        m_iterator = nullptr;
-        m_seq_size = PyList_GET_SIZE(m_fast_sequence);
-    }
-
     /**
      * \class ItemIterator
      * \brief An iterator over the IterableManager
@@ -205,7 +177,7 @@ public:
         // Define the iterator type
         using iterator_category = std::input_iterator_tag;
         using difference_type = std::ptrdiff_t;
-        using value_type = PyObject*;
+        using value_type = PayloadType;
         using pointer = value_type*;
         using reference = value_type&;
 
@@ -215,7 +187,7 @@ public:
          */
         explicit ItemIterator(IterableManager* parent)
             : m_parent(parent)
-            , m_payload(nullptr)
+            , m_payload()
             , m_state(IterState::STOP)
         {
             // Prime the iterator
@@ -264,7 +236,7 @@ public:
         IterableManager* m_parent;
 
         /// The data returned by the parent for the current iteration
-        PyObject* m_payload;
+        PayloadType m_payload;
 
         /// State indicating if iteration should stop or not
         IterState m_state;
@@ -296,10 +268,10 @@ private:
     Py_ssize_t m_seq_size;
 
     /// The function used to convert data
-    Function m_convert;
+    std::function<PayloadType(PyObject*)> m_convert;
 
 private:
-    std::pair<PyObject*, IterState> next()
+    std::pair<PayloadType, IterState> next()
     {
         PyObject* item = nullptr;
 
@@ -308,7 +280,7 @@ private:
         if (m_iterator == nullptr) {
             // When at the end of the sequence, return the sigil
             if (m_index == m_seq_size) {
-                return std::make_pair(nullptr, IterState::STOP);
+                return std::make_pair(PayloadType(), IterState::STOP);
             }
 
             // Access the data in the input sequence directly.
@@ -328,7 +300,7 @@ private:
         // When a nullptr is returned then it is the end of the iteration
         // and we return return the sigil.
         if ((item = PyIter_Next(m_iterator)) == nullptr) {
-            return std::make_pair(nullptr, IterState::STOP);
+            return std::make_pair(PayloadType(), IterState::STOP);
         }
 
         // Convert the item and return the value. When complete we must decrease
@@ -341,5 +313,36 @@ private:
             throw;
         }
         Py_DECREF(item);
+    }
+
+    /// Force the input to be a sequence, converting an iterable to a list if needed.
+    void require_fast_sequence()
+    {
+        // Nothing to do if already a sequence
+        if (PySequence_Check(m_object)) {
+            return;
+        }
+
+        // Create a list into which we will insert the data from our iterator
+        PyObject* local_storage = PyList_New(0);
+        if (local_storage == nullptr) {
+            throw just_return_null_exception();
+        }
+
+        // This function is the closest we can get to list.extend in the
+        // C-API. It returns a new reference to possibly the same object
+        // that was input. So we, decrement the input and keep the output,
+        // even though they may be the same object.
+        m_fast_sequence = PySequence_InPlaceConcat(local_storage, m_object);
+        Py_DECREF(local_storage);
+        if (m_fast_sequence == nullptr) {
+            throw just_return_null_exception();
+        }
+
+        // Now that we are here, we can free the iterator if it had been created,
+        // and store the new sequence length.
+        Py_XDECREF(m_iterator);
+        m_iterator = nullptr;
+        m_seq_size = PyList_GET_SIZE(m_fast_sequence);
     }
 };
