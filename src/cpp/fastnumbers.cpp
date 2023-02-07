@@ -1345,7 +1345,6 @@ PyObject* Selectors::INPUT = nullptr;
 PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
-PyObject* NumericParser::PYTHON_ZERO = nullptr;
 PyObject* Sigils::ITERATOR = nullptr;
 
 // Actually create the module object itself
@@ -1389,7 +1388,6 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     Py_DecRef(neg_inf_str);
     Py_DecRef(pos_nan_str);
     Py_DecRef(neg_nan_str);
-    NumericParser::PYTHON_ZERO = PyLong_FromLong(0L);
 
     return m;
 }

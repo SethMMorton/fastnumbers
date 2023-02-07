@@ -13,10 +13,6 @@
  */
 class NumericParser final : public Parser {
 public:
-    /// Cached instance of zero for use in identifying negative numbers
-    static PyObject* PYTHON_ZERO;
-
-public:
     /// Construct with a Python object
     explicit NumericParser(PyObject* obj, const UserOptions& options)
         : Parser(ParserType::NUMERIC, options)
@@ -30,10 +26,12 @@ public:
         Py_INCREF(m_obj);
 
         // Record the sign
+        // XXX: We are cheating a bit here - we are only getting the sign
+        // for simple floats because we *know* that that is the only time
+        // the sign is used for numbers. Otherwise, we would have to spend
+        // more effort getting the sign for all cases.
         if (flags & NumberType::Float && !(flags & NumberType::User)) {
             set_negative(get_double() < 0);
-        } else if (!(flags & (NumberType::INVALID | NumberType::User))) {
-            set_negative(PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT));
         }
     }
 
