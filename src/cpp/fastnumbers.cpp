@@ -11,6 +11,7 @@
 
 #include "fastnumbers/argparse.hpp"
 #include "fastnumbers/docstrings.hpp"
+#include "fastnumbers/exception.hpp"
 #include "fastnumbers/implementation.hpp"
 #include "fastnumbers/iteration.hpp"
 #include "fastnumbers/parser/numeric.hpp"
@@ -53,7 +54,7 @@ static inline PyObject* convert_exception(PyObject* obj, const std::exception& e
 static inline PyObject* handle_exceptions(PyObject* input)
 try {
     throw;
-} catch (const just_return_null_exception&) {
+} catch (const exception_is_set&) {
     return nullptr;
 } catch (const fastnumbers_exception& e) {
     return e.raise_value_error();

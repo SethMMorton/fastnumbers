@@ -1,20 +1,13 @@
 #pragma once
 
 #include <functional>
-#include <stdexcept>
 #include <utility>
 
 #include <Python.h>
 
+#include "fastnumbers/exception.hpp"
 #include "fastnumbers/selectors.hpp"
 
-/// Custom exception class to tell the handler to just return NULL
-class just_return_null_exception : public std::runtime_error {
-public:
-    just_return_null_exception()
-        : std::runtime_error("")
-    { }
-};
 
 /**
  * \class ListBuilder
@@ -31,7 +24,7 @@ public:
         , m_index(0)
     {
         if (m_list == nullptr) {
-            throw just_return_null_exception();
+            throw exception_is_set();
         }
     }
 
@@ -60,7 +53,7 @@ public:
     {
         // Protect against incoming NULLs.
         if (item == nullptr) {
-            throw just_return_null_exception();
+            throw exception_is_set();
         }
 
         // The list may have been pre-allocated using the length hint.
@@ -71,7 +64,7 @@ public:
         if (PyList_GET_SIZE(m_list) == m_index) {
             if (PyList_Append(m_list, item)) {
                 Py_DECREF(m_list);
-                throw just_return_null_exception();
+                throw exception_is_set();
             }
         } else {
             PyList_SET_ITEM(m_list, m_index, item);
@@ -97,7 +90,7 @@ private:
     {
         Py_ssize_t length_hint = PyObject_LengthHint(length_hint_base, 0);
         if (length_hint < 0) {
-            throw just_return_null_exception();
+            throw exception_is_set();
         }
         return length_hint;
     }
@@ -132,7 +125,7 @@ public:
             m_seq_size = PySequence_Fast_GET_SIZE(m_fast_sequence);
         } else {
             if ((m_iterator = PyObject_GetIter(m_object)) == nullptr) {
-                throw just_return_null_exception();
+                throw exception_is_set();
             }
         }
     }
@@ -326,7 +319,7 @@ private:
         // Create a list into which we will insert the data from our iterator
         PyObject* local_storage = PyList_New(0);
         if (local_storage == nullptr) {
-            throw just_return_null_exception();
+            throw exception_is_set();
         }
 
         // This function is the closest we can get to list.extend in the
@@ -336,7 +329,7 @@ private:
         m_fast_sequence = PySequence_InPlaceConcat(local_storage, m_object);
         Py_DECREF(local_storage);
         if (m_fast_sequence == nullptr) {
-            throw just_return_null_exception();
+            throw exception_is_set();
         }
 
         // Now that we are here, we can free the iterator if it had been created,
