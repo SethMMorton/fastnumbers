@@ -66,6 +66,96 @@ public:
         return str != m_start && str == (m_start + m_str_len);
     }
 
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * This template specialization is for integral types.
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
+    T as_number()
+    {
+        reset_error();
+
+        bool error;
+        bool overflow;
+        constexpr bool always_convert = true;
+        T result = parse_int<T>(
+            m_start, end(), options().get_base(), error, overflow, always_convert
+        );
+
+        // If an error occured because of underscores, remove them and re-parse
+        if (error && has_valid_underscores()) {
+            Buffer buffer(m_start, m_str_len);
+            buffer.remove_valid_underscores();
+            result = parse_int<T>(
+                buffer.start(),
+                buffer.end(),
+                options().get_base(),
+                error,
+                overflow,
+                always_convert
+            );
+        }
+
+        // If there is still an error then it is real
+        // We also will short-circuit overflows here
+        if (error || overflow) {
+            if (error) {
+                encountered_conversion_error();
+            } else {
+                encountered_overflow();
+            }
+            return static_cast<T>(0);
+        }
+
+        // For unsigned types, fail with overflow if the value is negative
+        if constexpr (std::is_unsigned_v<T>) {
+            if (is_negative()) {
+                encountered_overflow();
+                return static_cast<T>(0);
+            }
+            return static_cast<T>(result);
+        } else {
+            return static_cast<T>(sign() * result);
+        }
+    }
+
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * This template specialization is for floating point types.
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <
+        typename T,
+        typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+    T as_number()
+    {
+        reset_error();
+
+        bool error;
+        T result = parse_float<T>(m_start, end(), error);
+
+        // If an error occured because of underscores, remove them and re-parse
+        if (error && has_valid_underscores()) {
+            Buffer buffer(m_start, m_str_len);
+            buffer.remove_valid_underscores();
+            result = parse_float<T>(buffer.start(), buffer.end(), error);
+        }
+
+        // If there is still an error then it is real
+        if (error) {
+            encountered_conversion_error();
+            return static_cast<T>(0.0);
+        }
+
+        // Return with the sign
+        return static_cast<T>(sign() * result);
+    }
+
 private:
     /// The potential start of the character array
     const char* m_start;
@@ -99,9 +189,6 @@ private:
     {
         return m_start == nullptr ? nullptr : (m_start + m_str_len);
     }
-
-    /// The string as a double (check error state)
-    double as_double();
 
     /// Add FromStr to the return NumberFlags
     static constexpr NumberFlags flag_wrap(const NumberFlags val)

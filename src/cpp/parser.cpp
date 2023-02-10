@@ -1,10 +1,16 @@
+#include <cstdint>
+#include <limits>
+#include <type_traits>
+
+#include <Python.h>
+
 #include "fastnumbers/buffer.hpp"
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/character.hpp"
+#include "fastnumbers/parser/numeric.hpp"
+#include "fastnumbers/parser/unicode.hpp"
 #include "fastnumbers/user_options.hpp"
-#include <Python.h>
-#include <limits>
 
 /**
  * \brief Remove whitespace at the end of a string
@@ -82,11 +88,12 @@ PyObject* CharacterParser::as_pyint()
     // The only thing special handling we need is underscores.
     bool error;
     bool overflow;
-    int64_t result = parse_int(m_start, end(), options().get_base(), error, overflow);
+    int64_t result
+        = parse_int<int64_t>(m_start, end(), options().get_base(), error, overflow);
     if (error && has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(options().get_base() != 10);
-        result = parse_int(
+        result = parse_int<int64_t>(
             buffer.start(), buffer.end(), options().get_base(), error, overflow
         );
     }
@@ -107,30 +114,9 @@ PyObject* CharacterParser::as_pyint()
     return retval;
 }
 
-double CharacterParser::as_double()
-{
-    reset_error();
-
-    // The C++ parser is robust enough to handle any double properly,
-    // so there is no need to fall back on Python's parser.
-    // The only thing special handling we need is underscores.
-    bool error;
-    double result = parse_float(m_start, end(), error);
-    if (error && has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores();
-        result = parse_float(buffer.start(), buffer.end(), error);
-    }
-    if (error) {
-        encountered_conversion_error();
-        return -1.0;
-    }
-    return sign() * result;
-}
-
 PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)
 {
-    const double result = as_double();
+    const double result = as_number<double>();
 
     // Fail fast on error
     if (errored()) {
@@ -188,4 +174,62 @@ NumberFlags CharacterParser::get_number_type() const
 
     // Return the found type
     return type_mapping[value];
+}
+
+/////////////////////////////////////////////////
+// Specializations for NumericParser::as_number()
+/////////////////////////////////////////////////
+
+template <>
+double NumericParser::as_number()
+{
+    // Fast path if we know it is not numeric
+    if (!(get_number_type() & (NumberType::Float | NumberType::Integer))) {
+        encountered_conversion_error();
+        return 0.0;
+    }
+
+    // Otherwise use the Python conversion function - this should handle
+    // converting integers to double as well. Watch out for errors here too.
+    const double value = PyFloat_AsDouble(m_obj);
+    if (value == -1.0 && PyErr_Occurred()) {
+        encountered_conversion_error();
+        PyErr_Clear();
+        return 0.0;
+    }
+    return value;
+}
+
+template <>
+long double NumericParser::as_number()
+{
+    return static_cast<long double>(as_number<double>());
+}
+
+template <>
+float NumericParser::as_number()
+{
+    return cast_num_check_overflow<float>(as_number<double>());
+}
+
+template <>
+long long NumericParser::as_number()
+{
+    // Fast path if we know it is not numeric
+    if (!(get_number_type() & NumberType::Integer)) {
+        encountered_conversion_error();
+        return 0;
+    }
+    return check_for_error_py<long long>(m_obj, PyLong_AsLongLongAndOverflow);
+}
+
+template <>
+unsigned long long NumericParser::as_number()
+{
+    // Fast path if we know it is not numeric
+    if (!(get_number_type() & NumberType::Integer)) {
+        encountered_conversion_error();
+        return 0;
+    }
+    return check_for_error_py(PyLong_AsUnsignedLongLong(m_obj));
 }

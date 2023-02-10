@@ -2,7 +2,9 @@
 
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
+#include <type_traits>
 
 #include <Python.h>
 
@@ -57,11 +59,8 @@ public:
     /// Whether the last conversion encountered an error
     bool errored() const { return m_error_type != ErrorType::NONE; }
 
-    /// Whether the last conversion potentially had an overflow
-    bool potential_overflow() const
-    {
-        return m_error_type == ErrorType::POTENTIAL_OVERFLOW;
-    }
+    /// Whether the last conversion (possibly potentially) had an overflow
+    bool overflow() const { return m_error_type == ErrorType::OVERFLOW; }
 
     /// Was an explict base given illegally?
     bool illegal_explicit_base() const
@@ -74,6 +73,10 @@ public:
 
     /// Access the user-given options for parsing
     const UserOptions& options() const { return m_options; }
+
+    // NOTE: ideally, the as_int() and as_float() templates would be defined
+    //       as virtual functions here, but virtual functions are not allowed
+    //       to also be templates, so we just define them at in the sub-classes.
 
     /// Convert the stored object to a python int (check error state)
     virtual PyObject* as_pyint() = 0;
@@ -136,11 +139,8 @@ protected:
     /// Record that the conversion encountered an error
     void encountered_conversion_error() { m_error_type = ErrorType::CANNOT_PARSE; }
 
-    /// Record that the conversion encountered a potential overflow
-    void encountered_potential_overflow_error()
-    {
-        m_error_type = ErrorType::POTENTIAL_OVERFLOW;
-    }
+    /// Record that the conversion encountered a (possibly potential) overflow
+    void encountered_overflow() { m_error_type = ErrorType::OVERFLOW; }
 
     /// Reset the error state to "no error"
     void reset_error() { m_error_type = ErrorType::NONE; }
@@ -171,7 +171,7 @@ private:
     enum ErrorType {
         NONE,
         CANNOT_PARSE,
-        POTENTIAL_OVERFLOW,
+        OVERFLOW,
     };
 
     /// Tracker of what error is being stored
@@ -185,4 +185,28 @@ private:
 
     /// Hold the parser options
     UserOptions m_options;
+
+protected:
+    /// Helper for casting but first checking for overflow
+    template <typename T1, typename T2>
+    T1 cast_num_check_overflow(const T2 value)
+    {
+        // Only do the overflow checking if T1 is a smaller type than T2
+        // or if one is signed and the other is unsigned.
+        constexpr T1 t1_max = std::numeric_limits<T1>::max();
+        constexpr T1 t1_min = std::numeric_limits<T1>::min();
+        constexpr T2 t2_max = std::numeric_limits<T2>::max();
+        constexpr T2 t2_min = std::numeric_limits<T2>::min();
+        constexpr bool t1_signed = std::is_signed_v<T1>;
+        constexpr bool t2_signed = std::is_signed_v<T2>;
+        constexpr bool same_sign
+            = (t1_signed && t2_signed) || (!t1_signed && !t2_signed);
+        if constexpr (!same_sign || t1_max < t2_max || t1_min > t2_min) {
+            if (value < t1_min || value > t1_max) {
+                encountered_overflow();
+                return static_cast<T1>(0);
+            }
+        }
+        return static_cast<T1>(value);
+    }
 };

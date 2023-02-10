@@ -13,10 +13,7 @@
 #include <cstring>
 
 // FORWARD DECLARATIONS
-static inline uint32_t number_trailing_zeros(const char* start, const char* end);
-static inline int detect_base(const char* str, const char* end);
 static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
-
 // END FORWARD DECLARATIONS, BEGIN DEFINITITONS
 
 /*********************/
@@ -147,97 +144,6 @@ int string_contains_what(const char* str, const char* end, int base)
     return value;
 }
 
-int64_t
-parse_int(const char* str, const char* end, int base, bool& error, bool& overflow)
-{
-    const std::size_t len = static_cast<std::size_t>(end - str);
-
-    // If the base needs to be guessed, do so now and get it over with.
-    if (base == 0) {
-        base = detect_base(str, end);
-    }
-
-    // Negative bases are illegal. So is zero-length
-    if (base < 0 || len == 0) {
-        overflow = false;
-        error = true;
-        return -1;
-    }
-
-    // Use std::from_chars for all but base-10.
-    if (base != 10) {
-        // Skip leading characters for non-base 10 ints.
-        if (len > 1 && str[0] == '0' && is_base_prefix(str[1], base)) {
-            str += 2;
-        }
-
-        // Use a very fast and accurate string to integer parser
-        // that will report back if there was an overflow (which
-        // we propagete back to the user).
-        int64_t value;
-        const std::from_chars_result res = std::from_chars(str, end, value, base);
-        error = res.ptr != end || res.ec == std::errc::invalid_argument;
-        overflow = res.ec == std::errc::result_out_of_range;
-        return value;
-    }
-
-    // We use our own method for base-10 because we can omit some overflow
-    // checking and get faster results.
-    //
-    // We just assume overflow if the length of the string is over a certain value.
-    // The number of digits chosen for overflow is 18 - this is one less than the
-    // maximumlength of a 64-bit integer.
-    //
-    // 64-bit int max == 9223372036854775807; len('9223372036854775807') - 1 == 18
-    overflow = len > 18;
-
-    // If an overflow is going to happen, just evaluate that this looks like
-    // an integer. Otherwise, actually calculate the value contained in the string.
-    int64_t value = 0L;
-    if (overflow) {
-        consume_digits(str, len);
-    } else {
-        // Attempt to read eight characters at a time and parse as digits.
-        // Loop over the character array in steps of eight. Stop processing
-        // if not all eight characters are digits.
-        const std::size_t number_of_eights = len / 8;
-        for (std::size_t i = 0; i < number_of_eights; ++i) {
-            if (fast_float::is_made_of_eight_digits_fast(str)) {
-                value = value * 100000000 + fast_float::parse_eight_digits_unrolled(str);
-                str += 8;
-            } else {
-                break;
-            }
-        }
-
-        // Convert digits the remaining digits one-at-a-time.
-        int64_t this_char_as_digit = 0L;
-        while (str != end && (this_char_as_digit = to_digit<int64_t>(*str)) >= 0) {
-            value = value * 10L + this_char_as_digit;
-            str += 1;
-        }
-    }
-    error = str != end;
-    return value;
-}
-
-double parse_float(const char* str, const char* end, bool& error)
-{
-    // parse_float is not supposed to accept signed values, but from_chars
-    // will accept negative signs. To prevent accidental success on e.g. "+-3.14"
-    // we short-cicuit on a leading negative sign.
-    if (str != end && *str == '-') {
-        error = true;
-        return -1.0;
-    }
-
-    // Use a very fast and accurate string to double parser
-    double value;
-    const fast_float::from_chars_result res = fast_float::from_chars(str, end, value);
-    error = !(res.ptr == end && res.ec == std::errc());
-    return value;
-}
-
 void remove_valid_underscores(char* str, const char*& end, const bool based)
 {
     const std::size_t len = static_cast<std::size_t>(end - str);
@@ -312,56 +218,6 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
 /**************************/
 /* IMPLEMENTATION DETAILS */
 /**************************/
-
-/**
- * \brief Check the number of zeros at the end of a number
- *
- * \param str The string to check, assumed to be non-NULL
- * \param end The end of the string being checked
- * \return The number of zeros
- */
-uint32_t number_trailing_zeros(const char* start, const char* end)
-{
-    uint32_t n = 0;
-    for (end = end - 1; end >= start; --end) {
-        if (*end == '0') {
-            n += 1;
-        } else {
-            break;
-        }
-    }
-    return n;
-}
-
-/**
- * \brief Auto-detect the base of the given integer string
- *
- * \param str The string to check, assumed to be non-NULL
- * \param end The end of the string being checked
- * \return The dectected base, possibly 2, 8, 10, 16, or -1 on error
- */
-int detect_base(const char* str, const char* end)
-{
-    const std::size_t len = static_cast<std::size_t>(end - str);
-    if (str[0] != '0' || len == 1) {
-        return 10;
-    }
-
-    const char lowered = lowercase(str[1]);
-    if (lowered == 'x') {
-        return 16;
-    } else if (lowered == 'o') {
-        return 8;
-    } else if (lowered == 'b') {
-        return 2;
-    } else
-        /* "old" (C-style) octal literal illegal in 3.x. */
-        if (number_trailing_zeros(str, end) == len) {
-            return 10;
-        } else {
-            return -1;
-        }
-}
 
 /**
  * \brief Determine if a character represents a digit in a given base

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <type_traits>
 
 #include <Python.h>
 
@@ -118,6 +119,39 @@ public:
         return NumberType::INVALID;
     }
 
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T>
+    T as_number()
+    {
+        // Fast path if we know it is not numeric
+        if (!(get_number_type() & NumberType::Integer)) {
+            encountered_conversion_error();
+            return 0;
+        }
+
+        // Because of template specifications, this implementation will
+        // only be called for *integers* that are of size (unsigned) long
+        // or smaller.
+        if constexpr (std::is_signed_v<T>) {
+            return cast_num_check_overflow<T>(
+                check_for_error_py<long>(m_obj, PyLong_AsLongAndOverflow)
+            );
+        } else if constexpr (std::is_unsigned_v<T>) {
+            return cast_num_check_overflow<T>(
+                check_for_error_py(PyLong_AsUnsignedLong(m_obj))
+            );
+        } else {
+            static_assert(
+                !std::is_integral_v<T>,
+                "invalid type given to NumericParser::as_number()"
+            );
+        }
+    }
+
 private:
     /// The Python object potentially under analysis
     PyObject* m_obj;
@@ -144,5 +178,39 @@ private:
     static constexpr NumberFlags flag_wrap(const NumberFlags val)
     {
         return NumberType::FromNum | val;
+    }
+
+    /// Helper for performing error checking
+    template <typename T>
+    T check_for_error_py(T value)
+    {
+        if (value == static_cast<T>(-1) && PyErr_Occurred()) {
+            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                encountered_overflow();
+            } else {
+                encountered_conversion_error();
+            }
+            PyErr_Clear();
+            return static_cast<T>(0);
+        }
+        return value;
+    }
+
+    /// Helper for performing error checking
+    template <typename T, typename Function>
+    T check_for_error_py(PyObject* obj, Function func)
+    {
+        int overflow = false;
+        const T value = func(m_obj, &overflow);
+        if (overflow) {
+            encountered_overflow();
+            return 0;
+        }
+        if (value == static_cast<T>(-1) && PyErr_Occurred()) {
+            PyErr_Clear();
+            encountered_conversion_error();
+            return static_cast<T>(0);
+        }
+        return value;
     }
 };
