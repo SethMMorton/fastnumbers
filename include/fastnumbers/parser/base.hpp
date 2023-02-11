@@ -62,6 +62,15 @@ public:
     /// Whether the last conversion (possibly potentially) had an overflow
     bool overflow() const { return m_error_type == ErrorType::OVERFLOW; }
 
+    /// Whether there is is just a plain-old TypeError
+    bool type_error() const
+    {
+        const bool numeric_parser = parser_type() == ParserType::NUMERIC;
+        const bool invalid_number
+            = get_number_type() == static_cast<NumberFlags>(NumberType::INVALID);
+        return numeric_parser && invalid_number;
+    }
+
     /// Was an explict base given illegally?
     bool illegal_explicit_base() const
     {
@@ -172,6 +181,7 @@ private:
         NONE,
         CANNOT_PARSE,
         OVERFLOW,
+        TYPE_ERROR,
     };
 
     /// Tracker of what error is being stored

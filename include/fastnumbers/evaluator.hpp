@@ -90,8 +90,8 @@ private:
         const NumberFlags typeflags = m_parser.get_number_type();
         constexpr NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
 
-        // If not a numeric type it is a type error
-        if (typeflags & NumberType::INVALID) {
+        // Stop now for a type error
+        if (m_parser.type_error()) {
             return typed_error(ntype);
         }
 
