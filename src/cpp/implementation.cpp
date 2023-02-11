@@ -5,9 +5,12 @@
 
 #include <Python.h>
 
+#include "fastnumbers/ctype_extractor.hpp"
 #include "fastnumbers/evaluator.hpp"
+#include "fastnumbers/exception.hpp"
 #include "fastnumbers/extractor.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/iteration.hpp"
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
 #include "fastnumbers/resolver.hpp"
@@ -403,4 +406,162 @@ PyObject* type_query_impl(
     // Return the type of the input
     Py_IncRef(found_type);
     return found_type;
+}
+
+// Implementation for iterating over a collection to populate a list
+PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+{
+    // Create a python list into which to store the return values
+    ListBuilder list_builder(input);
+
+    // The helper for iterating over the Python iterable
+    IterableManager<PyObject*> iter_manager(input, convert);
+
+    // For each element in the Python iterable, convert it and append to the list
+    for (auto& value : iter_manager) {
+        list_builder.append(value);
+    }
+
+    // Return the list to the user
+    return list_builder.get();
+}
+
+/**
+ * \struct ArrayImpl
+ * \brief Executor of array population, manages Python memory buffer
+ */
+struct ArrayImpl {
+    /// The input object as given by Python
+    PyObject* m_input;
+
+    /// The output object, represented as a memory view buffer
+    Py_buffer& m_output;
+
+    /// The action to take if INF is found
+    PyObject* m_inf;
+
+    /// The action to take if NaN is found
+    PyObject* m_nan;
+
+    /// The action to take if input is invalid
+    PyObject* m_on_fail;
+
+    /// The action to take if input overflows
+    PyObject* m_on_overflow;
+
+    /// The action to take if input is of incorrect type
+    PyObject* m_on_type_error;
+
+    /// Whether or not to allow underscores in strings
+    bool m_allow_underscores;
+
+    /// The base to use when parsing integers
+    int m_base;
+
+    /// Release the Python memoryview buffer
+    ~ArrayImpl() { PyBuffer_Release(&m_output); }
+
+    /// Perform the actual array population logic
+    template <typename T>
+    void execute()
+    {
+        UserOptions options;
+        options.set_base(m_base);
+        options.set_underscores_allowed(m_allow_underscores);
+
+        // Define how a Python object can be converted into a C number type
+        CTypeExtractor<T> extractor(options);
+        extractor.set_inf_replacement(m_inf);
+        extractor.set_nan_replacement(m_nan);
+        extractor.set_fail_replacement(m_on_fail);
+        extractor.set_overflow_replacement(m_on_overflow);
+        extractor.set_type_error_replacement(m_on_type_error);
+
+        // Define how we convert each element of the iterable
+        IterableManager<T> iter_man(m_input, [&extractor](PyObject* x) -> T {
+            return extractor.extract_c_number(x);
+        });
+
+        // Create a handler for inserting data into the output memory buffer
+        ArrayPopulator pop(m_output, iter_man.get_size());
+
+        // Iterate over the input data, convert it, and place it in the output
+        for (const auto& value : iter_man) {
+            pop.place_next(value);
+        }
+    }
+};
+
+// Implementation for iterating over a collection to populate an array
+void array_impl(
+    PyObject* input,
+    PyObject* output,
+    PyObject* inf,
+    PyObject* nan,
+    PyObject* on_fail,
+    PyObject* on_overflow,
+    PyObject* on_type_error,
+    bool allow_underscores,
+    int base
+)
+{
+    // Extract the underlying buffer data from the output object
+    Py_buffer buf { nullptr, nullptr };
+    constexpr auto flags = PyBUF_WRITABLE | PyBUF_ND | PyBUF_FORMAT;
+    if (PyObject_GetBuffer(output, &buf, flags) != 0) {
+        throw exception_is_set();
+    }
+
+    // Pass on all arguments to the actual implementation
+    // NOTE: This will manage the buffer object for us
+    ArrayImpl impl {
+        input, buf, inf, nan, on_fail, on_overflow, on_type_error, allow_underscores,
+        base,
+    };
+
+    // The buffer format must be defined
+    if (buf.format == nullptr) {
+        PyErr_Format(
+            CustomExc::fastnumbers_python_dtype_exception,
+            "Output object '%.200R' does not define a buffer format",
+            output
+        );
+        throw exception_is_set();
+    }
+
+    // The type to extract is based on the given format character
+    switch (buf.format[0]) {
+    case 'b':
+        return impl.execute<char>();
+    case 'B':
+        return impl.execute<unsigned char>();
+    case 'h':
+        return impl.execute<short>();
+    case 'H':
+        return impl.execute<unsigned short>();
+    case 'i':
+        return impl.execute<int>();
+    case 'I':
+        return impl.execute<unsigned int>();
+    case 'l':
+        return impl.execute<long>();
+    case 'L':
+        return impl.execute<unsigned long>();
+    case 'q':
+        return impl.execute<long long>();
+    case 'Q':
+        return impl.execute<unsigned long long>();
+    case 'f':
+        return impl.execute<float>();
+    case 'd':
+        return impl.execute<double>();
+    }
+
+    PyErr_Format(
+        CustomExc::fastnumbers_python_dtype_exception,
+        "Unknown buffer format '%s' for object '%.200R'",
+        buf.format,
+        output
+    );
+    throw exception_is_set();
 }

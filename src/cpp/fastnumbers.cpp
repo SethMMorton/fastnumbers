@@ -2,7 +2,6 @@
  * This file contains the functions that directly interface with the Python interpreter.
  */
 #include <exception>
-#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -13,10 +12,7 @@
 #include "fastnumbers/docstrings.hpp"
 #include "fastnumbers/exception.hpp"
 #include "fastnumbers/implementation.hpp"
-#include "fastnumbers/iteration.hpp"
-#include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/selectors.hpp"
-#include "fastnumbers/user_options.hpp"
 #include "fastnumbers/version.hpp"
 
 /// Custom exception class for fastnumbers
@@ -191,6 +187,45 @@ static inline void validate_not_allow_disallow_str_only_num_only(const PyObject*
 }
 
 /**
+ * \brief Validate the selector is not a "yes, no, num, str, input" value
+ * \param selector The python object to validate
+ * \throws fastnumbers_exception if one of the four valid values
+ */
+static inline void
+validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector)
+{
+    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
+        || selector == Selectors::INPUT;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'on_fail', 'on_overflow', and 'on_type_error' cannot be "
+            "fastnumbers.ALLOWED, fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, "
+            "fastnumbers.STRING_ONLY, or fastnumbers.INPUT"
+        );
+    }
+}
+
+/**
+ * \brief Validate the selector is not a "no, num, str, input" value
+ * \param selector The python object to validate
+ * \throws fastnumbers_exception if one of the four valid values
+ */
+static inline void validate_not_disallow_str_only_num_only_input(const PyObject* selector
+)
+{
+    const bool bad = selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
+        || selector == Selectors::INPUT;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+            "fastnumbers.NUMBER_ONLY, fastnumbers.STRING_ONLY, or fastnumbers.INPUT"
+        );
+    }
+}
+
+/**
  * \brief Validate the selector is not "DISALLOWED"
  * \param selector The python object to validate
  * \throws fastnumbers_exception if the value is "DISALLOWED"
@@ -222,30 +257,6 @@ static inline void validate_consider(const PyObject* selector)
             "fastnumbers.STRING_ONLY"
         );
     }
-}
-
-/**
- * \brief Iterate over the elements of a collection and convert each one
- * \param input The given input object that should be iterable
- * \param convert A function accepting a single argument that performs the conversion
- * \return A new python list containing the converted results, or NULL on error
- */
-static PyObject*
-iterate_python_object(PyObject* input, std::function<PyObject*(PyObject*)> convert)
-{
-    // Create a python list into which to store the return values
-    ListBuilder list_builder(input);
-
-    // The helper for iterating over the Python iterable
-    IterableManager<PyObject*> iter_manager(input, convert);
-
-    // For each element in the Python iterable, convert it and append to the list
-    for (auto& value : iter_manager) {
-        list_builder.append(value);
-    }
-
-    // Return the list to the user
-    return list_builder.get();
 }
 
 /**
@@ -1097,7 +1108,7 @@ static PyObject* fastnumbers_map_try_real(
                 coerce
             );
         };
-        return iterate_python_object(input, convert);
+        return iteration_impl(input, convert);
     } catch (...) {
         return handle_exceptions(input);
     }
@@ -1139,7 +1150,7 @@ static PyObject* fastnumbers_map_try_float(
                 x, on_fail, on_type_error, inf, nan, UserType::FLOAT, allow_underscores
             );
         };
-        return iterate_python_object(input, convert);
+        return iteration_impl(input, convert);
     } catch (...) {
         return handle_exceptions(input);
     }
@@ -1178,7 +1189,7 @@ static PyObject* fastnumbers_map_try_int(
                 x, on_fail, on_type_error, UserType::INT, allow_underscores, base
             );
         };
-        return iterate_python_object(input, convert);
+        return iteration_impl(input, convert);
     } catch (...) {
         return handle_exceptions(input);
     }
@@ -1214,10 +1225,67 @@ static PyObject* fastnumbers_map_try_forceint(
                 x, on_fail, on_type_error, UserType::FORCEINT, allow_underscores
             );
         };
-        return iterate_python_object(input, convert);
+        return iteration_impl(input, convert);
     } catch (...) {
         return handle_exceptions(input);
     }
+}
+
+static PyObject* fastnumbers_array(
+    PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
+)
+{
+    PyObject* input = nullptr;
+    PyObject* output = nullptr;
+    PyObject* inf = Selectors::ALLOWED;
+    PyObject* nan = Selectors::ALLOWED;
+    PyObject* on_fail = Selectors::RAISE;
+    PyObject* on_overflow = Selectors::RAISE;
+    PyObject* on_type_error = Selectors::RAISE;
+    PyObject* pybase = nullptr;
+    bool allow_underscores = false;
+
+    // Read the function arguments
+    FN_PREPARE_ARGPARSER;
+    // clang-format off
+    if (fn_parse_arguments("array", args, len_args, kwnames,
+                           "input", false,  &input,
+                           "output", false, &output,
+                           "$inf", false, &inf,
+                           "$nan", false, &nan,
+                           "$on_fail", false, &on_fail,
+                           "$on_overflow", false, &on_overflow,
+                           "$on_type_error", false, &on_type_error,
+                           "$base", false, &pybase,
+                           "$allow_underscores", true, &allow_underscores,
+                           nullptr, false, nullptr
+        )) return nullptr;
+    // clang-format on
+
+    try {
+        validate_not_disallow_str_only_num_only_input(inf);
+        validate_not_disallow_str_only_num_only_input(nan);
+        validate_not_allow_disallow_str_only_num_only_input(on_fail);
+        validate_not_allow_disallow_str_only_num_only_input(on_overflow);
+        validate_not_allow_disallow_str_only_num_only_input(on_type_error);
+        const int base = assess_integer_base_input(pybase);
+        array_impl(
+            input,
+            output,
+            inf,
+            nan,
+            on_fail,
+            on_overflow,
+            on_type_error,
+            allow_underscores,
+            base
+        );
+    } catch (...) {
+        return handle_exceptions(input);
+    }
+
+    // No return value, need to return None
+    Py_RETURN_NONE;
 }
 
 // Define the methods contained in this module
@@ -1315,6 +1383,7 @@ static PyMethodDef FastnumbersMethods[] = {
       (PyCFunction)fastnumbers_map_try_forceint,
       METH_FASTCALL | METH_KEYWORDS,
       map_try_forceint__doc__ },
+    { "array", (PyCFunction)fastnumbers_array, METH_FASTCALL | METH_KEYWORDS, "" },
     { nullptr, nullptr, 0, nullptr } /* Sentinel */
 };
 
@@ -1340,6 +1409,7 @@ PyObject* Selectors::INPUT = nullptr;
 PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
+PyObject* CustomExc::fastnumbers_python_dtype_exception = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1351,6 +1421,14 @@ PyMODINIT_FUNC PyInit_fastnumbers()
 
     // Add module level constants.
     PyModule_AddStringConstant(m, "__version__", FASTNUMBERS_VERSION);
+
+    // Exported custom exceptions
+    CustomExc::fastnumbers_python_dtype_exception = PyErr_NewExceptionWithDoc(
+        "fastnumbers.DataypeException",
+        "Custom exceptiom to express invalid datatypes for memory buffers",
+        nullptr,
+        nullptr
+    );
 
     // Selectors
     Selectors::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);

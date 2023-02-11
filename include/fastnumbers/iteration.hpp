@@ -8,7 +8,6 @@
 #include "fastnumbers/exception.hpp"
 #include "fastnumbers/selectors.hpp"
 
-
 /**
  * \class ListBuilder
  * \brief Handles the details of creating and managing a Python list
@@ -94,6 +93,56 @@ private:
         }
         return length_hint;
     }
+};
+
+/**
+ * \class ArrayPopulator
+ * \brief Handles the details of populating an array buffer
+ */
+class ArrayPopulator {
+public:
+    /**
+     * \brief Construct the manager with the buffer to manage
+     * \param buffer The Python memory buffer to populate
+     * \param length The initial length required of the array
+     */
+    explicit ArrayPopulator(Py_buffer& buffer, const Py_ssize_t length)
+        : m_buf(buffer)
+        , m_index(0)
+    {
+        if (m_buf.ndim != 1) {
+            PyErr_SetString(PyExc_ValueError, "Can only accept arrays of dimension 1");
+            throw exception_is_set();
+        }
+        if (m_buf.shape[0] != length) {
+            PyErr_SetString(PyExc_ValueError, "input/output must be of equal size");
+            throw exception_is_set();
+        }
+    }
+
+    // Deleted
+    ArrayPopulator(const ArrayPopulator&) = delete;
+    ArrayPopulator(ArrayPopulator&&) = delete;
+    ArrayPopulator& operator=(const ArrayPopulator&) = delete;
+
+    /// Default
+    ~ArrayPopulator() = default;
+
+    /// \brief Place a return value in the next proper location of the buffer
+    /// \param value The value to place
+    template <typename T>
+    void place_next(const T value)
+    {
+        static_cast<T*>(m_buf.buf)[m_index] = value;
+        m_index += 1;
+    }
+
+private:
+    /// The buffer where the data should be added
+    Py_buffer& m_buf;
+
+    /// The current location where we should add to the array
+    Py_ssize_t m_index;
 };
 
 /// Track the state of the iteration
