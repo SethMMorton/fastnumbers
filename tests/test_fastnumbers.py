@@ -924,6 +924,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     funcs = ["try_real", "try_float"]
 
     @given(sampled_from(numeric_not_digit_not_int))
+    @example("\u0F33")  # the only negative unicode character
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_float(
         self, func: Union[TryReal, TryInt, TryForceInt], x: str

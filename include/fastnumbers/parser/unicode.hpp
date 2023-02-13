@@ -38,7 +38,7 @@ public:
     {
         reset_error();
         if (get_number_type() & NumberType::Integer) {
-            return PyLong_FromLong(sign() * m_digit);
+            return PyLong_FromLong(m_digit);
         }
         encountered_conversion_error();
         return nullptr;
@@ -64,18 +64,17 @@ public:
         }
 
         if (force_int) {
-            return (ntype & NumberType::Integer) ? PyLong_FromLong(sign() * m_digit)
-                                                 : PyLong_FromDouble(sign() * m_numeric);
+            return (ntype & NumberType::Integer) ? PyLong_FromLong(m_digit)
+                                                 : PyLong_FromDouble(m_numeric);
         } else if (coerce) {
             return (ntype & NumberType::Integer)
-                ? PyLong_FromLong(sign() * m_digit)
-                : ((ntype & NumberType::IntLike)
-                       ? PyLong_FromDouble(sign() * m_numeric)
-                       : PyFloat_FromDouble(sign() * m_numeric));
+                ? PyLong_FromLong(m_digit)
+                : ((ntype & NumberType::IntLike) ? PyLong_FromDouble(m_numeric)
+                                                 : PyFloat_FromDouble(m_numeric));
         } else {
             return (ntype & NumberType::Integer)
-                ? PyFloat_FromDouble(static_cast<double>(sign() * m_digit))
-                : PyFloat_FromDouble(sign() * m_numeric);
+                ? PyFloat_FromDouble(static_cast<double>(m_digit))
+                : PyFloat_FromDouble(m_numeric);
         }
     }
 
