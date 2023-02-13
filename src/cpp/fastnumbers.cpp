@@ -262,7 +262,7 @@ static PyObject* fastnumbers_try_real(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     int coerce = true;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function argument
     FN_PREPARE_ARGPARSER;
@@ -315,7 +315,7 @@ static PyObject* fastnumbers_fast_real(
     PyObject* nan = Selectors::ALLOWED;
     int raise_on_invalid = false;
     int coerce = true;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function argument
     FN_PREPARE_ARGPARSER;
@@ -359,7 +359,7 @@ static PyObject* fastnumbers_try_float(
     PyObject* nan = Selectors::ALLOWED;
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -403,7 +403,7 @@ static PyObject* fastnumbers_fast_float(
     PyObject* inf = Selectors::ALLOWED;
     PyObject* nan = Selectors::ALLOWED;
     int raise_on_invalid = false;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -445,7 +445,7 @@ static PyObject* fastnumbers_try_int(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     PyObject* pybase = nullptr;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -486,7 +486,7 @@ static PyObject* fastnumbers_fast_int(
     PyObject* key = nullptr;
     PyObject* pybase = nullptr;
     int raise_on_invalid = false;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -525,7 +525,7 @@ static PyObject* fastnumbers_try_forceint(
     PyObject* input = nullptr;
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -563,7 +563,7 @@ static PyObject* fastnumbers_fast_forceint(
     PyObject* on_fail = nullptr;
     PyObject* key = nullptr;
     int raise_on_invalid = false;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -601,7 +601,7 @@ static PyObject* fastnumbers_check_real(
     PyObject* consider = Py_None;
     PyObject* inf = Selectors::NUMBER_ONLY;
     PyObject* nan = Selectors::NUMBER_ONLY;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -641,7 +641,7 @@ static PyObject* fastnumbers_isreal(
     int num_only = false;
     int allow_inf = false;
     int allow_nan = false;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -684,7 +684,7 @@ static PyObject* fastnumbers_check_float(
     PyObject* inf = Selectors::NUMBER_ONLY;
     PyObject* nan = Selectors::NUMBER_ONLY;
     int strict = false;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -725,7 +725,7 @@ static PyObject* fastnumbers_isfloat(
     int num_only = false;
     int allow_inf = false;
     int allow_nan = false;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -766,7 +766,7 @@ static PyObject* fastnumbers_check_int(
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
     PyObject* pybase = nullptr;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -801,7 +801,7 @@ static PyObject* fastnumbers_isint(
     PyObject* pybase = nullptr;
     int str_only = false;
     int num_only = false;
-    int allow_underscores = true;
+    bool allow_underscores = true;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -906,7 +906,7 @@ static PyObject* fastnumbers_query_type(
     int coerce = false;
     int allow_inf = false;
     int allow_nan = false;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -1063,7 +1063,7 @@ static PyObject* fastnumbers_map_try_real(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     int coerce = true;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function argument
     FN_PREPARE_ARGPARSER;
@@ -1114,7 +1114,7 @@ static PyObject* fastnumbers_map_try_float(
     PyObject* nan = Selectors::ALLOWED;
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -1156,7 +1156,7 @@ static PyObject* fastnumbers_map_try_int(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     PyObject* pybase = nullptr;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -1195,7 +1195,7 @@ static PyObject* fastnumbers_map_try_forceint(
     PyObject* input = nullptr;
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
-    int allow_underscores = false;
+    bool allow_underscores = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
