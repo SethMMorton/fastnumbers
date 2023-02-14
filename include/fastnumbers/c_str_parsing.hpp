@@ -416,7 +416,7 @@ T parse_int(
         // Use a very fast and accurate string to integer parser
         // that will report back if there was an overflow (which
         // we propagete back to the user).
-        T value;
+        T value = static_cast<T>(0);
         std::from_chars_result res = std::from_chars(str, end, value, base);
         error = res.ptr != end || res.ec == std::errc::invalid_argument;
         overflow = res.ec == std::errc::result_out_of_range;

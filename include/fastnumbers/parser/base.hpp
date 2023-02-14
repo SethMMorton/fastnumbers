@@ -208,11 +208,26 @@ protected:
         constexpr T1 t1_min = std::numeric_limits<T1>::min();
         constexpr T2 t2_max = std::numeric_limits<T2>::max();
         constexpr T2 t2_min = std::numeric_limits<T2>::min();
-        constexpr bool same_sign = std::is_signed_v<T1> == std::is_signed_v<T2>;
-        if constexpr (!same_sign || t1_max < t2_max || t1_min > t2_min) {
-            if (value < t1_min || value > t1_max) {
-                encountered_overflow();
-                return static_cast<T1>(0);
+        if constexpr (std::is_signed_v<T1> == std::is_signed_v<T2>) {
+            if constexpr (t1_max < t2_max || t1_min > t2_min) {
+                if (value < t1_min || value > t1_max) {
+                    encountered_overflow();
+                    return static_cast<T1>(0);
+                }
+            }
+        } else { // one is signed, the other is not
+            if constexpr (t1_max < t2_max) {
+                if constexpr (std::is_signed_v<T1>) { // T2 is unsigned
+                    if (value > t1_max) {
+                        encountered_overflow();
+                        return static_cast<T1>(0);
+                    }
+                } else { // T2 is signed, T1 unsigned
+                    if (value < 0 || value > t1_max) {
+                        encountered_overflow();
+                        return static_cast<T1>(0);
+                    }
+                }
             }
         }
         return static_cast<T1>(value);
