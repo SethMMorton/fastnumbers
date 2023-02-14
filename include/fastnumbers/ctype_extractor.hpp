@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstring>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -13,6 +14,39 @@
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
+
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 11
+// This function was introduced in Python 3.11, but is super-useful
+// in obtaining the name of a type.
+// The implementation was basically copied from the 3.11 source code,
+// but adjustments were made to make it C++.
+PyObject* PyType_GetName(PyTypeObject* type)
+{
+    auto _PyType_Name = [](PyTypeObject* type) -> const char* {
+        assert(type->tp_name != nullptr);
+        const char* s = std::strrchr(type->tp_name, '.');
+        if (s == nullptr) {
+            s = type->tp_name;
+        } else {
+            s++;
+        }
+        return s;
+    };
+
+    auto type_name = [_PyType_Name](PyTypeObject* type, void* context) -> PyObject* {
+        if (type->tp_flags & Py_TPFLAGS_HEAPTYPE) {
+            PyHeapTypeObject* et = (PyHeapTypeObject*)type;
+
+            Py_INCREF(et->ht_name);
+            return et->ht_name;
+        } else {
+            return PyUnicode_FromString(_PyType_Name(type));
+        }
+    };
+
+    return type_name(type, nullptr);
+}
+#endif
 
 /**
  * \class CTypeExtractor
@@ -188,25 +222,27 @@ private:
             if (key == ReplaceType::FAIL) {
                 PyErr_Format(
                     PyExc_ValueError,
-                    "Cannot convert '%.200R' to C type '%s'",
+                    "Cannot convert %.200R to C type '%s'",
                     input,
                     type_name<T>()
                 );
             } else if (key == ReplaceType::OVERFLOW) {
                 PyErr_Format(
                     PyExc_OverflowError,
-                    "Cannot convert '%.200R' to C type '%s' without overflowing",
+                    "Cannot convert %.200R to C type '%s' without overflowing",
                     input,
                     type_name<T>()
                 );
             } else { // "on_type_error", "nan" and "inf" omitted by construction
+                PyObject* type_name = PyType_GetName(Py_TYPE(input));
                 PyErr_Format(
                     PyExc_TypeError,
-                    "The value '%.200R' has type '%.200R' which cannot be converted to "
+                    "The value %.200R has type %.200R which cannot be converted to "
                     "a numeric value",
-                    Py_TYPE(input)->tp_name,
-                    input
+                    input,
+                    type_name
                 );
+                Py_DECREF(type_name);
             }
             throw exception_is_set();
         }
@@ -238,21 +274,23 @@ private:
         // Check for more errors, and if we pass them then return the value.
         if (parser.errored()) {
             if (parser.type_error()) {
+                PyObject* type_name = PyType_GetName(Py_TYPE(input));
                 PyErr_Format(
                     PyExc_TypeError,
-                    "Callable passed to '%s' with input '%.200R' returned the value "
-                    "'%.200R' that has type '%.200R' which cannot be converted to a "
+                    "Callable passed to '%s' with input %.200R returned the value "
+                    "%.200R that has type %.200R which cannot be converted to a "
                     "numeric value",
                     m_replace_repr.at(key),
                     input,
                     retval,
-                    Py_TYPE(input)->tp_name
+                    type_name
                 );
+                Py_DECREF(type_name);
             } else if (parser.overflow()) {
                 PyErr_Format(
                     PyExc_OverflowError,
-                    "Callable passed to '%s' with input '%.200R' returned the value "
-                    "'%.200R' that cannot be converted to C type '%s' without "
+                    "Callable passed to '%s' with input %.200R returned the value "
+                    "%.200R that cannot be converted to C type '%s' without "
                     "overflowing",
                     m_replace_repr.at(key),
                     input,
@@ -262,8 +300,8 @@ private:
             } else {
                 PyErr_Format(
                     PyExc_ValueError,
-                    "Callable passed to '%s' with input '%.200R' returned the value "
-                    "'%.200R' that cannot be converted to C type '%s'",
+                    "Callable passed to '%s' with input %.200R returned the value "
+                    "%.200R that cannot be converted to C type '%s'",
                     m_replace_repr.at(key),
                     input,
                     retval,
@@ -303,18 +341,20 @@ private:
         const T value = parser.as_number<T>();
         if (parser.errored()) {
             if (parser.type_error()) {
+                PyObject* type_name = PyType_GetName(Py_TYPE(replacement));
                 PyErr_Format(
                     PyExc_TypeError,
-                    "The default value of '%.200R' given to option '%s' has type "
-                    "'%.200R' which cannot be converted to a numeric value",
+                    "The default value of %.200R given to option '%s' has type "
+                    "%.200R which cannot be converted to a numeric value",
                     replacement,
                     m_replace_repr.at(key),
-                    Py_TYPE(replacement)->tp_name
+                    type_name
                 );
+                Py_DECREF(type_name);
             } else if (parser.overflow()) {
                 PyErr_Format(
                     PyExc_OverflowError,
-                    "The default value of '%.200R' given to option '%s' cannot "
+                    "The default value of %.200R given to option '%s' cannot "
                     "be converted to C type '%s' without overflowing",
                     replacement,
                     m_replace_repr.at(key),
@@ -323,7 +363,7 @@ private:
             } else {
                 PyErr_Format(
                     PyExc_ValueError,
-                    "The default value of '%.200R' given to option '%s' cannot "
+                    "The default value of %.200R given to option '%s' cannot "
                     "be converted to C type '%s'",
                     replacement,
                     m_replace_repr.at(key),

@@ -146,6 +146,11 @@ int string_contains_what(const char* str, const char* end, int base)
 
 void remove_valid_underscores(char* str, const char*& end, const bool based)
 {
+    // Ignore a leading negative sign
+    if (*str == '-') {
+        str += 1;
+    }
+
     const std::size_t len = static_cast<std::size_t>(end - str);
     std::size_t i, offset;
 

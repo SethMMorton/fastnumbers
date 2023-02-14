@@ -147,10 +147,10 @@ public:
             return static_cast<T>(0.0);
         }
 
-        // Cast to the desired output type, being careful to check for overflow
-        return cast_num_check_overflow<T>(
-            (ntype & NumberType::Integer) ? static_cast<double>(m_digit) : (m_numeric)
-        );
+        // Cast to the desired output type. No need to worry about overflow
+        // when casting to floating point type, because too big will become
+        // infinity and too small will become zero.
+        return static_cast<T>((ntype & NumberType::Integer) ? m_digit : m_numeric);
     }
 
 private:

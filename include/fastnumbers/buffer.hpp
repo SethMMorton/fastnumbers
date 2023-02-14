@@ -1,8 +1,9 @@
 #pragma once
 
-#include "fastnumbers/c_str_parsing.hpp"
 #include <cstring>
 #include <limits>
+
+#include "fastnumbers/c_str_parsing.hpp"
 
 /**
  * \class Buffer
@@ -68,8 +69,35 @@ public:
     void remove_valid_underscores(const bool based)
     {
         const char* new_end = end();
-        ::remove_valid_underscores(start(), new_end, based);
-        m_len = static_cast<std::size_t>(new_end - start());
+        ::remove_valid_underscores(m_buffer, new_end, based);
+        m_len = static_cast<std::size_t>(new_end - m_buffer);
+    }
+
+    /// Remove a base prefix
+    void remove_base_prefix()
+    {
+        // To remove the base prefix, first move past a possible negative sign,
+        // then skip the base prefix. If the there was a negative sign, we
+        // place it in the position before the first digit after the prefix.
+        // Then, the internal buffer pointer is set to point to that new position.
+        const bool is_signed = *m_buffer == '-';
+        char* tracker = m_buffer;
+        std::size_t len = m_len;
+        if (is_signed) {
+            tracker += 1;
+            len -= 1;
+        }
+        if (has_base_prefix(tracker, len)) {
+            tracker += 2;
+            len -= 2;
+            if (is_signed) {
+                tracker -= 1;
+                *tracker = '-';
+                len += 1;
+            }
+            m_buffer = tracker;
+            m_len = len;
+        }
     }
 
     /// The largest amount of data the buffer can contain

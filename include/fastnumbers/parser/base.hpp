@@ -166,9 +166,6 @@ protected:
     /// Toggle whether the store value is negative or not
     void set_negative(const bool negative = true) { m_negative = negative; }
 
-    /// Integer that can be used to apply the sign of the number in the text
-    int sign() const { return is_negative() ? -1 : 1; }
-
 private:
     /// The type of the parser
     ParserType m_ptype;
@@ -197,8 +194,12 @@ private:
     UserOptions m_options;
 
 protected:
-    /// Helper for casting but first checking for overflow
-    template <typename T1, typename T2>
+    /// Helper for casting but first checking for integer overflow
+    template <
+        typename T1,
+        typename T2,
+        typename std::enable_if_t<std::is_integral_v<T1> && std::is_integral_v<T2>, bool>
+        = true>
     T1 cast_num_check_overflow(const T2 value)
     {
         // Only do the overflow checking if T1 is a smaller type than T2
@@ -207,10 +208,7 @@ protected:
         constexpr T1 t1_min = std::numeric_limits<T1>::min();
         constexpr T2 t2_max = std::numeric_limits<T2>::max();
         constexpr T2 t2_min = std::numeric_limits<T2>::min();
-        constexpr bool t1_signed = std::is_signed_v<T1>;
-        constexpr bool t2_signed = std::is_signed_v<T2>;
-        constexpr bool same_sign
-            = (t1_signed && t2_signed) || (!t1_signed && !t2_signed);
+        constexpr bool same_sign = std::is_signed_v<T1> == std::is_signed_v<T2>;
         if constexpr (!same_sign || t1_max < t2_max || t1_min > t2_min) {
             if (value < t1_min || value > t1_max) {
                 encountered_overflow();

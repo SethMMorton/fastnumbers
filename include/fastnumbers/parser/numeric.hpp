@@ -127,28 +127,54 @@ public:
     template <typename T>
     T as_number()
     {
-        // Fast path if we know it is not numeric
-        if (!(get_number_type() & NumberType::Integer)) {
-            encountered_conversion_error();
-            return 0;
-        }
+        // Special handling for floating point numbers
+        if constexpr (std::is_floating_point_v<T>) {
+            // Fast path if we know it is not numeric
+            if (!(get_number_type() & (NumberType::Float | NumberType::Integer))) {
+                encountered_conversion_error();
+                return 0.0;
+            }
 
-        // Because of template specifications, this implementation will
-        // only be called for *integers* that are of size (unsigned) long
-        // or smaller.
-        if constexpr (std::is_signed_v<T>) {
-            return cast_num_check_overflow<T>(
-                check_for_error_py<long>(m_obj, PyLong_AsLongAndOverflow)
-            );
-        } else if constexpr (std::is_unsigned_v<T>) {
-            return cast_num_check_overflow<T>(
-                check_for_error_py(PyLong_AsUnsignedLong(m_obj))
-            );
+            // Otherwise use the Python conversion function - this should handle
+            // converting integers to double as well. Watch out for errors here too.
+            const double value = PyFloat_AsDouble(m_obj);
+            if (value == -1.0 && PyErr_Occurred()) {
+                encountered_conversion_error();
+                PyErr_Clear();
+                return 0.0;
+            }
+
+            // Don't worry about overflow on casting to a smaller type because
+            // too big will just become infinity, too small becomes zero.
+            return static_cast<T>(value);
         } else {
-            static_assert(
-                !std::is_integral_v<T>,
-                "invalid type given to NumericParser::as_number()"
-            );
+            // Fast path if we know it is not numeric
+            if (!(get_number_type() & NumberType::Integer)) {
+                encountered_conversion_error();
+                return 0;
+            }
+
+            // Use special logic for the largest types, otherwise use a generic logic.
+            if constexpr (std::is_same_v<T, long long>) {
+                return check_for_error_py<long long>(
+                    m_obj, PyLong_AsLongLongAndOverflow
+                );
+            } else if constexpr (std::is_same_v<T, unsigned long long>) {
+                return check_for_error_py(PyLong_AsUnsignedLongLong(m_obj));
+            } else if constexpr (std::is_signed_v<T>) {
+                return cast_num_check_overflow<T>(
+                    check_for_error_py<long>(m_obj, PyLong_AsLongAndOverflow)
+                );
+            } else if constexpr (std::is_unsigned_v<T>) {
+                return cast_num_check_overflow<T>(
+                    check_for_error_py<unsigned long>(PyLong_AsUnsignedLong(m_obj))
+                );
+            } else {
+                static_assert(
+                    !std::is_integral_v<T>,
+                    "invalid type given to NumericParser::as_number()"
+                );
+            }
         }
     }
 

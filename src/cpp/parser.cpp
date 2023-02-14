@@ -47,14 +47,13 @@ CharacterParser::CharacterParser(
     const bool explict_base_allowed
 )
     : Parser(ParserType::CHARACTER, options, explict_base_allowed)
-    , m_start(nullptr)
-    , m_start_orig(nullptr)
-    , m_end_orig(nullptr)
+    , m_start(str)
+    , m_start_orig(str)
+    , m_end_orig(str + len)
     , m_str_len(0)
 {
-    // Store the start and end point of the character array
-    m_start = m_start_orig = str;
-    const char* end = m_end_orig = str + len;
+    // Store the end point of the character array
+    const char* end = m_end_orig;
 
     // Strip leading whitespace
     while (is_whitespace(*m_start)) {
@@ -72,6 +71,15 @@ CharacterParser::CharacterParser(
         set_negative();
     }
 
+    // We can only have a sign here if there are two consecutive signs.
+    // Two or more signs is illegal - let's treat it as such.
+    // Reset the start to before the first sign.
+    // All parsers will treat this as illegal now.
+    if (is_sign(*m_start)) {
+        m_start -= 1;
+        set_negative(false);
+    }
+
     // Calculate the length of the string after accounting for
     // whitespace and signs
     m_str_len = static_cast<std::size_t>(end - m_start);
@@ -85,24 +93,31 @@ PyObject* CharacterParser::as_pyint()
     // so that we can determine if the integer was at least valid.
     // If it was valid but overflowed, we use Python's parser, otherwise
     // return an error.
-    // The only thing special handling we need is underscores.
+    // The only thing special handling we need is underscores or base prefixes
+    // with negative signs that caused overflow.
     bool error;
     bool overflow;
-    int64_t result
-        = parse_int<int64_t>(m_start, end(), options().get_base(), error, overflow);
-    if (error && has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
+    int64_t result = parse_int<int64_t>(
+        signed_start(), end(), options().get_base(), error, overflow
+    );
+    const bool underscore_error = error && has_valid_underscores();
+    const bool prefix_overflow = overflow && has_base_prefix(m_start, m_str_len);
+    if (underscore_error || prefix_overflow) {
+        Buffer buffer(signed_start(), signed_len());
         buffer.remove_valid_underscores(options().get_base() != 10);
-        result = parse_int<int64_t>(
-            buffer.start(), buffer.end(), options().get_base(), error, overflow
-        );
+        int base = options().get_base();
+        if (base == 0) {
+            base = detect_base(buffer.start(), buffer.end());
+        }
+        buffer.remove_base_prefix();
+        result = parse_int<int64_t>(buffer.start(), buffer.end(), base, error, overflow);
     }
     if (error) {
         encountered_conversion_error();
         return nullptr;
     }
     if (!overflow) {
-        return pyobject_from_int64(sign() * result);
+        return pyobject_from_int64(result);
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
@@ -174,62 +189,4 @@ NumberFlags CharacterParser::get_number_type() const
 
     // Return the found type
     return type_mapping[value];
-}
-
-/////////////////////////////////////////////////
-// Specializations for NumericParser::as_number()
-/////////////////////////////////////////////////
-
-template <>
-double NumericParser::as_number()
-{
-    // Fast path if we know it is not numeric
-    if (!(get_number_type() & (NumberType::Float | NumberType::Integer))) {
-        encountered_conversion_error();
-        return 0.0;
-    }
-
-    // Otherwise use the Python conversion function - this should handle
-    // converting integers to double as well. Watch out for errors here too.
-    const double value = PyFloat_AsDouble(m_obj);
-    if (value == -1.0 && PyErr_Occurred()) {
-        encountered_conversion_error();
-        PyErr_Clear();
-        return 0.0;
-    }
-    return value;
-}
-
-template <>
-long double NumericParser::as_number()
-{
-    return static_cast<long double>(as_number<double>());
-}
-
-template <>
-float NumericParser::as_number()
-{
-    return cast_num_check_overflow<float>(as_number<double>());
-}
-
-template <>
-long long NumericParser::as_number()
-{
-    // Fast path if we know it is not numeric
-    if (!(get_number_type() & NumberType::Integer)) {
-        encountered_conversion_error();
-        return 0;
-    }
-    return check_for_error_py<long long>(m_obj, PyLong_AsLongLongAndOverflow);
-}
-
-template <>
-unsigned long long NumericParser::as_number()
-{
-    // Fast path if we know it is not numeric
-    if (!(get_number_type() & NumberType::Integer)) {
-        encountered_conversion_error();
-        return 0;
-    }
-    return check_for_error_py(PyLong_AsUnsignedLongLong(m_obj));
 }

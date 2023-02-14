@@ -82,20 +82,23 @@ public:
         bool overflow;
         constexpr bool always_convert = true;
         T result = parse_int<T>(
-            m_start, end(), options().get_base(), error, overflow, always_convert
+            signed_start(), end(), options().get_base(), error, overflow, always_convert
         );
 
-        // If an error occured because of underscores, remove them and re-parse
-        if (error && has_valid_underscores()) {
-            Buffer buffer(m_start, m_str_len);
-            buffer.remove_valid_underscores();
+        // If an error occured because of underscores or a pesky sign and base prefix
+        // combo, remove them and re-parse
+        const bool underscore_error = error && has_valid_underscores();
+        const bool prefix_overflow = overflow && has_base_prefix(m_start, m_str_len);
+        if (underscore_error || prefix_overflow) {
+            Buffer buffer(signed_start(), signed_len());
+            buffer.remove_valid_underscores(options().get_base() != 10);
+            int base = options().get_base();
+            if (base == 0) {
+                base = detect_base(buffer.start(), buffer.end());
+            }
+            buffer.remove_base_prefix();
             result = parse_int<T>(
-                buffer.start(),
-                buffer.end(),
-                options().get_base(),
-                error,
-                overflow,
-                always_convert
+                buffer.start(), buffer.end(), base, error, overflow, always_convert
             );
         }
 
@@ -110,16 +113,8 @@ public:
             return static_cast<T>(0);
         }
 
-        // For unsigned types, fail with overflow if the value is negative
-        if constexpr (std::is_unsigned_v<T>) {
-            if (is_negative()) {
-                encountered_overflow();
-                return static_cast<T>(0);
-            }
-            return static_cast<T>(result);
-        } else {
-            return static_cast<T>(sign() * result);
-        }
+        // If here, we can just return the result
+        return static_cast<T>(result);
     }
 
     /**
@@ -137,11 +132,11 @@ public:
         reset_error();
 
         bool error;
-        T result = parse_float<T>(m_start, end(), error);
+        T result = parse_float<T>(signed_start(), end(), error);
 
         // If an error occured because of underscores, remove them and re-parse
         if (error && has_valid_underscores()) {
-            Buffer buffer(m_start, m_str_len);
+            Buffer buffer(signed_start(), signed_len());
             buffer.remove_valid_underscores();
             result = parse_float<T>(buffer.start(), buffer.end(), error);
         }
@@ -153,7 +148,7 @@ public:
         }
 
         // Return with the sign
-        return static_cast<T>(sign() * result);
+        return static_cast<T>(result);
     }
 
 private:
@@ -173,21 +168,30 @@ private:
     /// Check if the character array contains valid underscores
     bool has_valid_underscores() const
     {
-        return m_start != nullptr && options().allow_underscores() && m_str_len > 0
+        return options().allow_underscores() && m_str_len > 0
             && std::memchr(m_start, '_', m_str_len);
     }
 
     /// Check if the character array contains invalid underscores
     bool has_invalid_underscores() const
     {
-        return m_start != nullptr && !options().allow_underscores() && m_str_len > 0
+        return !options().allow_underscores() && m_str_len > 0
             && std::memchr(m_start, '_', m_str_len);
     }
 
     /// The end of the stored character array
-    const char* end() const
+    const char* end() const { return m_start + m_str_len; }
+
+    /// Return the start of the character array when accounting for '-'
+    const char* signed_start() const
     {
-        return m_start == nullptr ? nullptr : (m_start + m_str_len);
+        return m_start - static_cast<int>(is_negative());
+    }
+
+    /// Return the length of the character array when accounting for '-'
+    const std::size_t signed_len() const
+    {
+        return m_str_len + static_cast<int>(is_negative());
     }
 
     /// Add FromStr to the return NumberFlags

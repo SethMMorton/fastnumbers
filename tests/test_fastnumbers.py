@@ -884,6 +884,14 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert isinstance(result, int)
 
     @given(integers().map(repr))
+    @example("-128")
+    @example("127")
+    @example("-32768")
+    @example("32767")
+    @example("-2147483648")
+    @example("2147483647")
+    @example("-9223372036854775808")
+    @example("9223372036854775807")
     @example("40992764608243448035")
     @example("-41538374848935286698640072416676709")
     @example("240278958776173358420034462324117625982")
@@ -1204,6 +1212,14 @@ class TestTryInt:
             fastnumbers.try_int(x, on_fail=fastnumbers.RAISE)
 
     @given(integers())
+    @example(-128)
+    @example(127)
+    @example(-32768)
+    @example(32767)
+    @example(-2147483648)
+    @example(2147483647)
+    @example(-9223372036854775808)
+    @example(9223372036854775807)
     def test_given_int_string_returns_int_with_non_base_10(self, x: int) -> None:
         for base in range(2, 36 + 1):
             # Avoid recursion error because of overly simple baseN function.

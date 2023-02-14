@@ -1,10 +1,13 @@
 #pragma once
 
 #include <charconv>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <system_error>
 #include <type_traits>
+#include <vector>
 
 #include "fastnumbers/third_party/fast_float.h"
 
@@ -22,7 +25,7 @@ constexpr bool WHITESPACE_TABLE[]
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /// Table of what characters are classified as digits
-constexpr int DIGIT_TABLE[]
+constexpr int8_t DIGIT_TABLE[]
     = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1,
@@ -119,7 +122,7 @@ constexpr inline bool is_valid_digit(const char c)
 {
     // Using a table was determined through performance testing to be
     // faster than std::isdigit or a switch statement.
-    return to_digit<int>(c) >= 0;
+    return to_digit<int8_t>(c) >= 0;
 }
 
 /**
@@ -184,6 +187,14 @@ constexpr inline bool is_base_prefix(const char c, const int base)
     const char lowered = lowercase(c);
     return (base == 16 && (lowered == 'x')) || (base == 8 && (lowered == 'o'))
         || (base == 2 && (lowered == 'b'));
+}
+
+/**
+ * \brief Determine if a string begins with a base prefix
+ */
+constexpr inline bool has_base_prefix(const char* str, const std::size_t len)
+{
+    return len > 2 && str[0] == '0' && is_base_prefix(str[1]);
 }
 
 /**
@@ -292,6 +303,8 @@ constexpr inline uint32_t number_trailing_zeros(const char* start, const char* e
  */
 constexpr inline int detect_base(const char* str, const char* end)
 {
+    if (str[0] == '-') // Skip leading negative sign
+        str += 1;
     const std::size_t len = static_cast<std::size_t>(end - str);
     if (str[0] != '0' || len == 1) {
         return 10;
@@ -318,22 +331,22 @@ constexpr inline int detect_base(const char* str, const char* end)
  * \brief Return the number of digits an integer type can safely parse without overflow
  */
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-constexpr inline T overflow_cutoff()
+constexpr inline int8_t overflow_cutoff()
 {
     // len('std::numeric_limits<T>::max()') - 1 == return value
     switch (static_cast<uint64_t>(std::numeric_limits<T>::max())) {
-    case 9223372036854775807LL:
-        return 18;
     case 18446744073709551615ULL:
         return 19;
-    case 2147483647L:
-    case 4294967295UL:
+    case 9223372036854775807ULL:
+        return 18;
+    case 2147483647ULL:
+    case 4294967295ULL:
         return 9;
-    case 32767:
-    case 65535U:
+    case 32767ULL:
+    case 65535ULL:
         return 4;
-    case 127:
-    case 255U:
+    case 127ULL:
+    case 255ULL:
         return 2;
     default: // unknown, be safe
         return 0;
@@ -343,7 +356,7 @@ constexpr inline T overflow_cutoff()
 /**
  * \brief Convert a string to an int type
  *
- * Assumes no sign or whitespace.
+ * Assumes no whitespace, and only a single '-' is allowed.
  *
  * \param str The string to parse, assumed to be non-NULL
  * \param end The end of the string being checked
@@ -362,6 +375,12 @@ T parse_int(
     bool always_convert = false
 )
 {
+    // Remember if we are negative
+    const bool is_negative = *str == '-';
+    const std::size_t negative_offset = static_cast<std::size_t>(is_negative);
+    str += negative_offset;
+
+    // Remove the sign when counting the length
     const std::size_t len = static_cast<std::size_t>(end - str);
 
     // If the base needs to be guessed, do so now and get it over with.
@@ -385,18 +404,23 @@ T parse_int(
     // Use std::from_chars for all but base-10.
     if (base != 10 || (overflow && always_convert)) {
         // Skip leading characters for non-base 10 ints.
+        // If we did not have to do that, replace a '-' if we had one.
+        bool had_base_prefix = false;
         if (len > 1 && str[0] == '0' && is_base_prefix(str[1], base)) {
             str += 2;
+            had_base_prefix = true;
+        } else {
+            str -= negative_offset;
         }
 
         // Use a very fast and accurate string to integer parser
         // that will report back if there was an overflow (which
         // we propagete back to the user).
         T value;
-        const std::from_chars_result res = std::from_chars(str, end, value, base);
+        std::from_chars_result res = std::from_chars(str, end, value, base);
         error = res.ptr != end || res.ec == std::errc::invalid_argument;
         overflow = res.ec == std::errc::result_out_of_range;
-        return value;
+        return had_base_prefix && is_negative ? -value : value;
     }
 
     // If an overflow is going to happen, just evaluate that this looks like
@@ -422,20 +446,21 @@ T parse_int(
         }
 
         // Convert digits the remaining digits one-at-a-time.
-        T this_char_as_digit = 0L;
-        while (str != end && (this_char_as_digit = to_digit<T>(*str)) >= 0) {
-            value = value * 10L + this_char_as_digit;
+        int8_t this_char_as_digit = 0;
+        while (str != end && (this_char_as_digit = to_digit<int8_t>(*str)) >= 0) {
+            value = value * 10 + this_char_as_digit;
             str += 1;
         }
     }
     error = str != end;
-    return value;
+    return is_negative ? -value : value;
 }
 
 /**
  * \brief Convert a string to a double type
  *
- * Assumes no sign or whitespace. No overflow checking is performed.
+ * Assumes no whitespace, and only a single '-' is allowed.
+ * Overflows go to infinity. Underflows go to zero.
  *
  * \param str The string to parse, assumed to be non-NULL
  * \param end The end of the string being checked
@@ -446,14 +471,6 @@ template <
     typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
 T parse_float(const char* str, const char* end, bool& error)
 {
-    // parse_float is not supposed to accept signed values, but from_chars
-    // will accept negative signs. To prevent accidental success on e.g. "+-3.14"
-    // we short-cicuit on a leading negative sign.
-    if (str != end && *str == '-') {
-        error = true;
-        return -1.0;
-    }
-
     // Use a very fast and accurate string-to-floating point parser
     T value;
     const fast_float::from_chars_result res = fast_float::from_chars(str, end, value);
