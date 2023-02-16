@@ -4,6 +4,7 @@ import ctypes
 import pytest
 
 import fastnumbers
+from conftest import base_n
 
 try:
     import numpy as np
@@ -395,6 +396,35 @@ class TestSuccess:
             ],
         )
         fastnumbers.try_array(given, result)
+        assert result == expected
+
+    @pytest.mark.parametrize("base", range(2, 37))
+    @pytest.mark.parametrize("data_type", int_data_types)
+    def test_integer_bases(self, base, data_type):
+        given = map(
+            lambda x: base_n(x, base),
+            [
+                extremes[data_type][0],
+                extremes[data_type][0] - 1,
+                extremes[data_type][1],
+                extremes[data_type][1] + 1,
+                0,
+                100,
+            ],
+        )
+        result = array.array(formats[data_type], [0, 0, 0, 0, 0, 0])
+        expected = array.array(
+            formats[data_type],
+            [
+                extremes[data_type][0],
+                123,
+                extremes[data_type][1],
+                123,
+                0,
+                100,
+            ],
+        )
+        fastnumbers.try_array(given, result, base=base, on_overflow=123)
         assert result == expected
 
 

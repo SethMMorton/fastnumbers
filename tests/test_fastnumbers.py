@@ -34,6 +34,7 @@ from pytest import mark, raises
 from typing_extensions import Protocol
 
 import fastnumbers
+from conftest import base_n
 
 parametrize = mark.parametrize
 
@@ -276,21 +277,6 @@ def an_integer(x: float) -> bool:
 
 def not_an_integer(x: float) -> bool:
     return not x.is_integer()
-
-
-def base_n(
-    num: int, b: int, numerals: str = "0123456789abcdefghijklmnopqrstuvwxyz"
-) -> str:
-    """
-    Convert any integer to a Base-N string representation.
-    Shamelessly stolen from http://stackoverflow.com/a/2267428/1399279
-    """
-    neg = num < 0
-    num = abs(num)
-    val = ((num == 0) and numerals[0]) or (
-        base_n(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b]
-    )
-    return "-" + val if neg else val
 
 
 def capture_result(  # type: ignore [no-untyped-def]
