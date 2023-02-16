@@ -109,6 +109,7 @@ public:
     explicit ArrayPopulator(Py_buffer& buffer, const Py_ssize_t length)
         : m_buf(buffer)
         , m_index(0)
+        , m_stride(m_buf.strides != nullptr ? (m_buf.strides[0] / m_buf.itemsize) : 1)
     {
         if (m_buf.ndim != 1) {
             PyErr_SetString(PyExc_ValueError, "Can only accept arrays of dimension 1");
@@ -133,7 +134,7 @@ public:
     template <typename T>
     void place_next(const T value)
     {
-        static_cast<T*>(m_buf.buf)[m_index] = value;
+        *(static_cast<T*>(m_buf.buf) + (m_index * m_stride)) = value;
         m_index += 1;
     }
 
@@ -143,6 +144,9 @@ private:
 
     /// The current location where we should add to the array
     Py_ssize_t m_index;
+
+    /// Offset to use when determining the index
+    Py_ssize_t m_stride;
 };
 
 /// Track the state of the iteration

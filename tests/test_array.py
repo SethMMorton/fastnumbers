@@ -515,3 +515,65 @@ class TestNumpy:
         expected = np.array([4, 5, 7], dtype=dtype)
         fastnumbers.try_array(given, result)
         assert np.array_equal(result, expected)
+
+    def test_slice(self):
+        given = [4, "5", "⑦"]
+        result = np.array([0, 0, 0, 0, 0])
+        expected = np.array([0, 4, 5, 7, 0])
+        fastnumbers.try_array(given, result[1:4])
+        assert np.array_equal(result, expected)
+
+    def test_strides(self):
+        given = [4, "5", "⑦"]
+        result = np.array([0, 0, 0, 0, 0, 0])
+        expected = np.array([4, 0, 5, 0, 7, 0])
+        fastnumbers.try_array(given, result[::2])
+        assert np.array_equal(result, expected)
+
+    def test_strides_offset(self):
+        given = [4, "5", "⑦"]
+        result = np.array([0, 0, 0, 0, 0, 0])
+        expected = np.array([0, 4, 0, 5, 0, 7])
+        fastnumbers.try_array(given, result[1::2])
+        assert np.array_equal(result, expected)
+
+    def test_negative_strides(self):
+        given = [4, "5", "⑦"]
+        result = np.array([0, 0, 0, 0, 0, 0])
+        expected = np.array([0, 7, 0, 5, 0, 4])
+        fastnumbers.try_array(given, result[::-2])
+        assert np.array_equal(result, expected)
+
+    def test_slice_2d(self):
+        given = [4, "5", "⑦"]
+        result = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        expected = np.array([[0, 0, 0], [4, 5, 7], [0, 0, 0]])
+        fastnumbers.try_array(given, result[1, :])
+        assert np.array_equal(result, expected)
+
+    def test_slice_2d_column(self):
+        given = [4, "5", "⑦"]
+        result = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        expected = np.array([[0, 4, 0], [0, 5, 0], [0, 7, 0]])
+        fastnumbers.try_array(given, result[:, 1])
+        assert np.array_equal(result, expected)
+
+    def test_stride_2d(self):
+        given = [4, "5", "⑦"]
+        result = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]])
+        expected = np.array(
+            [[0, 0, 0, 0, 0, 0], [4, 0, 5, 0, 7, 0], [0, 0, 0, 0, 0, 0]]
+        )
+        fastnumbers.try_array(given, result[1, ::2])
+        assert np.array_equal(result, expected)
+
+    def test_stride_2d_column(self):
+        given = [4, "5", "⑦"]
+        result = np.array(
+            [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        )
+        expected = np.array(
+            [[0, 0, 0], [0, 4, 0], [0, 0, 0], [0, 5, 0], [0, 0, 0], [0, 7, 0]]
+        )
+        fastnumbers.try_array(given, result[1::2, 1])
+        assert np.array_equal(result, expected)

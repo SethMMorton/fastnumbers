@@ -508,7 +508,7 @@ void array_impl(
 {
     // Extract the underlying buffer data from the output object
     Py_buffer buf { nullptr, nullptr };
-    constexpr auto flags = PyBUF_WRITABLE | PyBUF_ND | PyBUF_FORMAT;
+    constexpr auto flags = PyBUF_WRITABLE | PyBUF_STRIDES | PyBUF_FORMAT;
     if (PyObject_GetBuffer(output, &buf, flags) != 0) {
         // This should be impossible to encounter because of guards in the python code
         throw exception_is_set();
