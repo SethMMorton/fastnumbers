@@ -2,6 +2,7 @@
  * This file contains the high-level implementations for the Python-exposed functions
  */
 #include <limits>
+#include <string_view>
 
 #include <Python.h>
 
@@ -509,6 +510,7 @@ void array_impl(
     Py_buffer buf { nullptr, nullptr };
     constexpr auto flags = PyBUF_WRITABLE | PyBUF_ND | PyBUF_FORMAT;
     if (PyObject_GetBuffer(output, &buf, flags) != 0) {
+        // This should be impossible to encounter because of guards in the python code
         throw exception_is_set();
     }
 
@@ -519,46 +521,38 @@ void array_impl(
         base,
     };
 
-    // The buffer format must be defined
-    if (buf.format == nullptr) {
-        PyErr_Format(
-            CustomExc::fastnumbers_python_dtype_exception,
-            "Output object '%.200R' does not define a buffer format",
-            output
-        );
-        throw exception_is_set();
-    }
-
-    // The type to extract is based on the given format character
-    switch (buf.format[0]) {
-    case 'b':
-        return impl.execute<char>();
-    case 'B':
-        return impl.execute<unsigned char>();
-    case 'h':
-        return impl.execute<short>();
-    case 'H':
-        return impl.execute<unsigned short>();
-    case 'i':
-        return impl.execute<int>();
-    case 'I':
-        return impl.execute<unsigned int>();
-    case 'l':
-        return impl.execute<long>();
-    case 'L':
-        return impl.execute<unsigned long>();
-    case 'q':
-        return impl.execute<long long>();
-    case 'Q':
-        return impl.execute<unsigned long long>();
-    case 'f':
-        return impl.execute<float>();
-    case 'd':
+    // Use the format to determine the code path to execute
+    // Attempt to order this if-branch by anticipated frequency of use
+    const std::string_view format(buf.format == nullptr ? "<NULL>" : buf.format);
+    if (format == "d") {
         return impl.execute<double>();
+    } else if (format == "l") {
+        return impl.execute<long>();
+    } else if (format == "q") {
+        return impl.execute<long long>();
+    } else if (format == "i") {
+        return impl.execute<int>();
+    } else if (format == "f") {
+        return impl.execute<float>();
+    } else if (format == "L") {
+        return impl.execute<unsigned long>();
+    } else if (format == "Q") {
+        return impl.execute<unsigned long long>();
+    } else if (format == "I") {
+        return impl.execute<unsigned int>();
+    } else if (format == "h") {
+        return impl.execute<short>();
+    } else if (format == "b") {
+        return impl.execute<char>();
+    } else if (format == "H") {
+        return impl.execute<unsigned short>();
+    } else if (format == "B") {
+        return impl.execute<unsigned char>();
     }
 
+    // This should be impossible to encounter because of guards in the python code
     PyErr_Format(
-        CustomExc::fastnumbers_python_dtype_exception,
+        PyExc_TypeError,
         "Unknown buffer format '%s' for object '%.200R'",
         buf.format,
         output

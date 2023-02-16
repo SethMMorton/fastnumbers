@@ -9,9 +9,3 @@ public:
         : std::runtime_error("")
     { }
 };
-
-/// Namespace for custom exceptions
-struct CustomExc {
-    /// Exception for an invalid datatype
-    static PyObject* fastnumbers_python_dtype_exception;
-};

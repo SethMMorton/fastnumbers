@@ -31,7 +31,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions numpy
 
       - name: Patch Doctests
         run: python dev/patch_doctest.py
@@ -89,7 +89,7 @@ jobs:
           source .env/bin/activate && \
           echo -e "\e[1;34m Install Dependencies \e[0m" && \
           python -m pip install --upgrade pip && \
-          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions cython && \
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions numpy && \
           echo -e "\e[1;34m Run Tests \e[0m" && \
           python -m pip install --editable . && \
           pytest --hypothesis-profile=slow-tests --doctest-glob=README.rst && \

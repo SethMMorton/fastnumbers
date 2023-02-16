@@ -1409,7 +1409,6 @@ PyObject* Selectors::INPUT = nullptr;
 PyObject* Selectors::RAISE = nullptr;
 PyObject* Selectors::STRING_ONLY = nullptr;
 PyObject* Selectors::NUMBER_ONLY = nullptr;
-PyObject* CustomExc::fastnumbers_python_dtype_exception = nullptr;
 
 // Actually create the module object itself
 PyMODINIT_FUNC PyInit_fastnumbers()
@@ -1421,14 +1420,6 @@ PyMODINIT_FUNC PyInit_fastnumbers()
 
     // Add module level constants.
     PyModule_AddStringConstant(m, "__version__", FASTNUMBERS_VERSION);
-
-    // Exported custom exceptions
-    CustomExc::fastnumbers_python_dtype_exception = PyErr_NewExceptionWithDoc(
-        "fastnumbers.DataypeException",
-        "Custom exceptiom to express invalid datatypes for memory buffers",
-        nullptr,
-        nullptr
-    );
 
     // Selectors
     Selectors::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);

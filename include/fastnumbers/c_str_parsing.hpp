@@ -375,12 +375,21 @@ T parse_int(
     bool always_convert = false
 )
 {
-    // Remember if we are negative
+    // Remember if we are negative.
     const bool is_negative = *str == '-';
     const std::size_t negative_offset = static_cast<std::size_t>(is_negative);
     str += negative_offset;
 
-    // Remove the sign when counting the length
+    // For unsigned values that are negative, quit now with an overflow error.
+    if constexpr (std::is_unsigned_v<T>) {
+        if (is_negative) {
+            overflow = true;
+            error = false;
+            return static_cast<T>(0);
+        }
+    }
+
+    // The length of the string will be useful below.
     const std::size_t len = static_cast<std::size_t>(end - str);
 
     // If the base needs to be guessed, do so now and get it over with.
@@ -388,11 +397,11 @@ T parse_int(
         base = detect_base(str, end);
     }
 
-    // Negative bases are illegal. So is zero-length
+    // Negative bases are illegal. So is zero-length.
     if (base < 0 || len == 0) {
         overflow = false;
         error = true;
-        return -1;
+        return static_cast<T>(0);
     }
 
     // We use our own method for base-10 because we can omit some overflow
