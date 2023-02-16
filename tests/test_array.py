@@ -2,6 +2,14 @@ import array
 import ctypes
 
 import pytest
+from hypothesis import given as hyp_given
+from hypothesis.strategies import (
+    binary,
+    floats,
+    integers,
+    lists,
+    text,
+)
 
 import fastnumbers
 from conftest import base_n
@@ -607,3 +615,89 @@ class TestNumpy:
         )
         fastnumbers.try_array(given, result[1::2, 1])
         assert np.array_equal(result, expected)
+
+
+@hyp_given(
+    lists(
+        floats() | integers() | text() | binary() | lists(integers(), max_size=1),
+        max_size=50,
+    )
+)
+@pytest.mark.parametrize("dtype", int_dtypes)
+def test_all_the_things_for_ints(dtype, x):
+    # Using try_array should give the same results
+    # as map_try_int then converted to an array.
+    # Under-the-hood, the on_fail, etc. replacements use a different code path
+    # so this test is not just wasting time.
+    expected_pre = fastnumbers.map_try_int(
+        x, on_fail=lambda x: 5 if isinstance(x, str) else 6, on_type_error=7
+    )
+    expected_pre = [9 if x < dtype_extremes[dtype][0] else x for x in expected_pre]
+    expected_pre = [9 if x > dtype_extremes[dtype][1] else x for x in expected_pre]
+    expected = np.array(expected_pre, dtype=dtype)
+    result = fastnumbers.try_array(
+        x,
+        dtype=dtype,
+        on_fail=lambda x: 5 if isinstance(x, str) else 6,
+        on_type_error=7,
+        on_overflow=9,
+    )
+    np.array_equal(result, expected)
+
+
+@hyp_given(
+    lists(
+        floats() | integers() | text() | binary() | lists(integers(), max_size=1),
+        max_size=50,
+    )
+)
+@pytest.mark.parametrize("dtype", float_dtypes)
+@pytest.mark.filterwarnings("ignore:overflow encountered in cast")
+def test_all_the_things_for_floats(dtype, x):
+    # Using try_array should give the same results
+    # as map_try_float then converted to an array.
+    # Under-the-hood, the on_fail, etc. replacements use a different code path
+    # so this test is not just wasting time.
+    expected_pre = fastnumbers.map_try_float(
+        x, on_fail=lambda x: 5 if isinstance(x, str) else 6, on_type_error=7
+    )
+    expected = np.array(expected_pre, dtype=dtype)
+    result = fastnumbers.try_array(
+        x,
+        dtype=dtype,
+        on_fail=lambda x: 5 if isinstance(x, str) else 6,
+        on_type_error=7,
+    )
+    np.array_equal(result, expected, equal_nan=True)
+
+
+@hyp_given(
+    lists(
+        floats() | integers() | text() | binary() | lists(integers(), max_size=1),
+        max_size=50,
+    )
+)
+@pytest.mark.parametrize("dtype", float_dtypes)
+@pytest.mark.filterwarnings("ignore:overflow encountered in cast")
+def test_all_the_things_for_floats_with_nan_inf_replacement(dtype, x):
+    # Using try_array should give the same results
+    # as map_try_float then converted to an array.
+    # Under-the-hood, the on_fail, etc. replacements use a different code path
+    # so this test is not just wasting time.
+    expected_pre = fastnumbers.map_try_float(
+        x,
+        inf=1,
+        nan=3,
+        on_fail=lambda x: 5 if isinstance(x, str) else 6,
+        on_type_error=7,
+    )
+    expected = np.array(expected_pre, dtype=dtype)
+    result = fastnumbers.try_array(
+        x,
+        dtype=dtype,
+        inf=1,
+        nan=3,
+        on_fail=lambda x: 5 if isinstance(x, str) else 6,
+        on_type_error=7,
+    )
+    np.array_equal(result, expected)
