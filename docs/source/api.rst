@@ -80,6 +80,11 @@ They are guaranteed to return results identical to the built-in
 
 .. autofunction:: map_try_forceint
 
+:func:`~fastnumbers.try_array`
+++++++++++++++++++++++++++++++
+
+.. autofunction:: try_array
+
 The "Checking" Functions
 ------------------------
 

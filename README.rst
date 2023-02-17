@@ -208,6 +208,20 @@ The difference is that ``map_try_float`` is 2x the speed of the list
 comprehension method, and 1.5x the speed of the ``map`` method. The reason
 is that it avoids Python function call overhead on each iteration.
 
+If you need to store your output in a ``numpy`` array, you can use
+``try_array`` to do this conversion directly. This function has some
+additional handling for overflow that is not present in the other
+``fastnumbers`` functions that may come in handy when dealing with
+``numpy`` arrays.
+
+.. code-block:: python
+
+    >>> from fastnumbers import map_try_float, try_array
+    >>> import numpy as np
+    >>> iterable = ["5", "4.5", "34567.6", "32"]
+    >>> np.array_equal(np.array(map_try_float(iterable), dtype=np.float64), try_array(iterable))
+    True
+
 About the ``on_fail`` option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

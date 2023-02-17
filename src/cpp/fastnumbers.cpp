@@ -216,11 +216,12 @@ static inline void validate_not_disallow_str_only_num_only_input(const PyObject*
 {
     const bool bad = selector == Selectors::DISALLOWED
         || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
-        || selector == Selectors::INPUT;
+        || selector == Selectors::INPUT || selector == Selectors::RAISE;
     if (bad) {
         throw fastnumbers_exception(
             "values for 'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
-            "fastnumbers.NUMBER_ONLY, fastnumbers.STRING_ONLY, or fastnumbers.INPUT"
+            "fastnumbers.NUMBER_ONLY, fastnumbers.STRING_ONLY, fastnumbers.INPUT "
+            "or fastnumbers.RAISE"
         );
     }
 }
@@ -235,9 +236,8 @@ static inline void validate_not_disallow(const PyObject* selector)
     const bool bad = selector == Selectors::DISALLOWED
         || selector == Selectors::STRING_ONLY || selector == Selectors::NUMBER_ONLY;
     if (bad) {
-        throw fastnumbers_exception(
-            "'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
-            "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY."
+        throw fastnumbers_exception("'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+                                    "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY"
         );
     }
 }
