@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstring>
 #include <type_traits>
-#include <unordered_map>
+#include <optional>
 #include <utility>
 
 #include <Python.h>
@@ -57,8 +57,13 @@ class CTypeExtractor {
 public:
     /// Constructor
     CTypeExtractor(const UserOptions& options)
-        : m_replacements()
+        : m_inf()
+        , m_nan()
+        , m_fail()
+        , m_overflow()
+        , m_type_error()
         , m_options(options)
+        , m_buffer()
     { }
 
     // Copy and assignment are disallowed
@@ -78,8 +83,7 @@ public:
     T extract_c_number(PyObject* input)
     {
         T value;
-        Buffer buffer;
-        TextExtractor extractor(input, buffer);
+        TextExtractor extractor(input, m_buffer);
         bool errored, overflow, type_error;
 
         // This function can grab the error state from the parser
@@ -117,9 +121,9 @@ public:
 
         // For float types, attempt to replace NaN and INF if that is so desired.
         if constexpr (std::is_floating_point_v<T>) {
-            if (std::isnan(value) && m_replacements.count(ReplaceType::NAN_) != 0) {
+            if (std::isnan(value) && m_nan.has_value()) {
                 return replace_value(ReplaceType::NAN_, input);
-            } else if (std::isinf(value) && m_replacements.count(ReplaceType::INF) != 0) {
+            } else if (std::isinf(value) && m_inf.has_value()) {
                 return replace_value(ReplaceType::INF, input);
             }
         }
@@ -188,8 +192,20 @@ private:
         TYPEERROR,
     };
 
-    /// Store values that could replace troublesome input
-    std::unordered_map<ReplaceType, std::pair<T, PyObject*>> m_replacements;
+    /// Potential replacement for infinity
+    std::optional<std::pair<T, PyObject*>> m_inf;
+
+    /// Potential replacement for NaN
+    std::optional<std::pair<T, PyObject*>> m_nan;
+
+    /// Potential replacement for invalid values
+    std::optional<std::pair<T, PyObject*>> m_fail;
+
+    /// Potential replacement for overflows
+    std::optional<std::pair<T, PyObject*>> m_overflow;
+
+    /// Potential replacement for invalid types
+    std::optional<std::pair<T, PyObject*>> m_type_error;
 
     /// Store string representations of the replacement types
     const std::unordered_map<ReplaceType, const char*> m_replace_repr {
@@ -203,7 +219,27 @@ private:
     /// Hold the evaluator options
     UserOptions m_options;
 
+    /// A buffer into which to store text data
+    Buffer m_buffer;
+
 private:
+    /// Return the object that corresponds to the user's requested key -
+    /// the return is a reference so it can be edited
+    std::optional<std::pair<T, PyObject*>>& get_value(ReplaceType key) {
+        switch (key) {
+        case ReplaceType::INF:
+            return m_inf;
+        case ReplaceType::NAN_:
+            return m_nan;
+        case ReplaceType::FAIL:
+            return m_fail;
+        case ReplaceType::OVERFLOW:
+            return m_overflow;
+        default:  // ReplaceType::TYPEERROR:
+            return m_type_error;
+        }
+    }
+
     /**
      * \brief Replace the given input in the user-specified method
      * \param key The key to use to look up the appropriate replacement method
@@ -214,11 +250,11 @@ private:
     T replace_value(ReplaceType key, PyObject* input)
     {
         // Locate the value in the mapping for this key.
-        const auto key_value_pair = m_replacements.find(key);
+        const auto value = get_value(key);
 
         // If the key/value pair was not found in the replacement mapping,
         // that means an error must be raised for this input.
-        if (key_value_pair == m_replacements.end()) {
+        if (not value.has_value()) {
             if (key == ReplaceType::FAIL) {
                 PyErr_Format(
                     PyExc_ValueError,
@@ -248,8 +284,8 @@ private:
         }
 
         // Extract the values for use below
-        const T number_value = key_value_pair->second.first;
-        PyObject* callable_value = key_value_pair->second.second;
+        const T number_value = value->first;
+        PyObject* callable_value = value->second;
 
         // If the replacement value has no callable attached
         // then return a default value directly.
@@ -331,7 +367,7 @@ private:
 
         // If the input is a callable just store the callable in the mapping.
         if (PyCallable_Check(replacement)) {
-            m_replacements[key] = std::make_pair(T(), replacement);
+            get_value(key) = std::make_pair(T(), replacement);
             return;
         }
 
@@ -374,6 +410,6 @@ private:
         }
 
         // If the value is a legit C type, we store it.
-        m_replacements[key] = std::make_pair(value, nullptr);
+        get_value(key) = std::make_pair(value, nullptr);
     }
 };

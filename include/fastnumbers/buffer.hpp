@@ -22,8 +22,9 @@ public:
         , m_variable_buffer(nullptr)
         , m_buffer(nullptr)
         , m_len(needed_length)
+        , m_size(0)
     {
-        reserve();
+        reserve(true);
     }
 
     /// Allocate buffer space and copy data into it
@@ -37,6 +38,17 @@ public:
     Buffer(Buffer&&) = delete;
     Buffer& operator=(const Buffer&) = delete;
     ~Buffer() { delete[] m_variable_buffer; };
+
+    /// Restore the Buffer to an empty-like state
+    void reset()
+    {
+        if (m_variable_buffer == nullptr) {
+            m_buffer = m_fixed_buffer;
+        } else {
+            m_buffer = m_variable_buffer;
+        }
+        m_len = 0;
+    }
 
     /// Return the start of the buffer
     char* start() { return m_buffer; }
@@ -119,16 +131,24 @@ private:
     /// The length of the character array
     std::size_t m_len;
 
+    /// The current size of the buffer - should
+    /// equal m_len except in intermediate states
+    std::size_t m_size;
+
 private:
     /// Set aside the amount of data stored in m_len
-    void reserve()
+    void reserve(const bool force = false)
     {
-        if (m_len + 1 < FIXED_BUFFER_SIZE) {
-            m_buffer = m_fixed_buffer;
-        } else {
-            delete[] m_variable_buffer;
-            m_variable_buffer = new char[m_len + 1];
-            m_buffer = m_variable_buffer;
+        // Only increase the size if needed
+        if (m_len > m_size || force) {
+            m_size = m_len;
+            if (m_size < FIXED_BUFFER_SIZE) {
+                m_buffer = m_fixed_buffer;
+            } else {
+                delete[] m_variable_buffer;
+                m_variable_buffer = new char[m_size];
+                m_buffer = m_variable_buffer;
+            }
         }
     }
 

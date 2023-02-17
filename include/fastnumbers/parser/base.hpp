@@ -65,10 +65,10 @@ public:
     /// Whether there is is just a plain-old TypeError
     bool type_error() const
     {
-        const bool numeric_parser = parser_type() == ParserType::NUMERIC;
-        const bool invalid_number
-            = get_number_type() == static_cast<NumberFlags>(NumberType::INVALID);
-        return numeric_parser && invalid_number;
+        if (parser_type() == ParserType::NUMERIC) {
+            return get_number_type() == static_cast<NumberFlags>(NumberType::INVALID);
+        }
+        return false;
     }
 
     /// Was an explict base given illegally?

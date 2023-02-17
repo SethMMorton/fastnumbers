@@ -31,6 +31,7 @@ public:
         if (!user_numeric) {
             extract_string_data();
         }
+        m_char_buffer.reset();
     }
 
     // Other constructors, destructors, and assignment

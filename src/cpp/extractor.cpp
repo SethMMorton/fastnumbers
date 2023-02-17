@@ -61,7 +61,7 @@ bool TextExtractor::extract_from_buffer()
         // slice will be made here and null termination will be added.
         // If the data amount is small enough, we use a fixed-sized buffer for speed.
         m_str_len = static_cast<const std::size_t>(view.len);
-        m_char_buffer.reserve(m_str_len);
+        m_char_buffer.reserve(m_str_len + 1);
         m_char_buffer.start()[m_str_len] = '\0';
         PyBuffer_ToContiguous(m_char_buffer.start(), &view, m_str_len, 'A');
 
@@ -114,7 +114,7 @@ bool TextExtractor::parse_unicode_to_char()
 
     // Allocate space for the character data, but use a small fixed size
     // buffer if the data is small enough. Ensure a trailing null character.
-    m_char_buffer.reserve(static_cast<std::size_t>(len));
+    m_char_buffer.reserve(static_cast<std::size_t>(len) + 1);
     char* buffer = m_char_buffer.start();
     std::size_t buffer_index = 0;
 
