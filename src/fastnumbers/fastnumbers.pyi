@@ -3,13 +3,10 @@ from typing import (
     Any,
     Callable,
     Iterable,
-    List,
     NewType,
-    Optional,
     Sequence,
     Type,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -26,7 +23,7 @@ class HasInt(Protocol):
 class ItWillFloat(Protocol):
     def __float__(self) -> pyfloat: ...
 
-InputType = Union[pyint, pyfloat, ItWillFloat, HasIndex, HasInt, str, bytes, bytearray]
+InputType = pyint | pyfloat | ItWillFloat | HasIndex | HasInt | str | bytes | bytearray
 FastInputType = TypeVar(
     "FastInputType",
     pyint,
@@ -53,8 +50,8 @@ INPUT_T = NewType("INPUT_T", object)
 RAISE_T = NewType("RAISE_T", object)
 STRING_ONLY_T = NewType("STRING_ONLY_T", object)
 NUMBER_ONLY_T = NewType("NUMBER_ONLY_T", object)
-ConsiderType = Union[STRING_ONLY_T, NUMBER_ONLY_T, None]
-InfNanCheckType = Union[STRING_ONLY_T, NUMBER_ONLY_T, ALLOWED_T, DISALLOWED_T]
+ConsiderType = STRING_ONLY_T | NUMBER_ONLY_T | None
+InfNanCheckType = STRING_ONLY_T | NUMBER_ONLY_T | ALLOWED_T | DISALLOWED_T
 
 # Selectors
 ALLOWED: ALLOWED_T
@@ -69,761 +66,761 @@ NUMBER_ONLY: NUMBER_ONLY_T
 def try_real(
     x: FastInputType,
     *,
-    inf: ALLOWED_T = ALLOWED,
-    nan: ALLOWED_T = ALLOWED,
+    inf: ALLOWED_T = ...,
+    nan: ALLOWED_T = ...,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[pyint, pyfloat]: ...
+    on_type_error: RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, pyint, pyfloat]: ...
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, pyint, pyfloat]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, pyint, pyfloat]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Nan, pyint, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: FastInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: FastInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: FastInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: FastInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: FastInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: FastInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]: ...
-@overload
-def try_real(
-    x: AnyInputType,
-    *,
-    inf: Inf,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: FastInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: FastInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: FastInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Default2,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: FastInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: FastInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: FastInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyint | pyfloat: ...
+@overload
+def try_real(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Default2,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -832,9 +829,9 @@ def try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -843,9 +840,9 @@ def try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -854,9 +851,9 @@ def try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -865,20 +862,20 @@ def try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyint, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
@@ -886,10 +883,10 @@ def try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
@@ -897,43 +894,43 @@ def try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -942,9 +939,9 @@ def try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -953,9 +950,9 @@ def try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -964,9 +961,9 @@ def try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -975,9 +972,9 @@ def try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -986,9 +983,9 @@ def try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -997,20 +994,20 @@ def try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyint, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
@@ -1018,10 +1015,10 @@ def try_real(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
@@ -1029,43 +1026,43 @@ def try_real(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1074,9 +1071,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1085,9 +1082,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1096,9 +1093,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1107,9 +1104,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1118,9 +1115,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1129,20 +1126,20 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyint, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
@@ -1150,10 +1147,10 @@ def try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: FastInputType,
@@ -1161,43 +1158,43 @@ def try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyint, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1206,9 +1203,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1217,9 +1214,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1228,9 +1225,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1239,9 +1236,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1250,9 +1247,9 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def try_real(
     x: AnyInputType,
@@ -1261,701 +1258,701 @@ def try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyint | pyfloat: ...
 
 # Try float
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: ALLOWED_T = ALLOWED,
-    nan: ALLOWED_T = ALLOWED,
+    inf: ALLOWED_T = ...,
+    nan: ALLOWED_T = ...,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    allow_underscores: bool = False,
+    on_type_error: RAISE_T = ...,
+    allow_underscores: bool = ...,
 ) -> pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, pyfloat]: ...
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, pyfloat]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, pyfloat]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Nan, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: FastInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: FastInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: FastInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: FastInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: FastInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: FastInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyfloat]: ...
-@overload
-def try_float(
-    x: AnyInputType,
-    *,
-    inf: Inf,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: FastInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: FastInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: FastInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Default2,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: FastInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: FastInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: FastInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyfloat: ...
+@overload
+def try_float(
+    x: AnyInputType,
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Default2,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -1964,8 +1961,8 @@ def try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -1974,8 +1971,8 @@ def try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -1984,8 +1981,8 @@ def try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -1994,18 +1991,18 @@ def try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
@@ -2013,9 +2010,9 @@ def try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
@@ -2023,39 +2020,39 @@ def try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2064,8 +2061,8 @@ def try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2074,8 +2071,8 @@ def try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2084,8 +2081,8 @@ def try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2094,8 +2091,8 @@ def try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2104,8 +2101,8 @@ def try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2114,18 +2111,18 @@ def try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
@@ -2133,9 +2130,9 @@ def try_float(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
@@ -2143,39 +2140,39 @@ def try_float(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2184,8 +2181,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2194,8 +2191,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2204,8 +2201,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2214,8 +2211,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2224,8 +2221,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2234,18 +2231,18 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Inf, Nan, pyfloat]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
@@ -2253,9 +2250,9 @@ def try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, Inf, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: FastInputType,
@@ -2263,39 +2260,39 @@ def try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, Inf, Nan, pyfloat]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2304,8 +2301,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2314,8 +2311,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2324,8 +2321,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2334,8 +2331,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2344,8 +2341,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | Inf | Nan | pyfloat: ...
 @overload
 def try_float(
     x: AnyInputType,
@@ -2354,8 +2351,8 @@ def try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | Inf | Nan | pyfloat: ...
 
 # Try int
 @overload
@@ -2363,118 +2360,118 @@ def try_int(
     x: FastInputType,
     *,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
 ) -> pyint: ...
 @overload
 def try_int(
     x: FastInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, pyint]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint: ...
 @overload
 def try_int(
     x: FastInputType,
     *,
     on_fail: Default,
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[Default, pyint]: ...
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyint: ...
 @overload
 def try_int(
     x: FastInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[TransformType, pyint]: ...
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
     on_fail: Default,
     on_type_error: INPUT_T,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
     on_fail: Default,
     on_type_error: Default2,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> Default | Default2 | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyint: ...
 @overload
 def try_int(
     x: AnyInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, pyint]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | pyint: ...
 
 # Try forceint
 @overload
@@ -2482,866 +2479,866 @@ def try_forceint(
     x: FastInputType,
     *,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    allow_underscores: bool = False,
+    on_type_error: RAISE_T = ...,
+    allow_underscores: bool = ...,
 ) -> pyint: ...
 @overload
 def try_forceint(
     x: FastInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: RAISE_T = RAISE,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, pyint]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint: ...
 @overload
 def try_forceint(
     x: FastInputType,
     *,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[Default, pyint]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyint: ...
 @overload
 def try_forceint(
     x: FastInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> Union[TransformType, pyint]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[FastInputType, Default, pyint]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Default | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[FastInputType, TransformType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | TransformType | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, Default, pyint]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | Default | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> Union[Default, Default2, pyint]: ...
+    allow_underscores: bool = ...,
+) -> Default | Default2 | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> Union[AnyInputType, TransformType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> AnyInputType | TransformType | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> Union[Default, TransformType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> Default | TransformType | pyint: ...
 @overload
 def try_forceint(
     x: AnyInputType,
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> Union[TransformType, TransformType2, pyint]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | TransformType2 | pyint: ...
 
 # Try real mapping
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: ALLOWED_T = ALLOWED,
-    nan: ALLOWED_T = ALLOWED,
+    inf: ALLOWED_T = ...,
+    nan: ALLOWED_T = ...,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[pyint, pyfloat]]: ...
+    on_type_error: RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, pyint, pyfloat]]: ...
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, pyint, pyfloat]]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, pyint, pyfloat]]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | pyint | pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Nan, pyint, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[FastInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[FastInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[FastInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[FastInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[FastInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[FastInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
-@overload
-def map_try_real(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[FastInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[FastInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[FastInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Default2,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[FastInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[FastInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[FastInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyint, pyfloat]: ...
+@overload
+def map_try_real(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Default2,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3350,9 +3347,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3361,9 +3358,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3372,9 +3369,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3383,20 +3380,20 @@ def map_try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyint, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
@@ -3404,10 +3401,10 @@ def map_try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
@@ -3415,43 +3412,43 @@ def map_try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3460,9 +3457,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3471,9 +3468,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3482,9 +3479,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3493,9 +3490,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3504,9 +3501,9 @@ def map_try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3515,20 +3512,20 @@ def map_try_real(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyint, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
@@ -3536,10 +3533,10 @@ def map_try_real(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
@@ -3547,43 +3544,43 @@ def map_try_real(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3592,9 +3589,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3603,9 +3600,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3614,9 +3611,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3625,9 +3622,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3636,9 +3633,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3647,20 +3644,20 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyint, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
@@ -3668,10 +3665,10 @@ def map_try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[FastInputType],
@@ -3679,43 +3676,43 @@ def map_try_real(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3724,9 +3721,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3735,9 +3732,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3746,9 +3743,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3757,9 +3754,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3768,9 +3765,9 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyint, pyfloat]: ...
 @overload
 def map_try_real(
     x: Iterable[AnyInputType],
@@ -3779,701 +3776,701 @@ def map_try_real(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    coerce: bool = True,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyint, pyfloat]]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyint, pyfloat]: ...
 
 # Try float mapping
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: ALLOWED_T = ALLOWED,
-    nan: ALLOWED_T = ALLOWED,
+    inf: ALLOWED_T = ...,
+    nan: ALLOWED_T = ...,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    allow_underscores: bool = False,
-) -> List[pyfloat]: ...
+    on_type_error: RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, pyfloat]]: ...
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2, pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, pyfloat]]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, pyfloat]]: ...
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
-    nan: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    nan: ALLOWED_T | INPUT_T | RAISE_T = ...,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Nan, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[FastInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[FastInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[FastInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Default,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Union[ALLOWED_T, INPUT_T, RAISE_T] = ALLOWED,
-    nan: Callable[[FastInputType], Nan],
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[FastInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[FastInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[FastInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
-    nan: Nan,
-    on_fail: Default,
-    on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyfloat]]: ...
-@overload
-def map_try_float(
-    x: Iterable[AnyInputType],
-    *,
-    inf: Inf,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[FastInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[FastInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[FastInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Default2,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Default,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: ALLOWED_T | INPUT_T | RAISE_T = ...,
+    nan: Callable[[FastInputType], Nan],
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: Callable[[AnyInputType], TransformType2],
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[FastInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[FastInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[FastInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Callable[[FastInputType], TransformType],
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Default,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: Callable[[AnyInputType], TransformType],
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: INPUT_T,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyfloat]: ...
+@overload
+def map_try_float(
+    x: Iterable[AnyInputType],
+    *,
+    inf: Inf,
+    nan: Nan,
+    on_fail: Default,
+    on_type_error: Default2,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4482,8 +4479,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4492,8 +4489,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4502,8 +4499,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4512,18 +4509,18 @@ def map_try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
@@ -4531,9 +4528,9 @@ def map_try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
@@ -4541,39 +4538,39 @@ def map_try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Nan,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4582,8 +4579,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4592,8 +4589,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4602,8 +4599,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4612,8 +4609,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4622,8 +4619,8 @@ def map_try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4632,18 +4629,18 @@ def map_try_float(
     nan: Nan,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
@@ -4651,9 +4648,9 @@ def map_try_float(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
@@ -4661,39 +4658,39 @@ def map_try_float(
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Inf,
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4702,8 +4699,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4712,8 +4709,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4722,8 +4719,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4732,8 +4729,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4742,8 +4739,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4752,18 +4749,18 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Inf, Nan, pyfloat]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
@@ -4771,9 +4768,9 @@ def map_try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Inf, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[FastInputType],
@@ -4781,39 +4778,39 @@ def map_try_float(
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, Inf, Nan, pyfloat]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
     *,
     inf: Callable[[FastInputType], Inf],
     nan: Callable[[FastInputType], Nan],
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4822,8 +4819,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4832,8 +4829,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4842,8 +4839,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4852,8 +4849,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4862,8 +4859,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | Inf | Nan | pyfloat]: ...
 @overload
 def map_try_float(
     x: Iterable[AnyInputType],
@@ -4872,8 +4869,8 @@ def map_try_float(
     nan: Callable[[FastInputType], Nan],
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, Inf, Nan, pyfloat]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | Inf | Nan | pyfloat]: ...
 
 # Try int mapping
 @overload
@@ -4881,118 +4878,118 @@ def map_try_int(
     x: Iterable[FastInputType],
     *,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[pyint]: ...
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[FastInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, pyint]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[FastInputType],
     *,
     on_fail: Default,
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[Default, pyint]]: ...
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[FastInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: RAISE_T = RAISE,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, pyint]]: ...
+    on_type_error: RAISE_T = ...,
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: Default,
     on_type_error: INPUT_T,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: Default,
     on_type_error: Default2,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyint]: ...
 @overload
 def map_try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    base: Union[HasIndex, pyint] = 10,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, pyint]]: ...
+    base: HasIndex | pyint = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | pyint]: ...
 
 # Try forceint mapping
 @overload
@@ -5000,547 +4997,547 @@ def map_try_forceint(
     x: Iterable[FastInputType],
     *,
     on_fail: RAISE_T,
-    on_type_error: RAISE_T = RAISE,
-    allow_underscores: bool = False,
-) -> List[pyint]: ...
+    on_type_error: RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[FastInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
-    on_type_error: RAISE_T = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, pyint]]: ...
+    on_fail: INPUT_T | RAISE_T = ...,
+    on_type_error: RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[FastInputType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[FastInputType],
     *,
     on_fail: Default,
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[Default, pyint]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[Default | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[FastInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
-    on_type_error: Union[INPUT_T, RAISE_T] = RAISE,
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, pyint]]: ...
+    on_type_error: INPUT_T | RAISE_T = ...,
+    allow_underscores: bool = ...,
+) -> list[TransformType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, Default, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | Default | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
-    on_fail: Union[INPUT_T, RAISE_T] = INPUT,
+    on_fail: INPUT_T | RAISE_T = ...,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[FastInputType, TransformType, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[FastInputType | TransformType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: Default,
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, Default, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | Default | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: Default,
     on_type_error: Default2,
-    allow_underscores: bool = False,
-) -> List[Union[Default, Default2, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | Default2 | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: Default,
     on_type_error: Callable[[AnyInputType], TransformType],
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: INPUT_T,
-    allow_underscores: bool = False,
-) -> List[Union[AnyInputType, TransformType, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[AnyInputType | TransformType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Default,
-    allow_underscores: bool = False,
-) -> List[Union[Default, TransformType, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[Default | TransformType | pyint]: ...
 @overload
 def map_try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: Callable[[FastInputType], TransformType],
     on_type_error: Callable[[AnyInputType], TransformType2],
-    allow_underscores: bool = False,
-) -> List[Union[TransformType, TransformType2, pyint]]: ...
+    allow_underscores: bool = ...,
+) -> list[TransformType | TransformType2 | pyint]: ...
 
 # Fast real
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, pyint, pyfloat]: ...
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     inf: Inf,
-    coerce: bool = True,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, Inf, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     nan: Nan,
-    coerce: bool = True,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     inf: Inf,
     nan: Nan,
-    coerce: bool = True,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, Inf, Nan, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
-    allow_underscores: bool = True,
-) -> Union[Default, pyint, pyfloat]: ...
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
     inf: Inf,
-    allow_underscores: bool = True,
-) -> Union[Default, Inf, pyint, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Inf | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[Default, Nan, pyint, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
     inf: Inf,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[Default, Inf, Nan, pyint, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    coerce: bool = True,
-    allow_underscores: bool = True,
-) -> Union[TransformType, pyint, pyfloat]: ...
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> TransformType | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    coerce: bool = True,
+    coerce: bool = ...,
     inf: Inf,
-    allow_underscores: bool = True,
-) -> Union[TransformType, Inf, pyint, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    coerce: bool = True,
+    coerce: bool = ...,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[TransformType, Nan, pyint, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    coerce: bool = True,
+    coerce: bool = ...,
     inf: Inf,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[TransformType, Inf, Nan, pyint, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
-    allow_underscores: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, pyint, pyfloat]: ...
+) -> TransformType | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
     inf: Inf,
-    allow_underscores: bool = True,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, Inf, pyint, pyfloat]: ...
+) -> TransformType | Inf | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
     nan: Nan,
-    allow_underscores: bool = True,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, Nan, pyint, pyfloat]: ...
+) -> TransformType | Nan | pyint | pyfloat: ...
 @overload
 def fast_real(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    coerce: bool = True,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
     inf: Inf,
     nan: Nan,
-    allow_underscores: bool = True,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, Inf, Nan, pyint, pyfloat]: ...
+) -> TransformType | Inf | Nan | pyint | pyfloat: ...
 
 # Fast float
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, pyfloat]: ...
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     inf: Inf,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Nan | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     inf: Inf,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> FastInputType | Inf | Nan | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-) -> Union[Default, pyfloat]: ...
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     inf: Inf,
-    allow_underscores: bool = True,
-) -> Union[Default, Inf, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Inf | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[Default, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Nan | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     inf: Inf,
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[Default, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> Default | Inf | Nan | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    allow_underscores: bool = True,
-) -> Union[TransformType, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    on_fail: Callable[[FastInputType], TransformType],
-    inf: Inf,
-    allow_underscores: bool = True,
-) -> Union[TransformType, Inf, pyfloat]: ...
-@overload
-def fast_float(
-    x: FastInputType,
-    *,
-    raise_on_invalid: bool = False,
-    on_fail: Callable[[FastInputType], TransformType],
-    nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[TransformType, Nan, pyfloat]: ...
-@overload
-def fast_float(
-    x: FastInputType,
-    *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
     inf: Inf,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | pyfloat: ...
+@overload
+def fast_float(
+    x: FastInputType,
+    *,
+    raise_on_invalid: bool = ...,
+    on_fail: Callable[[FastInputType], TransformType],
     nan: Nan,
-    allow_underscores: bool = True,
-) -> Union[TransformType, Inf, Nan, pyfloat]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | Nan | pyfloat: ...
 @overload
 def fast_float(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-    key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, pyfloat]: ...
-@overload
-def fast_float(
-    x: FastInputType,
-    *,
-    raise_on_invalid: bool = False,
-    inf: Inf,
-    allow_underscores: bool = True,
-    key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, Inf, pyfloat]: ...
-@overload
-def fast_float(
-    x: FastInputType,
-    *,
-    raise_on_invalid: bool = False,
-    nan: Nan,
-    allow_underscores: bool = True,
-    key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, Nan, pyfloat]: ...
-@overload
-def fast_float(
-    x: FastInputType,
-    *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
+    on_fail: Callable[[FastInputType], TransformType],
     inf: Inf,
     nan: Nan,
-    allow_underscores: bool = True,
+    allow_underscores: bool = ...,
+) -> TransformType | Inf | Nan | pyfloat: ...
+@overload
+def fast_float(
+    x: FastInputType,
+    *,
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, Inf, Nan, pyfloat]: ...
+) -> TransformType | pyfloat: ...
+@overload
+def fast_float(
+    x: FastInputType,
+    *,
+    raise_on_invalid: bool = ...,
+    inf: Inf,
+    allow_underscores: bool = ...,
+    key: Callable[[FastInputType], TransformType],
+) -> TransformType | Inf | pyfloat: ...
+@overload
+def fast_float(
+    x: FastInputType,
+    *,
+    raise_on_invalid: bool = ...,
+    nan: Nan,
+    allow_underscores: bool = ...,
+    key: Callable[[FastInputType], TransformType],
+) -> TransformType | Nan | pyfloat: ...
+@overload
+def fast_float(
+    x: FastInputType,
+    *,
+    raise_on_invalid: bool = ...,
+    inf: Inf,
+    nan: Nan,
+    allow_underscores: bool = ...,
+    key: Callable[[FastInputType], TransformType],
+) -> TransformType | Inf | Nan | pyfloat: ...
 
 # Fast int
 @overload
 def fast_int(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, pyint]: ...
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint: ...
 @overload
 def fast_int(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    base: Union[pyint, HasIndex],
-    allow_underscores: bool = True,
-) -> Union[FastInputType, pyint]: ...
-@overload
-def fast_int(
-    x: FastInputType,
-    default: Default,
-    *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-) -> Union[Default, pyint]: ...
+    raise_on_invalid: bool = ...,
+    base: pyint | HasIndex,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint: ...
 @overload
 def fast_int(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    base: Union[pyint, HasIndex],
-    allow_underscores: bool = True,
-) -> Union[Default, pyint]: ...
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyint: ...
+@overload
+def fast_int(
+    x: FastInputType,
+    default: Default,
+    *,
+    raise_on_invalid: bool = ...,
+    base: pyint | HasIndex,
+    allow_underscores: bool = ...,
+) -> Default | pyint: ...
 @overload
 def fast_int(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    allow_underscores: bool = True,
-) -> Union[TransformType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | pyint: ...
 @overload
 def fast_int(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    base: Union[pyint, HasIndex],
-    allow_underscores: bool = True,
-) -> Union[TransformType, pyint]: ...
+    base: pyint | HasIndex,
+    allow_underscores: bool = ...,
+) -> TransformType | pyint: ...
 @overload
 def fast_int(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, pyint]: ...
+) -> TransformType | pyint: ...
 @overload
 def fast_int(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    base: Union[pyint, HasIndex],
-    allow_underscores: bool = True,
+    raise_on_invalid: bool = ...,
+    base: pyint | HasIndex,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, pyint]: ...
+) -> TransformType | pyint: ...
 
 # Fast forceint
 @overload
 def fast_forceint(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-) -> Union[FastInputType, pyint]: ...
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> FastInputType | pyint: ...
 @overload
 def fast_forceint(
     x: FastInputType,
     default: Default,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
-) -> Union[Default, pyint]: ...
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> Default | pyint: ...
 @overload
 def fast_forceint(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
+    raise_on_invalid: bool = ...,
     on_fail: Callable[[FastInputType], TransformType],
-    allow_underscores: bool = True,
-) -> Union[TransformType, pyint]: ...
+    allow_underscores: bool = ...,
+) -> TransformType | pyint: ...
 @overload
 def fast_forceint(
     x: FastInputType,
     *,
-    raise_on_invalid: bool = False,
-    allow_underscores: bool = True,
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
     key: Callable[[FastInputType], TransformType],
-) -> Union[TransformType, pyint]: ...
+) -> TransformType | pyint: ...
 
 # Checking
 
 def check_real(
     x: Any,
     *,
-    consider: ConsiderType = None,
-    inf: InfNanCheckType = NUMBER_ONLY,
-    nan: InfNanCheckType = NUMBER_ONLY,
-    allow_underscores: bool = False,
+    consider: ConsiderType = ...,
+    inf: InfNanCheckType = ...,
+    nan: InfNanCheckType = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 def check_float(
     x: Any,
     *,
-    consider: ConsiderType = None,
-    inf: InfNanCheckType = NUMBER_ONLY,
-    nan: InfNanCheckType = NUMBER_ONLY,
-    strict: bool = False,
-    allow_underscores: bool = False,
+    consider: ConsiderType = ...,
+    inf: InfNanCheckType = ...,
+    nan: InfNanCheckType = ...,
+    strict: bool = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 def check_int(
     x: Any,
     *,
-    consider: ConsiderType = None,
-    base: Union[pyint, HasIndex] = 0,
-    allow_underscores: bool = False,
+    consider: ConsiderType = ...,
+    base: pyint | HasIndex = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 def check_intlike(
     x: Any,
     *,
-    consider: ConsiderType = None,
-    allow_underscores: bool = False,
+    consider: ConsiderType = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 def isreal(
     x: Any,
     *,
-    str_only: bool = False,
-    num_only: bool = False,
-    allow_inf: bool = False,
-    allow_nan: bool = False,
-    allow_underscores: bool = True,
+    str_only: bool = ...,
+    num_only: bool = ...,
+    allow_inf: bool = ...,
+    allow_nan: bool = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 
 # Deprecated checking
@@ -5548,26 +5545,26 @@ def isreal(
 def isfloat(
     x: Any,
     *,
-    str_only: bool = False,
-    num_only: bool = False,
-    allow_inf: bool = False,
-    allow_nan: bool = False,
-    allow_underscores: bool = True,
+    str_only: bool = ...,
+    num_only: bool = ...,
+    allow_inf: bool = ...,
+    allow_nan: bool = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 def isint(
     x: Any,
     *,
-    str_only: bool = False,
-    num_only: bool = False,
-    base: Union[pyint, HasIndex] = 0,
-    allow_underscores: bool = True,
+    str_only: bool = ...,
+    num_only: bool = ...,
+    base: pyint | HasIndex = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 def isintlike(
     x: Any,
     *,
-    str_only: bool = False,
-    num_only: bool = False,
-    allow_underscores: bool = True,
+    str_only: bool = ...,
+    num_only: bool = ...,
+    allow_underscores: bool = ...,
 ) -> bool: ...
 
 # Query type
@@ -5575,26 +5572,26 @@ def isintlike(
 def query_type(
     x: QueryInputType,
     *,
-    allow_inf: bool = False,
-    allow_nan: bool = False,
-    coerce: bool = False,
-    allow_underscores: bool = False,
-) -> Union[Type[QueryInputType], Type[pyint], Type[pyfloat]]: ...
+    allow_inf: bool = ...,
+    allow_nan: bool = ...,
+    coerce: bool = ...,
+    allow_underscores: bool = ...,
+) -> Type[QueryInputType] | Type[pyint] | Type[pyfloat]: ...
 @overload
 def query_type(
     x: QueryInputType,
     *,
-    allow_inf: bool = False,
-    allow_nan: bool = False,
-    coerce: bool = False,
+    allow_inf: bool = ...,
+    allow_nan: bool = ...,
+    coerce: bool = ...,
     allowed_types: Sequence[Type[Any]],
-    allow_underscores: bool = False,
-) -> Optional[Union[Type[QueryInputType], Type[pyint], Type[pyfloat]]]: ...
+    allow_underscores: bool = ...,
+) -> Type[QueryInputType] | Type[pyint] | Type[pyfloat] | None: ...
 
 # Buitin replacements
 @overload
-def int(x: InputType = 0) -> pyint: ...
+def int(x: InputType = ...) -> pyint: ...
 @overload
-def int(x: InputType, base: Union[pyint, HasIndex]) -> pyint: ...
-def float(x: InputType = 0.0) -> pyfloat: ...
-def real(x: InputType = 0.0, *, coerce: bool = True) -> Union[pyint, pyfloat]: ...
+def int(x: InputType, base: pyint | HasIndex) -> pyint: ...
+def float(x: InputType = ...) -> pyfloat: ...
+def real(x: InputType = ..., *, coerce: bool = ...) -> pyint | pyfloat: ...
