@@ -264,8 +264,8 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
         array([5., 3., 8.])
         >>> output = np.empty(3, dtype=np.int32)
         >>> try_array(["5", "3", "8"], output=output)
-        >>> output
-        array([5, 3, 8], dtype=int32)
+        >>> np.array_equal(output, np.array([5, 3, 8], dtype=np.int32))
+        True
 
     """
     # If output is not provided, we construct a numpy array of the same length

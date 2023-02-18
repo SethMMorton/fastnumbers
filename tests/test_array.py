@@ -129,10 +129,16 @@ def test_require_input_and_output_to_have_equal_size() -> None:
         fastnumbers.try_array([0, 9], output)
 
 
-@pytest.mark.parametrize(
-    "dtype",
-    [np.float128, np.complex128, np.half, np.bool_, np.bytes_, np.str_],
-)
+# Not all dtypes exist on all platforms. Add only the ones to test
+# here that exist.
+other_dtypes = [
+    getattr(np, x)
+    for x in ("float128", "complex128", "half", "bool_", "bytes_", "str_")
+    if hasattr(np, x)
+]
+
+
+@pytest.mark.parametrize("dtype", other_dtypes)
 def test_invalid_numpy_dtypes_raises_correct_type_error(
     dtype: np.dtype[Any],
 ) -> None:
@@ -155,10 +161,7 @@ class TestCPPProtections:
         with pytest.raises(TypeError, match="not 'list'"):
             fastnumbers._array([0, 1], [0, 0])  # type: ignore
 
-    @pytest.mark.parametrize(
-        "dtype",
-        [np.float128, np.complex128, np.half, np.bool_, np.bytes_, np.str_],
-    )
+    @pytest.mark.parametrize("dtype", other_dtypes)
     def test_invalid_memorybuffer_type_raises_correct_type_error(
         self, dtype: np.dtype[Any]
     ) -> None:

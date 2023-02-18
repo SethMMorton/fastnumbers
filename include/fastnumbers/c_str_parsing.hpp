@@ -429,7 +429,11 @@ T parse_int(
         std::from_chars_result res = std::from_chars(str, end, value, base);
         error = res.ptr != end || res.ec == std::errc::invalid_argument;
         overflow = res.ec == std::errc::result_out_of_range;
-        return had_base_prefix && is_negative ? -value : value;
+        if constexpr (std::is_signed_v<T>) {
+            return had_base_prefix && is_negative ? -value : value;
+        } else {
+            return value;
+        }
     }
 
     // If an overflow is going to happen, just evaluate that this looks like
@@ -462,7 +466,11 @@ T parse_int(
         }
     }
     error = str != end;
-    return is_negative ? -value : value;
+    if constexpr (std::is_signed_v<T>) {
+        return is_negative ? -value : value;
+    } else {
+        return value;
+    }
 }
 
 /**
