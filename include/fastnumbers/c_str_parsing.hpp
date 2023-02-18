@@ -334,22 +334,25 @@ template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = t
 constexpr inline int8_t overflow_cutoff()
 {
     // len('std::numeric_limits<T>::max()') - 1 == return value
-    switch (static_cast<uint64_t>(std::numeric_limits<T>::max())) {
-    case 18446744073709551615ULL:
+    constexpr uint64_t limit = static_cast<uint64_t>(std::numeric_limits<T>::max());
+    if constexpr (limit == 18446744073709551615ULL) {
         return 19;
-    case 9223372036854775807ULL:
+    } else if constexpr (limit == 9223372036854775807ULL) {
         return 18;
-    case 2147483647ULL:
-    case 4294967295ULL:
+    } else if constexpr (limit == 2147483647ULL) {
         return 9;
-    case 32767ULL:
-    case 65535ULL:
+    } else if constexpr (limit == 4294967295ULL) {
+        return 9;
+    } else if constexpr (limit == 32767ULL) {
         return 4;
-    case 127ULL:
-    case 255ULL:
+    } else if constexpr (limit == 65535ULL) {
+        return 4;
+    } else if constexpr (limit == 127ULL) {
         return 2;
-    default: // unknown, be safe
-        return 0;
+    } else if constexpr (limit == 255ULL) {
+        return 2;
+    } else {
+        return 0; // be safe - should never be encountered
     }
 }
 

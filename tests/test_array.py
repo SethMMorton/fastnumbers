@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import array
 import ctypes
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, NoReturn, Tuple, Union
 
 import numpy as np
 import pytest
@@ -89,6 +89,51 @@ unsigned_data_types = [
 int_data_types = signed_data_types + unsigned_data_types
 float_data_types = ["float", "double"]
 data_types = int_data_types + float_data_types
+
+
+def test_invalid_argument_raises_type_error() -> None:
+    given = [0, 1]
+    with pytest.raises(TypeError, match="got an unexpected keyword argument 'invalid'"):
+        fastnumbers.try_array(given, invalid="dummy")  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "selector",
+    [
+        fastnumbers.RAISE,
+        fastnumbers.INPUT,
+        fastnumbers.DISALLOWED,
+        fastnumbers.NUMBER_ONLY,
+        fastnumbers.STRING_ONLY,
+    ],
+)
+def test_selectors_are_rejected_when_invalid_for_inf_and_nan(selector: object) -> None:
+    with pytest.raises(ValueError, match="values for 'inf' and 'nan'"):
+        fastnumbers.try_array(["5"], inf=selector)
+    with pytest.raises(ValueError, match="values for 'inf' and 'nan'"):
+        fastnumbers.try_array(["5"], nan=selector)
+
+
+@pytest.mark.parametrize(
+    "selector",
+    [
+        fastnumbers.ALLOWED,
+        fastnumbers.INPUT,
+        fastnumbers.DISALLOWED,
+        fastnumbers.NUMBER_ONLY,
+        fastnumbers.STRING_ONLY,
+    ],
+)
+def test_selectors_are_rejected_when_invalid_for_on_fail_and_friends(
+    selector: object,
+) -> None:
+    msg = "values for 'on_fail', 'on_overflow', and 'on_type_error'"
+    with pytest.raises(ValueError, match=msg):
+        fastnumbers.try_array(["5"], on_fail=selector)
+    with pytest.raises(ValueError, match=msg):
+        fastnumbers.try_array(["5"], on_overflow=selector)
+    with pytest.raises(ValueError, match=msg):
+        fastnumbers.try_array(["5"], on_type_error=selector)
 
 
 def test_invalid_input_type_gives_type_error() -> None:
@@ -351,8 +396,30 @@ class TestReplacements:
         assert result == expected
 
 
+class DumbFloatClass(object):
+    def __float__(self) -> NoReturn:
+        raise ValueError("something here might go wrong")
+
+
+class DumbIntClass(object):
+    def __int__(self) -> NoReturn:
+        raise ValueError("something here might go wrong")
+
+
 class TestErrors:
     """Test that intelligent exceptions are raised on error"""
+
+    @pytest.mark.parametrize("dumb", [DumbFloatClass(), DumbIntClass()])
+    @pytest.mark.parametrize("data_type", data_types)
+    @pytest.mark.parametrize("style", [list, iter])
+    def test_given_junk_float_type_raises_error(
+        self, data_type: str, dumb: Any, style: Callable[[Any], Any]
+    ) -> None:
+        given = style([dumb])
+        result = array.array(formats[data_type], [0])
+        expected = "Cannot convert"
+        with pytest.raises(ValueError, match=expected):
+            fastnumbers.try_array(given, result)
 
     @pytest.mark.parametrize("data_type", data_types)
     def test_given_invalid_string_raises_value_error(self, data_type: str) -> None:
@@ -379,15 +446,60 @@ class TestErrors:
         with pytest.raises(TypeError, match=expected):
             fastnumbers.try_array(given, result)
 
+    @pytest.mark.parametrize("data_type", data_types)
+    def test_given_broken_generator_fails(self, data_type: str) -> None:
+        """A generator's exception should be returned"""
+
+        def broken() -> Iterator[str]:
+            """Not a good generator"""
+            yield "5"
+            yield "6"
+            raise ValueError("Fëanor")
+
+        output = array.array(formats[data_type], [0, 0, 0, 0])
+        with pytest.raises(ValueError, match="Fëanor"):
+            fastnumbers.try_array(broken(), output)
+
+    @pytest.mark.parametrize("data_type", data_types)
+    def test_given_non_iterable_raises_type_error(self, data_type: str) -> None:
+        output = array.array(formats[data_type], [0, 0, 0, 0])
+        with pytest.raises(TypeError, match="'int' object is not iterable"):
+            fastnumbers.try_array(5, output)  # type: ignore
+
+    @pytest.mark.parametrize("data_type", data_types)
+    @pytest.mark.parametrize("style", [list, iter])
+    def test_given_invalid_types_behave_as_expected(
+        self, data_type: str, style: Callable[[Any], Any]
+    ) -> None:
+        msg = r"The value \('Fëanor',\) has type 'tuple' which cannot be "
+        msg += "converted to a numeric value"
+        with pytest.raises(TypeError, match=msg):
+            fastnumbers.try_array(style([("Fëanor",)]))
+        expected = array.array(formats[data_type], [5])
+        result = array.array(formats[data_type], [0])
+        fastnumbers.try_array(style([("Fëanor",)]), result, on_type_error=5)
+        assert result == expected
+
 
 class TestSuccess:
     """Test that the function does what it says on the tin"""
 
     @pytest.mark.parametrize("data_type", data_types)
-    def test_given_valid_values_returns_correct_results(self, data_type: str) -> None:
-        given = ["4", "78", 46, "⑦"]
+    @pytest.mark.parametrize("style", [list, tuple, iter])
+    def test_given_valid_values_returns_correct_results(
+        self, data_type: str, style: Callable[[Any], Any]
+    ) -> None:
+        given = style(["4", "78", 46, "⑦"])
         result = array.array(formats[data_type], [0, 0, 0, 0])
         expected = array.array(formats[data_type], [4, 78, 46, 7])
+        fastnumbers.try_array(given, result)
+        assert result == expected
+
+    @pytest.mark.parametrize("data_type", data_types)
+    def test_given_range_returns_correct_results(self, data_type: str) -> None:
+        given = range(4)
+        result = array.array(formats[data_type], [0, 0, 0, 0])
+        expected = array.array(formats[data_type], [0, 1, 2, 3])
         fastnumbers.try_array(given, result)
         assert result == expected
 
@@ -476,6 +588,34 @@ class TestSuccess:
             ],
         )
         fastnumbers.try_array(given, result, base=base, on_overflow=123)
+        assert result == expected
+
+    @pytest.mark.parametrize("data_type", data_types)
+    def test_underscores(self, data_type: str) -> None:
+        given = ["1_0", "11_0"]
+        result = array.array(formats[data_type], [0, 0])
+        expected = array.array(formats[data_type], [10, 110])
+        fastnumbers.try_array(given, result, allow_underscores=True)
+        assert result == expected
+
+    @pytest.mark.parametrize("data_type", int_data_types)
+    def test_base_prefix(self, data_type: str) -> None:
+        given = [
+            bin(extremes[data_type][0]),
+            oct(extremes[data_type][0]),
+            hex(extremes[data_type][0]),
+        ]
+        result = array.array(formats[data_type], [0, 0, 0])
+        expected = array.array(formats[data_type], [extremes[data_type][0]] * 3)
+        fastnumbers.try_array(given, result, base=0)
+        assert result == expected
+
+    @pytest.mark.parametrize("data_type", int_data_types)
+    def test_base_prefix_and_underscores(self, data_type: str) -> None:
+        given = ["0b10_01", "0x3_a", "0o5_7", "0b_0", "0x_f", "0o_5"]
+        result = array.array(formats[data_type], [0, 0, 0, 0, 0, 0])
+        expected = array.array(formats[data_type], [9, 58, 47, 0, 15, 5])
+        fastnumbers.try_array(given, result, base=0, allow_underscores=True)
         assert result == expected
 
 

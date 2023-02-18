@@ -11,6 +11,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     NoReturn,
     Tuple,
@@ -1796,6 +1797,44 @@ class TestMappingFunctions:
             fastnumbers.map_try_forceint,
         ],
     )
+    def test_mapping_handles_range(self, func: MappingConversionFuncs) -> None:
+        """Range is a sequence but is not a 'fast sequence'"""
+        expected = [0, 1, 2, 3]
+        result = func(range(4))
+        assert result == expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    def test_mapping_handles_broken_generator(
+        self, func: MappingConversionFuncs
+    ) -> None:
+        """A generator's exception should be returned"""
+
+        def broken() -> Iterator[str]:
+            """Not a good generator"""
+            yield "5"
+            yield "6"
+            raise ValueError("Fëanor")
+
+        with raises(ValueError, match="Fëanor"):
+            func(broken())
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
     @parametrize(
         "iterable_gen",
         [
@@ -1811,4 +1850,38 @@ class TestMappingFunctions:
     ) -> None:
         expected: List[Any] = []
         result = func(iterable_gen())
+        assert result == expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    def test_mapping_raises_type_error_on_non_iterable(
+        self, func: MappingConversionFuncs
+    ) -> None:
+        with raises(TypeError, match="'int' object is not iterable"):
+            func(5)  # type: ignore
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    @parametrize("style", [list, iter])
+    def test_invalid_types_behave_as_expected(
+        self, func: MappingConversionFuncs, style: Callable[[Any], Any]
+    ) -> None:
+        with raises(TypeError, match="not 'tuple'"):
+            func(style([("Fëanor",)]))
+        expected = [5]
+        result = func(style([("Fëanor",)]), on_type_error=5)
         assert result == expected

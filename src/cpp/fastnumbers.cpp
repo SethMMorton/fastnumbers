@@ -2,6 +2,7 @@
  * This file contains the functions that directly interface with the Python interpreter.
  */
 #include <exception>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -32,31 +33,49 @@ public:
     }
 };
 
-/// Convert a C++ error to a Python exception
-static inline PyObject* convert_exception(PyObject* obj, const std::exception& exc)
-{
-    // This will ideally never get coverage, and that's OK
-    PyErr_Format(
-        PyExc_SystemError,
-        "fastnumbers with input '%.R' has thrown an unexpected C++ exception: %s",
-        obj,
-        exc.what()
-    );
-    return nullptr;
-}
+/**
+ * \class ExceptionHandler
+ * \brief Call a function and handle all exceptions
+ */
+class ExceptionHandler {
+public:
+    /// Construct with the original input sent to the function
+    explicit ExceptionHandler(PyObject* input)
+        : m_input(input)
+    { }
 
-/// Handle all exceptions from running fastnumbers logic.
-/// This is a "function try block", hence the missing pair of braces.
-static inline PyObject* handle_exceptions(PyObject* input)
-try {
-    throw;
-} catch (const exception_is_set&) {
-    return nullptr;
-} catch (const fastnumbers_exception& e) {
-    return e.raise_value_error();
-} catch (const std::exception& e) {
-    return convert_exception(input, e);
-}
+    // Cannot copy
+    ExceptionHandler(const ExceptionHandler&) = delete;
+    ExceptionHandler(ExceptionHandler&&) = delete;
+    ExceptionHandler& operator=(const ExceptionHandler&) = delete;
+
+    // Default destroy
+    ~ExceptionHandler() = default;
+
+    /// Handle all exceptions from running fastnumbers logic.
+    /// This is a "function try block", hence the missing pair of braces.
+    PyObject* run(std::function<PyObject*()> func)
+    try {
+        return func();
+    } catch (const exception_is_set&) {
+        return nullptr;
+    } catch (const fastnumbers_exception& e) {
+        return e.raise_value_error();
+    } catch (const std::exception& e) {
+        // This will ideally never get coverage, and that's OK
+        PyErr_Format(
+            PyExc_SystemError,
+            "fastnumbers with input '%.200R' has thrown an unexpected C++ exception: %s",
+            m_input,
+            e.what()
+        );
+        return nullptr;
+    }
+
+private:
+    /// The orignal input value given to the function
+    PyObject* m_input;
+};
 
 /**
  * \brief Function to handle the conversion of base to integers.
@@ -289,8 +308,8 @@ static PyObject* fastnumbers_try_real(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_disallow(inf);
         validate_not_disallow(nan);
         validate_not_allow_disallow_str_only_num_only(on_fail);
@@ -305,9 +324,7 @@ static PyObject* fastnumbers_try_real(
             allow_underscores,
             coerce
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -344,17 +361,15 @@ static PyObject* fastnumbers_fast_real(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
         return float_conv_impl(
             input, on_fail, inf, nan, UserType::REAL, allow_underscores, coerce
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -385,8 +400,8 @@ static PyObject* fastnumbers_try_float(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_disallow(inf);
         validate_not_disallow(nan);
         validate_not_allow_disallow_str_only_num_only(on_fail);
@@ -394,9 +409,7 @@ static PyObject* fastnumbers_try_float(
         return float_conv_impl(
             input, on_fail, on_type_error, inf, nan, UserType::FLOAT, allow_underscores
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -431,17 +444,15 @@ static PyObject* fastnumbers_fast_float(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
         return float_conv_impl(
             input, on_fail, inf, nan, UserType::FLOAT, allow_underscores
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -470,17 +481,15 @@ static PyObject* fastnumbers_try_int(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         const int base = assess_integer_base_input(pybase);
         return int_conv_impl(
             input, on_fail, on_type_error, UserType::INT, allow_underscores, base
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -513,16 +522,14 @@ static PyObject* fastnumbers_fast_int(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
         const int base = assess_integer_base_input(pybase);
         return int_conv_impl(input, on_fail, UserType::INT, allow_underscores, base);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -549,16 +556,14 @@ static PyObject* fastnumbers_try_forceint(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         return int_conv_impl(
             input, on_fail, on_type_error, UserType::FORCEINT, allow_underscores
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -589,15 +594,13 @@ static PyObject* fastnumbers_fast_forceint(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
         return int_conv_impl(input, on_fail, UserType::FORCEINT, allow_underscores);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -626,17 +629,15 @@ static PyObject* fastnumbers_check_real(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_allow_disallow_str_only_num_only(inf);
         validate_allow_disallow_str_only_num_only(nan);
         validate_consider(consider);
         return float_check_impl(
             input, inf, nan, consider, UserType::REAL, allow_underscores
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -672,14 +673,12 @@ static PyObject* fastnumbers_isreal(
     const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         return float_check_impl(
             input, inf, nan, consider, UserType::REAL, allow_underscores
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -710,17 +709,15 @@ static PyObject* fastnumbers_check_float(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_allow_disallow_str_only_num_only(inf);
         validate_allow_disallow_str_only_num_only(nan);
         validate_consider(consider);
         return float_check_impl(
             input, inf, nan, consider, UserType::FLOAT, allow_underscores, strict
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -756,14 +753,12 @@ static PyObject* fastnumbers_isfloat(
     const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         return float_check_impl(
             input, inf, nan, consider, UserType::FLOAT, allow_underscores
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -790,14 +785,12 @@ static PyObject* fastnumbers_check_int(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_consider(consider);
         const int base = assess_integer_base_input(pybase);
         return int_check_impl(input, consider, UserType::INT, allow_underscores, base);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -829,13 +822,11 @@ static PyObject* fastnumbers_isint(
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         const int base = assess_integer_base_input(pybase);
         return int_check_impl(input, consider, UserType::INT, allow_underscores, base);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -860,13 +851,11 @@ static PyObject* fastnumbers_check_intlike(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_consider(consider);
         return int_check_impl(input, consider, UserType::INTLIKE, allow_underscores);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -896,12 +885,10 @@ static PyObject* fastnumbers_isintlike(
     // Convert old-style arguments to new-style
     const PyObject* consider = create_consider(str_only, num_only);
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         return int_check_impl(input, consider, UserType::INTLIKE, allow_underscores);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -952,14 +939,12 @@ static PyObject* fastnumbers_query_type(
     const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         return type_query_impl(
             input, allowed_types, inf, nan, allow_underscores, coerce
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -984,12 +969,10 @@ fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args)
         return PyFloat_FromDouble(0.0);
     }
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         return float_conv_impl(input, UserType::FLOAT);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -1021,13 +1004,11 @@ static PyObject* fastnumbers_int(
         return PyLong_FromLong(0);
     }
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         const int base = assess_integer_base_input(pybase);
         return int_conv_impl(input, UserType::INT, base);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 /**
@@ -1055,12 +1036,10 @@ static PyObject* fastnumbers_real(
         return coerce ? PyLong_FromLong(0) : PyFloat_FromDouble(0.0);
     }
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         return float_conv_impl(input, UserType::REAL, coerce);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 static PyObject* fastnumbers_map_try_real(
@@ -1090,8 +1069,8 @@ static PyObject* fastnumbers_map_try_real(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_disallow(inf);
         validate_not_disallow(nan);
         validate_not_allow_disallow_str_only_num_only(on_fail);
@@ -1109,9 +1088,7 @@ static PyObject* fastnumbers_map_try_real(
             );
         };
         return iteration_impl(input, convert);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 static PyObject* fastnumbers_map_try_float(
@@ -1139,8 +1116,8 @@ static PyObject* fastnumbers_map_try_float(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_disallow(inf);
         validate_not_disallow(nan);
         validate_not_allow_disallow_str_only_num_only(on_fail);
@@ -1151,9 +1128,7 @@ static PyObject* fastnumbers_map_try_float(
             );
         };
         return iteration_impl(input, convert);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 static PyObject* fastnumbers_map_try_int(
@@ -1179,8 +1154,8 @@ static PyObject* fastnumbers_map_try_int(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         const int base = assess_integer_base_input(pybase);
@@ -1190,9 +1165,7 @@ static PyObject* fastnumbers_map_try_int(
             );
         };
         return iteration_impl(input, convert);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 static PyObject* fastnumbers_map_try_forceint(
@@ -1216,8 +1189,8 @@ static PyObject* fastnumbers_map_try_forceint(
         )) return nullptr;
     // clang-format on
 
-    // Execute main logic in a try-block to convert C++ exceptions
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [&](PyObject* x) -> PyObject* {
@@ -1226,9 +1199,7 @@ static PyObject* fastnumbers_map_try_forceint(
             );
         };
         return iteration_impl(input, convert);
-    } catch (...) {
-        return handle_exceptions(input);
-    }
+    });
 }
 
 static PyObject* fastnumbers_array(
@@ -1262,7 +1233,8 @@ static PyObject* fastnumbers_array(
         )) return nullptr;
     // clang-format on
 
-    try {
+    // Execute main logic in an exception handler to convert C++ exceptions
+    return ExceptionHandler(input).run([&]() {
         validate_not_disallow_str_only_num_only_input(inf);
         validate_not_disallow_str_only_num_only_input(nan);
         validate_not_allow_disallow_str_only_num_only_input(on_fail);
@@ -1280,12 +1252,10 @@ static PyObject* fastnumbers_array(
             allow_underscores,
             base
         );
-    } catch (...) {
-        return handle_exceptions(input);
-    }
 
-    // No return value, need to return None
-    Py_RETURN_NONE;
+        // No return value, need to return None
+        Py_RETURN_NONE;
+    });
 }
 
 // Define the methods contained in this module

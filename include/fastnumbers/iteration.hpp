@@ -209,8 +209,27 @@ public:
         } else if (PySequence_Check(m_object)) {
             return PySequence_Size(m_object);
         } else {
-            require_fast_sequence();
-            return m_seq_size;
+            // Create a list into which we will insert the data from our iterator
+            PyObject* local_storage = PyList_New(0);
+            if (local_storage == nullptr) {
+                throw exception_is_set();
+            }
+
+            // This function is the closest we can get to list.extend in the
+            // C-API. It returns a new reference to possibly the same object
+            // that was input. So we, decrement the input and keep the output,
+            // even though they may be the same object.
+            m_fast_sequence = PySequence_InPlaceConcat(local_storage, m_object);
+            Py_DECREF(local_storage);
+            if (m_fast_sequence == nullptr) {
+                throw exception_is_set();
+            }
+
+            // Now that we are here, we can free the iterator if it had been created,
+            // and store the new sequence length.
+            Py_XDECREF(m_iterator);
+            m_iterator = nullptr;
+            return (m_seq_size = PyList_GET_SIZE(m_fast_sequence));
         }
     }
 
@@ -343,9 +362,13 @@ private:
 
         // Otherwise, the object was an iterator and we use the iteration
         // protocol to get each next item.
-        // When a nullptr is returned then it is the end of the iteration
-        // and we return return the sigil.
+        // When a nullptr is returned with no exception set then it is the end
+        // of the iteration and we return return the sigil. If an exception is
+        // set, well, we need to raise it.
         if ((item = PyIter_Next(m_iterator)) == nullptr) {
+            if (PyErr_Occurred()) {
+                throw exception_is_set();
+            }
             return std::make_pair(PayloadType(), IterState::STOP);
         }
 
@@ -359,36 +382,5 @@ private:
             throw;
         }
         Py_DECREF(item);
-    }
-
-    /// Force the input to be a sequence, converting an iterable to a list if needed.
-    void require_fast_sequence()
-    {
-        // Nothing to do if already a sequence
-        if (PySequence_Check(m_object)) {
-            return;
-        }
-
-        // Create a list into which we will insert the data from our iterator
-        PyObject* local_storage = PyList_New(0);
-        if (local_storage == nullptr) {
-            throw exception_is_set();
-        }
-
-        // This function is the closest we can get to list.extend in the
-        // C-API. It returns a new reference to possibly the same object
-        // that was input. So we, decrement the input and keep the output,
-        // even though they may be the same object.
-        m_fast_sequence = PySequence_InPlaceConcat(local_storage, m_object);
-        Py_DECREF(local_storage);
-        if (m_fast_sequence == nullptr) {
-            throw exception_is_set();
-        }
-
-        // Now that we are here, we can free the iterator if it had been created,
-        // and store the new sequence length.
-        Py_XDECREF(m_iterator);
-        m_iterator = nullptr;
-        m_seq_size = PyList_GET_SIZE(m_fast_sequence);
     }
 };

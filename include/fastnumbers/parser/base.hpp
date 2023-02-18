@@ -218,12 +218,15 @@ protected:
         } else { // one is signed, the other is not
             if constexpr (t1_max < t2_max) {
                 if constexpr (std::is_signed_v<T1>) { // T2 is unsigned
-                    if (value > t1_max) {
-                        encountered_overflow();
-                        return static_cast<T1>(0);
-                    }
+                    static_assert(
+                        std::is_signed_v<T1> && std::is_unsigned_v<T2>,
+                        "cast from unsigned to signed not supported"
+                    );
                 } else { // T2 is signed, T1 unsigned
                     if (value < 0 || value > t1_max) {
+                        // This likely will never happen based on the fact that only
+                        // unicode digits will pass through this branch, and those seem
+                        // to only range from 0 to 9.
                         encountered_overflow();
                         return static_cast<T1>(0);
                     }
