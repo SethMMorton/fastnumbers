@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import array
 import ctypes
-import typing
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pytest
@@ -12,6 +14,7 @@ from hypothesis.strategies import (
     lists,
     text,
 )
+from typing_extensions import TypedDict
 
 import fastnumbers
 from conftest import base_n
@@ -114,7 +117,7 @@ def test_require_output_if_numpy_is_not_installed() -> None:
     [np.array([[0, 0], [0, 0]]), np.array(0)],
 )
 def test_require_identically_one_ndarray_dimension(
-    output: np.ndarray[typing.Any, np.dtype[np.int_]]
+    output: np.ndarray[Any, np.dtype[np.int_]]
 ) -> None:
     with pytest.raises(ValueError, match="Can only accept arrays of dimension 1"):
         fastnumbers.try_array([0, 9], output)
@@ -131,7 +134,7 @@ def test_require_input_and_output_to_have_equal_size() -> None:
     [np.float128, np.complex128, np.half, np.bool_, np.bytes_, np.str_],
 )
 def test_invalid_numpy_dtypes_raises_correct_type_error(
-    dtype: np.dtype[typing.Any],
+    dtype: np.dtype[Any],
 ) -> None:
     """Numpy arrays as output with invalid dtypes give an error"""
     given = [0, 1]
@@ -157,7 +160,7 @@ class TestCPPProtections:
         [np.float128, np.complex128, np.half, np.bool_, np.bytes_, np.str_],
     )
     def test_invalid_memorybuffer_type_raises_correct_type_error(
-        self, dtype: np.dtype[typing.Any]
+        self, dtype: np.dtype[Any]
     ) -> None:
         """Ensure we only accept well-behaved memory views as input"""
         given = [0, 1]
@@ -168,7 +171,7 @@ class TestCPPProtections:
 
 
 kwargs = ["inf", "nan", "on_fail", "on_overflow", "on_type_error"]
-KwargsType = typing.TypedDict(
+KwargsType = TypedDict(
     "KwargsType",
     {"inf": int, "nan": int, "on_fail": int, "on_overflow": int, "on_type_error": int},
     total=False,
@@ -474,22 +477,22 @@ class TestSuccess:
 
 
 # Create shortcuts to collections of dtypes to test
-signed_dtypes: typing.List[typing.Any] = [
+signed_dtypes: List[Any] = [
     np.int8,
     np.int16,
     np.int32,
     np.int64,
 ]
-unsigned_dtypes: typing.List[typing.Any] = [
+unsigned_dtypes: List[Any] = [
     np.uint8,
     np.uint16,
     np.uint32,
     np.uint64,
 ]
 int_dtypes = signed_dtypes + unsigned_dtypes
-float_dtypes: typing.List[typing.Any] = [np.float32, np.float64]
+float_dtypes: List[Any] = [np.float32, np.float64]
 dtypes = int_dtypes + float_dtypes
-dtype_extremes: typing.Dict[typing.Any, typing.Tuple[int, int]] = {
+dtype_extremes: Dict[Any, Tuple[int, int]] = {
     np.int8: signed_size_extreme[1],
     np.uint8: unsigned_size_extreme[1],
     np.int16: signed_size_extreme[2],
@@ -500,7 +503,7 @@ dtype_extremes: typing.Dict[typing.Any, typing.Tuple[int, int]] = {
     np.uint64: unsigned_size_extreme[8],
 }
 
-dtype_float_extremes: typing.Dict[typing.Any, typing.Tuple[float, float]] = {
+dtype_float_extremes: Dict[Any, Tuple[float, float]] = {
     np.float32: (1.17549e-38, 3.40282e38),
     np.float64: (2.22507e-308, 1.79769e308),
 }
@@ -524,7 +527,7 @@ class TestNumpy:
 
     @pytest.mark.parametrize("dtype", dtypes)
     def test_supported_dtypes(
-        self, dtype: typing.Union[np.dtype[np.int_], np.dtype[np.float_]]
+        self, dtype: Union[np.dtype[np.int_], np.dtype[np.float_]]
     ) -> None:
         given = [4, "5", "⑦"]
         expected = np.array([4, 5, 7], dtype=dtype)
@@ -590,7 +593,7 @@ class TestNumpy:
 
     @pytest.mark.parametrize("dtype", dtypes)
     def test_accepts_output_array(
-        self, dtype: typing.Union[np.dtype[np.int_], np.dtype[np.float_]]
+        self, dtype: Union[np.dtype[np.int_], np.dtype[np.float_]]
     ) -> None:
         given = [4, "5", "⑦"]
         result = np.array([0, 0, 0], dtype=dtype)
@@ -668,7 +671,7 @@ class TestNumpy:
     )
 )
 @pytest.mark.parametrize("dtype", int_dtypes)
-def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: typing.Any) -> None:
+def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: Any) -> None:
     # Using try_array should give the same results
     # as map_try_int then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -700,7 +703,7 @@ def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: typing.Any) -> Non
 )
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
-def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: typing.Any) -> None:
+def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: Any) -> None:
     # Using try_array should give the same results
     # as map_try_float then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -727,7 +730,7 @@ def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: typing.Any) ->
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
 def test_all_the_things_for_floats_with_nan_inf_replacement(
-    dtype: np.dtype[np.float_], x: typing.Any
+    dtype: np.dtype[np.float_], x: Any
 ) -> None:
     # Using try_array should give the same results
     # as map_try_float then converted to an array.
