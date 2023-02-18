@@ -256,7 +256,7 @@ private:
 
         // If the key/value pair was not found in the replacement mapping,
         // that means an error must be raised for this input.
-        if (not value.has_value()) {
+        if (!value.has_value()) {
             if (key == ReplaceType::FAIL_) {
                 PyErr_Format(
                     PyExc_ValueError,
