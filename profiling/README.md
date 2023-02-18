@@ -20,3 +20,7 @@ Some general observations about the results:
 - If you need to convert a list of data, using the `map_try_*` functions
   is 2x faster than using `try_*` in a list comprehension, and about
   1.5x faster than using `try_*` with `map`.
+- If you need to convert a list of data to a `numpy` array, `try_array`
+  is about 2x faster than using the `map_try_*` and then converting the
+  resulting list to an `ndarray`. Interestingly, `try_array` is only slightly
+  faster than `map_try_*` by itself.

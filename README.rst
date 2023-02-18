@@ -55,8 +55,8 @@ see the `Timing`_ section for the raw data if you want details.
     - Up to 10x faster handling of errors during conversion than using
       user-side error handling
     - On top of the above, operations on a list of strings to to convert
-      (with the ``map_try_*`` functions) is 2x faster than the equivalent
-      list comprehension.
+      (with the ``map_try_*`` or ``try_array`` functions) is 2x faster
+      than the equivalent list comprehension.
 
 **NOTICE**: As of ``fastnumbers`` version 4.0.0, only Python >= 3.7 is
 supported.
@@ -221,6 +221,9 @@ additional handling for overflow that is not present in the other
     >>> iterable = ["5", "4.5", "34567.6", "32"]
     >>> np.array_equal(np.array(map_try_float(iterable), dtype=np.float64), try_array(iterable))
     True
+
+You will see about a 2x speedup of doing this in one step over converting
+to a list then converting that list to an array.
 
 About the ``on_fail`` option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
