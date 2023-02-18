@@ -5,12 +5,6 @@ template <typename T>
 constexpr const char* type_name();
 
 template <>
-constexpr const char* type_name<long double>()
-{
-    return "long double";
-}
-
-template <>
 constexpr const char* type_name<double>()
 {
     return "double";
@@ -23,33 +17,33 @@ constexpr const char* type_name<float>()
 }
 
 template <>
-constexpr const char* type_name<long long>()
+constexpr const char* type_name<signed long long>()
 {
-    return "long long";
+    return "signed long long";
 }
 
 template <>
-constexpr const char* type_name<long>()
+constexpr const char* type_name<signed long>()
 {
-    return "long";
+    return "signed long";
 }
 
 template <>
-constexpr const char* type_name<int>()
+constexpr const char* type_name<signed int>()
 {
-    return "int";
+    return "signed int";
 }
 
 template <>
-constexpr const char* type_name<short>()
+constexpr const char* type_name<signed short>()
 {
-    return "short";
+    return "signed short";
 }
 
 template <>
-constexpr const char* type_name<char>()
+constexpr const char* type_name<signed char>()
 {
-    return "char";
+    return "signed char";
 }
 
 template <>

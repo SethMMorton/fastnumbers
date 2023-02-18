@@ -527,11 +527,11 @@ void array_impl(
     if (format == "d") {
         return impl.execute<double>();
     } else if (format == "l") {
-        return impl.execute<long>();
+        return impl.execute<signed long>();
     } else if (format == "q") {
-        return impl.execute<long long>();
+        return impl.execute<signed long long>();
     } else if (format == "i") {
-        return impl.execute<int>();
+        return impl.execute<signed int>();
     } else if (format == "f") {
         return impl.execute<float>();
     } else if (format == "L") {
@@ -541,9 +541,9 @@ void array_impl(
     } else if (format == "I") {
         return impl.execute<unsigned int>();
     } else if (format == "h") {
-        return impl.execute<short>();
+        return impl.execute<signed short>();
     } else if (format == "b") {
-        return impl.execute<char>();
+        return impl.execute<signed char>();
     } else if (format == "H") {
         return impl.execute<unsigned short>();
     } else if (format == "B") {

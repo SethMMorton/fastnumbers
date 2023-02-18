@@ -22,15 +22,15 @@ from conftest import base_n
 
 # Map supported data types to the Python array internal format designator
 formats = {
-    "char": "b",
+    "signed char": "b",
     "unsigned char": "B",
-    "short": "h",
+    "signed short": "h",
     "unsigned short": "H",
-    "int": "i",
+    "signed int": "i",
     "unsigned int": "I",
-    "long": "l",
+    "signed long": "l",
     "unsigned long": "L",
-    "long long": "q",
+    "signed long long": "q",
     "unsigned long long": "Q",
     "float": "f",
     "double": "d",
@@ -54,15 +54,15 @@ unsigned_size_extreme = {
 
 # Map all supported data types to the extreme values they support
 extremes = {
-    "char": signed_size_extreme[ctypes.sizeof(ctypes.c_byte)],
+    "signed char": signed_size_extreme[ctypes.sizeof(ctypes.c_byte)],
     "unsigned char": unsigned_size_extreme[ctypes.sizeof(ctypes.c_ubyte)],
-    "short": signed_size_extreme[ctypes.sizeof(ctypes.c_short)],
+    "signed short": signed_size_extreme[ctypes.sizeof(ctypes.c_short)],
     "unsigned short": unsigned_size_extreme[ctypes.sizeof(ctypes.c_ushort)],
-    "int": signed_size_extreme[ctypes.sizeof(ctypes.c_int)],
+    "signed int": signed_size_extreme[ctypes.sizeof(ctypes.c_int)],
     "unsigned int": unsigned_size_extreme[ctypes.sizeof(ctypes.c_uint)],
-    "long": signed_size_extreme[ctypes.sizeof(ctypes.c_long)],
+    "signed long": signed_size_extreme[ctypes.sizeof(ctypes.c_long)],
     "unsigned long": unsigned_size_extreme[ctypes.sizeof(ctypes.c_ulong)],
-    "long long": signed_size_extreme[ctypes.sizeof(ctypes.c_longlong)],
+    "signed long long": signed_size_extreme[ctypes.sizeof(ctypes.c_longlong)],
     "unsigned long long": unsigned_size_extreme[ctypes.sizeof(ctypes.c_ulonglong)],
 }
 
@@ -73,11 +73,11 @@ float_extremes = {
 
 # Create shortcuts to collections of data types to test
 signed_data_types = [
-    "char",
-    "short",
-    "int",
-    "long",
-    "long long",
+    "signed char",
+    "signed short",
+    "signed int",
+    "signed long",
+    "signed long long",
 ]
 unsigned_data_types = [
     "unsigned char",
