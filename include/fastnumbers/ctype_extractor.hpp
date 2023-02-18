@@ -111,11 +111,11 @@ public:
         // Check if there were any error cases, and if so, attempt a value replacement.
         if (errored) {
             if (type_error) {
-                return replace_value(ReplaceType::TYPEERROR, input);
+                return replace_value(ReplaceType::TYPE_ERROR_, input);
             } else if (overflow) {
-                return replace_value(ReplaceType::OVERFLOW, input);
+                return replace_value(ReplaceType::OVERFLOW_, input);
             } else {
-                return replace_value(ReplaceType::FAIL, input);
+                return replace_value(ReplaceType::FAIL_, input);
             }
         }
 
@@ -124,7 +124,7 @@ public:
             if (std::isnan(value) && m_nan.has_value()) {
                 return replace_value(ReplaceType::NAN_, input);
             } else if (std::isinf(value) && m_inf.has_value()) {
-                return replace_value(ReplaceType::INF, input);
+                return replace_value(ReplaceType::INF_, input);
             }
         }
 
@@ -149,7 +149,7 @@ public:
      */
     void set_inf_replacement(PyObject* replacement)
     {
-        add_replacement_to_mapping(ReplaceType::INF, replacement);
+        add_replacement_to_mapping(ReplaceType::INF_, replacement);
     }
 
     /**
@@ -159,7 +159,7 @@ public:
      */
     void set_fail_replacement(PyObject* replacement)
     {
-        add_replacement_to_mapping(ReplaceType::FAIL, replacement);
+        add_replacement_to_mapping(ReplaceType::FAIL_, replacement);
     }
 
     /**
@@ -169,7 +169,7 @@ public:
      */
     void set_overflow_replacement(PyObject* replacement)
     {
-        add_replacement_to_mapping(ReplaceType::OVERFLOW, replacement);
+        add_replacement_to_mapping(ReplaceType::OVERFLOW_, replacement);
     }
 
     /**
@@ -179,17 +179,17 @@ public:
      */
     void set_type_error_replacement(PyObject* replacement)
     {
-        add_replacement_to_mapping(ReplaceType::TYPEERROR, replacement);
+        add_replacement_to_mapping(ReplaceType::TYPE_ERROR_, replacement);
     }
 
 private:
     /// Represent reasons to replace a value
     enum class ReplaceType {
-        INF,
+        INF_,
         NAN_,
-        FAIL,
-        OVERFLOW,
-        TYPEERROR,
+        FAIL_,
+        OVERFLOW_,
+        TYPE_ERROR_,
     };
 
     /// Potential replacement for infinity
@@ -209,11 +209,11 @@ private:
 
     /// Store string representations of the replacement types
     const std::unordered_map<ReplaceType, const char*> m_replace_repr {
-        { ReplaceType::INF, "inf" },
+        { ReplaceType::INF_, "inf" },
         { ReplaceType::NAN_, "nan" },
-        { ReplaceType::FAIL, "on_fail" },
-        { ReplaceType::OVERFLOW, "on_overflow" },
-        { ReplaceType::TYPEERROR, "on_type_error" },
+        { ReplaceType::FAIL_, "on_fail" },
+        { ReplaceType::OVERFLOW_, "on_overflow" },
+        { ReplaceType::TYPE_ERROR_, "on_type_error" },
     };
 
     /// Hold the evaluator options
@@ -228,15 +228,15 @@ private:
     std::optional<std::pair<T, PyObject*>>& get_value(ReplaceType key)
     {
         switch (key) {
-        case ReplaceType::INF:
+        case ReplaceType::INF_:
             return m_inf;
         case ReplaceType::NAN_:
             return m_nan;
-        case ReplaceType::FAIL:
+        case ReplaceType::FAIL_:
             return m_fail;
-        case ReplaceType::OVERFLOW:
+        case ReplaceType::OVERFLOW_:
             return m_overflow;
-        default: // ReplaceType::TYPEERROR:
+        default: // ReplaceType::TYPE_ERROR_:
             return m_type_error;
         }
     }
@@ -256,14 +256,14 @@ private:
         // If the key/value pair was not found in the replacement mapping,
         // that means an error must be raised for this input.
         if (not value.has_value()) {
-            if (key == ReplaceType::FAIL) {
+            if (key == ReplaceType::FAIL_) {
                 PyErr_Format(
                     PyExc_ValueError,
                     "Cannot convert %.200R to C type '%s'",
                     input,
                     type_name<T>()
                 );
-            } else if (key == ReplaceType::OVERFLOW) {
+            } else if (key == ReplaceType::OVERFLOW_) {
                 PyErr_Format(
                     PyExc_OverflowError,
                     "Cannot convert %.200R to C type '%s' without overflowing",

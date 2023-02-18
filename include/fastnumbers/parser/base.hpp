@@ -60,7 +60,7 @@ public:
     bool errored() const { return m_error_type != ErrorType::NONE; }
 
     /// Whether the last conversion (possibly potentially) had an overflow
-    bool overflow() const { return m_error_type == ErrorType::OVERFLOW; }
+    bool overflow() const { return m_error_type == ErrorType::OVERFLOW_; }
 
     /// Whether there is is just a plain-old TypeError
     bool type_error() const
@@ -149,7 +149,7 @@ protected:
     void encountered_conversion_error() { m_error_type = ErrorType::CANNOT_PARSE; }
 
     /// Record that the conversion encountered a (possibly potential) overflow
-    void encountered_overflow() { m_error_type = ErrorType::OVERFLOW; }
+    void encountered_overflow() { m_error_type = ErrorType::OVERFLOW_; }
 
     /// Reset the error state to "no error"
     void reset_error() { m_error_type = ErrorType::NONE; }
@@ -177,7 +177,7 @@ private:
     enum ErrorType {
         NONE,
         CANNOT_PARSE,
-        OVERFLOW,
+        OVERFLOW_,
         TYPE_ERROR,
     };
 
