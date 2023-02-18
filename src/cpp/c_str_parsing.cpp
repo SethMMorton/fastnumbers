@@ -12,10 +12,6 @@
 #include <cstdint>
 #include <cstring>
 
-// FORWARD DECLARATIONS
-static inline bool is_valid_digit_arbitrary_base(const char c, const int base);
-// END FORWARD DECLARATIONS, BEGIN DEFINITITONS
-
 /*********************/
 /* EXPOSED FUNCTIONS */
 /*********************/
@@ -49,7 +45,7 @@ int string_contains_what(const char* str, const char* end, int base)
 
         // The rest behaves as normal.
         const char* digit_start = str;
-        while (str != end && is_valid_digit_arbitrary_base(*str, base)) {
+        while (str != end && is_valid_digit(*str, base)) {
             str += 1;
         }
         return (str == end && str != digit_start) ? INTEGER : INVALID;
@@ -199,9 +195,8 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
         // Now search for simpler valid underscores.
         // use base 36 as the base because it is the most inclusive.
         for (; i < len; i++) {
-            if (str[i] == '_' && i > 0 && i < len - 1
-                && is_valid_digit_arbitrary_base(str[i - 1], 36)
-                && is_valid_digit_arbitrary_base(str[i + 1], 36)) {
+            if (str[i] == '_' && i > 0 && i < len - 1 && is_valid_digit(str[i - 1], 36)
+                && is_valid_digit(str[i + 1], 36)) {
                 offset += 1;
                 continue;
             }
@@ -217,26 +212,5 @@ void remove_valid_underscores(char* str, const char*& end, const bool based)
     // Fill the trailing data with nul characters.
     for (i = len - offset; i < len; i++) {
         str[i] = '\0';
-    }
-}
-
-/**************************/
-/* IMPLEMENTATION DETAILS */
-/**************************/
-
-/**
- * \brief Determine if a character represents a digit in a given base
- *
- * \param c The character to analyze
- * \param base The base to use for digit determination
- */
-bool is_valid_digit_arbitrary_base(const char c, const int base)
-{
-    if (base < 10) {
-        return c >= '0' && c <= (static_cast<int>('0') + base);
-    } else {
-        const char lowered = lowercase(c);
-        const char offset = static_cast<char>(base) - 10;
-        return is_valid_digit(c) || (lowered >= 'a' && lowered <= 'a' + offset);
     }
 }

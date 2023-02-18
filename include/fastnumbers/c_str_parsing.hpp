@@ -40,6 +40,21 @@ constexpr int8_t DIGIT_TABLE[]
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
+constexpr int8_t DIGIT_TABLE_ARBITRARY_BASE[]
+    = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1,
+        -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1, -1, 10, 11, 12,
+        13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+        33, 34, 35, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
 /**
  * \brief Check if a string could be converted to some numeric type
  *
@@ -116,6 +131,18 @@ constexpr inline T to_digit(const char c)
 }
 
 /**
+ * \brief Convert a character to a digit from an arbitrary base, returns -1 on failure.
+ */
+template <typename T>
+constexpr inline T to_digit(const char c, const int base)
+{
+    // Using a table was determined through performance testing to be
+    // three times faster than c - '0' or a switch statement.
+    const int8_t value = DIGIT_TABLE_ARBITRARY_BASE[static_cast<uint8_t>(c)];
+    return static_cast<T>(value < base ? value : -1);
+}
+
+/**
  * \brief Determine if a character represents a digit
  */
 constexpr inline bool is_valid_digit(const char c)
@@ -123,6 +150,16 @@ constexpr inline bool is_valid_digit(const char c)
     // Using a table was determined through performance testing to be
     // faster than std::isdigit or a switch statement.
     return to_digit<int8_t>(c) >= 0;
+}
+
+/**
+ * \brief Determine if a character represents a digit in an arbitrary base
+ */
+constexpr inline bool is_valid_digit(const char c, const int base)
+{
+    // Using a table was determined through performance testing to be
+    // faster than std::isdigit or a switch statement.
+    return to_digit<int8_t>(c, base) >= 0;
 }
 
 /**
