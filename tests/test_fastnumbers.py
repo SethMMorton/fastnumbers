@@ -11,6 +11,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     NoReturn,
     Tuple,
@@ -34,6 +35,7 @@ from pytest import mark, raises
 from typing_extensions import Protocol
 
 import fastnumbers
+from conftest import base_n
 
 parametrize = mark.parametrize
 
@@ -276,21 +278,6 @@ def an_integer(x: float) -> bool:
 
 def not_an_integer(x: float) -> bool:
     return not x.is_integer()
-
-
-def base_n(
-    num: int, b: int, numerals: str = "0123456789abcdefghijklmnopqrstuvwxyz"
-) -> str:
-    """
-    Convert any integer to a Base-N string representation.
-    Shamelessly stolen from http://stackoverflow.com/a/2267428/1399279
-    """
-    neg = num < 0
-    num = abs(num)
-    val = ((num == 0) and numerals[0]) or (
-        base_n(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b]
-    )
-    return "-" + val if neg else val
 
 
 def capture_result(  # type: ignore [no-untyped-def]
@@ -884,6 +871,14 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert isinstance(result, int)
 
     @given(integers().map(repr))
+    @example("-128")
+    @example("127")
+    @example("-32768")
+    @example("32767")
+    @example("-2147483648")
+    @example("2147483647")
+    @example("-9223372036854775808")
+    @example("9223372036854775807")
     @example("40992764608243448035")
     @example("-41538374848935286698640072416676709")
     @example("240278958776173358420034462324117625982")
@@ -924,6 +919,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     funcs = ["try_real", "try_float"]
 
     @given(sampled_from(numeric_not_digit_not_int))
+    @example("\u0F33")  # the only negative unicode character
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_float(
         self, func: Union[TryReal, TryInt, TryForceInt], x: str
@@ -1203,6 +1199,14 @@ class TestTryInt:
             fastnumbers.try_int(x, on_fail=fastnumbers.RAISE)
 
     @given(integers())
+    @example(-128)
+    @example(127)
+    @example(-32768)
+    @example(32767)
+    @example(-2147483648)
+    @example(2147483647)
+    @example(-9223372036854775808)
+    @example(9223372036854775807)
     def test_given_int_string_returns_int_with_non_base_10(self, x: int) -> None:
         for base in range(2, 36 + 1):
             # Avoid recursion error because of overly simple baseN function.
@@ -1793,6 +1797,44 @@ class TestMappingFunctions:
             fastnumbers.map_try_forceint,
         ],
     )
+    def test_mapping_handles_range(self, func: MappingConversionFuncs) -> None:
+        """Range is a sequence but is not a 'fast sequence'"""
+        expected = [0, 1, 2, 3]
+        result = func(range(4))
+        assert result == expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    def test_mapping_handles_broken_generator(
+        self, func: MappingConversionFuncs
+    ) -> None:
+        """A generator's exception should be returned"""
+
+        def broken() -> Iterator[str]:
+            """Not a good generator"""
+            yield "5"
+            yield "6"
+            raise ValueError("Fëanor")
+
+        with raises(ValueError, match="Fëanor"):
+            func(broken())
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
     @parametrize(
         "iterable_gen",
         [
@@ -1808,4 +1850,38 @@ class TestMappingFunctions:
     ) -> None:
         expected: List[Any] = []
         result = func(iterable_gen())
+        assert result == expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    def test_mapping_raises_type_error_on_non_iterable(
+        self, func: MappingConversionFuncs
+    ) -> None:
+        with raises(TypeError, match="'int' object is not iterable"):
+            func(5)  # type: ignore
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.map_try_real,
+            fastnumbers.map_try_float,
+            fastnumbers.map_try_int,
+            fastnumbers.map_try_forceint,
+        ],
+    )
+    @parametrize("style", [list, iter])
+    def test_invalid_types_behave_as_expected(
+        self, func: MappingConversionFuncs, style: Callable[[Any], Any]
+    ) -> None:
+        with raises(TypeError, match="not 'tuple'"):
+            func(style([("Fëanor",)]))
+        expected = [5]
+        result = func(style([("Fëanor",)]), on_type_error=5)
         assert result == expected

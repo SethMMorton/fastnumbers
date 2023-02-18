@@ -1,5 +1,8 @@
 #pragma once
 
+#include <limits>
+#include <type_traits>
+
 #include <Python.h>
 
 #include "fastnumbers/parser/base.hpp"
@@ -38,7 +41,7 @@ public:
     {
         reset_error();
         if (get_number_type() & NumberType::Integer) {
-            return PyLong_FromLong(sign() * m_digit);
+            return PyLong_FromLong(m_digit);
         }
         encountered_conversion_error();
         return nullptr;
@@ -64,18 +67,17 @@ public:
         }
 
         if (force_int) {
-            return (ntype & NumberType::Integer) ? PyLong_FromLong(sign() * m_digit)
-                                                 : PyLong_FromDouble(sign() * m_numeric);
+            return (ntype & NumberType::Integer) ? PyLong_FromLong(m_digit)
+                                                 : PyLong_FromDouble(m_numeric);
         } else if (coerce) {
             return (ntype & NumberType::Integer)
-                ? PyLong_FromLong(sign() * m_digit)
-                : ((ntype & NumberType::IntLike)
-                       ? PyLong_FromDouble(sign() * m_numeric)
-                       : PyFloat_FromDouble(sign() * m_numeric));
+                ? PyLong_FromLong(m_digit)
+                : ((ntype & NumberType::IntLike) ? PyLong_FromDouble(m_numeric)
+                                                 : PyFloat_FromDouble(m_numeric));
         } else {
             return (ntype & NumberType::Integer)
-                ? PyFloat_FromDouble(static_cast<double>(sign() * m_digit))
-                : PyFloat_FromDouble(sign() * m_numeric);
+                ? PyFloat_FromDouble(static_cast<double>(m_digit))
+                : PyFloat_FromDouble(m_numeric);
         }
     }
 
@@ -103,6 +105,52 @@ public:
 
         // If here, the object is not numeric.
         return NumberType::INVALID;
+    }
+
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * This template specialization is for integral types.
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
+    T as_number()
+    {
+        reset_error();
+        if (get_number_type() & NumberType::Integer) {
+            return cast_num_check_overflow<T>(m_digit);
+        }
+        encountered_conversion_error();
+        return static_cast<T>(0);
+    }
+
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * This template specialization is for floating point types.
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <
+        typename T,
+        typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+    T as_number()
+    {
+        reset_error();
+
+        const NumberFlags ntype = get_number_type();
+
+        // Quit here if not a valid number
+        if (!(ntype & (NumberType::Integer | NumberType::Float))) {
+            encountered_conversion_error();
+            return static_cast<T>(0.0);
+        }
+
+        // Cast to the desired output type. No need to worry about overflow
+        // when casting to floating point type, because too big will become
+        // infinity and too small will become zero.
+        return static_cast<T>((ntype & NumberType::Integer) ? m_digit : m_numeric);
     }
 
 private:

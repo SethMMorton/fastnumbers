@@ -7,6 +7,8 @@ import re
 import sys
 import timeit
 
+import numpy as np
+
 import fastnumbers
 
 # If given an file path as an argument, cause print to write
@@ -361,6 +363,17 @@ def fn_map(iterable, func=fastnumbers.try_float):
     return list(map(func, iterable))
 
 
+def fn_then_array(iterable, func=fastnumbers.map_try_float):
+    return np.array(func(iterable), dtype=np.float64)
+
+
+output = np.empty(50, dtype=np.float64)
+
+
+def fn_into_array(iterable, func=fastnumbers.try_array, out=output):
+    func(iterable, out)
+
+
 print(sys.version_info)
 print()
 
@@ -458,6 +471,30 @@ timer.add_function(
     "map_try_float",
     "map_try_float(iterable)",
     "from fastnumbers import map_try_float",
+    iterable=True,
+)
+timer.time_functions()
+
+timer = Timer(
+    "Timing comparison of `try_array` vs. `map_try_float` "
+    "for a 50 element list to a numpy array"
+)
+timer.add_function(
+    "fn_then_array",
+    "np.array(map_try_float(iterable))",
+    "from __main__ import fn_then_array; import numpy as np",
+    iterable=True,
+)
+timer.add_function(
+    "try_array",
+    "try_array(iterable)",
+    "from fastnumbers import try_array",
+    iterable=True,
+)
+timer.add_function(
+    "fn_into_array",
+    "try_array(iterable, output)",
+    "from __main__ import fn_into_array",
     iterable=True,
 )
 timer.time_functions()

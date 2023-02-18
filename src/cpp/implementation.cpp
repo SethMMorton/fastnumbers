@@ -2,12 +2,16 @@
  * This file contains the high-level implementations for the Python-exposed functions
  */
 #include <limits>
+#include <string_view>
 
 #include <Python.h>
 
+#include "fastnumbers/ctype_extractor.hpp"
 #include "fastnumbers/evaluator.hpp"
+#include "fastnumbers/exception.hpp"
 #include "fastnumbers/extractor.hpp"
 #include "fastnumbers/implementation.hpp"
+#include "fastnumbers/iteration.hpp"
 #include "fastnumbers/parser.hpp"
 #include "fastnumbers/payload.hpp"
 #include "fastnumbers/resolver.hpp"
@@ -403,4 +407,155 @@ PyObject* type_query_impl(
     // Return the type of the input
     Py_IncRef(found_type);
     return found_type;
+}
+
+// Implementation for iterating over a collection to populate a list
+PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+{
+    // Create a python list into which to store the return values
+    ListBuilder list_builder(input);
+
+    // The helper for iterating over the Python iterable
+    IterableManager<PyObject*> iter_manager(input, convert);
+
+    // For each element in the Python iterable, convert it and append to the list
+    for (auto& value : iter_manager) {
+        list_builder.append(value);
+    }
+
+    // Return the list to the user
+    return list_builder.get();
+}
+
+/**
+ * \struct ArrayImpl
+ * \brief Executor of array population, manages Python memory buffer
+ */
+struct ArrayImpl {
+    /// The input object as given by Python
+    PyObject* m_input;
+
+    /// The output object, represented as a memory view buffer
+    Py_buffer& m_output;
+
+    /// The action to take if INF is found
+    PyObject* m_inf;
+
+    /// The action to take if NaN is found
+    PyObject* m_nan;
+
+    /// The action to take if input is invalid
+    PyObject* m_on_fail;
+
+    /// The action to take if input overflows
+    PyObject* m_on_overflow;
+
+    /// The action to take if input is of incorrect type
+    PyObject* m_on_type_error;
+
+    /// Whether or not to allow underscores in strings
+    bool m_allow_underscores;
+
+    /// The base to use when parsing integers
+    int m_base;
+
+    /// Release the Python memoryview buffer
+    ~ArrayImpl() { PyBuffer_Release(&m_output); }
+
+    /// Perform the actual array population logic
+    template <typename T>
+    void execute()
+    {
+        UserOptions options;
+        options.set_base(m_base);
+        options.set_underscores_allowed(m_allow_underscores);
+
+        // Define how a Python object can be converted into a C number type
+        CTypeExtractor<T> extractor(options);
+        extractor.set_inf_replacement(m_inf);
+        extractor.set_nan_replacement(m_nan);
+        extractor.set_fail_replacement(m_on_fail);
+        extractor.set_overflow_replacement(m_on_overflow);
+        extractor.set_type_error_replacement(m_on_type_error);
+
+        // Define how we convert each element of the iterable
+        IterableManager<T> iter_man(m_input, [&extractor](PyObject* x) -> T {
+            return extractor.extract_c_number(x);
+        });
+
+        // Create a handler for inserting data into the output memory buffer
+        ArrayPopulator pop(m_output, iter_man.get_size());
+
+        // Iterate over the input data, convert it, and place it in the output
+        for (const auto& value : iter_man) {
+            pop.place_next(value);
+        }
+    }
+};
+
+// Implementation for iterating over a collection to populate an array
+void array_impl(
+    PyObject* input,
+    PyObject* output,
+    PyObject* inf,
+    PyObject* nan,
+    PyObject* on_fail,
+    PyObject* on_overflow,
+    PyObject* on_type_error,
+    bool allow_underscores,
+    int base
+)
+{
+    // Extract the underlying buffer data from the output object
+    Py_buffer buf { nullptr, nullptr };
+    constexpr auto flags = PyBUF_WRITABLE | PyBUF_STRIDES | PyBUF_FORMAT;
+    if (PyObject_GetBuffer(output, &buf, flags) != 0) {
+        // This should be impossible to encounter because of guards in the python code
+        throw exception_is_set();
+    }
+
+    // Pass on all arguments to the actual implementation
+    // NOTE: This will manage the buffer object for us
+    ArrayImpl impl {
+        input, buf, inf, nan, on_fail, on_overflow, on_type_error, allow_underscores,
+        base,
+    };
+
+    // Use the format to determine the code path to execute
+    // Attempt to order this if-branch by anticipated frequency of use
+    const std::string_view format(buf.format == nullptr ? "<NULL>" : buf.format);
+    if (format == "d") {
+        return impl.execute<double>();
+    } else if (format == "l") {
+        return impl.execute<signed long>();
+    } else if (format == "q") {
+        return impl.execute<signed long long>();
+    } else if (format == "i") {
+        return impl.execute<signed int>();
+    } else if (format == "f") {
+        return impl.execute<float>();
+    } else if (format == "L") {
+        return impl.execute<unsigned long>();
+    } else if (format == "Q") {
+        return impl.execute<unsigned long long>();
+    } else if (format == "I") {
+        return impl.execute<unsigned int>();
+    } else if (format == "h") {
+        return impl.execute<signed short>();
+    } else if (format == "b") {
+        return impl.execute<signed char>();
+    } else if (format == "H") {
+        return impl.execute<unsigned short>();
+    } else if (format == "B") {
+        return impl.execute<unsigned char>();
+    }
+
+    // This should be impossible to encounter because of guards in the python code
+    PyErr_Format(
+        PyExc_TypeError,
+        "Unknown buffer format '%s' for object '%.200R'",
+        buf.format,
+        output
+    );
+    throw exception_is_set();
 }

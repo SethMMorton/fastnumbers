@@ -40,26 +40,6 @@ public:
         , m_pyval(nullptr)
     { }
 
-    /// Construct the payload with a double.
-    explicit Payload(const double val)
-        : m_actval(ActionType::PY_OBJECT)
-        , m_pyval(PyFloat_FromDouble(val))
-    { }
-
-    /// Construct the payload with a double that needs to be be converted to an int.
-    explicit Payload(const double val, const bool needs_int_conversion)
-        : m_actval(ActionType::PY_OBJECT)
-        , m_pyval(
-              needs_int_conversion ? PyLong_FromDouble(val) : PyFloat_FromDouble(val)
-          )
-    { }
-
-    /// Construct the payload with a long.
-    explicit Payload(const long val)
-        : m_actval(ActionType::PY_OBJECT)
-        , m_pyval(PyLong_FromLong(val))
-    { }
-
     /// Construct the payload with a PyObject*.
     explicit Payload(PyObject* val)
         : m_actval(ActionType::PY_OBJECT)

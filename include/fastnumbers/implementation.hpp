@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <limits>
 
 #include <Python.h>
@@ -196,4 +197,38 @@ PyObject* type_query_impl(
     const PyObject* nan,
     const bool allow_underscores,
     const bool coerce
+);
+
+/**
+ * \brief Iterate over the elements of a collection and convert each one
+ *
+ * \param input The given input object that should be iterable
+ * \param convert A function accepting a single argument that performs the conversion
+ * \return A new python list containing the converted results, or nullptr on error
+ */
+PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert);
+
+/**
+ * \brief Iterate over the elements of a collection and convert each one
+ *
+ * \param input The given input object that should be iterable
+ * \param output The object containing the array to populate
+ * \param inf The object specifying what action to take if INF is found
+ * \param nan The object specifying what action to take if NaN is found
+ * \param on_fail The object specifying what action to take on conversion failure
+ * \param on_overflow The object specifying what action to take on overflow
+ * \param on_type_error The object specifying what action to take on type error
+ * \param allow_underscores Whether or not it is OK for numbers to contain underscores
+ * \param base The integer base use when parsing ints, use INT_MIN for default
+ */
+void array_impl(
+    PyObject* input,
+    PyObject* output,
+    PyObject* inf,
+    PyObject* nan,
+    PyObject* on_fail,
+    PyObject* on_overflow,
+    PyObject* on_type_error,
+    bool allow_underscores,
+    const int base = std::numeric_limits<int>::min()
 );

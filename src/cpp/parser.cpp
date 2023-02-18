@@ -1,10 +1,16 @@
+#include <cstdint>
+#include <limits>
+#include <type_traits>
+
+#include <Python.h>
+
 #include "fastnumbers/buffer.hpp"
 #include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/character.hpp"
+#include "fastnumbers/parser/numeric.hpp"
+#include "fastnumbers/parser/unicode.hpp"
 #include "fastnumbers/user_options.hpp"
-#include <Python.h>
-#include <limits>
 
 /**
  * \brief Remove whitespace at the end of a string
@@ -41,14 +47,13 @@ CharacterParser::CharacterParser(
     const bool explict_base_allowed
 )
     : Parser(ParserType::CHARACTER, options, explict_base_allowed)
-    , m_start(nullptr)
-    , m_start_orig(nullptr)
-    , m_end_orig(nullptr)
+    , m_start(str)
+    , m_start_orig(str)
+    , m_end_orig(str + len)
     , m_str_len(0)
 {
-    // Store the start and end point of the character array
-    m_start = m_start_orig = str;
-    const char* end = m_end_orig = str + len;
+    // Store the end point of the character array
+    const char* end = m_end_orig;
 
     // Strip leading whitespace
     while (is_whitespace(*m_start)) {
@@ -66,6 +71,15 @@ CharacterParser::CharacterParser(
         set_negative();
     }
 
+    // We can only have a sign here if there are two consecutive signs.
+    // Two or more signs is illegal - let's treat it as such.
+    // Reset the start to before the first sign.
+    // All parsers will treat this as illegal now.
+    if (is_sign(*m_start)) {
+        m_start -= 1;
+        set_negative(false);
+    }
+
     // Calculate the length of the string after accounting for
     // whitespace and signs
     m_str_len = static_cast<std::size_t>(end - m_start);
@@ -79,23 +93,31 @@ PyObject* CharacterParser::as_pyint()
     // so that we can determine if the integer was at least valid.
     // If it was valid but overflowed, we use Python's parser, otherwise
     // return an error.
-    // The only thing special handling we need is underscores.
+    // The only thing special handling we need is underscores or base prefixes
+    // with negative signs that caused overflow.
     bool error;
     bool overflow;
-    int64_t result = parse_int(m_start, end(), options().get_base(), error, overflow);
-    if (error && has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
+    int64_t result = parse_int<int64_t>(
+        signed_start(), end(), options().get_base(), error, overflow
+    );
+    const bool underscore_error = error && has_valid_underscores();
+    const bool prefix_overflow = overflow && has_base_prefix(m_start, m_str_len);
+    if (underscore_error || prefix_overflow) {
+        Buffer buffer(signed_start(), signed_len());
         buffer.remove_valid_underscores(options().get_base() != 10);
-        result = parse_int(
-            buffer.start(), buffer.end(), options().get_base(), error, overflow
-        );
+        int base = options().get_base();
+        if (base == 0) {
+            base = detect_base(buffer.start(), buffer.end());
+        }
+        buffer.remove_base_prefix();
+        result = parse_int<int64_t>(buffer.start(), buffer.end(), base, error, overflow);
     }
     if (error) {
         encountered_conversion_error();
         return nullptr;
     }
     if (!overflow) {
-        return pyobject_from_int64(sign() * result);
+        return pyobject_from_int64(result);
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
@@ -107,30 +129,9 @@ PyObject* CharacterParser::as_pyint()
     return retval;
 }
 
-double CharacterParser::as_double()
-{
-    reset_error();
-
-    // The C++ parser is robust enough to handle any double properly,
-    // so there is no need to fall back on Python's parser.
-    // The only thing special handling we need is underscores.
-    bool error;
-    double result = parse_float(m_start, end(), error);
-    if (error && has_valid_underscores()) {
-        Buffer buffer(m_start, m_str_len);
-        buffer.remove_valid_underscores();
-        result = parse_float(buffer.start(), buffer.end(), error);
-    }
-    if (error) {
-        encountered_conversion_error();
-        return -1.0;
-    }
-    return sign() * result;
-}
-
 PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)
 {
-    const double result = as_double();
+    const double result = as_number<double>();
 
     // Fail fast on error
     if (errored()) {

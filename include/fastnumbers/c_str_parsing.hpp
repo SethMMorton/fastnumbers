@@ -1,9 +1,15 @@
 #pragma once
 
-#include "fastnumbers/third_party/fast_float.h"
-#include <cctype>
+#include <charconv>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
+#include <system_error>
+#include <type_traits>
+#include <vector>
+
+#include "fastnumbers/third_party/fast_float.h"
 
 /// Table of what characters are classified as whitespace
 constexpr bool WHITESPACE_TABLE[]
@@ -19,7 +25,7 @@ constexpr bool WHITESPACE_TABLE[]
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /// Table of what characters are classified as digits
-constexpr int DIGIT_TABLE[]
+constexpr int8_t DIGIT_TABLE[]
     = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1,
@@ -33,31 +39,6 @@ constexpr int DIGIT_TABLE[]
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-
-/**
- * \brief Convert a string to a 64-bit int type
- *
- * Assumes no sign or whitespace. No overflow checking is performed.
- *
- * \param str The string to parse, assumed to be non-NULL
- * \param end The end of the string being checked
- * \param base The base to assume when checking an integer, 0 is "guess".
- * \param error Flag to indicate if there was a parsing error
- * \param overflow Flag to indicate if the string was long enough to overflow
- */
-int64_t
-parse_int(const char* str, const char* end, int base, bool& error, bool& overflow);
-
-/**
- * \brief Convert a string to a double type
- *
- * Assumes no sign or whitespace. No overflow checking is performed.
- *
- * \param str The string to parse, assumed to be non-NULL
- * \param end The end of the string being checked
- * \param error Flag to indicate if there was a parsing error
- */
-double parse_float(const char* str, const char* end, bool& error);
 
 /**
  * \brief Check if a string could be converted to some numeric type
@@ -141,7 +122,7 @@ constexpr inline bool is_valid_digit(const char c)
 {
     // Using a table was determined through performance testing to be
     // faster than std::isdigit or a switch statement.
-    return to_digit<int>(c) >= 0;
+    return to_digit<int8_t>(c) >= 0;
 }
 
 /**
@@ -206,6 +187,14 @@ constexpr inline bool is_base_prefix(const char c, const int base)
     const char lowered = lowercase(c);
     return (base == 16 && (lowered == 'x')) || (base == 8 && (lowered == 'o'))
         || (base == 2 && (lowered == 'b'));
+}
+
+/**
+ * \brief Determine if a string begins with a base prefix
+ */
+constexpr inline bool has_base_prefix(const char* str, const std::size_t len)
+{
+    return len > 2 && str[0] == '0' && is_base_prefix(str[1]);
 }
 
 /**
@@ -283,4 +272,228 @@ constexpr inline bool quick_detect_nan(const char* str, const std::size_t len)
 constexpr inline bool is_likely_int(const char* str, std::size_t len)
 {
     return len > 0 && is_valid_digit(*str);
+}
+
+/**
+ * \brief Check the number of zeros at the end of a number
+ *
+ * \param str The string to check, assumed to be non-NULL
+ * \param end The end of the string being checked
+ * \return The number of zeros
+ */
+constexpr inline uint32_t number_trailing_zeros(const char* start, const char* end)
+{
+    uint32_t n = 0;
+    for (end = end - 1; end >= start; --end) {
+        if (*end == '0') {
+            n += 1;
+        } else {
+            break;
+        }
+    }
+    return n;
+}
+
+/**
+ * \brief Auto-detect the base of the given integer string
+ *
+ * \param str The string to check, assumed to be non-NULL
+ * \param end The end of the string being checked
+ * \return The dectected base, possibly 2, 8, 10, 16, or -1 on error
+ */
+constexpr inline int detect_base(const char* str, const char* end)
+{
+    if (str[0] == '-') // Skip leading negative sign
+        str += 1;
+    const std::size_t len = static_cast<std::size_t>(end - str);
+    if (str[0] != '0' || len == 1) {
+        return 10;
+    }
+
+    const char lowered = lowercase(str[1]);
+    if (lowered == 'x') {
+        return 16;
+    } else if (lowered == 'o') {
+        return 8;
+    } else if (lowered == 'b') {
+        return 2;
+    } else {
+        /* "old" (C-style) octal literal illegal in 3.x. */
+        if (number_trailing_zeros(str, end) == len) {
+            return 10;
+        } else {
+            return -1;
+        }
+    }
+}
+
+/**
+ * \brief Return the number of digits an integer type can safely parse without overflow
+ */
+template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
+constexpr inline int8_t overflow_cutoff()
+{
+    // len('std::numeric_limits<T>::max()') - 1 == return value
+    constexpr uint64_t limit = static_cast<uint64_t>(std::numeric_limits<T>::max());
+    if constexpr (limit == 18446744073709551615ULL) {
+        return 19;
+    } else if constexpr (limit == 9223372036854775807ULL) {
+        return 18;
+    } else if constexpr (limit == 2147483647ULL) {
+        return 9;
+    } else if constexpr (limit == 4294967295ULL) {
+        return 9;
+    } else if constexpr (limit == 32767ULL) {
+        return 4;
+    } else if constexpr (limit == 65535ULL) {
+        return 4;
+    } else if constexpr (limit == 127ULL) {
+        return 2;
+    } else if constexpr (limit == 255ULL) {
+        return 2;
+    } else {
+        return 0; // be safe - should never be encountered
+    }
+}
+
+/**
+ * \brief Convert a string to an int type
+ *
+ * Assumes no whitespace, and only a single '-' is allowed.
+ *
+ * \param str The string to parse, assumed to be non-NULL
+ * \param end The end of the string being checked
+ * \param base The base to assume when checking an integer, 0 is "guess".
+ * \param error Flag to indicate if there was a parsing error
+ * \param overflow Flag to indicate if the string was long enough to overflow
+ * \param always_convert
+ */
+template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
+T parse_int(
+    const char* str,
+    const char* end,
+    int base,
+    bool& error,
+    bool& overflow,
+    bool always_convert = false
+)
+{
+    // Remember if we are negative.
+    const bool is_negative = *str == '-';
+    const std::size_t negative_offset = static_cast<std::size_t>(is_negative);
+    str += negative_offset;
+
+    // For unsigned values that are negative, quit now with an overflow error.
+    if constexpr (std::is_unsigned_v<T>) {
+        if (is_negative) {
+            overflow = true;
+            error = false;
+            return static_cast<T>(0);
+        }
+    }
+
+    // The length of the string will be useful below.
+    const std::size_t len = static_cast<std::size_t>(end - str);
+
+    // If the base needs to be guessed, do so now and get it over with.
+    if (base == 0) {
+        base = detect_base(str, end);
+    }
+
+    // Negative bases are illegal. So is zero-length.
+    if (base < 0 || len == 0) {
+        overflow = false;
+        error = true;
+        return static_cast<T>(0);
+    }
+
+    // We use our own method for base-10 because we can omit some overflow
+    // checking and get faster results.
+    //
+    // We just assume overflow if the length of the string is over a certain value.
+    overflow = len > static_cast<std::size_t>(overflow_cutoff<T>());
+
+    // Use std::from_chars for all but base-10.
+    if (base != 10 || (overflow && always_convert)) {
+        // Skip leading characters for non-base 10 ints.
+        // If we did not have to do that, replace a '-' if we had one.
+        bool had_base_prefix = false;
+        if (len > 1 && str[0] == '0' && is_base_prefix(str[1], base)) {
+            str += 2;
+            had_base_prefix = true;
+        } else {
+            str -= negative_offset;
+        }
+
+        // Use a very fast and accurate string to integer parser
+        // that will report back if there was an overflow (which
+        // we propagete back to the user).
+        T value = static_cast<T>(0);
+        std::from_chars_result res = std::from_chars(str, end, value, base);
+        error = res.ptr != end || res.ec == std::errc::invalid_argument;
+        overflow = res.ec == std::errc::result_out_of_range;
+        if constexpr (std::is_signed_v<T>) {
+            return had_base_prefix && is_negative ? -value : value;
+        } else {
+            return value;
+        }
+    }
+
+    // If an overflow is going to happen, just evaluate that this looks like
+    // an integer. Otherwise, actually calculate the value contained in the string.
+    T value = static_cast<T>(0);
+    if (overflow) {
+        consume_digits(str, len);
+    } else {
+        // Attempt to read eight characters at a time and parse as digits.
+        // Loop over the character array in steps of eight. Stop processing
+        // if not all eight characters are digits.
+        if constexpr (overflow_cutoff<T>() > 8) {
+            const std::size_t number_of_eights = len / 8;
+            for (std::size_t i = 0; i < number_of_eights; ++i) {
+                if (fast_float::is_made_of_eight_digits_fast(str)) {
+                    value = value * 100000000
+                        + fast_float::parse_eight_digits_unrolled(str);
+                    str += 8;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // Convert digits the remaining digits one-at-a-time.
+        int8_t this_char_as_digit = 0;
+        while (str != end && (this_char_as_digit = to_digit<int8_t>(*str)) >= 0) {
+            value = value * 10 + this_char_as_digit;
+            str += 1;
+        }
+    }
+    error = str != end;
+    if constexpr (std::is_signed_v<T>) {
+        return is_negative ? -value : value;
+    } else {
+        return value;
+    }
+}
+
+/**
+ * \brief Convert a string to a double type
+ *
+ * Assumes no whitespace, and only a single '-' is allowed.
+ * Overflows go to infinity. Underflows go to zero.
+ *
+ * \param str The string to parse, assumed to be non-NULL
+ * \param end The end of the string being checked
+ * \param error Flag to indicate if there was a parsing error
+ */
+template <
+    typename T,
+    typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+T parse_float(const char* str, const char* end, bool& error)
+{
+    // Use a very fast and accurate string-to-floating point parser
+    T value;
+    const fast_float::from_chars_result res = fast_float::from_chars(str, end, value);
+    error = !(res.ptr == end && res.ec == std::errc());
+    return value;
 }

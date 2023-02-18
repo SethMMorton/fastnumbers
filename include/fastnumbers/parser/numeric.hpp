@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <type_traits>
 
 #include <Python.h>
 
@@ -12,10 +13,6 @@
  * \brief Parses numeric python objects
  */
 class NumericParser final : public Parser {
-public:
-    /// Cached instance of zero for use in identifying negative numbers
-    static PyObject* PYTHON_ZERO;
-
 public:
     /// Construct with a Python object
     explicit NumericParser(PyObject* obj, const UserOptions& options)
@@ -30,10 +27,12 @@ public:
         Py_INCREF(m_obj);
 
         // Record the sign
+        // XXX: We are cheating a bit here - we are only getting the sign
+        // for simple floats because we *know* that that is the only time
+        // the sign is used for numbers. Otherwise, we would have to spend
+        // more effort getting the sign for all cases.
         if (flags & NumberType::Float && !(flags & NumberType::User)) {
             set_negative(get_double() < 0);
-        } else if (!(flags & (NumberType::INVALID | NumberType::User))) {
-            set_negative(PyObject_RichCompareBool(m_obj, PYTHON_ZERO, Py_LT));
         }
     }
 
@@ -120,6 +119,65 @@ public:
         return NumberType::INVALID;
     }
 
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T>
+    T as_number()
+    {
+        // Special handling for floating point numbers
+        if constexpr (std::is_floating_point_v<T>) {
+            // Fast path if we know it is not numeric
+            if (!(get_number_type() & (NumberType::Float | NumberType::Integer))) {
+                encountered_conversion_error();
+                return 0.0;
+            }
+
+            // Otherwise use the Python conversion function - this should handle
+            // converting integers to double as well. Watch out for errors here too.
+            const double value = PyFloat_AsDouble(m_obj);
+            if (value == -1.0 && PyErr_Occurred()) {
+                encountered_conversion_error();
+                PyErr_Clear();
+                return 0.0;
+            }
+
+            // Don't worry about overflow on casting to a smaller type because
+            // too big will just become infinity, too small becomes zero.
+            return static_cast<T>(value);
+        } else {
+            // Fast path if we know it is not numeric
+            if (!(get_number_type() & NumberType::Integer)) {
+                encountered_conversion_error();
+                return 0;
+            }
+
+            // Use special logic for the largest types, otherwise use a generic logic.
+            if constexpr (std::is_same_v<T, long long>) {
+                return check_for_error_py<long long>(
+                    m_obj, PyLong_AsLongLongAndOverflow
+                );
+            } else if constexpr (std::is_same_v<T, unsigned long long>) {
+                return check_for_error_py(PyLong_AsUnsignedLongLong(m_obj));
+            } else if constexpr (std::is_signed_v<T>) {
+                return cast_num_check_overflow<T>(
+                    check_for_error_py<long>(m_obj, PyLong_AsLongAndOverflow)
+                );
+            } else if constexpr (std::is_unsigned_v<T>) {
+                return cast_num_check_overflow<T>(
+                    check_for_error_py<unsigned long>(PyLong_AsUnsignedLong(m_obj))
+                );
+            } else {
+                static_assert(
+                    !std::is_integral_v<T>,
+                    "invalid type given to NumericParser::as_number()"
+                );
+            }
+        }
+    }
+
 private:
     /// The Python object potentially under analysis
     PyObject* m_obj;
@@ -146,5 +204,39 @@ private:
     static constexpr NumberFlags flag_wrap(const NumberFlags val)
     {
         return NumberType::FromNum | val;
+    }
+
+    /// Helper for performing error checking
+    template <typename T>
+    T check_for_error_py(T value)
+    {
+        if (value == static_cast<T>(-1) && PyErr_Occurred()) {
+            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                encountered_overflow();
+            } else {
+                encountered_conversion_error();
+            }
+            PyErr_Clear();
+            return static_cast<T>(0);
+        }
+        return value;
+    }
+
+    /// Helper for performing error checking
+    template <typename T, typename Function>
+    T check_for_error_py(PyObject* obj, Function func)
+    {
+        int overflow = false;
+        const T value = func(m_obj, &overflow);
+        if (overflow) {
+            encountered_overflow();
+            return 0;
+        }
+        if (value == static_cast<T>(-1) && PyErr_Occurred()) {
+            PyErr_Clear();
+            encountered_conversion_error();
+            return static_cast<T>(0);
+        }
+        return value;
     }
 };

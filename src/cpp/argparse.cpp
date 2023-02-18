@@ -287,7 +287,7 @@ int _fn_parse_arguments(
         len_kwargs = PyTuple_GET_SIZE(kwnames);
         max_nargs = cache->nargs;
 
-        for (int i = len_args; i < cache->nargs; i++) {
+        for (Py_ssize_t i = len_args; i < cache->nargs; i++) {
             all_arguments[i] = NULL;
         }
 

@@ -6,3 +6,18 @@ import hypothesis
 hypothesis.settings.register_profile(
     "slow-tests", suppress_health_check=[hypothesis.HealthCheck.too_slow]
 )
+
+
+def base_n(
+    num: int, b: int, numerals: str = "0123456789abcdefghijklmnopqrstuvwxyz"
+) -> str:
+    """
+    Convert any integer to a Base-N string representation.
+    Shamelessly stolen from http://stackoverflow.com/a/2267428/1399279
+    """
+    neg = num < 0
+    num = abs(num)
+    val = ((num == 0) and numerals[0]) or (
+        base_n(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b]
+    )
+    return "-" + val if neg else val
