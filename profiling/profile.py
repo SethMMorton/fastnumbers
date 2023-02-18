@@ -367,9 +367,10 @@ def fn_then_array(iterable, func=fastnumbers.map_try_float):
     return np.array(func(iterable), dtype=np.float64)
 
 
-def fn_into_array(
-    iterable, func=fastnumbers.try_array, out=np.empty(50, dtype=np.float64)
-):
+output = np.empty(50, dtype=np.float64)
+
+
+def fn_into_array(iterable, func=fastnumbers.try_array, out=output):
     func(iterable, out)
 
 

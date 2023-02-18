@@ -2,6 +2,7 @@ import array
 import ctypes
 import typing
 
+import numpy as np
 import pytest
 from hypothesis import given as hyp_given
 from hypothesis.strategies import (
@@ -11,8 +12,6 @@ from hypothesis.strategies import (
     lists,
     text,
 )
-
-import numpy as np
 
 import fastnumbers
 from conftest import base_n
@@ -214,7 +213,7 @@ class TestReplacements:
             KwargsType(on_type_error=0),
         ],
     )
-    def test_int_replacement_type_for_float_is_OK(
+    def test_int_replacement_type_for_float_is_ok(
         self, data_type: str, kwargs: KwargsType
     ) -> None:
         given = [0, 1]

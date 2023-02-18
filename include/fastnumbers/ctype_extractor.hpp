@@ -2,8 +2,8 @@
 
 #include <cmath>
 #include <cstring>
-#include <type_traits>
 #include <optional>
+#include <type_traits>
 #include <utility>
 
 #include <Python.h>
@@ -225,7 +225,8 @@ private:
 private:
     /// Return the object that corresponds to the user's requested key -
     /// the return is a reference so it can be edited
-    std::optional<std::pair<T, PyObject*>>& get_value(ReplaceType key) {
+    std::optional<std::pair<T, PyObject*>>& get_value(ReplaceType key)
+    {
         switch (key) {
         case ReplaceType::INF:
             return m_inf;
@@ -235,7 +236,7 @@ private:
             return m_fail;
         case ReplaceType::OVERFLOW:
             return m_overflow;
-        default:  // ReplaceType::TYPEERROR:
+        default: // ReplaceType::TYPEERROR:
             return m_type_error;
         }
     }
