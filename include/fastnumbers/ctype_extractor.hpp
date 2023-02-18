@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <map>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -208,7 +209,7 @@ private:
     std::optional<std::pair<T, PyObject*>> m_type_error;
 
     /// Store string representations of the replacement types
-    const std::unordered_map<ReplaceType, const char*> m_replace_repr {
+    const std::map<ReplaceType, const char*> m_replace_repr {
         { ReplaceType::INF_, "inf" },
         { ReplaceType::NAN_, "nan" },
         { ReplaceType::FAIL_, "on_fail" },
