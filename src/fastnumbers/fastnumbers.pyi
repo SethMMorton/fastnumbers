@@ -12,6 +12,8 @@ from typing import (
 
 from typing_extensions import Protocol
 
+from . import ALLOWED_T, DISALLOWED_T, INPUT_T, RAISE_T, STRING_ONLY_T, NUMBER_ONLY_T
+
 __version__: str
 
 class HasIndex(Protocol):
@@ -44,22 +46,8 @@ Nan = TypeVar("Nan")
 TransformType = TypeVar("TransformType")
 TransformType2 = TypeVar("TransformType2")
 
-ALLOWED_T = NewType("ALLOWED_T", object)
-DISALLOWED_T = NewType("DISALLOWED_T", object)
-INPUT_T = NewType("INPUT_T", object)
-RAISE_T = NewType("RAISE_T", object)
-STRING_ONLY_T = NewType("STRING_ONLY_T", object)
-NUMBER_ONLY_T = NewType("NUMBER_ONLY_T", object)
 ConsiderType = STRING_ONLY_T | NUMBER_ONLY_T | None
 InfNanCheckType = STRING_ONLY_T | NUMBER_ONLY_T | ALLOWED_T | DISALLOWED_T
-
-# Selectors
-ALLOWED: ALLOWED_T
-DISALLOWED: DISALLOWED_T
-INPUT: INPUT_T
-RAISE: RAISE_T
-STRING_ONLY: STRING_ONLY_T
-NUMBER_ONLY: NUMBER_ONLY_T
 
 # Try real
 @overload
