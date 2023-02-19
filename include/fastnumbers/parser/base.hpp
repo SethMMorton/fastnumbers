@@ -8,6 +8,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/helpers.hpp"
 #include "fastnumbers/third_party/EnumClass.h"
 #include "fastnumbers/user_options.hpp"
 
@@ -219,7 +220,7 @@ protected:
             if constexpr (t1_max < t2_max) {
                 if constexpr (std::is_signed_v<T1>) { // T2 is unsigned
                     static_assert(
-                        std::is_signed_v<T1> && std::is_unsigned_v<T2>,
+                        always_false_v<T1> && always_false_v<T2>,
                         "cast from unsigned to signed not supported"
                     );
                 } else { // T2 is signed, T1 unsigned

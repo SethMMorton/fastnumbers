@@ -5,6 +5,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/helpers.hpp"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/user_options.hpp"
 
@@ -171,8 +172,7 @@ public:
                 );
             } else {
                 static_assert(
-                    !std::is_integral_v<T>,
-                    "invalid type given to NumericParser::as_number()"
+                    always_false_v<T>, "invalid type given to NumericParser::as_number()"
                 );
             }
         }
