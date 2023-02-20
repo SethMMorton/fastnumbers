@@ -2,9 +2,9 @@
 
 #include <cmath>
 #include <map>
-#include <optional>
 #include <type_traits>
 #include <utility>
+#include <variant>
 
 #include <Python.h>
 
@@ -89,9 +89,9 @@ public:
 
         // For float types, attempt to replace NaN and INF if that is so desired.
         if constexpr (std::is_floating_point_v<T>) {
-            if (std::isnan(value) && m_nan.has_value()) {
+            if (std::isnan(value) && !std::holds_alternative<std::monostate>(m_nan)) {
                 return replace_value(ReplaceType::NAN_, input);
-            } else if (std::isinf(value) && m_inf.has_value()) {
+            } else if (std::isinf(value) && !std::holds_alternative<std::monostate>(m_inf)) {
                 return replace_value(ReplaceType::INF_, input);
             }
         }
@@ -160,20 +160,23 @@ private:
         TYPE_ERROR_,
     };
 
+    /// The value (or Python callable to generate a value) to use on replacement
+    using ReplaceValue = std::variant<std::monostate, T, PyObject*>;
+
     /// Potential replacement for infinity
-    std::optional<std::pair<T, PyObject*>> m_inf;
+    ReplaceValue m_inf;
 
     /// Potential replacement for NaN
-    std::optional<std::pair<T, PyObject*>> m_nan;
+    ReplaceValue m_nan;
 
     /// Potential replacement for invalid values
-    std::optional<std::pair<T, PyObject*>> m_fail;
+    ReplaceValue m_fail;
 
     /// Potential replacement for overflows
-    std::optional<std::pair<T, PyObject*>> m_overflow;
+    ReplaceValue m_overflow;
 
     /// Potential replacement for invalid types
-    std::optional<std::pair<T, PyObject*>> m_type_error;
+    ReplaceValue m_type_error;
 
     /// Store string representations of the replacement types
     const std::map<ReplaceType, const char*> m_replace_repr {
@@ -193,7 +196,7 @@ private:
 private:
     /// Return the object that corresponds to the user's requested key -
     /// the return is a reference so it can be edited
-    std::optional<std::pair<T, PyObject*>>& get_value(ReplaceType key)
+    ReplaceValue& get_value(ReplaceType key)
     {
         switch (key) {
         case ReplaceType::INF_:
@@ -218,106 +221,116 @@ private:
      */
     T replace_value(ReplaceType key, PyObject* input)
     {
-        // Locate the value in the mapping for this key.
-        const auto value = get_value(key);
+        // A safe and clean way to perform different actions on a std::variant based
+        // on the stored type is to use std::visit, which will execute the correct
+        // logic based on the overload that best matches the type currently stored
+        // in the variant. What each action does is annotated below.
+        // The logics are ordered in their anticipated most commonly used ordering
+        // in practice, in case that somehow affects performance.
+        return std::visit(
+            overloaded {
 
-        // If the key/value pair was not found in the replacement mapping,
-        // that means an error must be raised for this input.
-        if (!value.has_value()) {
-            if (key == ReplaceType::FAIL_) {
-                PyErr_Format(
-                    PyExc_ValueError,
-                    "Cannot convert %.200R to C type '%s'",
-                    input,
-                    type_name<T>()
-                );
-            } else if (key == ReplaceType::OVERFLOW_) {
-                PyErr_Format(
-                    PyExc_OverflowError,
-                    "Cannot convert %.200R to C type '%s' without overflowing",
-                    input,
-                    type_name<T>()
-                );
-            } else { // "on_type_error", "nan" and "inf" omitted by construction
-                PyObject* type_name = PyType_GetName(Py_TYPE(input));
-                PyErr_Format(
-                    PyExc_TypeError,
-                    "The value %.200R has type %.200R which cannot be converted to "
-                    "a numeric value",
-                    input,
-                    type_name
-                );
-                Py_DECREF(type_name);
-            }
-            throw exception_is_set();
-        }
+                // If a raw value is stored, return it directly
+                [](const T arg) -> T {
+                    return arg;
+                },
 
-        // Extract the values for use below
-        const T number_value = value->first;
-        PyObject* callable_value = value->second;
+                // If no value is stored, then we should raise an error
+                [input, key](std::monostate) -> T {
+                    if (key == ReplaceType::FAIL_) {
+                        PyErr_Format(
+                            PyExc_ValueError,
+                            "Cannot convert %.200R to C type '%s'",
+                            input,
+                            type_name<T>()
+                        );
+                    } else if (key == ReplaceType::OVERFLOW_) {
+                        PyErr_Format(
+                            PyExc_OverflowError,
+                            "Cannot convert %.200R to C type '%s' without overflowing",
+                            input,
+                            type_name<T>()
+                        );
+                    } else { // "on_type_error", "nan" and "inf" omitted by construction
+                        PyObject* type_name = PyType_GetName(Py_TYPE(input));
+                        PyErr_Format(
+                            PyExc_TypeError,
+                            "The value %.200R has type %.200R which cannot be converted "
+                            "to "
+                            "a numeric value",
+                            input,
+                            type_name
+                        );
+                        Py_DECREF(type_name);
+                    }
+                    throw exception_is_set();
+                },
 
-        // If the replacement value has no callable attached
-        // then return a default value directly.
-        if (callable_value == nullptr) {
-            return number_value;
-        }
+                // If a Python object is stored, we assume it is a callable that will be
+                // used to get the appropriate raw value to return.
+                [input, key, this](PyObject* arg) -> T {
+                    // Call a Python function
+                    PyObject* retval = PyObject_CallFunctionObjArgs(arg, input, nullptr);
 
-        // If here, we have to call a Python function then
-        // extract a number from the result.
-        PyObject* retval = PyObject_CallFunctionObjArgs(callable_value, input, nullptr);
+                    // On exception, no need to define our our own message,
+                    // I'm sure Python's is just fine.
+                    if (retval == nullptr) {
+                        throw exception_is_set();
+                    }
 
-        // On exception, no need to define our our own message,
-        // I'm sure Python's is just fine.
-        if (retval == nullptr) {
-            throw exception_is_set();
-        }
+                    // If there was no error calling the function, attempt to extract the
+                    // C type.
+                    NumericParser parser(retval, m_options);
+                    const T call_value = parser.as_number<T>();
 
-        // If there was no error calling the function, attempt to extract the C type.
-        NumericParser parser(retval, m_options);
-        const T call_value = parser.as_number<T>();
+                    // Check for more errors, and if we pass them then return the value.
+                    if (parser.errored()) {
+                        if (parser.type_error()) {
+                            PyObject* type_name = PyType_GetName(Py_TYPE(input));
+                            PyErr_Format(
+                                PyExc_TypeError,
+                                "Callable passed to '%s' with input %.200R returned the "
+                                "value %.200R that has type %.200R which cannot be "
+                                "converted to a numeric value",
+                                m_replace_repr.at(key),
+                                input,
+                                retval,
+                                type_name
+                            );
+                            Py_DECREF(type_name);
+                        } else if (parser.overflow()) {
+                            PyErr_Format(
+                                PyExc_OverflowError,
+                                "Callable passed to '%s' with input %.200R returned the "
+                                "value %.200R that cannot be converted to C type '%s' "
+                                "without overflowing",
+                                m_replace_repr.at(key),
+                                input,
+                                retval,
+                                type_name<T>()
+                            );
+                        } else {
+                            PyErr_Format(
+                                PyExc_ValueError,
+                                "Callable passed to '%s' with input %.200R returned the "
+                                "value %.200R that cannot be converted to C type '%s'",
+                                m_replace_repr.at(key),
+                                input,
+                                retval,
+                                type_name<T>()
+                            );
+                        }
+                        Py_DECREF(retval);
+                        throw exception_is_set();
+                    }
+                    Py_DECREF(retval);
+                    return call_value;
+                },
+            },
 
-        // Check for more errors, and if we pass them then return the value.
-        if (parser.errored()) {
-            if (parser.type_error()) {
-                PyObject* type_name = PyType_GetName(Py_TYPE(input));
-                PyErr_Format(
-                    PyExc_TypeError,
-                    "Callable passed to '%s' with input %.200R returned the value "
-                    "%.200R that has type %.200R which cannot be converted to a "
-                    "numeric value",
-                    m_replace_repr.at(key),
-                    input,
-                    retval,
-                    type_name
-                );
-                Py_DECREF(type_name);
-            } else if (parser.overflow()) {
-                PyErr_Format(
-                    PyExc_OverflowError,
-                    "Callable passed to '%s' with input %.200R returned the value "
-                    "%.200R that cannot be converted to C type '%s' without "
-                    "overflowing",
-                    m_replace_repr.at(key),
-                    input,
-                    retval,
-                    type_name<T>()
-                );
-            } else {
-                PyErr_Format(
-                    PyExc_ValueError,
-                    "Callable passed to '%s' with input %.200R returned the value "
-                    "%.200R that cannot be converted to C type '%s'",
-                    m_replace_repr.at(key),
-                    input,
-                    retval,
-                    type_name<T>()
-                );
-            }
-            Py_DECREF(retval);
-            throw exception_is_set();
-        }
-        Py_DECREF(retval);
-        return call_value;
+            // This is the actual value passed to std::visit that will be acted upon
+            get_value(key)
+        );
     }
 
     /**
@@ -336,7 +349,7 @@ private:
 
         // If the input is a callable just store the callable in the mapping.
         if (PyCallable_Check(replacement)) {
-            get_value(key) = std::make_pair(T(), replacement);
+            get_value(key) = replacement;
             return;
         }
 
@@ -379,6 +392,6 @@ private:
         }
 
         // If the value is a legit C type, we store it.
-        get_value(key) = std::make_pair(value, nullptr);
+        get_value(key) = value;
     }
 };
