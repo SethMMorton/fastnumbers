@@ -50,31 +50,19 @@ public:
      */
     T extract_c_number(PyObject* input)
     {
-        T value;
-        TextExtractor extractor(input, m_buffer);
+
+        // Get the number no matter which parser was returned
         bool errored, overflow, type_error;
-
-        // This function can grab the error state from the parser
-        auto get_errors = [&errored, &overflow, &type_error](auto& parser) {
-            errored = parser.errored();
-            overflow = parser.overflow();
-            type_error = parser.type_error();
-        };
-
-        // Depending on the found data type, create a different parser to get the number
-        if (extractor.is_text()) {
-            CharacterParser cparser = extractor.text_parser(m_options);
-            value = cparser.as_number<T>();
-            get_errors(cparser);
-        } else if (extractor.is_unicode_character()) {
-            UnicodeParser uparser = extractor.unicode_char_parser(m_options);
-            value = uparser.as_number<T>();
-            get_errors(uparser);
-        } else {
-            NumericParser nparser(input, m_options);
-            value = nparser.as_number<T>();
-            get_errors(nparser);
-        }
+        T value;
+        std::visit(
+            [&](auto parser) {
+                parser.as_number(value);
+                errored = parser.errored();
+                overflow = parser.overflow();
+                type_error = parser.type_error();
+            },
+            extract_parser(input, m_buffer, m_options)
+        );
 
         // Check if there were any error cases, and if so, attempt a value replacement.
         if (errored) {
