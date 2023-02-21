@@ -100,32 +100,30 @@ private:
         switch (ntype) {
         case UserType::REAL:
             if (typeflags & nan_or_inf) {
-                return Payload(handle_nan_and_inf());
+                return handle_nan_and_inf();
             } else if (options().allow_coerce()) {
-                return Payload(m_parser.as_pyfloat(false, true));
+                return m_parser.as_pyfloat(false, true);
             } else if (typeflags & NumberType::Float) {
-                return Payload(m_parser.as_pyfloat());
+                return m_parser.as_pyfloat();
             } else {
-                return Payload(m_parser.as_pyint());
+                return m_parser.as_pyint();
             }
 
         case UserType::FLOAT:
             if (typeflags & nan_or_inf) {
-                return Payload(handle_nan_and_inf());
+                return handle_nan_and_inf();
             } else {
-                return Payload(m_parser.as_pyfloat());
+                return m_parser.as_pyfloat();
             }
 
         case UserType::INT:
         case UserType::INTLIKE:
         case UserType::FORCEINT:
             if (!options().is_default_base()) {
-                return Payload(ActionType::ERROR_INVALID_BASE);
+                return ActionType::ERROR_INVALID_BASE;
             }
-            return Payload(
-                (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
-                                                : m_parser.as_pyint()
-            );
+            return (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
+                                                   : m_parser.as_pyint();
         }
         Py_UNREACHABLE();
     }
@@ -159,23 +157,23 @@ private:
             return from_text_as_int();
 
         } else if (force_int && (m_parser.peek_inf() || m_parser.peek_nan())) {
-            return Payload(ActionType::ERROR_INVALID_INT);
+            return ActionType::ERROR_INVALID_INT;
 
         } else {
             // Special-case handling of infinity and NaN
             if (m_parser.peek_inf()) {
-                return Payload(inf_action(m_parser.is_negative()));
+                return inf_action(m_parser.is_negative());
             } else if (m_parser.peek_nan()) {
-                return Payload(nan_action(m_parser.is_negative()));
+                return nan_action(m_parser.is_negative());
             }
 
             // Otherwise, attempt to convert to a python float
             // and optionally make as integer and if not signal an error.
             PyObject* result = m_parser.as_pyfloat(force_int, options().allow_coerce());
             if (m_parser.errored()) {
-                return Payload(ActionType::ERROR_INVALID_FLOAT);
+                return ActionType::ERROR_INVALID_FLOAT;
             }
-            return Payload(result);
+            return result;
         }
     }
 
@@ -184,18 +182,18 @@ private:
     {
         // Special-case handling of infinity and NaN
         if (m_parser.peek_inf()) {
-            return Payload(inf_action(m_parser.is_negative()));
+            return inf_action(m_parser.is_negative());
         } else if (m_parser.peek_nan()) {
-            return Payload(nan_action(m_parser.is_negative()));
+            return nan_action(m_parser.is_negative());
         }
 
         // Otherwise, attempt to convert to a python float
         // and if not signal an error.
         PyObject* result = m_parser.as_pyfloat();
         if (m_parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_FLOAT);
+            return ActionType::ERROR_INVALID_FLOAT;
         }
-        return Payload(result);
+        return result;
     }
 
     /// Logic for evaluating a text python object as an int
@@ -206,7 +204,7 @@ private:
         // so check that first.
         if (m_parser.options().get_base() != 10) {
             if (m_parser.illegal_explicit_base()) {
-                return Payload(ActionType::ERROR_ILLEGAL_EXPLICIT_BASE);
+                return ActionType::ERROR_ILLEGAL_EXPLICIT_BASE;
             }
         }
 
@@ -214,9 +212,9 @@ private:
         // and if not signal an error.
         PyObject* result = m_parser.as_pyint();
         if (m_parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_INT);
+            return ActionType::ERROR_INVALID_INT;
         }
-        return Payload(result);
+        return result;
     }
 
     /// Return an error due to a bad type
@@ -224,15 +222,15 @@ private:
     {
         if (ntype == UserType::REAL || ntype == UserType::FLOAT) {
             if (type) {
-                return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
+                return ActionType::ERROR_BAD_TYPE_FLOAT;
             } else {
-                return Payload(ActionType::ERROR_INVALID_FLOAT);
+                return ActionType::ERROR_INVALID_FLOAT;
             }
         } else {
             if (type) {
-                return Payload(ActionType::ERROR_BAD_TYPE_INT);
+                return ActionType::ERROR_BAD_TYPE_INT;
             } else {
-                return Payload(ActionType::ERROR_INVALID_INT);
+                return ActionType::ERROR_INVALID_INT;
             }
         }
     }

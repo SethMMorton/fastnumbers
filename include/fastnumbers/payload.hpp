@@ -1,12 +1,13 @@
 #pragma once
 
+#include <variant>
+
 #include <Python.h>
 
 #include "fastnumbers/user_options.hpp"
 
 /// Possible actions that can be performed on input objects
 enum class ActionType {
-    PY_OBJECT, ///< Return a PyObject*
     NAN_ACTION, ///< Return NaN
     INF_ACTION, ///< Return infinity
     NEG_NAN_ACTION, ///< Return negative NaN
@@ -26,42 +27,4 @@ enum class ActionType {
  * on user parameters. This class uniformly stores all types for smoothest
  * transfer into "Python-land".
  */
-class Payload {
-public:
-    /// Default construct
-    Payload()
-        : m_actval(ActionType::PY_OBJECT)
-        , m_pyval(nullptr)
-    { }
-
-    /// Construct the payload with an action.
-    explicit Payload(const ActionType atype)
-        : m_actval(atype)
-        , m_pyval(nullptr)
-    { }
-
-    /// Construct the payload with a PyObject*.
-    explicit Payload(PyObject* val)
-        : m_actval(ActionType::PY_OBJECT)
-        , m_pyval(val)
-    { }
-
-    // Copy, assignment, and destruct are defaults
-    Payload(const Payload&) = default;
-    Payload(Payload&&) = default;
-    Payload& operator=(const Payload&) = default;
-    ~Payload() = default;
-
-    /// Return the Payload as an ActionType.
-    ActionType get_action() const { return m_actval; }
-
-    /// Return the Payload as a PyObject*.
-    PyObject* to_pyobject() const { return m_pyval; }
-
-private:
-    /// Tracker of what action is being requested
-    ActionType m_actval;
-
-    /// The Payload as a PyObject*
-    PyObject* m_pyval;
-};
+using Payload = std::variant<PyObject*, ActionType>;
