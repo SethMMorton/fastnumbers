@@ -24,9 +24,6 @@ public:
         const NumberFlags flags = get_number_type();
         set_number_type(flags);
 
-        // Increment the reference count for this object
-        Py_INCREF(m_obj);
-
         // Record the sign
         // XXX: We are cheating a bit here - we are only getting the sign
         // for simple floats because we *know* that that is the only time
@@ -40,13 +37,11 @@ public:
     // No default constructor
     NumericParser() = delete;
 
-    // Default copy/assignment
+    // Default copy/assignment/destruction
     NumericParser(const NumericParser&) = default;
     NumericParser(NumericParser&&) = default;
     NumericParser& operator=(const NumericParser&) = default;
-
-    /// Descructor decreases reference count of the stored object
-    ~NumericParser() { Py_DECREF(m_obj); };
+    ~NumericParser() = default;
 
     /// Convert the stored object to a python int (check error state)
     PyObject* as_pyint() override
