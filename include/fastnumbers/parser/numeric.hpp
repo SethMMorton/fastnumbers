@@ -173,6 +173,17 @@ public:
         }
     }
 
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T>
+    void as_number(T& value)
+    {
+        value = as_number<T>();
+    }
+
 private:
     /// The Python object potentially under analysis
     PyObject* m_obj;

@@ -151,6 +151,17 @@ public:
         return static_cast<T>(result);
     }
 
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T>
+    void as_number(T& value)
+    {
+        value = as_number<T>();
+    }
+
 private:
     /// The potential start of the character array
     const char* m_start;
