@@ -15,6 +15,7 @@ Unreleased
 - Move to a model where the return code is a value or error instead of
   a model where one has to check the error state after getting a value
   (Issue [#66](https://github.com/SethMMorton/fastnumbers/pull/66))
+- *Significantly* simplified the type annotations (by 4000+ lines!)
 
 ### Fixed
 - Increased code coverage and fixed missing headers in codecov reaport

@@ -95,6 +95,9 @@ def test_try_real() -> None:
     # 19. Function to execute on failure to convert
     assert fastnumbers.try_real("76.8", on_fail=len) == 76.8
     assert fastnumbers.try_real("invalid", on_fail=len) == 7
+    # 20. Handling of type errors
+    assert fastnumbers.try_real(["invalid"], on_fail=6, on_type_error=7.0) == 7.0
+    assert fastnumbers.try_real(["invalid"], on_type_error=None) is None
 
 
 def test_try_float() -> None:
@@ -116,7 +119,7 @@ def test_try_float() -> None:
     # 6. signed int string
     assert fastnumbers.try_float("-499") == -499.0
     # 7. int string with padded whitespace
-    assert fastnumbers.try_float("   +3001   ") == 3001
+    assert fastnumbers.try_float("   +3001   ") == 3001.0
     # 8. long number
     assert fastnumbers.try_float(35892482945872302493) == 35892482945872302493.0
     # 9. long string
@@ -138,11 +141,11 @@ def test_try_float() -> None:
     # 14. Infinity
     assert fastnumbers.try_float("inf") == float("inf")
     assert fastnumbers.try_float("-iNFinity") == float("-inf")
-    assert fastnumbers.try_float("-iNFinity", inf=523) == 523
+    assert fastnumbers.try_float("-iNFinity", inf=523.0) == 523.0
     # 15. NaN
     assert math.isnan(cast(float, fastnumbers.try_float("nAn")))
     assert math.isnan(cast(float, fastnumbers.try_float("-NaN")))
-    assert fastnumbers.try_float("-NaN", nan=0) == 0
+    assert fastnumbers.try_float("-NaN", nan=0.0) == 0.0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.try_float("+") == "+"
     assert fastnumbers.try_float("-") == "-"
@@ -150,7 +153,7 @@ def test_try_float() -> None:
     assert fastnumbers.try_float("e8") == "e8"
     assert fastnumbers.try_float(".") == "."
     # 17. Default on invalid...
-    assert fastnumbers.try_float("invalid", on_fail=90) == 90
+    assert fastnumbers.try_float("invalid", on_fail=90.0) == 90.0
     assert fastnumbers.try_float("invalid", on_fail=None) is None
     # 18. Unicode numbers
     assert fastnumbers.try_float("⑦") == 7.0
@@ -160,6 +163,9 @@ def test_try_float() -> None:
     # 19. Function to execute on failure to convert
     assert fastnumbers.try_float("76.8", on_fail=len) == 76.8
     assert fastnumbers.try_float("invalid", on_fail=len) == 7
+    # 20. Handling of type errors
+    assert fastnumbers.try_float(["invalid"], on_fail=6.0, on_type_error=7.0) == 7.0
+    assert fastnumbers.try_float(["invalid"], on_type_error=None) is None
 
 
 def test_try_int() -> None:
@@ -219,6 +225,9 @@ def test_try_int() -> None:
     # 19. Function to execute on failure to convert
     assert fastnumbers.try_int("76", on_fail=len) == 76
     assert fastnumbers.try_int("invalid", on_fail=len) == 7
+    # 20. Handling of type errors
+    assert fastnumbers.try_int(["invalid"], on_fail=6, on_type_error=7) == 7
+    assert fastnumbers.try_int(["invalid"], on_type_error=None) is None
 
 
 def test_try_forceint() -> None:
@@ -278,6 +287,9 @@ def test_try_forceint() -> None:
     # 19. Function to execute on failure to convert
     assert fastnumbers.try_forceint("76.8", on_fail=len) == 76
     assert fastnumbers.try_forceint("invalid", on_fail=len) == 7
+    # 20. Handling of type errors
+    assert fastnumbers.try_forceint(["invalid"], on_fail=6, on_type_error=7) == 7
+    assert fastnumbers.try_forceint(["invalid"], on_type_error=None) is None
 
 
 def test_check_real() -> None:
