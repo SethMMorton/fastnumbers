@@ -59,9 +59,6 @@ public:
     {
         // Send to the appropriate convenience function based on the found type
         switch (parser_type()) {
-        case ParserType::NUMERIC:
-            return from_numeric_as_type(ntype);
-
         case ParserType::UNICODE:
             if (!options().allow_unicode()) {
                 return typed_error(ntype, false);
@@ -69,8 +66,10 @@ public:
             /* DELIBERATE FALL-THROUGH */
         case ParserType::CHARACTER:
             return from_text_as_type(ntype);
+
+        default: // NUMERIC
+            return from_numeric_as_type(ntype);
         }
-        Py_UNREACHABLE();
     }
 
 private:
@@ -111,9 +110,7 @@ private:
                 return convert(m_parser.as_pyfloat(), ntype);
             }
 
-        case UserType::INT:
-        case UserType::INTLIKE:
-        case UserType::FORCEINT:
+        default: // INT, INTLIKE, FORCEINT
             if (!options().is_default_base()) {
                 return ActionType::ERROR_INVALID_BASE;
             }
@@ -123,26 +120,22 @@ private:
                 ntype
             );
         }
-        Py_UNREACHABLE();
     }
 
     /// Logic for evaluating a text python object
     Payload from_text_as_type(const UserType ntype)
     {
         switch (ntype) {
-        case UserType::REAL:
-        case UserType::INTLIKE:
-        case UserType::FORCEINT:
-            // REAL will only try to coerce to integer... the others will force
-            return from_text_as_int_or_float(ntype != UserType::REAL);
-
         case UserType::FLOAT:
             return from_text_as_float();
 
         case UserType::INT:
             return from_text_as_int();
+
+        default: // REAL, FORCEINT, INTLIKE
+            // REAL will only try to coerce to integer... the others will force
+            return from_text_as_int_or_float(ntype != UserType::REAL);
         }
-        Py_UNREACHABLE();
     }
 
     /// Logic for evaluating a text python object as a float or integer

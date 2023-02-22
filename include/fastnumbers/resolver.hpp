@@ -228,14 +228,6 @@ private:
             );
             break;
 
-        case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE: // TODO - duplciate
-            // Raise an exception due to useing an explict integer base where it
-            // shouldn't
-            PyErr_SetString(
-                PyExc_TypeError, "int() can't convert non-string with explicit base"
-            );
-            break;
-
         case ActionType::ERROR_INVALID_INT:
             // Raise an exception due to an invalid integer
             PyErr_Format(
@@ -253,15 +245,14 @@ private:
             );
             break;
 
-        case ActionType::ERROR_INVALID_BASE: // TODO - duplciate
+        default:
+            // ERROR_ILLEGAL_EXPLICIT_BASE
+            // ERROR_INVALID_BASE
             // Raise an exception due to an invalid base for integer conversion
             PyErr_SetString(
                 PyExc_TypeError, "int() can't convert non-string with explicit base"
             );
             break;
-
-        default:
-            Py_UNREACHABLE();
         }
 
         return nullptr;
