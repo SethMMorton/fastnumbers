@@ -11,6 +11,11 @@ Unreleased
  [#62](https://github.com/SethMMorton/fastnumbers/issues/62) and
  [#65](https://github.com/SethMMorton/fastnumbers/issues/65))
 
+### Changed
+- Move to a model where the return code is a value or error instead of
+  a model where one has to check the error state after getting a value
+  (Issue [#66](https://github.com/SethMMorton/fastnumbers/pull/66))
+
 ### Fixed
 - Increased code coverage and fixed missing headers in codecov reaport
   (Issue [#64](https://github.com/SethMMorton/fastnumbers/pull/64))
