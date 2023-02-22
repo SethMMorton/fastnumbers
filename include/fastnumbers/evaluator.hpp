@@ -16,7 +16,7 @@ template <typename ParserT>
 class Evaluator {
 public:
     /// Constructor from a Python object
-    Evaluator(PyObject* obj, const UserOptions& options, ParserT& parser)
+    Evaluator(PyObject* obj, const UserOptions& options, const ParserT& parser)
         : m_obj(obj)
         , m_parser(parser)
         , m_options(options)
@@ -59,9 +59,6 @@ public:
     {
         // Send to the appropriate convenience function based on the found type
         switch (parser_type()) {
-        case ParserType::NUMERIC:
-            return from_numeric_as_type(ntype);
-
         case ParserType::UNICODE:
             if (!options().allow_unicode()) {
                 return typed_error(ntype, false);
@@ -69,8 +66,10 @@ public:
             /* DELIBERATE FALL-THROUGH */
         case ParserType::CHARACTER:
             return from_text_as_type(ntype);
+
+        default: // NUMERIC
+            return from_numeric_as_type(ntype);
         }
-        Py_UNREACHABLE();
     }
 
 private:
@@ -78,7 +77,7 @@ private:
     PyObject* m_obj;
 
     /// A Parser object used for evaluating the Python object
-    ParserT& m_parser;
+    const ParserT& m_parser;
 
     /// Hold the evaluator options
     UserOptions m_options;
@@ -90,63 +89,53 @@ private:
         const NumberFlags typeflags = m_parser.get_number_type();
         constexpr NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
 
-        // Stop now for a type error
-        if (m_parser.type_error()) {
-            return typed_error(ntype);
-        }
-
         // Otherwise, tell the downstream parser what action to take based
         // on the user requested type
         switch (ntype) {
         case UserType::REAL:
             if (typeflags & nan_or_inf) {
-                return Payload(handle_nan_and_inf());
+                return handle_nan_and_inf();
             } else if (options().allow_coerce()) {
-                return Payload(m_parser.as_pyfloat(false, true));
+                return convert(m_parser.as_pyfloat(false, true), ntype);
             } else if (typeflags & NumberType::Float) {
-                return Payload(m_parser.as_pyfloat());
+                return convert(m_parser.as_pyfloat(), ntype);
             } else {
-                return Payload(m_parser.as_pyint());
+                return convert(m_parser.as_pyint(), ntype);
             }
 
         case UserType::FLOAT:
             if (typeflags & nan_or_inf) {
-                return Payload(handle_nan_and_inf());
+                return handle_nan_and_inf();
             } else {
-                return Payload(m_parser.as_pyfloat());
+                return convert(m_parser.as_pyfloat(), ntype);
             }
 
-        case UserType::INT:
-        case UserType::INTLIKE:
-        case UserType::FORCEINT:
+        default: // INT, INTLIKE, FORCEINT
             if (!options().is_default_base()) {
-                return Payload(ActionType::ERROR_INVALID_BASE);
+                return ActionType::ERROR_INVALID_BASE;
             }
-            return Payload(
+            return convert(
                 (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
-                                                : m_parser.as_pyint()
+                                                : m_parser.as_pyint(),
+                ntype
             );
         }
-        Py_UNREACHABLE();
     }
 
     /// Logic for evaluating a text python object
     Payload from_text_as_type(const UserType ntype)
     {
         switch (ntype) {
-        case UserType::REAL:
-        case UserType::INTLIKE:
-        case UserType::FORCEINT:
-            // REAL will only try to coerce to integer... the others will force
-            return from_text_as_int_or_float(ntype != UserType::REAL);
-
         case UserType::FLOAT:
             return from_text_as_float();
 
         case UserType::INT:
             return from_text_as_int();
+
+        default: // REAL, FORCEINT, INTLIKE
+            // REAL will only try to coerce to integer... the others will force
+            return from_text_as_int_or_float(ntype != UserType::REAL);
         }
-        Py_UNREACHABLE();
     }
 
     /// Logic for evaluating a text python object as a float or integer
@@ -159,23 +148,21 @@ private:
             return from_text_as_int();
 
         } else if (force_int && (m_parser.peek_inf() || m_parser.peek_nan())) {
-            return Payload(ActionType::ERROR_INVALID_INT);
+            return ActionType::ERROR_INVALID_INT;
 
         } else {
             // Special-case handling of infinity and NaN
             if (m_parser.peek_inf()) {
-                return Payload(inf_action(m_parser.is_negative()));
+                return inf_action(m_parser.is_negative());
             } else if (m_parser.peek_nan()) {
-                return Payload(nan_action(m_parser.is_negative()));
+                return nan_action(m_parser.is_negative());
             }
 
             // Otherwise, attempt to convert to a python float
-            // and optionally make as integer and if not signal an error.
-            PyObject* result = m_parser.as_pyfloat(force_int, options().allow_coerce());
-            if (m_parser.errored()) {
-                return Payload(ActionType::ERROR_INVALID_FLOAT);
-            }
-            return Payload(result);
+            // and optionally make as integer
+            return convert(
+                m_parser.as_pyfloat(force_int, options().allow_coerce()), UserType::FLOAT
+            );
         }
     }
 
@@ -184,18 +171,13 @@ private:
     {
         // Special-case handling of infinity and NaN
         if (m_parser.peek_inf()) {
-            return Payload(inf_action(m_parser.is_negative()));
+            return inf_action(m_parser.is_negative());
         } else if (m_parser.peek_nan()) {
-            return Payload(nan_action(m_parser.is_negative()));
+            return nan_action(m_parser.is_negative());
         }
 
         // Otherwise, attempt to convert to a python float
-        // and if not signal an error.
-        PyObject* result = m_parser.as_pyfloat();
-        if (m_parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_FLOAT);
-        }
-        return Payload(result);
+        return convert(m_parser.as_pyfloat(), UserType::FLOAT);
     }
 
     /// Logic for evaluating a text python object as an int
@@ -206,17 +188,12 @@ private:
         // so check that first.
         if (m_parser.options().get_base() != 10) {
             if (m_parser.illegal_explicit_base()) {
-                return Payload(ActionType::ERROR_ILLEGAL_EXPLICIT_BASE);
+                return ActionType::ERROR_ILLEGAL_EXPLICIT_BASE;
             }
         }
 
         // Otherwise, attempt to convert to a python int
-        // and if not signal an error.
-        PyObject* result = m_parser.as_pyint();
-        if (m_parser.errored()) {
-            return Payload(ActionType::ERROR_INVALID_INT);
-        }
-        return Payload(result);
+        return convert(m_parser.as_pyint(), UserType::INT);
     }
 
     /// Return an error due to a bad type
@@ -224,15 +201,15 @@ private:
     {
         if (ntype == UserType::REAL || ntype == UserType::FLOAT) {
             if (type) {
-                return Payload(ActionType::ERROR_BAD_TYPE_FLOAT);
+                return ActionType::ERROR_BAD_TYPE_FLOAT;
             } else {
-                return Payload(ActionType::ERROR_INVALID_FLOAT);
+                return ActionType::ERROR_INVALID_FLOAT;
             }
         } else {
             if (type) {
-                return Payload(ActionType::ERROR_BAD_TYPE_INT);
+                return ActionType::ERROR_BAD_TYPE_INT;
             } else {
-                return Payload(ActionType::ERROR_INVALID_INT);
+                return ActionType::ERROR_INVALID_INT;
             }
         }
     }
@@ -256,5 +233,35 @@ private:
         const NumberFlags typeflags = m_parser.get_number_type();
         return typeflags & NumberType::NaN ? nan_action(m_parser.is_negative())
                                            : inf_action(m_parser.is_negative());
+    }
+
+    /// Convert the RawPayload data into Paylod data
+    Payload convert(const RawPayload<PyObject*>& payload, const UserType ntype) const
+    {
+        return std::visit(
+            overloaded {
+
+                // If the stored object is not an error, pass it along
+                [](PyObject* retval) -> Payload {
+                    return retval;
+                },
+
+                // For errors, convert from "raw" errors to "action" errors
+                [ntype](const ErrorType err) -> Payload {
+                    // NOTE: We explicitly are not handling ErrorType:OVERFLOW_
+                    // because it cannot be returned in the PyObject* code path.
+                    if (err == ErrorType::BAD_VALUE) {
+                        if (ntype == UserType::FLOAT || ntype == UserType::REAL) {
+                            return ActionType::ERROR_INVALID_FLOAT;
+                        } else {
+                            return ActionType::ERROR_INVALID_INT;
+                        }
+                    } else {
+                        return typed_error(ntype);
+                    }
+                },
+            },
+            payload
+        );
     }
 };

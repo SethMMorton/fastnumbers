@@ -6,10 +6,12 @@
 
 #include "fastnumbers/buffer.hpp"
 #include "fastnumbers/c_str_parsing.hpp"
+#include "fastnumbers/helpers.hpp"
 #include "fastnumbers/parser/base.hpp"
 #include "fastnumbers/parser/character.hpp"
 #include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/parser/unicode.hpp"
+#include "fastnumbers/payload.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**
@@ -85,10 +87,8 @@ CharacterParser::CharacterParser(
     m_str_len = static_cast<std::size_t>(end - m_start);
 }
 
-PyObject* CharacterParser::as_pyint()
+RawPayload<PyObject*> CharacterParser::as_pyint() const
 {
-    reset_error();
-
     // We use the fast path method even if the result overflows,
     // so that we can determine if the integer was at least valid.
     // If it was valid but overflowed, we use Python's parser, otherwise
@@ -113,8 +113,7 @@ PyObject* CharacterParser::as_pyint()
         result = parse_int<int64_t>(buffer.start(), buffer.end(), base, error, overflow);
     }
     if (error) {
-        encountered_conversion_error();
-        return nullptr;
+        return ErrorType::BAD_VALUE;
     }
     if (!overflow) {
         return pyobject_from_int64(result);
@@ -129,24 +128,34 @@ PyObject* CharacterParser::as_pyint()
     return retval;
 }
 
-PyObject* CharacterParser::as_pyfloat(const bool force_int, const bool coerce)
+RawPayload<PyObject*>
+CharacterParser::as_pyfloat(const bool force_int, const bool coerce) const
 {
-    const double result = as_number<double>();
+    // Perform the correct action depending on the payload's contents
+    return std::visit(
+        overloaded {
 
-    // Fail fast on error
-    if (errored()) {
-        return nullptr;
-    }
+            // If the payload contained a double, convert it to a PyObject*
+            [force_int, coerce](const double result) -> RawPayload<PyObject*> {
+                // force_int takes precidence,
+                // and coerce conditionally returns as an integer
+                if (force_int) {
+                    return PyLong_FromDouble(result);
+                } else if (coerce) {
+                    return Parser::float_is_intlike(result) ? PyLong_FromDouble(result)
+                                                            : PyFloat_FromDouble(result);
+                } else {
+                    return PyFloat_FromDouble(result);
+                }
+            },
 
-    // force_int takes precidence, and coerce conditionally returns as an integer
-    if (force_int) {
-        return PyLong_FromDouble(result);
-    } else if (coerce) {
-        return Parser::float_is_intlike(result) ? PyLong_FromDouble(result)
-                                                : PyFloat_FromDouble(result);
-    } else {
-        return PyFloat_FromDouble(result);
-    }
+            // If the payload contained an error, pass the error along
+            [](const ErrorType err) -> RawPayload<PyObject*> {
+                return err;
+            },
+        },
+        as_number<double>()
+    );
 }
 
 NumberFlags CharacterParser::get_number_type() const

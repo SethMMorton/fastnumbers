@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include <utility>
+#include <optional>
 
 #include <Python.h>
 
@@ -282,7 +282,14 @@ public:
         ItemIterator& operator++()
         {
             if (m_parent != nullptr) {
-                std::tie(m_payload, m_state) = m_parent->next();
+                const auto current = m_parent->next();
+                if (current) {
+                    m_payload = current.value();
+                    m_state = IterState::CONTINUE;
+                } else {
+                    m_payload = PayloadType();
+                    m_state = IterState::STOP;
+                }
             }
             return *this;
         }
@@ -336,7 +343,7 @@ private:
     std::function<PayloadType(PyObject*)> m_convert;
 
 private:
-    std::pair<PayloadType, IterState> next()
+    std::optional<PayloadType> next()
     {
         PyObject* item = nullptr;
 
@@ -345,7 +352,7 @@ private:
         if (m_iterator == nullptr) {
             // When at the end of the sequence, return the sigil
             if (m_index == m_seq_size) {
-                return std::make_pair(PayloadType(), IterState::STOP);
+                return std::nullopt;
             }
 
             // Access the data in the input sequence directly.
@@ -356,8 +363,8 @@ private:
             // Before moving on, increment our internal counter.
             m_index += 1;
 
-            // Conver the item to the correct value and return.
-            return std::make_pair(m_convert(item), IterState::CONTINUE);
+            // Convert the item to the correct value and return.
+            return m_convert(item);
         }
 
         // Otherwise, the object was an iterator and we use the iteration
@@ -369,18 +376,19 @@ private:
             if (PyErr_Occurred()) {
                 throw exception_is_set();
             }
-            return std::make_pair(PayloadType(), IterState::STOP);
+            return std::nullopt;
         }
 
         // Convert the item and return the value. When complete we must decrease
         // the item reference count (because it was not returned as a borrowed
         // reference), so some error handling must be done to ensure it happens.
         try {
-            return std::make_pair(m_convert(item), IterState::CONTINUE);
+            PayloadType retval = m_convert(item);
+            Py_DECREF(item);
+            return retval;
         } catch (...) {
             Py_DECREF(item);
             throw;
         }
-        Py_DECREF(item);
     }
 };

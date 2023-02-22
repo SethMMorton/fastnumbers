@@ -5,7 +5,9 @@
 
 #include <Python.h>
 
+#include "fastnumbers/helpers.hpp"
 #include "fastnumbers/parser/base.hpp"
+#include "fastnumbers/payload.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**
@@ -23,9 +25,6 @@ public:
         const NumberFlags flags = get_number_type();
         set_number_type(flags);
 
-        // Increment the reference count for this object
-        Py_INCREF(m_obj);
-
         // Record the sign
         // XXX: We are cheating a bit here - we are only getting the sign
         // for simple floats because we *know* that that is the only time
@@ -39,32 +38,33 @@ public:
     // No default constructor
     NumericParser() = delete;
 
-    // Default copy/assignment
+    // Default copy/assignment/destruction
     NumericParser(const NumericParser&) = default;
     NumericParser(NumericParser&&) = default;
     NumericParser& operator=(const NumericParser&) = default;
+    ~NumericParser() = default;
 
-    /// Descructor decreases reference count of the stored object
-    ~NumericParser() { Py_DECREF(m_obj); };
-
-    /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() override
+    /// Convert the stored object to a python int
+    RawPayload<PyObject*> as_pyint() const override
     {
-        reset_error();
+        if (get_number_type() == static_cast<NumberFlags>(NumberType::INVALID)) {
+            return ErrorType::TYPE_ERROR;
+        }
         return PyNumber_Long(m_obj);
     }
 
     /**
      * \brief Convert the stored object to a python float but possibly
-     *        coerce to an integer (check error state)
+     *        coerce to an integer
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    PyObject*
-    as_pyfloat(const bool force_int = false, const bool coerce = false) override
+    RawPayload<PyObject*>
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const override
     {
-        reset_error();
-        if (force_int) {
+        if (get_number_type() == static_cast<NumberFlags>(NumberType::INVALID)) {
+            return ErrorType::TYPE_ERROR;
+        } else if (force_int) {
             return PyNumber_Long(m_obj);
         } else if (coerce) {
             if (get_number_type() & (NumberType::IntLike | NumberType::Integer)) {
@@ -125,34 +125,42 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T>
-    T as_number()
+    RawPayload<T> as_number() const
     {
         // Special handling for floating point numbers
         if constexpr (std::is_floating_point_v<T>) {
             // Fast path if we know it is not numeric
             if (!(get_number_type() & (NumberType::Float | NumberType::Integer))) {
-                encountered_conversion_error();
-                return 0.0;
+                return ErrorType::TYPE_ERROR;
             }
 
             // Otherwise use the Python conversion function - this should handle
             // converting integers to double as well. Watch out for errors here too.
             const double value = PyFloat_AsDouble(m_obj);
             if (value == -1.0 && PyErr_Occurred()) {
-                encountered_conversion_error();
                 PyErr_Clear();
-                return 0.0;
+                return ErrorType::BAD_VALUE;
             }
 
             // Don't worry about overflow on casting to a smaller type because
             // too big will just become infinity, too small becomes zero.
             return static_cast<T>(value);
         } else {
-            // Fast path if we know it is not numeric
+            // Fast path if we know it is not an integer
             if (!(get_number_type() & NumberType::Integer)) {
-                encountered_conversion_error();
-                return 0;
+                return (get_number_type() & NumberType::Float) ? ErrorType::BAD_VALUE
+                                                               : ErrorType::TYPE_ERROR;
             }
+
+            // Lambda used to pass a value into a RawPayload<T> object
+            auto pass_value = [&](const auto value) -> RawPayload<T> {
+                return cast_num_check_overflow<T>(value);
+            };
+
+            // Lambda used to pass an ErrorType into a RawPayload<T> object
+            auto pass_error = [](const ErrorType err) -> RawPayload<T> {
+                return err;
+            };
 
             // Use special logic for the largest types, otherwise use a generic logic.
             if constexpr (std::is_same_v<T, long long>) {
@@ -162,20 +170,32 @@ public:
             } else if constexpr (std::is_same_v<T, unsigned long long>) {
                 return check_for_error_py(PyLong_AsUnsignedLongLong(m_obj));
             } else if constexpr (std::is_signed_v<T>) {
-                return cast_num_check_overflow<T>(
+                return std::visit(
+                    overloaded { pass_error, pass_value },
                     check_for_error_py<long>(m_obj, PyLong_AsLongAndOverflow)
                 );
             } else if constexpr (std::is_unsigned_v<T>) {
-                return cast_num_check_overflow<T>(
+                return std::visit(
+                    overloaded { pass_error, pass_value },
                     check_for_error_py<unsigned long>(PyLong_AsUnsignedLong(m_obj))
                 );
             } else {
                 static_assert(
-                    !std::is_integral_v<T>,
-                    "invalid type given to NumericParser::as_number()"
+                    always_false_v<T>, "invalid type given to NumericParser::as_number()"
                 );
             }
         }
+    }
+
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T>
+    void as_number(RawPayload<T>& value) const
+    {
+        value = as_number<T>();
     }
 
 private:
@@ -208,34 +228,30 @@ private:
 
     /// Helper for performing error checking
     template <typename T>
-    T check_for_error_py(T value)
+    RawPayload<T> check_for_error_py(T value) const
     {
         if (value == static_cast<T>(-1) && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                encountered_overflow();
-            } else {
-                encountered_conversion_error();
-            }
+            const ErrorType err = PyErr_ExceptionMatches(PyExc_OverflowError)
+                ? ErrorType::OVERFLOW_
+                : ErrorType::BAD_VALUE;
             PyErr_Clear();
-            return static_cast<T>(0);
+            return err;
         }
         return value;
     }
 
     /// Helper for performing error checking
     template <typename T, typename Function>
-    T check_for_error_py(PyObject* obj, Function func)
+    RawPayload<T> check_for_error_py(PyObject* obj, Function func) const
     {
         int overflow = false;
         const T value = func(m_obj, &overflow);
         if (overflow) {
-            encountered_overflow();
-            return 0;
+            return ErrorType::OVERFLOW_;
         }
         if (value == static_cast<T>(-1) && PyErr_Occurred()) {
             PyErr_Clear();
-            encountered_conversion_error();
-            return static_cast<T>(0);
+            return ErrorType::BAD_VALUE;
         }
         return value;
     }

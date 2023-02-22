@@ -3,6 +3,7 @@
  */
 #include <limits>
 #include <string_view>
+#include <variant>
 
 #include <Python.h>
 
@@ -32,22 +33,16 @@ collect_payload(PyObject* obj, const UserOptions& options, const UserType ntype)
 {
     Buffer buffer;
 
-    // The text extractor is responsible for taking a python object
-    // and returning either a char array or single unicode character.
-    // Depending on what would be returned, we pass the data to the
-    // appropriate parser, and this parser is then passed to the evaluator
-    // to decide how to convert the data into the appropriate payload.
-    TextExtractor extractor(obj, buffer);
-    if (extractor.is_text()) {
-        CharacterParser cparser = extractor.text_parser(options);
-        return Evaluator<CharacterParser>(obj, options, cparser).as_type(ntype);
-    } else if (extractor.is_unicode_character()) {
-        UnicodeParser uparser = extractor.unicode_char_parser(options);
-        return Evaluator<UnicodeParser>(obj, options, uparser).as_type(ntype);
-    } else {
-        NumericParser nparser(obj, options);
-        return Evaluator<NumericParser>(obj, options, nparser).as_type(ntype);
-    }
+    // extract_parser() is responsible for taking a python object
+    // and returning the Parser object best suited to parser the object's data.
+    // std:visit is used to obtain the payload data no matter which parser was
+    // returned.
+    return std::visit(
+        [obj, options, ntype](const auto& parser) -> Payload {
+            return Evaluator<decltype(parser)>(obj, options, parser).as_type(ntype);
+        },
+        extract_parser(obj, buffer, options)
+    );
 }
 
 /**
@@ -66,26 +61,21 @@ collect_type(PyObject* obj, const UserOptions& options, const PyObject* consider
     const bool str_only = consider == Selectors::STRING_ONLY;
     Buffer buffer;
 
-    // The text extractor is responsible for taking a python object
-    // and returning either a char array or single unicode character.
-    // Depending on what would be returned, we pass the data to the
-    // appropriate parser, and this parser is then passed to the evaluator
-    // to decide how to convert the data into the appropriate payload.
-    TextExtractor extractor(obj, buffer);
-    if (num_only && (extractor.is_text() || extractor.is_unicode_character())) {
-        return NumberType::INVALID;
-    } else if (str_only && extractor.is_non_text()) {
-        return NumberType::INVALID;
-    } else if (extractor.is_text()) {
-        CharacterParser cparser = extractor.text_parser(options);
-        return Evaluator<CharacterParser>(obj, options, cparser).number_type();
-    } else if (extractor.is_unicode_character()) {
-        UnicodeParser uparser = extractor.unicode_char_parser(options);
-        return Evaluator<UnicodeParser>(obj, options, uparser).number_type();
-    } else {
-        NumericParser nparser(obj, options);
-        return Evaluator<NumericParser>(obj, options, nparser).number_type();
-    }
+    // extract_parser() is responsible for taking a python object
+    // and returning the Parser object best suited to parser the object's data.
+    // std:visit is used to obtain the number flag no matter which parser was
+    // returned.
+    return std::visit(
+        [obj, options, str_only, num_only](const auto& parser) -> NumberFlags {
+            if (str_only && parser.parser_type() == ParserType::NUMERIC) {
+                return NumberType::INVALID;
+            } else if (num_only && parser.parser_type() != ParserType::NUMERIC) {
+                return NumberType::INVALID;
+            }
+            return Evaluator<decltype(parser)>(obj, options, parser).number_type();
+        },
+        extract_parser(obj, buffer, options)
+    );
 }
 
 /**

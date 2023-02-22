@@ -26,8 +26,10 @@ else:
         "-Weffc++",
         "-Wpedantic",
     ]
+    if sys.platform == "darwin":
+        compile_args.append("-mmacosx-version-min=10.13")
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
-        compile_args.append("-O0")
+        compile_args.append("-Og")
         compile_args.append("-g")
 
 

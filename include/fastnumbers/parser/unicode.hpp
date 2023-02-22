@@ -6,6 +6,7 @@
 #include <Python.h>
 
 #include "fastnumbers/parser/base.hpp"
+#include "fastnumbers/payload.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**
@@ -36,34 +37,29 @@ public:
     UnicodeParser& operator=(const UnicodeParser&) = default;
     ~UnicodeParser() = default;
 
-    /// Convert the stored object to a python int (check error state)
-    PyObject* as_pyint() override
+    /// Convert the stored object to a python int
+    RawPayload<PyObject*> as_pyint() const override
     {
-        reset_error();
         if (get_number_type() & NumberType::Integer) {
             return PyLong_FromLong(m_digit);
         }
-        encountered_conversion_error();
-        return nullptr;
+        return ErrorType::BAD_VALUE;
     }
 
     /**
      * \brief Convert the stored object to a python float but possibly
-     *        coerce to an integer (check error state)
+     *        coerce to an integer
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    PyObject*
-    as_pyfloat(const bool force_int = false, const bool coerce = false) override
+    RawPayload<PyObject*>
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const override
     {
-        reset_error();
-
         const NumberFlags ntype = get_number_type();
 
         // Quit here if not a valid number
         if (!(ntype & (NumberType::Integer | NumberType::Float))) {
-            encountered_conversion_error();
-            return nullptr;
+            return ErrorType::BAD_VALUE;
         }
 
         if (force_int) {
@@ -115,14 +111,12 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-    T as_number()
+    RawPayload<T> as_number() const
     {
-        reset_error();
         if (get_number_type() & NumberType::Integer) {
             return cast_num_check_overflow<T>(m_digit);
         }
-        encountered_conversion_error();
-        return static_cast<T>(0);
+        return ErrorType::BAD_VALUE;
     }
 
     /**
@@ -135,22 +129,30 @@ public:
     template <
         typename T,
         typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-    T as_number()
+    RawPayload<T> as_number() const
     {
-        reset_error();
-
         const NumberFlags ntype = get_number_type();
 
         // Quit here if not a valid number
         if (!(ntype & (NumberType::Integer | NumberType::Float))) {
-            encountered_conversion_error();
-            return static_cast<T>(0.0);
+            return ErrorType::BAD_VALUE;
         }
 
         // Cast to the desired output type. No need to worry about overflow
         // when casting to floating point type, because too big will become
         // infinity and too small will become zero.
         return static_cast<T>((ntype & NumberType::Integer) ? m_digit : m_numeric);
+    }
+
+    /**
+     * \brief Convert the contained value into a number C++
+     *
+     * You will need to check for conversion errors and overflows.
+     */
+    template <typename T>
+    void as_number(RawPayload<T>& value) const
+    {
+        value = as_number<T>();
     }
 
 private:

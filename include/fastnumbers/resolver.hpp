@@ -1,7 +1,10 @@
 #pragma once
 
+#include <variant>
+
 #include <Python.h>
 
+#include "fastnumbers/helpers.hpp"
 #include "fastnumbers/payload.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
@@ -52,47 +55,54 @@ public:
         m_type_error = type_error_value == Selectors::INPUT ? m_input : type_error_value;
     }
 
-    /// Resolve the paylowd into a Python object
+    /// Resolve the payload into a Python object
     PyObject* resolve(const Payload& payload) const
     {
-        const ActionType atype = payload.get_action();
-        switch (atype) {
-        // Return a PyObject*
-        case ActionType::PY_OBJECT: {
-            PyObject* retval = payload.to_pyobject();
-            if (retval == nullptr) {
-                return fail_action();
-            }
-            return retval; // do not increment, already has a refcount
-        }
+        // std::visit will call the appropriate logic depending on what value
+        // is currently stored in the Payload object.
+        return std::visit(
+            overloaded {
 
-        // Return the appropriate value for when infinity is found
-        case ActionType::INF_ACTION:
-            return inf_action(false);
+                // If the payload contains a Python object, just return directly
+                [this](PyObject* retval) -> PyObject* {
+                    if (retval == nullptr) {
+                        return fail_action();
+                    }
+                    return retval; // do not increment, already has a refcount
+                },
 
-        // Return the appropriate value for when negative infinity is found
-        case ActionType::NEG_INF_ACTION:
-            return inf_action(true);
+                // If the payload contains an action type, act on it
+                [this](const ActionType atype) -> PyObject* {
+                    switch (atype) {
+                    // Return the appropriate value for when infinity is found
+                    case ActionType::INF_ACTION:
+                        return inf_action(false);
 
-        // Return the appropriate value for when NaN is found
-        case ActionType::NAN_ACTION:
-            return nan_action(false);
+                    // Return the appropriate value for when negative infinity is found
+                    case ActionType::NEG_INF_ACTION:
+                        return inf_action(true);
 
-        // Return the appropriate value for when negative NaN is found
-        case ActionType::NEG_NAN_ACTION:
-            return nan_action(true);
+                    // Return the appropriate value for when NaN is found
+                    case ActionType::NAN_ACTION:
+                        return nan_action(false);
 
-        // These actions are indicative of TypeErrors
-        case ActionType::ERROR_BAD_TYPE_INT:
-        case ActionType::ERROR_BAD_TYPE_FLOAT:
-        case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE:
-            return type_error_action(atype);
+                    // Return the appropriate value for when negative NaN is found
+                    case ActionType::NEG_NAN_ACTION:
+                        return nan_action(true);
 
-        default:
-            return fail_action(atype);
-        }
+                    // These actions are indicative of TypeErrors
+                    case ActionType::ERROR_BAD_TYPE_INT:
+                    case ActionType::ERROR_BAD_TYPE_FLOAT:
+                    case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE:
+                        return type_error_action(atype);
 
-        Py_UNREACHABLE();
+                    default:
+                        return fail_action(atype);
+                    }
+                },
+            },
+            payload
+        );
     }
 
 private:
@@ -218,14 +228,6 @@ private:
             );
             break;
 
-        case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE: // TODO - duplciate
-            // Raise an exception due to useing an explict integer base where it
-            // shouldn't
-            PyErr_SetString(
-                PyExc_TypeError, "int() can't convert non-string with explicit base"
-            );
-            break;
-
         case ActionType::ERROR_INVALID_INT:
             // Raise an exception due to an invalid integer
             PyErr_Format(
@@ -243,15 +245,14 @@ private:
             );
             break;
 
-        case ActionType::ERROR_INVALID_BASE: // TODO - duplciate
+        default:
+            // ERROR_ILLEGAL_EXPLICIT_BASE
+            // ERROR_INVALID_BASE
             // Raise an exception due to an invalid base for integer conversion
             PyErr_SetString(
                 PyExc_TypeError, "int() can't convert non-string with explicit base"
             );
             break;
-
-        default:
-            Py_UNREACHABLE();
         }
 
         return nullptr;
