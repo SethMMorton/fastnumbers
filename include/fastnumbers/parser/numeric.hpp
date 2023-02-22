@@ -153,7 +153,7 @@ public:
             }
 
             // Lambda used to pass a value into a RawPayload<T> object
-            auto pass_value = [this](const auto value) -> RawPayload<T> {
+            auto pass_value = [&](const auto value) -> RawPayload<T> {
                 return cast_num_check_overflow<T>(value);
             };
 

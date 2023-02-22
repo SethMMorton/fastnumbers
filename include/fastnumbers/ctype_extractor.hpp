@@ -63,7 +63,7 @@ public:
 
         // Function to pass-through a valid value, handling the special
         // case of the value being NaN or INF and requiring a replacement.
-        auto handle_value = [this, input](const T value) -> T {
+        auto handle_value = [&](const T value) -> T {
             if constexpr (std::is_floating_point_v<T>) {
                 const bool replace_nan = !std::holds_alternative<std::monostate>(m_nan);
                 const bool replace_inf = !std::holds_alternative<std::monostate>(m_inf);

@@ -247,7 +247,7 @@ private:
                 },
 
                 // For errors, convert from "raw" errors to "action" errors
-                [this, ntype](const ErrorType err) -> Payload {
+                [ntype](const ErrorType err) -> Payload {
                     // NOTE: We explicitly are not handling ErrorType:OVERFLOW_
                     // because it cannot be returned in the PyObject* code path.
                     if (err == ErrorType::BAD_VALUE) {
