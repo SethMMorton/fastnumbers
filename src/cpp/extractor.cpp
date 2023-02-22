@@ -9,8 +9,7 @@
 #include "fastnumbers/user_options.hpp"
 
 // Forward declarations
-using CharUniParser = std::variant<CharacterParser, UnicodeParser>;
-CharUniParser
+AnyParser
 parse_unicode_to_char(PyObject* obj, Buffer& char_buffer, const UserOptions& options);
 
 AnyParser extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& options)
@@ -41,12 +40,7 @@ AnyParser extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& optio
         }
 
         // Here is the special-case handling for non-ASCII unicode.
-        auto parser = parse_unicode_to_char(obj, buffer, options);
-        if (std::holds_alternative<CharacterParser>(parser)) {
-            return std::get<CharacterParser>(parser);
-        } else {
-            return std::get<UnicodeParser>(parser);
-        }
+        return parse_unicode_to_char(obj, buffer, options);
     } else if (PyBytes_Check(obj)) {
         return CharacterParser(
             PyBytes_AS_STRING(obj),
@@ -89,7 +83,7 @@ AnyParser extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& optio
 }
 
 /// Obtain either a CharacterParser or UnicodeParser from unicode data
-CharUniParser
+AnyParser
 parse_unicode_to_char(PyObject* obj, Buffer& char_buffer, const UserOptions& options)
 {
     const unsigned kind = PyUnicode_KIND(obj); // Unicode storage format.
