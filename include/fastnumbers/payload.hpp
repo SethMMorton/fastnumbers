@@ -20,6 +20,13 @@ enum class ActionType {
     ERROR_ILLEGAL_EXPLICIT_BASE, ///< Raise illegal explict base exception
 };
 
+/// The types of errors this class can encounter
+enum class ErrorType {
+    BAD_VALUE, ///< Error because the given value was not valid
+    OVERFLOW_, ///< Error because the given value was out-of-range
+    TYPE_ERROR, ///< Error because the input was not of correct type
+};
+
 /**
  * \brief Transfer data intended to be converted to Python objects
  *
@@ -28,3 +35,12 @@ enum class ActionType {
  * transfer into "Python-land".
  */
 using Payload = std::variant<PyObject*, ActionType>;
+
+template <typename T>
+/**
+ * \brief Transfer data intended to be kept as C-types
+ *
+ * Use of this class removes the need to keep track of error state
+ * after returning a value.
+ */
+using RawPayload = std::variant<T, ErrorType>;

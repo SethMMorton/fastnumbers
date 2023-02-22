@@ -64,7 +64,7 @@ public:
             overloaded {
 
                 // If the payload contains a Python object, just return directly
-                [*this](PyObject* retval) -> PyObject* {
+                [this](PyObject* retval) -> PyObject* {
                     if (retval == nullptr) {
                         return fail_action();
                     }
@@ -72,7 +72,7 @@ public:
                 },
 
                 // If the payload contains an action type, act on it
-                [*this](const ActionType atype) -> PyObject* {
+                [this](const ActionType atype) -> PyObject* {
                     switch (atype) {
                     // Return the appropriate value for when infinity is found
                     case ActionType::INF_ACTION:

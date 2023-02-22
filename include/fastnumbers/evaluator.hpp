@@ -16,7 +16,7 @@ template <typename ParserT>
 class Evaluator {
 public:
     /// Constructor from a Python object
-    Evaluator(PyObject* obj, const UserOptions& options, ParserT& parser)
+    Evaluator(PyObject* obj, const UserOptions& options, const ParserT& parser)
         : m_obj(obj)
         , m_parser(parser)
         , m_options(options)
@@ -78,7 +78,7 @@ private:
     PyObject* m_obj;
 
     /// A Parser object used for evaluating the Python object
-    ParserT& m_parser;
+    const ParserT& m_parser;
 
     /// Hold the evaluator options
     UserOptions m_options;
@@ -90,11 +90,6 @@ private:
         const NumberFlags typeflags = m_parser.get_number_type();
         constexpr NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
 
-        // Stop now for a type error
-        if (m_parser.type_error()) {
-            return typed_error(ntype);
-        }
-
         // Otherwise, tell the downstream parser what action to take based
         // on the user requested type
         switch (ntype) {
@@ -102,18 +97,18 @@ private:
             if (typeflags & nan_or_inf) {
                 return handle_nan_and_inf();
             } else if (options().allow_coerce()) {
-                return m_parser.as_pyfloat(false, true);
+                return convert(m_parser.as_pyfloat(false, true), ntype);
             } else if (typeflags & NumberType::Float) {
-                return m_parser.as_pyfloat();
+                return convert(m_parser.as_pyfloat(), ntype);
             } else {
-                return m_parser.as_pyint();
+                return convert(m_parser.as_pyint(), ntype);
             }
 
         case UserType::FLOAT:
             if (typeflags & nan_or_inf) {
                 return handle_nan_and_inf();
             } else {
-                return m_parser.as_pyfloat();
+                return convert(m_parser.as_pyfloat(), ntype);
             }
 
         case UserType::INT:
@@ -122,8 +117,11 @@ private:
             if (!options().is_default_base()) {
                 return ActionType::ERROR_INVALID_BASE;
             }
-            return (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
-                                                   : m_parser.as_pyint();
+            return convert(
+                (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
+                                                : m_parser.as_pyint(),
+                ntype
+            );
         }
         Py_UNREACHABLE();
     }
@@ -168,12 +166,10 @@ private:
             }
 
             // Otherwise, attempt to convert to a python float
-            // and optionally make as integer and if not signal an error.
-            PyObject* result = m_parser.as_pyfloat(force_int, options().allow_coerce());
-            if (m_parser.errored()) {
-                return ActionType::ERROR_INVALID_FLOAT;
-            }
-            return result;
+            // and optionally make as integer
+            return convert(
+                m_parser.as_pyfloat(force_int, options().allow_coerce()), UserType::FLOAT
+            );
         }
     }
 
@@ -188,12 +184,7 @@ private:
         }
 
         // Otherwise, attempt to convert to a python float
-        // and if not signal an error.
-        PyObject* result = m_parser.as_pyfloat();
-        if (m_parser.errored()) {
-            return ActionType::ERROR_INVALID_FLOAT;
-        }
-        return result;
+        return convert(m_parser.as_pyfloat(), UserType::FLOAT);
     }
 
     /// Logic for evaluating a text python object as an int
@@ -209,12 +200,7 @@ private:
         }
 
         // Otherwise, attempt to convert to a python int
-        // and if not signal an error.
-        PyObject* result = m_parser.as_pyint();
-        if (m_parser.errored()) {
-            return ActionType::ERROR_INVALID_INT;
-        }
-        return result;
+        return convert(m_parser.as_pyint(), UserType::INT);
     }
 
     /// Return an error due to a bad type
@@ -254,5 +240,35 @@ private:
         const NumberFlags typeflags = m_parser.get_number_type();
         return typeflags & NumberType::NaN ? nan_action(m_parser.is_negative())
                                            : inf_action(m_parser.is_negative());
+    }
+
+    /// Convert the RawPayload data into Paylod data
+    Payload convert(const RawPayload<PyObject*>& payload, const UserType ntype) const
+    {
+        return std::visit(
+            overloaded {
+
+                // If the stored object is not an error, pass it along
+                [](PyObject* retval) -> Payload {
+                    return retval;
+                },
+
+                // For errors, convert from "raw" errors to "action" errors
+                [this, ntype](const ErrorType err) -> Payload {
+                    // NOTE: We explicitly are not handling ErrorType:OVERFLOW_
+                    // because it cannot be returned in the PyObject* code path.
+                    if (err == ErrorType::BAD_VALUE) {
+                        if (ntype == UserType::FLOAT || ntype == UserType::REAL) {
+                            return ActionType::ERROR_INVALID_FLOAT;
+                        } else {
+                            return ActionType::ERROR_INVALID_INT;
+                        }
+                    } else {
+                        return typed_error(ntype);
+                    }
+                },
+            },
+            payload
+        );
     }
 };

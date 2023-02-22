@@ -9,6 +9,7 @@
 #include <Python.h>
 
 #include "fastnumbers/helpers.hpp"
+#include "fastnumbers/payload.hpp"
 #include "fastnumbers/third_party/EnumClass.h"
 #include "fastnumbers/user_options.hpp"
 
@@ -57,21 +58,6 @@ public:
     /// What type of parser is this?
     ParserType parser_type() const { return m_ptype; };
 
-    /// Whether the last conversion encountered an error
-    bool errored() const { return m_error_type != ErrorType::NONE; }
-
-    /// Whether the last conversion (possibly potentially) had an overflow
-    bool overflow() const { return m_error_type == ErrorType::OVERFLOW_; }
-
-    /// Whether there is is just a plain-old TypeError
-    bool type_error() const
-    {
-        if (parser_type() == ParserType::NUMERIC) {
-            return get_number_type() == static_cast<NumberFlags>(NumberType::INVALID);
-        }
-        return false;
-    }
-
     /// Was an explict base given illegally?
     bool illegal_explicit_base() const
     {
@@ -88,17 +74,17 @@ public:
     //       as virtual functions here, but virtual functions are not allowed
     //       to also be templates, so we just define them at in the sub-classes.
 
-    /// Convert the stored object to a python int (check error state)
-    virtual PyObject* as_pyint() = 0;
+    /// Convert the stored object to a python int
+    virtual RawPayload<PyObject*> as_pyint() const = 0;
 
     /**
      * \brief Convert the stored object to a python float but possibly
-     *        coerce to an integer (check error state)
+     *        coerce to an integer
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    virtual PyObject* as_pyfloat(const bool force_int = false, const bool coerce = false)
-        = 0;
+    virtual RawPayload<PyObject*>
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const = 0;
 
     /// Check the type of the number.
     virtual NumberFlags get_number_type() const { return m_number_type; }
@@ -137,7 +123,6 @@ protected:
     )
         : m_ptype(ptype)
         , m_number_type(NumberType::UNSET)
-        , m_error_type(ErrorType::NONE)
         , m_negative(false)
         , m_explicit_base_allowed(explicit_base_allowed)
         , m_options(options)
@@ -145,15 +130,6 @@ protected:
 
     /// Cache the number type
     void set_number_type(const NumberFlags ntype) { m_number_type = ntype; }
-
-    /// Record that the conversion encountered an error
-    void encountered_conversion_error() { m_error_type = ErrorType::CANNOT_PARSE; }
-
-    /// Record that the conversion encountered a (possibly potential) overflow
-    void encountered_overflow() { m_error_type = ErrorType::OVERFLOW_; }
-
-    /// Reset the error state to "no error"
-    void reset_error() { m_error_type = ErrorType::NONE; }
 
     /// Define whether an explicitly give base is allowed for integers
     void set_explict_base_allowed(bool explicit_base_allowed)
@@ -174,17 +150,6 @@ private:
     /// Tracker of what type is being stored
     NumberFlags m_number_type;
 
-    /// The types of errors this class can encounter
-    enum ErrorType {
-        NONE,
-        CANNOT_PARSE,
-        OVERFLOW_,
-        TYPE_ERROR,
-    };
-
-    /// Tracker of what error is being stored
-    ErrorType m_error_type;
-
     /// Whether or not text is a negative number
     bool m_negative;
 
@@ -201,7 +166,7 @@ protected:
         typename T2,
         typename std::enable_if_t<std::is_integral_v<T1> && std::is_integral_v<T2>, bool>
         = true>
-    T1 cast_num_check_overflow(const T2 value)
+    RawPayload<T1> cast_num_check_overflow(const T2 value) const
     {
         // Only do the overflow checking if T1 is a smaller type than T2
         // or if one is signed and the other is unsigned.
@@ -212,8 +177,7 @@ protected:
         if constexpr (std::is_signed_v<T1> == std::is_signed_v<T2>) {
             if constexpr (t1_max < t2_max || t1_min > t2_min) {
                 if (value < t1_min || value > t1_max) {
-                    encountered_overflow();
-                    return static_cast<T1>(0);
+                    return ErrorType::OVERFLOW_;
                 }
             }
         } else { // one is signed, the other is not
@@ -228,8 +192,7 @@ protected:
                         // This likely will never happen based on the fact that only
                         // unicode digits will pass through this branch, and those seem
                         // to only range from 0 to 9.
-                        encountered_overflow();
-                        return static_cast<T1>(0);
+                        return ErrorType::OVERFLOW_;
                     }
                 }
             }

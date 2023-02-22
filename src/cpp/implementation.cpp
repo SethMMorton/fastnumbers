@@ -38,7 +38,7 @@ collect_payload(PyObject* obj, const UserOptions& options, const UserType ntype)
     // std:visit is used to obtain the payload data no matter which parser was
     // returned.
     return std::visit(
-        [&](auto parser) -> Payload {
+        [obj, options, ntype](const auto& parser) -> Payload {
             return Evaluator<decltype(parser)>(obj, options, parser).as_type(ntype);
         },
         extract_parser(obj, buffer, options)
@@ -66,15 +66,11 @@ collect_type(PyObject* obj, const UserOptions& options, const PyObject* consider
     // std:visit is used to obtain the number flag no matter which parser was
     // returned.
     return std::visit(
-        [&](auto parser) -> NumberFlags {
-            if constexpr (std::is_same_v<decltype(parser), NumericParser>) {
-                if (str_only) {
-                    return NumberType::INVALID;
-                }
-            } else {
-                if (num_only) {
-                    return NumberType::INVALID;
-                }
+        [obj, options, str_only, num_only](const auto& parser) -> NumberFlags {
+            if (str_only && parser.parser_type() == ParserType::NUMERIC) {
+                return NumberType::INVALID;
+            } else if (num_only && parser.parser_type() != ParserType::NUMERIC) {
+                return NumberType::INVALID;
             }
             return Evaluator<decltype(parser)>(obj, options, parser).number_type();
         },
