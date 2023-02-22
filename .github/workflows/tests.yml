@@ -39,7 +39,7 @@ jobs:
       - name: Set CFLAGS
         if: matrix.os == 'ubuntu-latest'
         # Need no optimization for code coverage
-        run: echo CFLAGS="--coverage -O0" >> $GITHUB_ENV
+        run: echo CFLAGS="--coverage -Og" >> $GITHUB_ENV
 
       - name: Build and Install Using pip
         if: matrix.os != 'ubuntu-latest'
