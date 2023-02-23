@@ -363,8 +363,12 @@ def fn_map(iterable, func=fastnumbers.try_float):
     return list(map(func, iterable))
 
 
-def fn_then_array(iterable, func=fastnumbers.map_try_float):
-    return np.array(func(iterable), dtype=np.float64)
+def fn_map_option(iterable, func=fastnumbers.try_float):
+    return func(iterable, map=True)
+
+
+def fn_then_array(iterable, func=fastnumbers.try_float):
+    return np.array(func(iterable, map=True), dtype=np.float64)
 
 
 output = np.empty(50, dtype=np.float64)
@@ -452,7 +456,7 @@ timer.time_functions()
 
 
 timer = Timer(
-    "Timing comparison of `map_try_float` vs. iterating over "
+    "Timing comparison of `map` option vs. iterating over "
     "`try_float` for a 50 element list"
 )
 timer.add_function(
@@ -468,20 +472,20 @@ timer.add_function(
     iterable=True,
 )
 timer.add_function(
-    "map_try_float",
-    "map_try_float(iterable)",
-    "from fastnumbers import map_try_float",
+    "fn_map_option",
+    "try_float(iterable, map=True)",
+    "from __main__ import fn_map_option",
     iterable=True,
 )
 timer.time_functions()
 
 timer = Timer(
-    "Timing comparison of `try_array` vs. `map_try_float` "
+    "Timing comparison of `try_array` vs. `map` option "
     "for a 50 element list to a numpy array"
 )
 timer.add_function(
     "fn_then_array",
-    "np.array(map_try_float(iterable))",
+    "np.array(try_float(iterable, map=True))",
     "from __main__ import fn_then_array; import numpy as np",
     iterable=True,
 )

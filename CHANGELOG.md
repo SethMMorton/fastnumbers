@@ -2,7 +2,7 @@ Unreleased
 ---
 
 ### Added
-- Added `map_try_real`, `map_try_float`, `map_try_int`, and `map_try_forceint`
+- Added the `map` option to all ``try_*`` functions
   to enable very fast conversions of lists or other iterables (Issues
  [#61](https://github.com/SethMMorton/fastnumbers/issues/61) and
  [#63](https://github.com/SethMMorton/fastnumbers/issues/63))
