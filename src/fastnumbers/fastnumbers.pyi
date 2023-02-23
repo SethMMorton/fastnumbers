@@ -26,23 +26,8 @@ class ItWillFloat(Protocol):
     def __float__(self) -> pyfloat: ...
 
 InputType = pyint | pyfloat | ItWillFloat | HasIndex | HasInt | str | bytes | bytearray
-ValidInputType = TypeVar(
-    "ValidInputType",
-    pyint,
-    pyfloat,
-    ItWillFloat,
-    HasIndex,
-    HasInt,
-    str,
-    bytes,
-    bytearray,
-)
 AnyInputType = TypeVar("AnyInputType")
 QueryInputType = TypeVar("QueryInputType")
-Default = TypeVar("Default")
-Inf = TypeVar("Inf")
-Nan = TypeVar("Nan")
-TransformType = TypeVar("TransformType")
 
 NumInputType = TypeVar("NumInputType", pyint, pyfloat, ItWillFloat, HasIndex, HasInt)
 StrInputType = TypeVar("StrInputType", str, bytes, bytearray)
@@ -50,6 +35,8 @@ IntBaseType = TypeVar("IntBaseType", pyint, HasIndex)
 
 ConsiderType = STRING_ONLY_T | NUMBER_ONLY_T | None
 InfNanCheckType = STRING_ONLY_T | NUMBER_ONLY_T | ALLOWED_T | DISALLOWED_T
+TrySelectorsType = ALLOWED_T | INPUT_T | RAISE_T
+FloatInt = pyfloat | pyint
 
 # Try real
 @overload
@@ -67,8 +54,8 @@ def try_real(
 def try_real(
     x: pyfloat,
     *,
-    inf: ALLOWED_T | INPUT_T | RAISE_T | pyfloat | Callable[[pyfloat], pyfloat] = ...,
-    nan: ALLOWED_T | INPUT_T | RAISE_T | pyfloat | Callable[[pyfloat], pyfloat] = ...,
+    inf: TrySelectorsType | pyfloat | Callable[[pyfloat], pyfloat] = ...,
+    nan: TrySelectorsType | pyfloat | Callable[[pyfloat], pyfloat] = ...,
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: Literal[False],
@@ -78,65 +65,41 @@ def try_real(
 def try_real(
     x: NumInputType,
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[NumInputType], pyfloat | pyint] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[NumInputType], pyfloat | pyint] = ...,
+    inf: TrySelectorsType | FloatInt | Callable[[NumInputType], FloatInt] = ...,
+    nan: TrySelectorsType | FloatInt | Callable[[NumInputType], FloatInt] = ...,
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> pyfloat | pyint: ...
+) -> FloatInt: ...
 @overload
 def try_real(
     x: StrInputType,
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
+    inf: TrySelectorsType
+    | FloatInt
     | StrInputType
-    | Callable[[StrInputType], pyfloat | pyint | StrInputType] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
+    | Callable[[StrInputType], FloatInt | StrInputType] = ...,
+    nan: TrySelectorsType
+    | FloatInt
     | StrInputType
-    | Callable[[StrInputType], pyfloat | pyint | StrInputType] = ...,
+    | Callable[[StrInputType], FloatInt | StrInputType] = ...,
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> pyfloat | pyint | StrInputType: ...
+) -> FloatInt | StrInputType: ...
 @overload
 def try_real(
     x: StrInputType,
     *,
-    inf: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[StrInputType], pyfloat | pyint] = ...,
-    nan: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[StrInputType], pyfloat | pyint] = ...,
-    on_fail: RAISE_T | pyfloat | pyint | Callable[[StrInputType], pyfloat | pyint],
+    inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[StrInputType], FloatInt] = ...,
+    nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[StrInputType], FloatInt] = ...,
+    on_fail: RAISE_T | FloatInt | Callable[[StrInputType], FloatInt],
     on_type_error: Any = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> pyfloat | pyint: ...
+) -> FloatInt: ...
 @overload
 def try_real(
     x: NumInputType,
@@ -163,21 +126,13 @@ def try_real(
 def try_real(
     x: AnyInputType,
     *,
-    inf: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[AnyInputType], pyfloat | pyint] = ...,
-    nan: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[AnyInputType], pyfloat | pyint] = ...,
-    on_fail: RAISE_T | pyfloat | pyint | Callable[[AnyInputType], pyfloat | pyint],
-    on_type_error: pyfloat | pyint | Callable[[AnyInputType], pyfloat | pyint],
+    inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
+    nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
+    on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
+    on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> pyfloat | pyint: ...
+) -> FloatInt: ...
 @overload
 def try_real(
     x: Any,
@@ -195,16 +150,8 @@ def try_real(
 def try_float(
     x: NumInputType,
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | Callable[[NumInputType], pyfloat] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | Callable[[NumInputType], pyfloat] = ...,
+    inf: TrySelectorsType | pyfloat | Callable[[NumInputType], pyfloat] = ...,
+    nan: TrySelectorsType | pyfloat | Callable[[NumInputType], pyfloat] = ...,
     on_fail: Any = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
@@ -213,15 +160,11 @@ def try_float(
 def try_float(
     x: StrInputType,
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
+    inf: TrySelectorsType
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
+    nan: TrySelectorsType
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
@@ -401,8 +344,8 @@ def map_try_real(
 def map_try_real(
     x: Iterable[pyfloat],
     *,
-    inf: ALLOWED_T | INPUT_T | RAISE_T | pyfloat | Callable[[pyfloat], pyfloat] = ...,
-    nan: ALLOWED_T | INPUT_T | RAISE_T | pyfloat | Callable[[pyfloat], pyfloat] = ...,
+    inf: TrySelectorsType | pyfloat | Callable[[pyfloat], pyfloat] = ...,
+    nan: TrySelectorsType | pyfloat | Callable[[pyfloat], pyfloat] = ...,
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: Literal[False],
@@ -412,65 +355,41 @@ def map_try_real(
 def map_try_real(
     x: Iterable[NumInputType],
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[NumInputType], pyfloat | pyint] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[NumInputType], pyfloat | pyint] = ...,
+    inf: TrySelectorsType | FloatInt | Callable[[NumInputType], FloatInt] = ...,
+    nan: TrySelectorsType | FloatInt | Callable[[NumInputType], FloatInt] = ...,
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> list[pyfloat | pyint]: ...
+) -> list[FloatInt]: ...
 @overload
 def map_try_real(
     x: Iterable[StrInputType],
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
+    inf: TrySelectorsType
+    | FloatInt
     | StrInputType
-    | Callable[[StrInputType], pyfloat | pyint | StrInputType] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | pyint
+    | Callable[[StrInputType], FloatInt | StrInputType] = ...,
+    nan: TrySelectorsType
+    | FloatInt
     | StrInputType
-    | Callable[[StrInputType], pyfloat | pyint | StrInputType] = ...,
+    | Callable[[StrInputType], FloatInt | StrInputType] = ...,
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> list[pyfloat | pyint | StrInputType]: ...
+) -> list[FloatInt | StrInputType]: ...
 @overload
 def map_try_real(
     x: Iterable[StrInputType],
     *,
-    inf: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[StrInputType], pyfloat | pyint] = ...,
-    nan: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[StrInputType], pyfloat | pyint] = ...,
-    on_fail: RAISE_T | pyfloat | pyint | Callable[[StrInputType], pyfloat | pyint],
+    inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[StrInputType], FloatInt] = ...,
+    nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[StrInputType], FloatInt] = ...,
+    on_fail: RAISE_T | FloatInt | Callable[[StrInputType], FloatInt],
     on_type_error: Any = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> list[pyfloat | pyint]: ...
+) -> list[FloatInt]: ...
 @overload
 def map_try_real(
     x: Iterable[NumInputType],
@@ -497,21 +416,13 @@ def map_try_real(
 def map_try_real(
     x: Iterable[AnyInputType],
     *,
-    inf: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[AnyInputType], pyfloat | pyint] = ...,
-    nan: ALLOWED_T
-    | RAISE_T
-    | pyfloat
-    | pyint
-    | Callable[[AnyInputType], pyfloat | pyint] = ...,
-    on_fail: RAISE_T | pyfloat | pyint | Callable[[AnyInputType], pyfloat | pyint],
-    on_type_error: pyfloat | pyint | Callable[[AnyInputType], pyfloat | pyint],
+    inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
+    nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
+    on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
+    on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> list[pyfloat | pyint]: ...
+) -> list[FloatInt]: ...
 @overload
 def map_try_real(
     x: Iterable[Any],
@@ -529,16 +440,8 @@ def map_try_real(
 def map_try_float(
     x: Iterable[NumInputType],
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | Callable[[NumInputType], pyfloat] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
-    | pyfloat
-    | Callable[[NumInputType], pyfloat] = ...,
+    inf: TrySelectorsType | pyfloat | Callable[[NumInputType], pyfloat] = ...,
+    nan: TrySelectorsType | pyfloat | Callable[[NumInputType], pyfloat] = ...,
     on_fail: Any = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
@@ -547,15 +450,11 @@ def map_try_float(
 def map_try_float(
     x: Iterable[StrInputType],
     *,
-    inf: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
+    inf: TrySelectorsType
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
-    nan: ALLOWED_T
-    | INPUT_T
-    | RAISE_T
+    nan: TrySelectorsType
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
@@ -722,403 +621,269 @@ def map_try_forceint(
 # Fast real
 @overload
 def fast_real(
-    x: ValidInputType,
+    x: pyint,
+    default: Any = ...,
     *,
+    on_fail: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
     coerce: bool = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | pyint | pyfloat: ...
+) -> pyint: ...
 @overload
 def fast_real(
-    x: ValidInputType,
+    x: pyfloat,
+    default: Any = ...,
     *,
+    on_fail: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
-    inf: Inf,
-    coerce: bool = ...,
+    coerce: Literal[False],
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | Inf | pyint | pyfloat: ...
+) -> pyfloat: ...
 @overload
 def fast_real(
-    x: ValidInputType,
+    x: NumInputType,
+    default: Any = ...,
     *,
+    on_fail: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
-    nan: Nan,
-    coerce: bool = ...,
+    coerce: Literal[True] = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | Nan | pyint | pyfloat: ...
+) -> FloatInt: ...
 @overload
 def fast_real(
-    x: ValidInputType,
+    x: StrInputType,
+    default: FloatInt,
     *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
-    nan: Nan,
+    raise_on_invalid: Literal[False] = ...,
     coerce: bool = ...,
+    inf: FloatInt = ...,
+    nan: FloatInt = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | Inf | Nan | pyint | pyfloat: ...
+) -> FloatInt: ...
 @overload
 def fast_real(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
+    raise_on_invalid: Literal[True],
     coerce: bool = ...,
+    inf: FloatInt = ...,
+    nan: FloatInt = ...,
     allow_underscores: bool = ...,
-) -> Default | pyint | pyfloat: ...
+) -> FloatInt: ...
 @overload
 def fast_real(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
+    on_fail: Callable[[StrInputType], FloatInt],
+    raise_on_invalid: Literal[False] = ...,
     coerce: bool = ...,
-    inf: Inf,
+    inf: FloatInt = ...,
+    nan: FloatInt = ...,
     allow_underscores: bool = ...,
-) -> Default | Inf | pyint | pyfloat: ...
+) -> FloatInt: ...
 @overload
 def fast_real(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
+    default: StrInputType = ...,
     *,
-    raise_on_invalid: bool = ...,
+    on_fail: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
     coerce: bool = ...,
-    nan: Nan,
+    inf: FloatInt | StrInputType = ...,
+    nan: FloatInt | StrInputType = ...,
     allow_underscores: bool = ...,
-) -> Default | Nan | pyint | pyfloat: ...
+) -> FloatInt | StrInputType: ...
 @overload
 def fast_real(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
+    default: Any = ...,
     *,
-    raise_on_invalid: bool = ...,
+    on_fail: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
     coerce: bool = ...,
-    inf: Inf,
-    nan: Nan,
+    inf: Any = ...,
+    nan: Any = ...,
     allow_underscores: bool = ...,
-) -> Default | Inf | Nan | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    coerce: bool = ...,
-    allow_underscores: bool = ...,
-) -> TransformType | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    coerce: bool = ...,
-    inf: Inf,
-    allow_underscores: bool = ...,
-) -> TransformType | Inf | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    coerce: bool = ...,
-    nan: Nan,
-    allow_underscores: bool = ...,
-) -> TransformType | Nan | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    coerce: bool = ...,
-    inf: Inf,
-    nan: Nan,
-    allow_underscores: bool = ...,
-) -> TransformType | Inf | Nan | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    coerce: bool = ...,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    coerce: bool = ...,
-    inf: Inf,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | Inf | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    coerce: bool = ...,
-    nan: Nan,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | Nan | pyint | pyfloat: ...
-@overload
-def fast_real(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    coerce: bool = ...,
-    inf: Inf,
-    nan: Nan,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | Inf | Nan | pyint | pyfloat: ...
+) -> FloatInt | Any: ...
 
 # Fast float
 @overload
 def fast_float(
-    x: ValidInputType,
+    x: NumInputType,
+    default: Any = ...,
     *,
+    on_fail: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | pyfloat: ...
+) -> pyfloat: ...
 @overload
 def fast_float(
-    x: ValidInputType,
+    x: StrInputType,
+    default: pyfloat,
     *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
+    raise_on_invalid: Literal[False] = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | Inf | pyfloat: ...
+) -> pyfloat: ...
 @overload
 def fast_float(
-    x: ValidInputType,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
-    nan: Nan,
+    raise_on_invalid: Literal[True],
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | Nan | pyfloat: ...
+) -> pyfloat: ...
 @overload
 def fast_float(
-    x: ValidInputType,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
-    nan: Nan,
+    on_fail: Callable[[StrInputType], pyfloat],
+    raise_on_invalid: Literal[False] = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | Inf | Nan | pyfloat: ...
+) -> pyfloat: ...
 @overload
 def fast_float(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
+    default: StrInputType = ...,
     *,
-    raise_on_invalid: bool = ...,
+    on_fail: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    inf: pyfloat | StrInputType = ...,
+    nan: pyfloat | StrInputType = ...,
     allow_underscores: bool = ...,
-) -> Default | pyfloat: ...
+) -> pyfloat | StrInputType: ...
 @overload
 def fast_float(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
+    default: Any = ...,
     *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
+    on_fail: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    inf: Any = ...,
+    nan: Any = ...,
     allow_underscores: bool = ...,
-) -> Default | Inf | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    default: Default,
-    *,
-    raise_on_invalid: bool = ...,
-    nan: Nan,
-    allow_underscores: bool = ...,
-) -> Default | Nan | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    default: Default,
-    *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
-    nan: Nan,
-    allow_underscores: bool = ...,
-) -> Default | Inf | Nan | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    allow_underscores: bool = ...,
-) -> TransformType | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    inf: Inf,
-    allow_underscores: bool = ...,
-) -> TransformType | Inf | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    nan: Nan,
-    allow_underscores: bool = ...,
-) -> TransformType | Nan | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    inf: Inf,
-    nan: Nan,
-    allow_underscores: bool = ...,
-) -> TransformType | Inf | Nan | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | Inf | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    nan: Nan,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | Nan | pyfloat: ...
-@overload
-def fast_float(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    inf: Inf,
-    nan: Nan,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | Inf | Nan | pyfloat: ...
+) -> pyfloat | Any: ...
 
 # Fast int
 @overload
 def fast_int(
-    x: ValidInputType,
+    x: NumInputType,
+    default: Any = ...,
     *,
+    on_fail: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | pyint: ...
+) -> pyint: ...
 @overload
 def fast_int(
-    x: ValidInputType,
+    x: StrInputType,
+    default: pyint,
     *,
-    raise_on_invalid: bool = ...,
-    base: IntBaseType,
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | pyint: ...
+) -> pyint: ...
 @overload
 def fast_int(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
+    raise_on_invalid: Literal[True],
+    base: IntBaseType = ...,
     allow_underscores: bool = ...,
-) -> Default | pyint: ...
+) -> pyint: ...
 @overload
 def fast_int(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
-    base: IntBaseType,
+    on_fail: Callable[[StrInputType], pyint],
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
     allow_underscores: bool = ...,
-) -> Default | pyint: ...
+) -> pyint: ...
 @overload
 def fast_int(
-    x: ValidInputType,
+    x: StrInputType,
+    default: StrInputType = ...,
     *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
+    on_fail: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
     allow_underscores: bool = ...,
-) -> TransformType | pyint: ...
+) -> pyint | StrInputType: ...
 @overload
 def fast_int(
-    x: ValidInputType,
+    x: StrInputType,
+    default: Any = ...,
     *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
-    base: IntBaseType,
+    on_fail: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
     allow_underscores: bool = ...,
-) -> TransformType | pyint: ...
-@overload
-def fast_int(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | pyint: ...
-@overload
-def fast_int(
-    x: ValidInputType,
-    *,
-    raise_on_invalid: bool = ...,
-    base: IntBaseType,
-    allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | pyint: ...
+) -> pyint | Any: ...
 
 # Fast forceint
 @overload
 def fast_forceint(
-    x: ValidInputType,
+    x: NumInputType,
+    default: Any = ...,
     *,
+    on_fail: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
     allow_underscores: bool = ...,
-) -> ValidInputType | pyint: ...
+) -> pyint: ...
 @overload
 def fast_forceint(
-    x: ValidInputType,
-    default: Default,
+    x: StrInputType,
+    default: pyint,
     *,
-    raise_on_invalid: bool = ...,
+    raise_on_invalid: Literal[False] = ...,
     allow_underscores: bool = ...,
-) -> Default | pyint: ...
+) -> pyint: ...
 @overload
 def fast_forceint(
-    x: ValidInputType,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
-    on_fail: Callable[[ValidInputType], TransformType],
+    raise_on_invalid: Literal[True],
     allow_underscores: bool = ...,
-) -> TransformType | pyint: ...
+) -> pyint: ...
 @overload
 def fast_forceint(
-    x: ValidInputType,
+    x: StrInputType,
     *,
-    raise_on_invalid: bool = ...,
+    on_fail: Callable[[StrInputType], pyint],
+    raise_on_invalid: Literal[False] = ...,
     allow_underscores: bool = ...,
-    key: Callable[[ValidInputType], TransformType],
-) -> TransformType | pyint: ...
+) -> pyint: ...
+@overload
+def fast_forceint(
+    x: StrInputType,
+    default: StrInputType = ...,
+    *,
+    on_fail: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    allow_underscores: bool = ...,
+) -> pyint | StrInputType: ...
+@overload
+def fast_forceint(
+    x: StrInputType,
+    default: Any = ...,
+    *,
+    on_fail: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    allow_underscores: bool = ...,
+) -> pyint | Any: ...
 
 # Checking
 
@@ -1216,4 +981,9 @@ def int(x: InputType = ...) -> pyint: ...
 @overload
 def int(x: InputType, base: IntBaseType) -> pyint: ...
 def float(x: InputType = ...) -> pyfloat: ...
+@overload
+def real(x: pyint = ..., *, coerce: bool = ...) -> pyint: ...
+@overload
+def real(x: pyfloat = ..., *, coerce: Literal[False]) -> pyfloat: ...
+@overload
 def real(x: InputType = ..., *, coerce: bool = ...) -> pyint | pyfloat: ...
