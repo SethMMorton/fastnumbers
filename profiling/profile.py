@@ -478,13 +478,13 @@ timer.add_function(
 timer.add_function(
     "fn_map_iter_option",
     "list(try_float(iterable, map=True))",
-    "from __main__ import fn_map_option",
+    "from __main__ import fn_map_iter_option",
     iterable=True,
 )
 timer.add_function(
     "fn_map_option",
     "try_float(iterable, map=list)",
-    "from __main__ import fn_map_iter_option",
+    "from __main__ import fn_map_option",
     iterable=True,
 )
 timer.time_functions()

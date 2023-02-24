@@ -209,8 +209,8 @@ The difference is that the ``map`` option is 2x the speed of the list
 comprehension method, and 1.5x the speed of the ``map`` method. The reason
 is that it avoids Python function call overhead on each iteration. Note that
 *True* causes the function to return an iterator, and *list* causes it to
-return a ``list``. In practice the performance of these are similar, but
-converting to a ``list`` directly is of course a bit faster.
+return a ``list``. In practice the performance of these are similar
+(see `Timing`_ for raw data).
 
 If you need to store your output in a ``numpy`` array, you can use
 ``try_array`` to do this conversion directly. This function has some
