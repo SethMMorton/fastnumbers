@@ -400,7 +400,8 @@ PyObject* type_query_impl(
 }
 
 // Implementation for iterating over a collection to populate a list
-PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+PyObject*
+list_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
 {
     // Create a python list into which to store the return values
     ListBuilder list_builder(input);
@@ -415,6 +416,145 @@ PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> co
 
     // Return the list to the user
     return list_builder.get();
+}
+
+/**
+ * \struct FastnumbersIterator
+ * \brief Object containing the state of the fastnumbers iterator
+ *
+ * This is a PyObject "subclass" that enables iterating over fastnumbers
+ * results.
+ *
+ * It is written in a very C-like way because it has to interface with C-code.
+ */
+struct FastnumbersIterator {
+    // clang-format off
+    PyObject_HEAD
+
+    /// The Python object over which to iterated
+    PyObject* it_input;
+    // clang-format on
+
+    /// Pointer to the active IterableManager
+    IterableManager<PyObject*>* it_man;
+
+    /// The C++ iterator
+    IterableManager<PyObject*>::ItemIterator it_iter;
+
+    // Track if this is the first iteration or not
+    bool it_first;
+
+    /// Deallocate the itertor object
+    static void dealloc(FastnumbersIterator* it)
+    {
+        Py_DECREF(it->it_input);
+        delete it->it_man;
+    }
+
+    /// Get a guess of the length of the iterator
+    static PyObject* len_guess(FastnumbersIterator* it, PyObject* Py_UNUSED(ignored))
+    {
+        return PyLong_FromSsize_t(get_length_hint(it->it_input));
+    }
+
+    /// Return the next value of the iterator
+    static PyObject* next(FastnumbersIterator* it)
+    {
+        assert(it != nullptr);
+        assert(it->it_man != nullptr);
+
+        // Run inside an exception handler to ensure anything we throw gets converted
+        // into a Python exception.
+        return ExceptionHandler(it->it_input).run([&it]() -> PyObject* {
+            // On the first iteration, prime the iterator.
+            // On subsequent iterations, just increment it.
+            if (it->it_first) {
+                it->it_first = false;
+                it->it_iter = it->it_man->begin();
+            } else {
+                ++it->it_iter;
+            }
+
+            // If the C++ iterator is exhausted, return NULL to
+            // tell Python the iterator is exhausted
+            if (it->it_iter == it->it_man->end()) {
+                return nullptr;
+            }
+
+            // Return the current value held in the itertor
+            return *it->it_iter;
+        });
+    }
+};
+
+/// Extra methods of the fastnumbers iterable object no standard in a type object
+static PyMethodDef fastnumbers_iterator_methods[] = {
+    { "__length_hint__",
+      (PyCFunction)FastnumbersIterator::len_guess,
+      METH_NOARGS,
+      "Get a length guess for the fastnumbers iterator" },
+    { NULL, NULL } /* sentinel */
+};
+
+/// The fastnumbers iterator type object definition
+PyTypeObject FastnumbersIteratorType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0) "fastnumbers_iterator", /* tp_name */
+    sizeof(FastnumbersIterator), /* tp_basicsize */
+    0, /* tp_itemsize */
+    /* methods */
+    (destructor)FastnumbersIterator::dealloc, /* tp_dealloc */
+    0, /* tp_vectorcall_offset */
+    0, /* tp_getattr */
+    0, /* tp_setattr */
+    0, /* tp_as_async */
+    0, /* tp_repr */
+    0, /* tp_as_number */
+    0, /* tp_as_sequence */
+    0, /* tp_as_mapping */
+    0, /* tp_hash */
+    0, /* tp_call */
+    0, /* tp_str */
+    PyObject_GenericGetAttr, /* tp_getattro */
+    0, /* tp_setattro */
+    0, /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT, /* tp_flags */
+    0, /* tp_doc */
+    0, /* tp_traverse */
+    0, /* tp_clear */
+    0, /* tp_richcompare */
+    0, /* tp_weaklistoffset */
+    PyObject_SelfIter, /* tp_iter */
+    (iternextfunc)FastnumbersIterator::next, /* tp_iternext */
+    fastnumbers_iterator_methods, /* tp_methods */
+    0,
+};
+
+// Implementation for iterating over a collection to populate an iterator
+PyObject*
+iter_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+{
+    // Create an instance of our iterator object as our iterator type
+    FastnumbersIterator* it
+        = PyObject_New(FastnumbersIterator, &FastnumbersIteratorType);
+    if (it == nullptr) {
+        return nullptr;
+    }
+
+    // Add to it the helper for iterating over the Python iterable
+    it->it_man = new IterableManager<PyObject*>(input, convert);
+
+    // Initialize with the end
+    it->it_iter = it->it_man->end();
+
+    // Store the input object over which we are iterating
+    it->it_input = input;
+    Py_INCREF(it->it_input);
+
+    // Indicate this is the first iteration
+    it->it_first = true;
+
+    // Return our iterator instance to Python-land
+    return (PyObject*)it;
 }
 
 /**

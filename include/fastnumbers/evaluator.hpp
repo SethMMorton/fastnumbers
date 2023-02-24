@@ -80,7 +80,7 @@ private:
     const ParserT& m_parser;
 
     /// Hold the evaluator options
-    UserOptions m_options;
+    const UserOptions m_options;
 
 private:
     /// Logic for evaluating a numeric python object

@@ -8,6 +8,16 @@
 #include "fastnumbers/exception.hpp"
 #include "fastnumbers/selectors.hpp"
 
+/// Obtain the length hint from a Python object
+Py_ssize_t get_length_hint(PyObject* length_hint_base)
+{
+    Py_ssize_t length_hint = PyObject_LengthHint(length_hint_base, 0);
+    if (length_hint < 0) {
+        throw exception_is_set();
+    }
+    return length_hint;
+}
+
 /**
  * \class ListBuilder
  * \brief Handles the details of creating and managing a Python list
@@ -82,17 +92,6 @@ private:
 
     /// The current location where we should add to the list
     Py_ssize_t m_index;
-
-private:
-    /// Obtain the length hint from a Python object
-    static Py_ssize_t get_length_hint(PyObject* length_hint_base)
-    {
-        Py_ssize_t length_hint = PyObject_LengthHint(length_hint_base, 0);
-        if (length_hint < 0) {
-            throw exception_is_set();
-        }
-        return length_hint;
-    }
 };
 
 /**
@@ -373,8 +372,13 @@ private:
         // of the iteration and we return return the sigil. If an exception is
         // set, well, we need to raise it.
         if ((item = PyIter_Next(m_iterator)) == nullptr) {
-            if (PyErr_Occurred()) {
-                throw exception_is_set();
+            PyObject* exc = nullptr;
+            if ((exc = PyErr_Occurred()) != nullptr) {
+                if (PyErr_GivenExceptionMatches(exc, PyExc_StopIteration)) {
+                    PyErr_Clear();
+                } else {
+                    throw exception_is_set();
+                }
             }
             return std::nullopt;
         }

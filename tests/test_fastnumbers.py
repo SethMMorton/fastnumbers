@@ -1657,10 +1657,10 @@ class TestMappingFunctions:
     @parametrize(
         "nomapper, mapper",
         [
-            (fastnumbers.try_real, partial(fastnumbers.try_real, map=True)),
-            (fastnumbers.try_float, partial(fastnumbers.try_float, map=True)),
-            (fastnumbers.try_int, partial(fastnumbers.try_int, map=True)),
-            (fastnumbers.try_forceint, partial(fastnumbers.try_forceint, map=True)),
+            (fastnumbers.try_real, partial(fastnumbers.try_real, map=list)),
+            (fastnumbers.try_float, partial(fastnumbers.try_float, map=list)),
+            (fastnumbers.try_int, partial(fastnumbers.try_int, map=list)),
+            (fastnumbers.try_forceint, partial(fastnumbers.try_forceint, map=list)),
         ],
     )
     @parametrize(
@@ -1693,10 +1693,10 @@ class TestMappingFunctions:
     @parametrize(
         "nomapper, mapper",
         [
-            (fastnumbers.try_real, partial(fastnumbers.try_real, map=True)),
-            (fastnumbers.try_float, partial(fastnumbers.try_float, map=True)),
-            (fastnumbers.try_int, partial(fastnumbers.try_int, map=True)),
-            (fastnumbers.try_forceint, partial(fastnumbers.try_forceint, map=True)),
+            (fastnumbers.try_real, partial(fastnumbers.try_real, map=list)),
+            (fastnumbers.try_float, partial(fastnumbers.try_float, map=list)),
+            (fastnumbers.try_int, partial(fastnumbers.try_int, map=list)),
+            (fastnumbers.try_forceint, partial(fastnumbers.try_forceint, map=list)),
         ],
     )
     def test_mapping_non_mapping_behave_the_same_with_invalid_types(
@@ -1710,6 +1710,10 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
             partial(fastnumbers.try_real, map=True),
             partial(fastnumbers.try_float, map=True),
             partial(fastnumbers.try_int, map=True),
@@ -1736,10 +1740,10 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
-            partial(fastnumbers.try_real, map=True),
-            partial(fastnumbers.try_float, map=True),
-            partial(fastnumbers.try_int, map=True),
-            partial(fastnumbers.try_forceint, map=True),
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
         ],
     )
     def test_mapping_handles_range(self, func: ConversionFuncs) -> None:
@@ -1757,6 +1761,34 @@ class TestMappingFunctions:
             partial(fastnumbers.try_forceint, map=True),
         ],
     )
+    def test_mapping_iterator_handles_range(self, func: ConversionFuncs) -> None:
+        """Range is a sequence but is not a 'fast sequence'"""
+        result = func(range(4))
+        print(1)
+        assert next(result) == 0
+        print(2)
+        assert next(result) == 1
+        print(3)
+        assert next(result) == 2
+        print(4)
+        assert next(result) == 3
+        print(5)
+        assert next(result, None) == None
+        print(6)
+
+    @parametrize(
+        "func",
+        [
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
+        ],
+    )
     def test_mapping_handles_broken_generator(self, func: ConversionFuncs) -> None:
         """A generator's exception should be returned"""
 
@@ -1767,15 +1799,16 @@ class TestMappingFunctions:
             raise ValueError("Fëanor")
 
         with raises(ValueError, match="Fëanor"):
-            func(broken())
+            for _ in func(broken()):
+                pass
 
     @parametrize(
         "func",
         [
-            partial(fastnumbers.try_real, map=True),
-            partial(fastnumbers.try_float, map=True),
-            partial(fastnumbers.try_int, map=True),
-            partial(fastnumbers.try_forceint, map=True),
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
         ],
     )
     @parametrize(
@@ -1804,6 +1837,35 @@ class TestMappingFunctions:
             partial(fastnumbers.try_forceint, map=True),
         ],
     )
+    @parametrize(
+        "iterable_gen",
+        [
+            lambda: [],
+            lambda: (),
+            lambda: set(),
+            lambda: iter([]),
+            lambda: (x for x in []),  # type: ignore [var-annotated]
+        ],
+    )
+    def test_mapping_iterable_handles_empty_iterable(
+        self, func: ConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
+    ) -> None:
+        with raises(StopIteration):
+            next(func(iterable_gen()))
+
+    @parametrize(
+        "func",
+        [
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
+        ],
+    )
     def test_mapping_raises_type_error_on_non_iterable(
         self, func: ConversionFuncs
     ) -> None:
@@ -1813,6 +1875,10 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
             partial(fastnumbers.try_real, map=True),
             partial(fastnumbers.try_float, map=True),
             partial(fastnumbers.try_int, map=True),
@@ -1824,7 +1890,8 @@ class TestMappingFunctions:
         self, func: ConversionFuncs, style: Callable[[Any], Any]
     ) -> None:
         with raises(TypeError, match="not 'tuple'"):
-            func(style([("Fëanor",)]))
+            for _ in func(style([("Fëanor",)])):
+                pass
         expected = [5]
-        result = func(style([("Fëanor",)]), on_type_error=5)
+        result = list(func(style([("Fëanor",)]), on_type_error=5))
         assert result == expected

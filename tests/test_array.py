@@ -816,14 +816,14 @@ class TestNumpy:
 @pytest.mark.parametrize("dtype", int_dtypes)
 def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: List[Any]) -> None:
     # Using try_array should give the same results
-    # as try_int with map=True then converted to an array.
+    # as try_int with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
     # so this test is not just wasting time.
     expected_pre = fastnumbers.try_int(
         x,
         on_fail=lambda x: 5 if isinstance(x, str) else 6,
         on_type_error=7,
-        map=True,
+        map=list,
     )
     expected_pre = [9 if x < dtype_extremes[dtype][0] else x for x in expected_pre]
     expected_pre = [9 if x > dtype_extremes[dtype][1] else x for x in expected_pre]
@@ -848,14 +848,14 @@ def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: List[Any]) -> None
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
 def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: List[Any]) -> None:
     # Using try_array should give the same results
-    # as try_float with map=True then converted to an array.
+    # as try_float with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
     # so this test is not just wasting time.
     expected_pre = fastnumbers.try_float(
         x,
         on_fail=lambda x: 5.0 if isinstance(x, str) else 6.0,
         on_type_error=7.0,
-        map=True,
+        map=list,
     )
     expected = np.array(expected_pre, dtype=dtype)
     result = fastnumbers.try_array(
@@ -879,7 +879,7 @@ def test_all_the_things_for_floats_with_nan_inf_replacement(
     dtype: np.dtype[np.float_], x: List[Any]
 ) -> None:
     # Using try_array should give the same results
-    # as try_float with map=True then converted to an array.
+    # as try_float with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
     # so this test is not just wasting time.
     expected_pre = fastnumbers.try_float(
@@ -888,7 +888,7 @@ def test_all_the_things_for_floats_with_nan_inf_replacement(
         nan=3.0,
         on_fail=lambda x: 5.0 if isinstance(x, str) else 6.0,
         on_type_error=7.0,
-        map=True,
+        map=list,
     )
     expected = np.array(expected_pre, dtype=dtype)
     result = fastnumbers.try_array(

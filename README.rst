@@ -198,14 +198,19 @@ to accept an iterable of items to convert and returns a list. Using
 
     >>> from fastnumbers import try_float
     >>> iterable = ["5", "4.5", "34567.6", "32"]
-    >>> try_float(iterable, map=True) == list(map(try_float, iterable))
+    >>> try_float(iterable, map=list) == list(map(try_float, iterable))
     True
-    >>> try_float(iterable, map=True) == [try_float(x) for x in iterable]
+    >>> try_float(iterable, map=list) == [try_float(x) for x in iterable]
+    True
+    >>> try_float(iterable, map=list) == list(try_float(iterable, map=True))
     True
 
 The difference is that the ``map`` option is 2x the speed of the list
 comprehension method, and 1.5x the speed of the ``map`` method. The reason
-is that it avoids Python function call overhead on each iteration.
+is that it avoids Python function call overhead on each iteration. Note that
+*True* causes the function to return an iterator, and *list* causes it to
+return a ``list``. In practice the performance of these are similar, but
+converting to a ``list`` directly is of course a bit faster.
 
 If you need to store your output in a ``numpy`` array, you can use
 ``try_array`` to do this conversion directly. This function has some
@@ -218,7 +223,7 @@ additional handling for overflow that is not present in the other
     >>> from fastnumbers import try_array
     >>> import numpy as np
     >>> iterable = ["5", "4.5", "34567.6", "32"]
-    >>> np.array_equal(np.array(try_float(iterable, map=True), dtype=np.float64), try_array(iterable))
+    >>> np.array_equal(np.array(try_float(iterable, map=list), dtype=np.float64), try_array(iterable))
     True
 
 You will see about a 2x speedup of doing this in one step over converting

@@ -364,11 +364,15 @@ def fn_map(iterable, func=fastnumbers.try_float):
 
 
 def fn_map_option(iterable, func=fastnumbers.try_float):
-    return func(iterable, map=True)
+    return func(iterable, map=list)
+
+
+def fn_map_iter_option(iterable, func=fastnumbers.try_float):
+    return list(func(iterable, map=True))
 
 
 def fn_then_array(iterable, func=fastnumbers.try_float):
-    return np.array(func(iterable, map=True), dtype=np.float64)
+    return np.array(func(iterable, map=list), dtype=np.float64)
 
 
 output = np.empty(50, dtype=np.float64)
@@ -472,9 +476,15 @@ timer.add_function(
     iterable=True,
 )
 timer.add_function(
-    "fn_map_option",
-    "try_float(iterable, map=True)",
+    "fn_map_iter_option",
+    "list(try_float(iterable, map=True))",
     "from __main__ import fn_map_option",
+    iterable=True,
+)
+timer.add_function(
+    "fn_map_option",
+    "try_float(iterable, map=list)",
+    "from __main__ import fn_map_iter_option",
     iterable=True,
 )
 timer.time_functions()

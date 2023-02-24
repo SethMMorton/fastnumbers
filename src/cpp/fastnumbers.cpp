@@ -4,7 +4,6 @@
 #include <exception>
 #include <functional>
 #include <limits>
-#include <stdexcept>
 #include <string>
 
 #include <Python.h>
@@ -15,67 +14,6 @@
 #include "fastnumbers/implementation.hpp"
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/version.hpp"
-
-/// Custom exception class for fastnumbers
-class fastnumbers_exception : public std::runtime_error {
-public:
-    fastnumbers_exception(const char* message)
-        : std::runtime_error(message)
-    { }
-
-    /// Set a ValueError if a non-empty message was given.
-    PyObject* raise_value_error() const
-    {
-        if (what()[0] != '\0') {
-            PyErr_SetString(PyExc_ValueError, what());
-        }
-        return nullptr;
-    }
-};
-
-/**
- * \class ExceptionHandler
- * \brief Call a function and handle all exceptions
- */
-class ExceptionHandler {
-public:
-    /// Construct with the original input sent to the function
-    explicit ExceptionHandler(PyObject* input)
-        : m_input(input)
-    { }
-
-    // Cannot copy
-    ExceptionHandler(const ExceptionHandler&) = delete;
-    ExceptionHandler(ExceptionHandler&&) = delete;
-    ExceptionHandler& operator=(const ExceptionHandler&) = delete;
-
-    // Default destroy
-    ~ExceptionHandler() = default;
-
-    /// Handle all exceptions from running fastnumbers logic.
-    /// This is a "function try block", hence the missing pair of braces.
-    PyObject* run(std::function<PyObject*()> func)
-    try {
-        return func();
-    } catch (const exception_is_set&) {
-        return nullptr;
-    } catch (const fastnumbers_exception& e) {
-        return e.raise_value_error();
-    } catch (const std::exception& e) {
-        // This will ideally never get coverage, and that's OK
-        PyErr_Format(
-            PyExc_SystemError,
-            "fastnumbers with input '%.200R' has thrown an unexpected C++ exception: %s",
-            m_input,
-            e.what()
-        );
-        return nullptr;
-    }
-
-private:
-    /// The orignal input value given to the function
-    PyObject* m_input;
-};
 
 /**
  * \brief Function to handle the conversion of base to integers.
@@ -279,18 +217,36 @@ static inline void validate_consider(const PyObject* selector)
 }
 
 /**
+ * \brief Make the value of map one of three possible values
+ * \param mapval The value of map given on input
+ * \return Either PyList_Type, Py_True, or Py_False
+ */
+static inline PyObject* normalize_map(PyObject* mapval)
+{
+    if (mapval == (PyObject*)&PyList_Type) {
+        return mapval;
+    } else if (PyObject_IsTrue(mapval)) {
+        return Py_True;
+    } else {
+        return Py_False;
+    }
+}
+
+/**
  * \brief Execute the conversion function as a one-off or as an iterable
  * \param input The input from Python-land
  * \param convert The function that converts our input to output
- * \param map If true, execute as an interable, otherwise as a one-off
+ * \param map If True or list execute as an iterable, otherwise as a one-off
  * \return The object to return to Python-land
  */
 static PyObject* choose_execution_scheme(
-    PyObject* input, std::function<PyObject*(PyObject*)> convert, const bool map
+    PyObject* input, std::function<PyObject*(PyObject*)> convert, const PyObject* map
 )
 {
-    if (map) {
-        return iteration_impl(input, convert);
+    if (map == Py_True) {
+        return iter_iteration_impl(input, convert);
+    } else if (map == (PyObject*)&PyList_Type) {
+        return list_iteration_impl(input, convert);
     } else {
         return convert(input);
     }
@@ -310,7 +266,7 @@ static PyObject* fastnumbers_try_real(
     PyObject* on_type_error = Selectors::RAISE;
     bool coerce = true;
     bool allow_underscores = false;
-    bool map = false;
+    PyObject* map = Py_False;
 
     // Read the function argument
     FN_PREPARE_ARGPARSER;
@@ -323,7 +279,7 @@ static PyObject* fastnumbers_try_real(
                            "$on_type_error", false, &on_type_error,
                            "$coerce", true, &coerce,
                            "$allow_underscores", true, &allow_underscores,
-                           "$map", true, &map,
+                           "$map", false, &map,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -334,7 +290,7 @@ static PyObject* fastnumbers_try_real(
         validate_not_disallow(nan);
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
-        auto convert = [&](PyObject* x) -> PyObject* {
+        auto convert = [=](PyObject* x) -> PyObject* {
             return float_conv_impl(
                 x,
                 on_fail,
@@ -346,7 +302,7 @@ static PyObject* fastnumbers_try_real(
                 coerce
             );
         };
-        return choose_execution_scheme(input, convert, map);
+        return choose_execution_scheme(input, convert, normalize_map(map));
     });
 }
 
@@ -363,7 +319,7 @@ static PyObject* fastnumbers_try_float(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     bool allow_underscores = false;
-    bool map = false;
+    PyObject* map = Py_False;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -375,7 +331,7 @@ static PyObject* fastnumbers_try_float(
                            "$on_fail", false, &on_fail,
                            "$on_type_error", false, &on_type_error,
                            "$allow_underscores", true, &allow_underscores,
-                           "$map", true, &map,
+                           "$map", false, &map,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -386,12 +342,12 @@ static PyObject* fastnumbers_try_float(
         validate_not_disallow(nan);
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
-        auto convert = [&](PyObject* x) -> PyObject* {
+        auto convert = [=](PyObject* x) -> PyObject* {
             return float_conv_impl(
                 x, on_fail, on_type_error, inf, nan, UserType::FLOAT, allow_underscores
             );
         };
-        return choose_execution_scheme(input, convert, map);
+        return choose_execution_scheme(input, convert, normalize_map(map));
     });
 }
 
@@ -407,7 +363,7 @@ static PyObject* fastnumbers_try_int(
     PyObject* on_type_error = Selectors::RAISE;
     PyObject* pybase = nullptr;
     bool allow_underscores = false;
-    bool map = false;
+    PyObject* map = Py_False;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -418,7 +374,7 @@ static PyObject* fastnumbers_try_int(
                            "$on_type_error", false, &on_type_error,
                            "$base", false, &pybase,
                            "$allow_underscores", true, &allow_underscores,
-                           "$map", true, &map,
+                           "$map", false, &map,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -428,12 +384,12 @@ static PyObject* fastnumbers_try_int(
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         const int base = assess_integer_base_input(pybase);
-        auto convert = [&](PyObject* x) -> PyObject* {
+        auto convert = [=](PyObject* x) -> PyObject* {
             return int_conv_impl(
                 x, on_fail, on_type_error, UserType::INT, allow_underscores, base
             );
         };
-        return choose_execution_scheme(input, convert, map);
+        return choose_execution_scheme(input, convert, normalize_map(map));
     });
 }
 
@@ -448,7 +404,7 @@ static PyObject* fastnumbers_try_forceint(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     bool allow_underscores = false;
-    bool map = false;
+    PyObject* map = Py_False;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -458,7 +414,7 @@ static PyObject* fastnumbers_try_forceint(
                            "$on_fail", false, &on_fail,
                            "$on_type_error", false, &on_type_error,
                            "$allow_underscores", true, &allow_underscores,
-                           "$map", true, &map,
+                           "$map", false, &map,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -467,12 +423,12 @@ static PyObject* fastnumbers_try_forceint(
     return ExceptionHandler(input).run([&]() {
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
-        auto convert = [&](PyObject* x) -> PyObject* {
+        auto convert = [=](PyObject* x) -> PyObject* {
             return int_conv_impl(
                 x, on_fail, on_type_error, UserType::FORCEINT, allow_underscores
             );
         };
-        return choose_execution_scheme(input, convert, map);
+        return choose_execution_scheme(input, convert, normalize_map(map));
     });
 }
 

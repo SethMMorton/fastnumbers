@@ -200,13 +200,24 @@ PyObject* type_query_impl(
 );
 
 /**
- * \brief Iterate over the elements of a collection and convert each one
+ * \brief Iterate over the elements of a collection and convert each one into a list
  *
  * \param input The given input object that should be iterable
  * \param convert A function accepting a single argument that performs the conversion
  * \return A new python list containing the converted results, or nullptr on error
  */
-PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert);
+PyObject*
+list_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert);
+
+/**
+ * \brief Iterate over the elements of a collection and convert each one into an iterator
+ *
+ * \param input The given input object that should be iterable
+ * \param convert A function accepting a single argument that performs the conversion
+ * \return A new python iterator producing the converted results, or nullptr on error
+ */
+PyObject*
+iter_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert);
 
 /**
  * \brief Iterate over the elements of a collection and convert each one
