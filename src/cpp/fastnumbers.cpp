@@ -176,7 +176,7 @@ static PyObject* fastnumbers_try_real(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         // Use a lambda instead of the convert function directly so that the
         // Implementation object stays in memory even if we return an iterator.
         Implementation impl(UserType::REAL);
@@ -224,7 +224,7 @@ static PyObject* fastnumbers_try_float(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         // Use a lambda instead of the convert function directly so that the
         // Implementation object stays in memory even if we return an iterator.
         Implementation impl(UserType::FLOAT);
@@ -269,7 +269,7 @@ static PyObject* fastnumbers_try_int(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         // Use a lambda instead of the convert function directly so that the
         // Implementation object stays in memory even if we return an iterator.
         Implementation impl(UserType::INT, assess_integer_base_input(pybase));
@@ -311,7 +311,7 @@ static PyObject* fastnumbers_try_forceint(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         // Use a lambda instead of the convert function directly so that the
         // Implementation object stays in memory even if we return an iterator.
         Implementation impl(UserType::FORCEINT);
@@ -360,7 +360,7 @@ static PyObject* fastnumbers_array(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         array_impl(
             input,
             output,
@@ -405,7 +405,7 @@ static PyObject* fastnumbers_check_real(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::REAL);
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -444,7 +444,7 @@ static PyObject* fastnumbers_check_float(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::FLOAT);
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -480,7 +480,7 @@ static PyObject* fastnumbers_check_int(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::INT, assess_integer_base_input(pybase));
         impl.set_consider(consider);
         impl.set_underscores_allowed(allow_underscores);
@@ -511,7 +511,7 @@ static PyObject* fastnumbers_check_intlike(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::INTLIKE);
         impl.set_consider(consider);
         impl.set_coerce(true);
@@ -553,7 +553,7 @@ static PyObject* fastnumbers_query_type(
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::REAL); // type doesn't matter, choose REAL
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -587,7 +587,7 @@ fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args)
     }
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::FLOAT);
         impl.set_unicode_allowed(false);
         impl.set_underscores_allowed(true);
@@ -625,7 +625,7 @@ static PyObject* fastnumbers_int(
     }
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::INT, assess_integer_base_input(pybase));
         impl.set_unicode_allowed(false);
         impl.set_underscores_allowed(true);
@@ -659,7 +659,7 @@ static PyObject* fastnumbers_real(
     }
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::REAL);
         impl.set_coerce(coerce);
         impl.set_unicode_allowed(false);
@@ -701,7 +701,7 @@ static PyObject* fastnumbers_fast_real(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
@@ -747,7 +747,7 @@ static PyObject* fastnumbers_fast_float(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
@@ -790,7 +790,7 @@ static PyObject* fastnumbers_fast_int(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
@@ -830,7 +830,7 @@ static PyObject* fastnumbers_fast_forceint(
     // clang-format on
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
@@ -874,7 +874,7 @@ static PyObject* fastnumbers_isreal(
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::REAL);
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -916,7 +916,7 @@ static PyObject* fastnumbers_isfloat(
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::FLOAT);
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -954,7 +954,7 @@ static PyObject* fastnumbers_isint(
     const PyObject* consider = create_consider(str_only, num_only);
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         const int base = assess_integer_base_input(pybase);
         Implementation impl(UserType::INT, base);
         impl.set_consider(consider);
@@ -989,7 +989,7 @@ static PyObject* fastnumbers_isintlike(
     const PyObject* consider = create_consider(str_only, num_only);
 
     // Execute main logic in an exception handler to convert C++ exceptions
-    return ExceptionHandler(input).run([&]() {
+    return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::INTLIKE);
         impl.set_consider(consider);
         impl.set_coerce(true);
