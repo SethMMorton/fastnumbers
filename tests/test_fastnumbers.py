@@ -48,12 +48,12 @@ class TryReal(Protocol):
         self,
         x: Any,
         *,
-        inf: Any = fastnumbers.ALLOWED,
-        nan: Any = fastnumbers.ALLOWED,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        coerce: bool = True,
-        allow_underscores: bool = False,
+        inf: Any = ...,
+        nan: Any = ...,
+        on_fail: Any = ...,
+        on_type_error: Any = ...,
+        coerce: bool = ...,
+        allow_underscores: bool = ...,
     ) -> Any:
         ...
 
@@ -63,11 +63,11 @@ class TryFloat(Protocol):
         self,
         x: Any,
         *,
-        inf: Any = fastnumbers.ALLOWED,
-        nan: Any = fastnumbers.ALLOWED,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        allow_underscores: bool = False,
+        inf: Any = ...,
+        nan: Any = ...,
+        on_fail: Any = ...,
+        on_type_error: Any = ...,
+        allow_underscores: bool = ...,
     ) -> Any:
         ...
 
@@ -77,10 +77,10 @@ class TryInt(Protocol):
         self,
         x: Any,
         *,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        base: int = 0,
-        allow_underscores: bool = False,
+        on_fail: Any = ...,
+        on_type_error: Any = ...,
+        base: int = ...,
+        allow_underscores: bool = ...,
     ) -> Any:
         ...
 
@@ -90,64 +90,10 @@ class TryForceInt(Protocol):
         self,
         x: Any,
         *,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        allow_underscores: bool = False,
+        on_fail: Any = ...,
+        on_type_error: Any = ...,
+        allow_underscores: bool = ...,
     ) -> Any:
-        ...
-
-
-class MapTryReal(Protocol):
-    def __call__(
-        self,
-        x: Iterable[Any],
-        *,
-        inf: Any = fastnumbers.ALLOWED,
-        nan: Any = fastnumbers.ALLOWED,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        coerce: bool = True,
-        allow_underscores: bool = False,
-    ) -> List[Any]:
-        ...
-
-
-class MapTryFloat(Protocol):
-    def __call__(
-        self,
-        x: Iterable[Any],
-        *,
-        inf: Any = fastnumbers.ALLOWED,
-        nan: Any = fastnumbers.ALLOWED,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        allow_underscores: bool = False,
-    ) -> List[Any]:
-        ...
-
-
-class MapTryInt(Protocol):
-    def __call__(
-        self,
-        x: Iterable[Any],
-        *,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        base: int = 0,
-        allow_underscores: bool = False,
-    ) -> List[Any]:
-        ...
-
-
-class MapTryForceInt(Protocol):
-    def __call__(
-        self,
-        x: Iterable[Any],
-        *,
-        on_fail: Any = fastnumbers.INPUT,
-        on_type_error: Any = fastnumbers.RAISE,
-        allow_underscores: bool = False,
-    ) -> List[Any]:
         ...
 
 
@@ -156,10 +102,10 @@ class CheckReal(Protocol):
         self,
         x: Any,
         *,
-        consider: Any = None,
-        inf: Any = fastnumbers.NUMBER_ONLY,
-        nan: Any = fastnumbers.NUMBER_ONLY,
-        allow_underscores: bool = False,
+        consider: Any = ...,
+        inf: Any = ...,
+        nan: Any = ...,
+        allow_underscores: bool = ...,
     ) -> bool:
         ...
 
@@ -169,10 +115,10 @@ class CheckFloat(Protocol):
         self,
         x: Any,
         *,
-        consider: Any = None,
-        inf: Any = fastnumbers.NUMBER_ONLY,
-        nan: Any = fastnumbers.NUMBER_ONLY,
-        allow_underscores: bool = False,
+        consider: Any = ...,
+        inf: Any = ...,
+        nan: Any = ...,
+        allow_underscores: bool = ...,
     ) -> bool:
         ...
 
@@ -182,9 +128,9 @@ class CheckInt(Protocol):
         self,
         x: Any,
         *,
-        consider: Any = None,
-        base: int = 0,
-        allow_underscores: bool = True,
+        consider: Any = ...,
+        base: int = ...,
+        allow_underscores: bool = ...,
     ) -> bool:
         ...
 
@@ -194,19 +140,18 @@ class CheckIntLike(Protocol):
         self,
         x: Any,
         *,
-        consider: Any = None,
-        allow_underscores: bool = True,
+        consider: Any = ...,
+        allow_underscores: bool = ...,
     ) -> bool:
         ...
 
 
 class Real(Protocol):
-    def __call__(self, x: Any = 0.0, *, coerce: bool = True) -> Union[int, float]:
+    def __call__(self, x: Any = ..., *, coerce: bool = ...) -> Union[int, float]:
         ...
 
 
 ConversionFuncs = Union[TryReal, TryFloat, TryInt, TryForceInt]
-MappingConversionFuncs = Union[MapTryReal, MapTryFloat, MapTryInt, MapTryForceInt]
 IdentificationFuncs = Union[CheckReal, CheckFloat, CheckInt, CheckIntLike]
 
 # Predefine Unicode digits, numbers, and not those.
@@ -281,13 +226,13 @@ def not_an_integer(x: float) -> bool:
 
 
 def capture_result(  # type: ignore [no-untyped-def]
-    func: Union[ConversionFuncs, MappingConversionFuncs], *args, **kwargs
+    func: Union[ConversionFuncs, ConversionFuncs], *args, **kwargs
 ) -> Any:
     """Execute a function, and either return the result or the exception message"""
     try:
         return func(*args, **kwargs)
     except Exception as e:
-        return str(e).replace("map_try", "try")  # normalize error message
+        return str(e)
 
 
 class DumbFloatClass(object):
@@ -1712,10 +1657,10 @@ class TestMappingFunctions:
     @parametrize(
         "nomapper, mapper",
         [
-            (fastnumbers.try_real, fastnumbers.map_try_real),
-            (fastnumbers.try_float, fastnumbers.map_try_float),
-            (fastnumbers.try_int, fastnumbers.map_try_int),
-            (fastnumbers.try_forceint, fastnumbers.map_try_forceint),
+            (fastnumbers.try_real, partial(fastnumbers.try_real, map=list)),
+            (fastnumbers.try_float, partial(fastnumbers.try_float, map=list)),
+            (fastnumbers.try_int, partial(fastnumbers.try_int, map=list)),
+            (fastnumbers.try_forceint, partial(fastnumbers.try_forceint, map=list)),
         ],
     )
     @parametrize(
@@ -1732,7 +1677,7 @@ class TestMappingFunctions:
     def test_mapping_non_mapping_behave_the_same(
         self,
         nomapper: ConversionFuncs,
-        mapper: MappingConversionFuncs,
+        mapper: ConversionFuncs,
         kwargs: Dict[str, Any],
         x: List[Union[float, int, str]],
     ) -> None:
@@ -1748,14 +1693,14 @@ class TestMappingFunctions:
     @parametrize(
         "nomapper, mapper",
         [
-            (fastnumbers.try_real, fastnumbers.map_try_real),
-            (fastnumbers.try_float, fastnumbers.map_try_float),
-            (fastnumbers.try_int, fastnumbers.map_try_int),
-            (fastnumbers.try_forceint, fastnumbers.map_try_forceint),
+            (fastnumbers.try_real, partial(fastnumbers.try_real, map=list)),
+            (fastnumbers.try_float, partial(fastnumbers.try_float, map=list)),
+            (fastnumbers.try_int, partial(fastnumbers.try_int, map=list)),
+            (fastnumbers.try_forceint, partial(fastnumbers.try_forceint, map=list)),
         ],
     )
     def test_mapping_non_mapping_behave_the_same_with_invalid_types(
-        self, nomapper: ConversionFuncs, mapper: MappingConversionFuncs
+        self, nomapper: ConversionFuncs, mapper: ConversionFuncs
     ) -> None:
         x = ["7", "5", None]
         nonmapping = capture_result(lambda y: list(map(nomapper, y)), x)  # type: ignore
@@ -1765,10 +1710,14 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
-            fastnumbers.map_try_real,
-            fastnumbers.map_try_float,
-            fastnumbers.map_try_int,
-            fastnumbers.map_try_forceint,
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
         ],
     )
     @parametrize(
@@ -1782,7 +1731,7 @@ class TestMappingFunctions:
         ],
     )
     def test_mapping_handles_any_iterable(
-        self, func: MappingConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
+        self, func: ConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
     ) -> None:
         expected = [4, 6, 590]
         result = sorted(func(iterable_gen()))  # sorted needed b/c of set
@@ -1791,13 +1740,13 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
-            fastnumbers.map_try_real,
-            fastnumbers.map_try_float,
-            fastnumbers.map_try_int,
-            fastnumbers.map_try_forceint,
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
         ],
     )
-    def test_mapping_handles_range(self, func: MappingConversionFuncs) -> None:
+    def test_mapping_handles_range(self, func: ConversionFuncs) -> None:
         """Range is a sequence but is not a 'fast sequence'"""
         expected = [0, 1, 2, 3]
         result = func(range(4))
@@ -1806,15 +1755,41 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
-            fastnumbers.map_try_real,
-            fastnumbers.map_try_float,
-            fastnumbers.map_try_int,
-            fastnumbers.map_try_forceint,
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
         ],
     )
-    def test_mapping_handles_broken_generator(
-        self, func: MappingConversionFuncs
-    ) -> None:
+    def test_mapping_iterator_handles_range(self, func: ConversionFuncs) -> None:
+        """Range is a sequence but is not a 'fast sequence'"""
+        result = func(range(4))
+        print(1)
+        assert next(result) == 0
+        print(2)
+        assert next(result) == 1
+        print(3)
+        assert next(result) == 2
+        print(4)
+        assert next(result) == 3
+        print(5)
+        assert next(result, None) is None
+        print(6)
+
+    @parametrize(
+        "func",
+        [
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
+        ],
+    )
+    def test_mapping_handles_broken_generator(self, func: ConversionFuncs) -> None:
         """A generator's exception should be returned"""
 
         def broken() -> Iterator[str]:
@@ -1824,15 +1799,16 @@ class TestMappingFunctions:
             raise ValueError("Fëanor")
 
         with raises(ValueError, match="Fëanor"):
-            func(broken())
+            for _ in func(broken()):
+                pass
 
     @parametrize(
         "func",
         [
-            fastnumbers.map_try_real,
-            fastnumbers.map_try_float,
-            fastnumbers.map_try_int,
-            fastnumbers.map_try_forceint,
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
         ],
     )
     @parametrize(
@@ -1846,7 +1822,7 @@ class TestMappingFunctions:
         ],
     )
     def test_mapping_handles_empty_iterable(
-        self, func: MappingConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
+        self, func: ConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
     ) -> None:
         expected: List[Any] = []
         result = func(iterable_gen())
@@ -1855,33 +1831,67 @@ class TestMappingFunctions:
     @parametrize(
         "func",
         [
-            fastnumbers.map_try_real,
-            fastnumbers.map_try_float,
-            fastnumbers.map_try_int,
-            fastnumbers.map_try_forceint,
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
         ],
     )
-    def test_mapping_raises_type_error_on_non_iterable(
-        self, func: MappingConversionFuncs
+    @parametrize(
+        "iterable_gen",
+        [
+            lambda: [],
+            lambda: (),
+            lambda: set(),
+            lambda: iter([]),
+            lambda: (x for x in []),  # type: ignore [var-annotated]
+        ],
+    )
+    def test_mapping_iterable_handles_empty_iterable(
+        self, func: ConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
     ) -> None:
-        with raises(TypeError, match="'int' object is not iterable"):
-            func(5)  # type: ignore
+        with raises(StopIteration):
+            next(func(iterable_gen()))
 
     @parametrize(
         "func",
         [
-            fastnumbers.map_try_real,
-            fastnumbers.map_try_float,
-            fastnumbers.map_try_int,
-            fastnumbers.map_try_forceint,
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
+        ],
+    )
+    def test_mapping_raises_type_error_on_non_iterable(
+        self, func: ConversionFuncs
+    ) -> None:
+        with raises(TypeError, match="'int' object is not iterable"):
+            func(5)
+
+    @parametrize(
+        "func",
+        [
+            partial(fastnumbers.try_real, map=list),
+            partial(fastnumbers.try_float, map=list),
+            partial(fastnumbers.try_int, map=list),
+            partial(fastnumbers.try_forceint, map=list),
+            partial(fastnumbers.try_real, map=True),
+            partial(fastnumbers.try_float, map=True),
+            partial(fastnumbers.try_int, map=True),
+            partial(fastnumbers.try_forceint, map=True),
         ],
     )
     @parametrize("style", [list, iter])
     def test_invalid_types_behave_as_expected(
-        self, func: MappingConversionFuncs, style: Callable[[Any], Any]
+        self, func: ConversionFuncs, style: Callable[[Any], Any]
     ) -> None:
         with raises(TypeError, match="not 'tuple'"):
-            func(style([("Fëanor",)]))
+            for _ in func(style([("Fëanor",)])):
+                pass
         expected = [5]
-        result = func(style([("Fëanor",)]), on_type_error=5)
+        result = list(func(style([("Fëanor",)]), on_type_error=5))
         assert result == expected

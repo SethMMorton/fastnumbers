@@ -25,7 +25,7 @@
  * \param start The beginning of the string to strip
  * \param end The end of the string to strip - updated in-place
  */
-inline void strip_trailing_whitespace(const char* start, const char*& end)
+inline void strip_trailing_whitespace(const char* start, const char*& end) noexcept
 {
     while (start < end && is_whitespace(*(end - 1))) {
         end -= 1;
@@ -33,7 +33,7 @@ inline void strip_trailing_whitespace(const char* start, const char*& end)
 }
 
 /// Convert a 64-int with the appropriate function depending on the compiler's long size
-inline PyObject* pyobject_from_int64(const int64_t value)
+inline PyObject* pyobject_from_int64(const int64_t value) noexcept
 {
     if constexpr (std::numeric_limits<long>::max() == std::numeric_limits<int64_t>::max()) {
         return PyLong_FromLong(static_cast<long>(value));
@@ -47,7 +47,7 @@ CharacterParser::CharacterParser(
     const std::size_t len,
     const UserOptions& options,
     const bool explict_base_allowed
-)
+) noexcept
     : Parser(ParserType::CHARACTER, options, explict_base_allowed)
     , m_start(str)
     , m_start_orig(str)
@@ -87,7 +87,7 @@ CharacterParser::CharacterParser(
     m_str_len = static_cast<std::size_t>(end - m_start);
 }
 
-RawPayload<PyObject*> CharacterParser::as_pyint() const
+RawPayload<PyObject*> CharacterParser::as_pyint() const noexcept(false)
 {
     // We use the fast path method even if the result overflows,
     // so that we can determine if the integer was at least valid.
@@ -130,6 +130,7 @@ RawPayload<PyObject*> CharacterParser::as_pyint() const
 
 RawPayload<PyObject*>
 CharacterParser::as_pyfloat(const bool force_int, const bool coerce) const
+    noexcept(false)
 {
     // Perform the correct action depending on the payload's contents
     return std::visit(
@@ -158,7 +159,7 @@ CharacterParser::as_pyfloat(const bool force_int, const bool coerce) const
     );
 }
 
-NumberFlags CharacterParser::get_number_type() const
+NumberFlags CharacterParser::get_number_type() const noexcept
 {
     // If this value is cached, use that instead of re-calculating
     if (Parser::get_number_type() != static_cast<NumberFlags>(NumberType::UNSET)) {

@@ -23,10 +23,6 @@ from .fastnumbers import (
     isint,
     isintlike,
     isreal,
-    map_try_float,
-    map_try_forceint,
-    map_try_int,
-    map_try_real,
     query_type,
     real,
     try_float,
@@ -178,10 +174,10 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
     """
     Quickly convert an iterable's contents into an array.
 
-    Is basically a direct analogue to :func:`map_try_float` and friends,
-    except that it returns an array object instead of a list, and there
-    are more restrictions of what can be returned (since the outputs
-    must fit inside C data-types).
+    Is basically a direct analogue to using the ``map`` option in :func:`try_float`
+    and friends, except that it returns an array object instead of a list, and there
+    are more restrictions of what can be returned (since the outputs must fit
+    inside C data-types).
 
     Parameters
     ----------
@@ -345,10 +341,6 @@ __all__ = [
     "isint",
     "isintlike",
     "isreal",
-    "map_try_float",
-    "map_try_forceint",
-    "map_try_int",
-    "map_try_real",
     "query_type",
     "real",
     "try_array",

@@ -9,10 +9,12 @@
 #include "fastnumbers/user_options.hpp"
 
 // Forward declarations
-AnyParser
-parse_unicode_to_char(PyObject* obj, Buffer& char_buffer, const UserOptions& options);
+AnyParser parse_unicode_to_char(
+    PyObject* obj, Buffer& char_buffer, const UserOptions& options
+) noexcept(false);
 
-AnyParser extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& options)
+AnyParser
+extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& options) noexcept(false)
 {
     buffer.reset();
 
@@ -83,8 +85,9 @@ AnyParser extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& optio
 }
 
 /// Obtain either a CharacterParser or UnicodeParser from unicode data
-AnyParser
-parse_unicode_to_char(PyObject* obj, Buffer& char_buffer, const UserOptions& options)
+AnyParser parse_unicode_to_char(
+    PyObject* obj, Buffer& char_buffer, const UserOptions& options
+) noexcept(false)
 {
     const unsigned kind = PyUnicode_KIND(obj); // Unicode storage format.
     const void* data = PyUnicode_DATA(obj); // Raw data

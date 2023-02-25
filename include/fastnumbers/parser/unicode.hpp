@@ -16,7 +16,9 @@
 class UnicodeParser final : public Parser {
 public:
     /// Construct with a single unicode character and sign
-    UnicodeParser(const Py_UCS4 uchar, const bool negative, const UserOptions& options)
+    UnicodeParser(
+        const Py_UCS4 uchar, const bool negative, const UserOptions& options
+    ) noexcept
         : Parser(ParserType::UNICODE, options)
         , m_numeric(Py_UNICODE_TONUMERIC(uchar))
         , m_digit(Py_UNICODE_TODIGIT(uchar))
@@ -38,7 +40,7 @@ public:
     ~UnicodeParser() = default;
 
     /// Convert the stored object to a python int
-    RawPayload<PyObject*> as_pyint() const override
+    RawPayload<PyObject*> as_pyint() const noexcept(false) override
     {
         if (get_number_type() & NumberType::Integer) {
             return PyLong_FromLong(m_digit);
@@ -53,7 +55,8 @@ public:
      * \param coerce Return as integer if the float is int-like
      */
     RawPayload<PyObject*>
-    as_pyfloat(const bool force_int = false, const bool coerce = false) const override
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const
+        noexcept(false) override
     {
         const NumberFlags ntype = get_number_type();
 
@@ -78,7 +81,7 @@ public:
     }
 
     /// Check the type of the number.
-    NumberFlags get_number_type() const override
+    NumberFlags get_number_type() const noexcept override
     {
         // If this value is cached, use that instead of re-calculating
         static constexpr NumberFlags unset = NumberType::UNSET;
@@ -111,7 +114,7 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-    RawPayload<T> as_number() const
+    RawPayload<T> as_number() const noexcept
     {
         if (get_number_type() & NumberType::Integer) {
             return cast_num_check_overflow<T>(m_digit);
@@ -129,7 +132,7 @@ public:
     template <
         typename T,
         typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-    RawPayload<T> as_number() const
+    RawPayload<T> as_number() const noexcept
     {
         const NumberFlags ntype = get_number_type();
 
@@ -150,7 +153,7 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T>
-    void as_number(RawPayload<T>& value) const
+    void as_number(RawPayload<T>& value) const noexcept
     {
         value = as_number<T>();
     }
@@ -163,7 +166,7 @@ private:
     long m_digit;
 
     /// Add FromUni to the return NumberFlags
-    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    static constexpr NumberFlags flag_wrap(const NumberFlags val) noexcept
     {
         return NumberType::FromUni | val;
     }

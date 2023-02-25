@@ -2,10 +2,11 @@ Unreleased
 ---
 
 ### Added
-- Added `map_try_real`, `map_try_float`, `map_try_int`, and `map_try_forceint`
+- Added the `map` option to all ``try_*`` functions
   to enable very fast conversions of lists or other iterables (Issues
- [#61](https://github.com/SethMMorton/fastnumbers/issues/61) and
- [#63](https://github.com/SethMMorton/fastnumbers/issues/63))
+ [#61](https://github.com/SethMMorton/fastnumbers/issues/61),
+ [#63](https://github.com/SethMMorton/fastnumbers/issues/63) and
+ [#67](https://github.com/SethMMorton/fastnumbers/issues/67))
 - Added `try_array` to enable very fast conversions
  directly to numpy arrays (Issues
  [#62](https://github.com/SethMMorton/fastnumbers/issues/62) and

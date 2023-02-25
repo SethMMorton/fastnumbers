@@ -8,6 +8,16 @@
 #include "fastnumbers/exception.hpp"
 #include "fastnumbers/selectors.hpp"
 
+/// Obtain the length hint from a Python object
+Py_ssize_t get_length_hint(PyObject* length_hint_base) noexcept(false)
+{
+    Py_ssize_t length_hint = PyObject_LengthHint(length_hint_base, 0);
+    if (length_hint < 0) {
+        throw exception_is_set();
+    }
+    return length_hint;
+}
+
 /**
  * \class ListBuilder
  * \brief Handles the details of creating and managing a Python list
@@ -18,7 +28,7 @@ public:
      * \brief Construct the manager with a list of a fixed size
      * \param length The initial length of the list to construct
      */
-    explicit ListBuilder(const Py_ssize_t length)
+    explicit ListBuilder(const Py_ssize_t length) noexcept(false)
         : m_list(PyList_New(length))
         , m_index(0)
     {
@@ -32,7 +42,7 @@ public:
      *         on a hint from another object
      * \param length The object with the length hint
      */
-    explicit ListBuilder(PyObject* length_hint_base)
+    explicit ListBuilder(PyObject* length_hint_base) noexcept(false)
         : ListBuilder(get_length_hint(length_hint_base))
     { }
 
@@ -48,7 +58,7 @@ public:
      * \brief Add an item to the end of the list
      * \param item The item to add to the list
      */
-    void append(PyObject* item)
+    void append(PyObject* item) noexcept(false)
     {
         // Protect against incoming NULLs.
         if (item == nullptr) {
@@ -74,7 +84,7 @@ public:
     }
 
     /// Return the stored list to the user
-    PyObject* get() { return m_list; }
+    PyObject* get() noexcept { return m_list; }
 
 private:
     /// The list itself
@@ -82,17 +92,6 @@ private:
 
     /// The current location where we should add to the list
     Py_ssize_t m_index;
-
-private:
-    /// Obtain the length hint from a Python object
-    static Py_ssize_t get_length_hint(PyObject* length_hint_base)
-    {
-        Py_ssize_t length_hint = PyObject_LengthHint(length_hint_base, 0);
-        if (length_hint < 0) {
-            throw exception_is_set();
-        }
-        return length_hint;
-    }
 };
 
 /**
@@ -106,7 +105,7 @@ public:
      * \param buffer The Python memory buffer to populate
      * \param length The initial length required of the array
      */
-    explicit ArrayPopulator(Py_buffer& buffer, const Py_ssize_t length)
+    explicit ArrayPopulator(Py_buffer& buffer, const Py_ssize_t length) noexcept(false)
         : m_buf(buffer)
         , m_index(0)
         , m_stride(m_buf.strides != nullptr ? (m_buf.strides[0] / m_buf.itemsize) : 1)
@@ -132,7 +131,7 @@ public:
     /// \brief Place a return value in the next proper location of the buffer
     /// \param value The value to place
     template <typename T>
-    void place_next(const T value)
+    void place_next(const T value) noexcept
     {
         *(static_cast<T*>(m_buf.buf) + (m_index * m_stride)) = value;
         m_index += 1;
@@ -165,7 +164,7 @@ public:
     /// Constructor
     explicit IterableManager(
         PyObject* potential_iterable, std::function<PayloadType(PyObject*)> convert
-    )
+    ) noexcept(false)
         : m_object(potential_iterable)
         , m_iterator(nullptr)
         , m_fast_sequence(nullptr)
@@ -184,7 +183,7 @@ public:
     }
 
     /// Destructor
-    ~IterableManager()
+    ~IterableManager() noexcept
     {
         Py_XDECREF(m_iterator);
 
@@ -202,7 +201,7 @@ public:
 
     /// Return the size of the managed sequence, potentially copying iterable
     /// data into a list in order to find the size.
-    Py_ssize_t get_size()
+    Py_ssize_t get_size() noexcept(false)
     {
         if (m_fast_sequence != nullptr) {
             return m_seq_size;
@@ -250,7 +249,7 @@ public:
          * \brief Construct the ItemIterator and obtain the first
          *        ViolationData if available.
          */
-        explicit ItemIterator(IterableManager* parent)
+        explicit ItemIterator(IterableManager* parent) noexcept(false)
             : m_parent(parent)
             , m_payload()
             , m_state(IterState::STOP)
@@ -262,7 +261,7 @@ public:
         }
 
         /// Default constructor
-        ItemIterator()
+        ItemIterator() noexcept
             : ItemIterator(nullptr)
         { }
 
@@ -273,13 +272,13 @@ public:
         ~ItemIterator() = default;
 
         /// Access the IterableManager data
-        reference operator*() { return m_payload; }
+        reference operator*() noexcept { return m_payload; }
 
         /// Access the IterableManager data as a pointer
-        pointer operator->() { return &m_payload; }
+        pointer operator->() noexcept { return &m_payload; }
 
         /// Increment the ItemIterator
-        ItemIterator& operator++()
+        ItemIterator& operator++() noexcept(false)
         {
             if (m_parent != nullptr) {
                 const auto current = m_parent->next();
@@ -295,13 +294,16 @@ public:
         }
 
         /// Compare two ItemIterator objects for equality.
-        bool operator==(const ItemIterator& rhs) const
+        bool operator==(const ItemIterator& rhs) const noexcept
         {
             return m_payload == rhs.m_payload && m_state == rhs.m_state;
         }
 
         /// Compare two ItemIterator objects for inequality.
-        bool operator!=(const ItemIterator& rhs) const { return !operator==(rhs); }
+        bool operator!=(const ItemIterator& rhs) const noexcept
+        {
+            return !operator==(rhs);
+        }
 
     private:
         /// A pointer to the object that instantiated the iterator
@@ -318,10 +320,10 @@ public:
     typedef ItemIterator iterator;
 
     /// Return an iterator over the IterableManager
-    iterator begin() { return iterator(this); };
+    iterator begin() noexcept(false) { return iterator(this); };
 
     /// The end of the iterator over the IterableManager
-    iterator end() { return iterator(); };
+    iterator end() noexcept { return iterator(); };
 
 private:
     /// The object that is currently being iterated over
@@ -343,7 +345,7 @@ private:
     std::function<PayloadType(PyObject*)> m_convert;
 
 private:
-    std::optional<PayloadType> next()
+    std::optional<PayloadType> next() noexcept(false)
     {
         PyObject* item = nullptr;
 
@@ -373,6 +375,7 @@ private:
         // of the iteration and we return return the sigil. If an exception is
         // set, well, we need to raise it.
         if ((item = PyIter_Next(m_iterator)) == nullptr) {
+            // StopIteration is already cleared by PyIter_Next()
             if (PyErr_Occurred()) {
                 throw exception_is_set();
             }

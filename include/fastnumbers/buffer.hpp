@@ -12,7 +12,7 @@
 class Buffer {
 public:
     /// Create a zero-sized buffer
-    Buffer()
+    Buffer() noexcept
         : Buffer(0)
     { }
 
@@ -37,10 +37,10 @@ public:
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = delete;
     Buffer& operator=(const Buffer&) = delete;
-    ~Buffer() { delete[] m_variable_buffer; };
+    ~Buffer() noexcept { delete[] m_variable_buffer; };
 
     /// Restore the Buffer to an empty-like state
-    void reset()
+    void reset() noexcept
     {
         if (m_variable_buffer == nullptr) {
             m_buffer = m_fixed_buffer;
@@ -51,34 +51,34 @@ public:
     }
 
     /// Return the start of the buffer
-    char* start() { return m_buffer; }
+    char* start() noexcept { return m_buffer; }
 
     /// Return the end of the buffer
-    char* end() { return m_buffer + m_len; }
+    char* end() noexcept { return m_buffer + m_len; }
 
     /// Return the length of the buffer
-    std::size_t length() { return m_len; }
+    std::size_t length() noexcept { return m_len; }
 
     /// Set aside a fixed lenth of data
-    void reserve(const std::size_t needed_length)
+    void reserve(const std::size_t needed_length) noexcept(false)
     {
         m_len = needed_length;
         reserve();
     }
 
     /// Copy a fixed length of data into the buffer
-    void copy(const char* data, const std::size_t needed_length)
+    void copy(const char* data, const std::size_t needed_length) noexcept(false)
     {
         reserve(needed_length);
         copy(data);
     }
 
     /// Remove underscores that are syntactically valid in a number
-    void remove_valid_underscores() { remove_valid_underscores(false); }
+    void remove_valid_underscores() noexcept { remove_valid_underscores(false); }
 
     /// Remove underscores that are syntactically valid in a number,
     /// possibly accounting for non-base-10 integers
-    void remove_valid_underscores(const bool based)
+    void remove_valid_underscores(const bool based) noexcept
     {
         const char* new_end = end();
         ::remove_valid_underscores(m_buffer, new_end, based);
@@ -86,7 +86,7 @@ public:
     }
 
     /// Remove a base prefix
-    void remove_base_prefix()
+    void remove_base_prefix() noexcept
     {
         // To remove the base prefix, first move past a possible negative sign,
         // then skip the base prefix. If the there was a negative sign, we
@@ -113,7 +113,10 @@ public:
     }
 
     /// The largest amount of data the buffer can contain
-    std::size_t max_size() const { return std::numeric_limits<std::size_t>::max(); }
+    std::size_t max_size() const noexcept
+    {
+        return std::numeric_limits<std::size_t>::max();
+    }
 
 private:
     /// Size of the fix-with buffer
@@ -137,7 +140,7 @@ private:
 
 private:
     /// Set aside the amount of data stored in m_len
-    void reserve(const bool force = false)
+    void reserve(const bool force = false) noexcept(false)
     {
         // Only increase the size if needed
         if (m_len > m_size || force) {
@@ -153,5 +156,5 @@ private:
     }
 
     /// Copy data into the buffer of the currently stored length
-    void copy(const char* data) { std::memcpy(m_buffer, data, m_len); }
+    void copy(const char* data) noexcept { std::memcpy(m_buffer, data, m_len); }
 };

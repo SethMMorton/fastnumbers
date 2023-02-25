@@ -54,8 +54,8 @@ see the `Timing`_ section for the raw data if you want details.
       ``float()`` function (possibly greater for very long strings)
     - Up to 10x faster handling of errors during conversion than using
       user-side error handling
-    - On top of the above, operations on a list of strings to to convert
-      (with the ``map_try_*`` or ``try_array`` functions) is 2x faster
+    - On top of the above, operations to convert a list of strings
+      (with the ``map`` option or ``try_array`` function) is 2x faster
       than the equivalent list comprehension.
 
 **NOTICE**: As of ``fastnumbers`` version 4.0.0, only Python >= 3.7 is
@@ -190,23 +190,27 @@ on if there is any fractional component of thi return value.
 Fast operations on lists and other iterables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Each of the ``try_*`` functions have an equivalent ``map_try_*`` function
-that has an identical signiture but accepts an iterable of items to convert
-and returns a list. Using ``try_float`` as an example, the following
-are all functionally equivalent.
+Each of the ``try_*`` functions have a ``map`` option causes the function
+to accept an iterable of items to convert and returns a list. Using
+``try_float`` as an example, the following are all functionally equivalent.
 
 .. code-block:: python
 
-    >>> from fastnumbers import map_try_float, try_float
+    >>> from fastnumbers import try_float
     >>> iterable = ["5", "4.5", "34567.6", "32"]
-    >>> map_try_float(iterable) == list(map(try_float, iterable))
+    >>> try_float(iterable, map=list) == list(map(try_float, iterable))
     True
-    >>> map_try_float(iterable) == [try_float(x) for x in iterable]
+    >>> try_float(iterable, map=list) == [try_float(x) for x in iterable]
+    True
+    >>> try_float(iterable, map=list) == list(try_float(iterable, map=True))
     True
 
-The difference is that ``map_try_float`` is 2x the speed of the list
+The difference is that the ``map`` option is 2x the speed of the list
 comprehension method, and 1.5x the speed of the ``map`` method. The reason
-is that it avoids Python function call overhead on each iteration.
+is that it avoids Python function call overhead on each iteration. Note that
+*True* causes the function to return an iterator, and *list* causes it to
+return a ``list``. In practice the performance of these are similar
+(see `Timing`_ for raw data).
 
 If you need to store your output in a ``numpy`` array, you can use
 ``try_array`` to do this conversion directly. This function has some
@@ -216,10 +220,10 @@ additional handling for overflow that is not present in the other
 
 .. code-block:: python
 
-    >>> from fastnumbers import map_try_float, try_array
+    >>> from fastnumbers import try_array
     >>> import numpy as np
     >>> iterable = ["5", "4.5", "34567.6", "32"]
-    >>> np.array_equal(np.array(map_try_float(iterable), dtype=np.float64), try_array(iterable))
+    >>> np.array_equal(np.array(try_float(iterable, map=list), dtype=np.float64), try_array(iterable))
     True
 
 You will see about a 2x speedup of doing this in one step over converting

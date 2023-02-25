@@ -17,10 +17,11 @@ Some general observations about the results:
   slightly slower than CPython.
 - When numbers are provided (as opposed to strings), the Python built-ins
   are usually faster.
-- If you need to convert a list of data, using the `map_try_*` functions
+- If you need to convert a list of data, using the `map` option
   is 2x faster than using `try_*` in a list comprehension, and about
-  1.5x faster than using `try_*` with `map`.
+  1.5x faster than using `try_*` with the builtin `map` function.
+  - Returning an iterator and returning a list are quite similar in performance.
 - If you need to convert a list of data to a `numpy` array, `try_array`
-  is about 2x faster than using the `map_try_*` and then converting the
+  is about 2x faster than using the `map` option and then converting the
   resulting list to an `ndarray`. Interestingly, `try_array` is only slightly
-  faster than `map_try_*` by itself.
+  faster than using the `map` option by itself.

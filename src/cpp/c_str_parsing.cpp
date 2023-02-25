@@ -16,7 +16,7 @@
 /* EXPOSED FUNCTIONS */
 /*********************/
 
-int string_contains_what(const char* str, const char* end, int base)
+int string_contains_what(const char* str, const char* end, int base) noexcept
 {
     const std::size_t len = static_cast<std::size_t>(end - str);
 
@@ -140,7 +140,7 @@ int string_contains_what(const char* str, const char* end, int base)
     return value;
 }
 
-void remove_valid_underscores(char* str, const char*& end, const bool based)
+void remove_valid_underscores(char* str, const char*& end, const bool based) noexcept
 {
     // Ignore a leading negative sign
     if (*str == '-') {

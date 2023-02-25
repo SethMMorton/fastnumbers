@@ -17,7 +17,7 @@
 class NumericParser final : public Parser {
 public:
     /// Construct with a Python object
-    explicit NumericParser(PyObject* obj, const UserOptions& options)
+    explicit NumericParser(PyObject* obj, const UserOptions& options) noexcept
         : Parser(ParserType::NUMERIC, options)
         , m_obj(obj)
     {
@@ -45,7 +45,7 @@ public:
     ~NumericParser() = default;
 
     /// Convert the stored object to a python int
-    RawPayload<PyObject*> as_pyint() const override
+    RawPayload<PyObject*> as_pyint() const noexcept(false) override
     {
         if (get_number_type() == static_cast<NumberFlags>(NumberType::INVALID)) {
             return ErrorType::TYPE_ERROR;
@@ -60,7 +60,8 @@ public:
      * \param coerce Return as integer if the float is int-like
      */
     RawPayload<PyObject*>
-    as_pyfloat(const bool force_int = false, const bool coerce = false) const override
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const
+        noexcept(false) override
     {
         if (get_number_type() == static_cast<NumberFlags>(NumberType::INVALID)) {
             return ErrorType::TYPE_ERROR;
@@ -78,7 +79,7 @@ public:
     }
 
     /// Check the type of the number.
-    NumberFlags get_number_type() const override
+    NumberFlags get_number_type() const noexcept override
     {
         // If this value is cached, use that instead of re-calculating
         static constexpr NumberFlags unset = NumberType::UNSET;
@@ -125,7 +126,7 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T>
-    RawPayload<T> as_number() const
+    RawPayload<T> as_number() const noexcept
     {
         // Special handling for floating point numbers
         if constexpr (std::is_floating_point_v<T>) {
@@ -193,7 +194,7 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T>
-    void as_number(RawPayload<T>& value) const
+    void as_number(RawPayload<T>& value) const noexcept
     {
         value = as_number<T>();
     }
@@ -204,11 +205,11 @@ private:
 
 private:
     /// Return the object as a double. No error checking is performed.
-    double get_double() const { return PyFloat_AS_DOUBLE(m_obj); }
+    double get_double() const noexcept { return PyFloat_AS_DOUBLE(m_obj); }
 
     /// Use the value of the float to add qualifiers
     /// if the float is infinite, NaN, or intlike.
-    NumberFlags float_properties(const double val, NumberFlags props) const
+    NumberFlags float_properties(const double val, NumberFlags props) const noexcept
     {
         if (std::isinf(val)) {
             props |= NumberType::Infinity;
@@ -221,14 +222,14 @@ private:
     }
 
     /// Add FromNum to the return NumberFlags
-    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    static constexpr NumberFlags flag_wrap(const NumberFlags val) noexcept
     {
         return NumberType::FromNum | val;
     }
 
     /// Helper for performing error checking
     template <typename T>
-    RawPayload<T> check_for_error_py(T value) const
+    RawPayload<T> check_for_error_py(T value) const noexcept
     {
         if (value == static_cast<T>(-1) && PyErr_Occurred()) {
             const ErrorType err = PyErr_ExceptionMatches(PyExc_OverflowError)
@@ -242,7 +243,7 @@ private:
 
     /// Helper for performing error checking
     template <typename T, typename Function>
-    RawPayload<T> check_for_error_py(PyObject* obj, Function func) const
+    RawPayload<T> check_for_error_py(PyObject* obj, Function func) const noexcept
     {
         int overflow = false;
         const T value = func(m_obj, &overflow);

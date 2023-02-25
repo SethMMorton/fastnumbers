@@ -19,369 +19,40 @@
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 
-/**
- * \brief Extract the return payload from a given python object
- *
- * \param obj The object from which to extract a payload
- * \param options User-specified options on how to extract
- * \param ntype The data type to extract
- *
- * \return The payload object containing the extracted data
- */
-static inline Payload
-collect_payload(PyObject* obj, const UserOptions& options, const UserType ntype)
+PyObject* Implementation::convert(PyObject* input) const noexcept(false)
 {
-    Buffer buffer;
-
-    // extract_parser() is responsible for taking a python object
-    // and returning the Parser object best suited to parser the object's data.
-    // std:visit is used to obtain the payload data no matter which parser was
-    // returned.
-    return std::visit(
-        [obj, options, ntype](const auto& parser) -> Payload {
-            return Evaluator<decltype(parser)>(obj, options, parser).as_type(ntype);
-        },
-        extract_parser(obj, buffer, options)
-    );
+    return m_resolver.resolve(input, collect_payload(input));
 }
 
-/**
- * \brief Extract the contained numeric type from a given python object
- *
- * \param obj The object from which to determine numeric type
- * \param options User-specified options on how to determine type
- * \param consider Whether to consider string inputs, numeric inputs, or both
- *
- * \return The bitfield specifying the numeric type attributes in the given object
- */
-static inline NumberFlags
-collect_type(PyObject* obj, const UserOptions& options, const PyObject* consider)
+PyObject* Implementation::check(PyObject* input) const noexcept(false)
 {
-    const bool num_only = consider == Selectors::NUMBER_ONLY;
-    const bool str_only = consider == Selectors::STRING_ONLY;
-    Buffer buffer;
+    // Assess what types we can call this input
+    auto [from_str, ok_float, ok_int, ok_intlike] = resolve_types(collect_type(input));
 
-    // extract_parser() is responsible for taking a python object
-    // and returning the Parser object best suited to parser the object's data.
-    // std:visit is used to obtain the number flag no matter which parser was
-    // returned.
-    return std::visit(
-        [obj, options, str_only, num_only](const auto& parser) -> NumberFlags {
-            if (str_only && parser.parser_type() == ParserType::NUMERIC) {
-                return NumberType::INVALID;
-            } else if (num_only && parser.parser_type() != ParserType::NUMERIC) {
-                return NumberType::INVALID;
-            }
-            return Evaluator<decltype(parser)>(obj, options, parser).number_type();
-        },
-        extract_parser(obj, buffer, options)
-    );
-}
+    // For FLOAT, we are OK with integers only if not in strict mode.
+    ok_int = m_ntype == UserType::FLOAT ? (from_str && !m_strict && ok_int) : ok_int;
 
-/**
- * \brief Resolve the input into the appropriate return object
- *
- * \param options User-specified options on how to determine type
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param inf The value indicating what action to take when an infinity is encountered
- * \param nan The value indicating what action to take when an NaN is encountered
- * \param ntype The desired type of the converted object
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-static inline PyObject* do_resolve(
-    const UserOptions& options,
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* inf,
-    PyObject* nan,
-    const UserType ntype
-)
-{
-    Resolver resolver(input, options);
-    resolver.set_inf_action(inf);
-    resolver.set_nan_action(nan);
-    resolver.set_fail_action(on_fail);
-    return resolver.resolve(collect_payload(input, options, ntype));
-}
-
-/**
- * \brief Resolve the input into the appropriate return object
- *
- * \param options User-specified options on how to determine type
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param on_type_error The value indicating what action to take on invalid type
- * \param inf The value indicating what action to take when an infinity is encountered
- * \param nan The value indicating what action to take when an NaN is encountered
- * \param ntype The desired type of the converted object
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-static inline PyObject* do_resolve(
-    const UserOptions& options,
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* on_type_error,
-    PyObject* inf,
-    PyObject* nan,
-    const UserType ntype
-)
-{
-    Resolver resolver(input, options);
-    resolver.set_inf_action(inf);
-    resolver.set_nan_action(nan);
-    resolver.set_fail_action(on_fail);
-    resolver.set_type_error_action(on_type_error);
-    return resolver.resolve(collect_payload(input, options, ntype));
-}
-
-/**
- * \brief Resolve the input into the appropriate return object
- *
- * \param options User-specified options on how to determine type
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param ntype The desired type of the converted object
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-static inline PyObject* do_resolve(
-    const UserOptions& options, PyObject* input, PyObject* on_fail, const UserType ntype
-)
-{
-    Resolver resolver(input, options);
-    resolver.set_fail_action(on_fail);
-    return resolver.resolve(collect_payload(input, options, ntype));
-}
-
-/**
- * \brief Resolve the input into the appropriate return object
- *
- * \param options User-specified options on how to determine type
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param on_type_error The value indicating what action to take on invalid type
- * \param ntype The desired type of the converted object
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-static inline PyObject* do_resolve(
-    const UserOptions& options,
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* on_type_error,
-    const UserType ntype
-)
-{
-    Resolver resolver(input, options);
-    resolver.set_fail_action(on_fail);
-    resolver.set_type_error_action(on_type_error);
-    return resolver.resolve(collect_payload(input, options, ntype));
-}
-
-// "Full" implementation for converting floats
-PyObject* float_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* inf,
-    PyObject* nan,
-    const UserType ntype,
-    const bool allow_underscores,
-    const bool coerce
-)
-{
-    UserOptions options;
-    options.set_coerce(coerce);
-    options.set_underscores_allowed(allow_underscores);
-    return do_resolve(options, input, on_fail, inf, nan, ntype);
-}
-
-// "Fuller" implementation for converting floats
-PyObject* float_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* on_type_error,
-    PyObject* inf,
-    PyObject* nan,
-    const UserType ntype,
-    const bool allow_underscores,
-    const bool coerce
-)
-{
-    UserOptions options;
-    options.set_coerce(coerce);
-    options.set_underscores_allowed(allow_underscores);
-    return do_resolve(options, input, on_fail, on_type_error, inf, nan, ntype);
-}
-
-// "Reduced" implementation for converting floats
-PyObject* float_conv_impl(PyObject* input, const UserType ntype, const bool coerce)
-{
-    UserOptions options;
-    options.set_coerce(coerce);
-    options.set_unicode_allowed(false);
-    options.set_underscores_allowed(true);
-    return do_resolve(options, input, Selectors::RAISE, ntype);
-}
-
-// "Full" implementation for converting integers
-PyObject* int_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    const UserType ntype,
-    const bool allow_underscores,
-    const int base
-)
-{
-    UserOptions options;
-    options.set_base(base);
-    options.set_unicode_allowed(options.is_default_base());
-    options.set_underscores_allowed(allow_underscores);
-    return do_resolve(options, input, on_fail, ntype);
-}
-
-// "Fuller" implementation for converting integers
-PyObject* int_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* on_type_error,
-    const UserType ntype,
-    const bool allow_underscores,
-    const int base
-)
-{
-    UserOptions options;
-    options.set_base(base);
-    options.set_unicode_allowed(options.is_default_base());
-    options.set_underscores_allowed(allow_underscores);
-    return do_resolve(options, input, on_fail, on_type_error, ntype);
-}
-
-// "Reduced" implementation for converting integers
-PyObject* int_conv_impl(PyObject* input, const UserType ntype, const int base)
-{
-    UserOptions options;
-    options.set_base(base);
-    options.set_unicode_allowed(false);
-    options.set_underscores_allowed(true);
-    return do_resolve(options, input, Selectors::RAISE, ntype);
-}
-
-/**
- * \brief Evaluate the type contained by the number type bitflags
- *
- * \param flags The number type flags to evaluate
- * \param options User options informing how to interpret the flags
- * \param ok_float (out) The value can be interpeted as a float
- * \param ok_int (out) The value can be interpreted as an int
- * \param ok_intlike (out) The value can be interpreted as intlike
- */
-static inline void resolve_types(
-    const NumberFlags& flags,
-    const UserOptions& options,
-    bool& from_str,
-    bool& ok_float,
-    bool& ok_int,
-    bool& ok_intlike
-)
-{
-    // Build up the logic with individual "Boolean chunks"
-    from_str = bool(flags & (NumberType::FromStr | NumberType::FromUni));
-    const bool from_num = bool(flags & NumberType::FromNum);
-    const bool no_inf_str = from_str && !options.allow_inf_str();
-    const bool no_nan_str = from_str && !options.allow_nan_str();
-    const bool no_inf_num = from_num && !options.allow_inf_num();
-    const bool no_nan_num = from_num && !options.allow_nan_num();
-    const bool no_inf = no_inf_str || no_inf_num;
-    const bool no_nan = no_nan_str || no_nan_num;
-    const bool bad_inf = no_inf && flags & NumberType::Infinity;
-    const bool bad_nan = no_nan && flags & NumberType::NaN;
-
-    // Set the final results as results of the booleans
-    ok_float = flags & NumberType::Float && !(bad_inf || bad_nan);
-    ok_int = bool(flags & NumberType::Integer);
-    ok_intlike = options.allow_coerce() && flags & NumberType::IntLike;
-}
-
-// Implementation for checking floats
-PyObject* float_check_impl(
-    PyObject* input,
-    const PyObject* inf,
-    const PyObject* nan,
-    const PyObject* consider,
-    const UserType ntype,
-    const bool allow_underscores,
-    const bool strict
-)
-{
-    UserOptions options;
-    options.set_underscores_allowed(allow_underscores);
-    options.set_inf_allowed(inf);
-    options.set_nan_allowed(nan);
-
-    const NumberFlags flags = collect_type(input, options, consider);
-
-    bool from_str, ok_float, ok_int, ok_intlike;
-    resolve_types(flags, options, from_str, ok_float, ok_int, ok_intlike);
-
-    // We are alwasy OK with integers for REAL.
-    // For FLOAT, we are OK only if not in strict mode.
-    ok_int = ntype == UserType::REAL ? ok_int : (from_str && !strict && ok_int);
-
-    if (ok_float || ok_int) {
-        Py_RETURN_TRUE;
+    // The logic of what is True depends on the type we are trying to check
+    switch (m_ntype) {
+    case UserType::REAL:
+    case UserType::FLOAT:
+        if (ok_float || ok_int) {
+            Py_RETURN_TRUE;
+        }
+        break;
+    default:
+        // ok_intline is never true unless set_coerce was given as true
+        if (ok_int || ok_intlike) {
+            Py_RETURN_TRUE;
+        }
     }
     Py_RETURN_FALSE;
 }
 
-// Implementation for checking integers
-PyObject* int_check_impl(
-    PyObject* input,
-    const PyObject* consider,
-    const UserType ntype,
-    const bool allow_underscores,
-    const int base
-)
+PyObject* Implementation::query_type(PyObject* input) const noexcept(false)
 {
-    UserOptions options;
-    options.set_base(base);
-    options.set_coerce(ntype == UserType::INTLIKE);
-    options.set_underscores_allowed(allow_underscores);
-
-    const NumberFlags flags = collect_type(input, options, consider);
-
-    bool from_str, ok_float, ok_int, ok_intlike;
-    resolve_types(flags, options, from_str, ok_float, ok_int, ok_intlike);
-
-    // ok_intline never be true unless set_coerce was given true
-    if (ok_int || ok_intlike) {
-        Py_RETURN_TRUE;
-    }
-    Py_RETURN_FALSE;
-}
-
-// Implementation for returning object type
-PyObject* type_query_impl(
-    PyObject* input,
-    PyObject* allowed_types,
-    const PyObject* inf,
-    const PyObject* nan,
-    const bool allow_underscores,
-    const bool coerce
-)
-{
-    UserOptions options;
-    options.set_coerce(coerce);
-    options.set_underscores_allowed(allow_underscores);
-    options.set_inf_allowed(inf);
-    options.set_nan_allowed(nan);
-
-    const NumberFlags flags = collect_type(input, options, nullptr);
-
-    bool from_str, ok_float, ok_int, ok_intlike;
-    resolve_types(flags, options, from_str, ok_float, ok_int, ok_intlike);
+    // Assess what types we can call this input
+    auto [from_str, ok_float, ok_int, ok_intlike] = resolve_types(collect_type(input));
 
     // If the input can be interpreted as a number, return that number
     // type. Otherwise, return the type of the input.
@@ -390,7 +61,8 @@ PyObject* type_query_impl(
         : (ok_float ? (PyObject*)&PyFloat_Type : (PyObject*)Py_TYPE(input));
 
     // If allowed types were given and the found type is not there, return None
-    if (allowed_types != nullptr && !PySequence_Contains(allowed_types, found_type)) {
+    if (m_allowed_types != nullptr
+        && !PySequence_Contains(m_allowed_types, found_type)) {
         Py_RETURN_NONE;
     }
 
@@ -399,8 +71,141 @@ PyObject* type_query_impl(
     return found_type;
 }
 
+void Implementation::set_consider(const PyObject* val) noexcept(false)
+{
+    const bool ok = val == Py_None || val == Selectors::NUMBER_ONLY
+        || val == Selectors::STRING_ONLY;
+    if (!ok) {
+        throw fastnumbers_exception(
+            "allowed values for 'consider' are None, fastnumbers.NUMBER_ONLY, or "
+            "fastnumbers.STRING_ONLY"
+        );
+    }
+    m_num_only = val == Selectors::NUMBER_ONLY;
+    m_str_only = val == Selectors::STRING_ONLY;
+}
+
+void Implementation::set_allowed_types(PyObject* val) noexcept(false)
+{
+    if (val != nullptr) {
+        if (!PySequence_Check(val)) {
+            PyErr_Format(
+                PyExc_TypeError, "allowed_type is not a sequence type: %R", val
+            );
+            throw exception_is_set();
+        }
+        if (PySequence_Length(val) < 1) {
+            throw fastnumbers_exception("allowed_type must not be an empty sequence");
+        }
+    }
+    m_allowed_types = Selectors::incref(val);
+}
+
+Payload Implementation::collect_payload(PyObject* obj) const noexcept(false)
+{
+    Buffer buffer;
+
+    // extract_parser() is responsible for taking a python object
+    // and returning the Parser object best suited to parser the object's data.
+    // std:visit is used to obtain the payload data no matter which parser was
+    // returned.
+    return std::visit(
+        [this, obj](const auto& parser) -> Payload {
+            return Evaluator<decltype(parser)>(obj, m_options, parser).as_type(m_ntype);
+        },
+        extract_parser(obj, buffer, m_options)
+    );
+}
+
+NumberFlags Implementation::collect_type(PyObject* obj) const noexcept(false)
+{
+    Buffer buffer;
+
+    // extract_parser() is responsible for taking a python object
+    // and returning the Parser object best suited to parser the object's data.
+    // std:visit is used to obtain the number flag no matter which parser was
+    // returned.
+    return std::visit(
+        [this, obj](const auto& parser) -> NumberFlags {
+            if (m_str_only && parser.parser_type() == ParserType::NUMERIC) {
+                return NumberType::INVALID;
+            } else if (m_num_only && parser.parser_type() != ParserType::NUMERIC) {
+                return NumberType::INVALID;
+            }
+            return Evaluator<decltype(parser)>(obj, m_options, parser).number_type();
+        },
+        extract_parser(obj, buffer, m_options)
+    );
+}
+
+Implementation::Types Implementation::resolve_types(const NumberFlags& flags
+) const noexcept
+{
+    // Build up the logic with individual "Boolean chunks"
+    const bool from_str = bool(flags & (NumberType::FromStr | NumberType::FromUni));
+    const bool from_num = bool(flags & NumberType::FromNum);
+    const bool no_inf_str = from_str && !m_options.allow_inf_str();
+    const bool no_nan_str = from_str && !m_options.allow_nan_str();
+    const bool no_inf_num = from_num && !m_options.allow_inf_num();
+    const bool no_nan_num = from_num && !m_options.allow_nan_num();
+    const bool no_inf = no_inf_str || no_inf_num;
+    const bool no_nan = no_nan_str || no_nan_num;
+    const bool bad_inf = no_inf && flags & NumberType::Infinity;
+    const bool bad_nan = no_nan && flags & NumberType::NaN;
+
+    // Set the final results as results of the booleans
+    return Types { from_str,
+                   /* ok_float */ flags & NumberType::Float && !(bad_inf || bad_nan),
+                   /* ok_int */ bool(flags & NumberType::Integer),
+                   /* ok_intlike */ m_options.allow_coerce()
+                       && flags & NumberType::IntLike };
+}
+
+void Implementation::validate_allow_disallow_str_only_num_only(const PyObject* selector
+) const noexcept(false)
+{
+    const bool ok = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
+    if (!ok) {
+        throw fastnumbers_exception(
+            "allowed values for 'inf' and 'nan' are fastnumbers.ALLOWED, "
+            "fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, or "
+            "fastnumbers.STRING_ONLY"
+        );
+    }
+}
+
+void Implementation::validate_not_allow_disallow_str_only_num_only(
+    const PyObject* selector
+) const noexcept(false)
+{
+    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'on_fail' and 'on_type_error' cannot be fastnumbers.ALLOWED, "
+            "fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, or "
+            "fastnumbers.STRING_ONLY"
+        );
+    }
+}
+
+void Implementation::validate_not_disallow(const PyObject* selector) const
+    noexcept(false)
+{
+    const bool bad = selector == Selectors::DISALLOWED
+        || selector == Selectors::STRING_ONLY || selector == Selectors::NUMBER_ONLY;
+    if (bad) {
+        throw fastnumbers_exception("'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+                                    "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY"
+        );
+    }
+}
+
 // Implementation for iterating over a collection to populate a list
-PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+PyObject* list_iteration_impl(
+    PyObject* input, std::function<PyObject*(PyObject*)> convert
+) noexcept(false)
 {
     // Create a python list into which to store the return values
     ListBuilder list_builder(input);
@@ -415,6 +220,147 @@ PyObject* iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> co
 
     // Return the list to the user
     return list_builder.get();
+}
+
+/**
+ * \struct FastnumbersIterator
+ * \brief Object containing the state of the fastnumbers iterator
+ *
+ * This is a PyObject "subclass" that enables iterating over fastnumbers
+ * results.
+ *
+ * It is written in a very C-like way because it has to interface with C-code.
+ */
+struct FastnumbersIterator {
+    // clang-format off
+    PyObject_HEAD
+
+    /// The Python object over which to iterated
+    PyObject* it_input;
+    // clang-format on
+
+    /// Pointer to the active IterableManager
+    IterableManager<PyObject*>* it_man;
+
+    /// The C++ iterator
+    IterableManager<PyObject*>::ItemIterator it_iter;
+
+    // Track if this is the first iteration or not
+    bool it_first;
+
+    /// Deallocate the itertor object
+    static void dealloc(FastnumbersIterator* it) noexcept
+    {
+        Py_DECREF(it->it_input);
+        delete it->it_man;
+    }
+
+    /// Get a guess of the length of the iterator
+    static PyObject*
+    len_guess(FastnumbersIterator* it, PyObject* Py_UNUSED(ignored)) noexcept(false)
+    {
+        return PyLong_FromSsize_t(get_length_hint(it->it_input));
+    }
+
+    /// Return the next value of the iterator
+    static PyObject* next(FastnumbersIterator* it) noexcept(false)
+    {
+        assert(it != nullptr);
+        assert(it->it_man != nullptr);
+
+        // Run inside an exception handler to ensure anything we throw gets converted
+        // into a Python exception.
+        return ExceptionHandler(it->it_input).run([&it]() -> PyObject* {
+            // On the first iteration, prime the iterator.
+            // On subsequent iterations, just increment it.
+            if (it->it_first) {
+                it->it_first = false;
+                it->it_iter = it->it_man->begin();
+            } else {
+                ++it->it_iter;
+            }
+
+            // If the C++ iterator is exhausted, return NULL to
+            // tell Python the iterator is exhausted
+            if (it->it_iter == it->it_man->end()) {
+                return nullptr;
+            }
+
+            // Return the current value held in the itertor
+            return *it->it_iter;
+        });
+    }
+};
+
+/// Extra methods of the fastnumbers iterable object no standard in a type object
+static PyMethodDef fastnumbers_iterator_methods[] = {
+    { "__length_hint__",
+      (PyCFunction)FastnumbersIterator::len_guess,
+      METH_NOARGS,
+      "Get a length guess for the fastnumbers iterator" },
+    { NULL, NULL } /* sentinel */
+};
+
+/// The fastnumbers iterator type object definition
+PyTypeObject FastnumbersIteratorType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0) "fastnumbers_iterator", /* tp_name */
+    sizeof(FastnumbersIterator), /* tp_basicsize */
+    0, /* tp_itemsize */
+    /* methods */
+    (destructor)FastnumbersIterator::dealloc, /* tp_dealloc */
+    0, /* tp_vectorcall_offset */
+    0, /* tp_getattr */
+    0, /* tp_setattr */
+    0, /* tp_as_async */
+    0, /* tp_repr */
+    0, /* tp_as_number */
+    0, /* tp_as_sequence */
+    0, /* tp_as_mapping */
+    0, /* tp_hash */
+    0, /* tp_call */
+    0, /* tp_str */
+    PyObject_GenericGetAttr, /* tp_getattro */
+    0, /* tp_setattro */
+    0, /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT, /* tp_flags */
+    0, /* tp_doc */
+    0, /* tp_traverse */
+    0, /* tp_clear */
+    0, /* tp_richcompare */
+    0, /* tp_weaklistoffset */
+    PyObject_SelfIter, /* tp_iter */
+    (iternextfunc)FastnumbersIterator::next, /* tp_iternext */
+    fastnumbers_iterator_methods, /* tp_methods */
+    0,
+};
+
+// Implementation for iterating over a collection to populate an iterator
+PyObject* iter_iteration_impl(
+    PyObject* input, std::function<PyObject*(PyObject*)> convert
+) noexcept(false)
+{
+    // Create an instance of our iterator object as our iterator type
+    FastnumbersIterator* it
+        = PyObject_New(FastnumbersIterator, &FastnumbersIteratorType);
+    if (it == nullptr) {
+        return nullptr;
+    }
+
+    // Add to it the helper for iterating over the Python iterable
+    it->it_man = new IterableManager<PyObject*>(input, convert);
+
+    // Initialize with the end
+    it->it_iter = it->it_man->end();
+
+    // Store the input object over which we are iterating
+    it->it_input = input;
+    Py_INCREF(it->it_input);
+
+    // Indicate this is the first iteration
+    it->it_first = true;
+
+    // Return our iterator instance to Python-land
+    return (PyObject*)it;
 }
 
 /**
@@ -450,11 +396,11 @@ struct ArrayImpl {
     int m_base;
 
     /// Release the Python memoryview buffer
-    ~ArrayImpl() { PyBuffer_Release(&m_output); }
+    ~ArrayImpl() noexcept { PyBuffer_Release(&m_output); }
 
     /// Perform the actual array population logic
     template <typename T>
-    void execute()
+    void execute() noexcept(false)
     {
         UserOptions options;
         options.set_base(m_base);
@@ -483,6 +429,47 @@ struct ArrayImpl {
     }
 };
 
+/**
+ * \brief Validate the selector is not a "yes, no, num, str, input" value
+ * \param selector The python object to validate
+ * \throws fastnumbers_exception if one of the four valid values
+ */
+static inline void
+validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector
+) noexcept(false)
+{
+    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
+        || selector == Selectors::INPUT;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'on_fail', 'on_overflow', and 'on_type_error' cannot be "
+            "fastnumbers.ALLOWED, fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, "
+            "fastnumbers.STRING_ONLY, or fastnumbers.INPUT"
+        );
+    }
+}
+
+/**
+ * \brief Validate the selector is not a "no, num, str, input" value
+ * \param selector The python object to validate
+ * \throws fastnumbers_exception if one of the four valid values
+ */
+static inline void validate_not_disallow_str_only_num_only_input(const PyObject* selector
+) noexcept(false)
+{
+    const bool bad = selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
+        || selector == Selectors::INPUT || selector == Selectors::RAISE;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+            "fastnumbers.NUMBER_ONLY, fastnumbers.STRING_ONLY, fastnumbers.INPUT "
+            "or fastnumbers.RAISE"
+        );
+    }
+}
+
 // Implementation for iterating over a collection to populate an array
 void array_impl(
     PyObject* input,
@@ -494,8 +481,15 @@ void array_impl(
     PyObject* on_type_error,
     bool allow_underscores,
     int base
-)
+) noexcept(false)
 {
+    // Ensure the given parameters are valid.
+    validate_not_disallow_str_only_num_only_input(inf);
+    validate_not_disallow_str_only_num_only_input(nan);
+    validate_not_allow_disallow_str_only_num_only_input(on_fail);
+    validate_not_allow_disallow_str_only_num_only_input(on_overflow);
+    validate_not_allow_disallow_str_only_num_only_input(on_type_error);
+
     // Extract the underlying buffer data from the output object
     Py_buffer buf { nullptr, nullptr };
     constexpr auto flags = PyBUF_WRITABLE | PyBUF_STRIDES | PyBUF_FORMAT;

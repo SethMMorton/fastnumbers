@@ -69,7 +69,7 @@ constexpr int8_t DIGIT_TABLE_ARBITRARY_BASE[]
  *         2 - float
  *         3 - "intlike" float
  */
-int string_contains_what(const char* str, const char* end, int base);
+int string_contains_what(const char* str, const char* end, int base) noexcept;
 
 /**
  * \brief Remove underscores in a numeric-representing string
@@ -85,12 +85,12 @@ int string_contains_what(const char* str, const char* end, int base);
  *            point to the new end of the string
  * \param based Whether or not the string contains a non-base-10 integer
  */
-void remove_valid_underscores(char* str, const char*& end, const bool based);
+void remove_valid_underscores(char* str, const char*& end, const bool based) noexcept;
 
 /**
  * \brief Lowercase a character - does no error checking
  */
-constexpr inline char lowercase(const char c)
+constexpr inline char lowercase(const char c) noexcept
 {
     // The ASCII standard was quite clever... upper- and lower-case
     // letters only differ from each other by the 32 bit, otherwise
@@ -101,7 +101,7 @@ constexpr inline char lowercase(const char c)
 /**
  * \brief Determine if a character is whitespace
  */
-constexpr inline bool is_whitespace(const char c)
+constexpr inline bool is_whitespace(const char c) noexcept
 {
     // Using a table was determined through performance testing to be
     // many times faster than std::isspace, and twice as fast as using
@@ -112,7 +112,7 @@ constexpr inline bool is_whitespace(const char c)
 /**
  * \brief Advance a string's pointer while whitespace is found
  */
-constexpr inline void consume_whitespace(const char*& str, const char* end)
+constexpr inline void consume_whitespace(const char*& str, const char* end) noexcept
 {
     while (str != end && is_whitespace(*str)) {
         str += 1;
@@ -123,7 +123,7 @@ constexpr inline void consume_whitespace(const char*& str, const char* end)
  * \brief Convert a character to a digit, returns -1 on failure.
  */
 template <typename T>
-constexpr inline T to_digit(const char c)
+constexpr inline T to_digit(const char c) noexcept
 {
     // Using a table was determined through performance testing to be
     // three times faster than c - '0' or a switch statement.
@@ -134,7 +134,7 @@ constexpr inline T to_digit(const char c)
  * \brief Convert a character to a digit from an arbitrary base, returns -1 on failure.
  */
 template <typename T>
-constexpr inline T to_digit(const char c, const int base)
+constexpr inline T to_digit(const char c, const int base) noexcept
 {
     // Using a table was determined through performance testing to be
     // three times faster than c - '0' or a switch statement.
@@ -145,7 +145,7 @@ constexpr inline T to_digit(const char c, const int base)
 /**
  * \brief Determine if a character represents a digit
  */
-constexpr inline bool is_valid_digit(const char c)
+constexpr inline bool is_valid_digit(const char c) noexcept
 {
     // Using a table was determined through performance testing to be
     // faster than std::isdigit or a switch statement.
@@ -155,7 +155,7 @@ constexpr inline bool is_valid_digit(const char c)
 /**
  * \brief Determine if a character represents a digit in an arbitrary base
  */
-constexpr inline bool is_valid_digit(const char c, const int base)
+constexpr inline bool is_valid_digit(const char c, const int base) noexcept
 {
     // Using a table was determined through performance testing to be
     // faster than std::isdigit or a switch statement.
@@ -165,7 +165,7 @@ constexpr inline bool is_valid_digit(const char c, const int base)
 /**
  * \brief Advance a string's pointer while digits are found
  */
-constexpr inline void consume_digits(const char*& str, const char* end)
+constexpr inline void consume_digits(const char*& str, const char* end) noexcept
 {
     while (str != end && is_valid_digit(*str)) {
         str += 1;
@@ -176,7 +176,7 @@ constexpr inline void consume_digits(const char*& str, const char* end)
  * \brief Advance a string's pointer while digits are found
  *        and attempt to read multiple digits at a time if possible
  */
-inline void consume_digits(const char*& str, const std::size_t len)
+inline void consume_digits(const char*& str, const std::size_t len) noexcept
 {
     // Attempt to read eight characters at a time to determine
     // if they are digits. Loop over the character array in steps
@@ -197,7 +197,7 @@ inline void consume_digits(const char*& str, const std::size_t len)
 /**
  * \brief Determine if a character is '-' or '+'
  */
-constexpr inline bool is_sign(const char c)
+constexpr inline bool is_sign(const char c) noexcept
 {
     return c == '-' || c == '+';
 }
@@ -205,7 +205,7 @@ constexpr inline bool is_sign(const char c)
 /**
  * \brief Determine if a character a prefix for base 2, 8, or 16
  */
-constexpr inline bool is_base_prefix(const char c)
+constexpr inline bool is_base_prefix(const char c) noexcept
 {
     // The ASCII standard was quite clever... upper- and lower-case
     // letters only differ from each other by the 32 bit, otherwise
@@ -219,7 +219,7 @@ constexpr inline bool is_base_prefix(const char c)
 /**
  * \brief Determine if a character a prefix for a specific base 2, 8, or 16
  */
-constexpr inline bool is_base_prefix(const char c, const int base)
+constexpr inline bool is_base_prefix(const char c, const int base) noexcept
 {
     const char lowered = lowercase(c);
     return (base == 16 && (lowered == 'x')) || (base == 8 && (lowered == 'o'))
@@ -229,7 +229,7 @@ constexpr inline bool is_base_prefix(const char c, const int base)
 /**
  * \brief Determine if a string begins with a base prefix
  */
-constexpr inline bool has_base_prefix(const char* str, const std::size_t len)
+constexpr inline bool has_base_prefix(const char* str, const std::size_t len) noexcept
 {
     return len > 2 && str[0] == '0' && is_base_prefix(str[1]);
 }
@@ -243,7 +243,8 @@ constexpr inline bool has_base_prefix(const char* str, const std::size_t len)
  * \param str The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-constexpr inline bool quick_detect_infinity(const char* str, const std::size_t len)
+constexpr inline bool
+quick_detect_infinity(const char* str, const std::size_t len) noexcept
 {
     // The ASCII standard was quite clever... upper- and lower-case
     // letters only differ from each other by the 32 bit, otherwise
@@ -282,7 +283,7 @@ constexpr inline bool quick_detect_infinity(const char* str, const std::size_t l
  * \param str The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-constexpr inline bool quick_detect_nan(const char* str, const std::size_t len)
+constexpr inline bool quick_detect_nan(const char* str, const std::size_t len) noexcept
 {
     if (len != 3) {
         return false;
@@ -306,7 +307,7 @@ constexpr inline bool quick_detect_nan(const char* str, const std::size_t len)
  * \param str The string to check, assumed to be non-NULL
  * \param len The length of the string
  */
-constexpr inline bool is_likely_int(const char* str, std::size_t len)
+constexpr inline bool is_likely_int(const char* str, std::size_t len) noexcept
 {
     return len > 0 && is_valid_digit(*str);
 }
@@ -318,7 +319,8 @@ constexpr inline bool is_likely_int(const char* str, std::size_t len)
  * \param end The end of the string being checked
  * \return The number of zeros
  */
-constexpr inline uint32_t number_trailing_zeros(const char* start, const char* end)
+constexpr inline uint32_t
+number_trailing_zeros(const char* start, const char* end) noexcept
 {
     uint32_t n = 0;
     for (end = end - 1; end >= start; --end) {
@@ -338,7 +340,7 @@ constexpr inline uint32_t number_trailing_zeros(const char* start, const char* e
  * \param end The end of the string being checked
  * \return The dectected base, possibly 2, 8, 10, 16, or -1 on error
  */
-constexpr inline int detect_base(const char* str, const char* end)
+constexpr inline int detect_base(const char* str, const char* end) noexcept
 {
     if (str[0] == '-') // Skip leading negative sign
         str += 1;
@@ -368,7 +370,7 @@ constexpr inline int detect_base(const char* str, const char* end)
  * \brief Return the number of digits an integer type can safely parse without overflow
  */
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-constexpr inline int8_t overflow_cutoff()
+constexpr inline int8_t overflow_cutoff() noexcept
 {
     // len('std::numeric_limits<T>::max()') - 1 == return value
     constexpr uint64_t limit = static_cast<uint64_t>(std::numeric_limits<T>::max());
@@ -413,7 +415,7 @@ T parse_int(
     bool& error,
     bool& overflow,
     bool always_convert = false
-)
+) noexcept
 {
     // Remember if we are negative.
     const bool is_negative = *str == '-';
@@ -526,7 +528,7 @@ T parse_int(
 template <
     typename T,
     typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-T parse_float(const char* str, const char* end, bool& error)
+T parse_float(const char* str, const char* end, bool& error) noexcept
 {
     // Use a very fast and accurate string-to-floating point parser
     T value;
