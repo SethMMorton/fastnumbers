@@ -34,22 +34,31 @@ public:
     Resolver(Resolver&&) = delete;
     Resolver& operator=(const Resolver&) = delete;
 
-    // Default destruct
-    ~Resolver() = default;
+    /// Destruct
+    ~Resolver()
+    {
+        Selectors::decref(m_inf);
+        Selectors::decref(m_nan);
+        Selectors::decref(m_fail);
+        Selectors::decref(m_type_error);
+    };
 
     /// Define how a value of infinity will be interpreted
-    void set_inf_action(PyObject* inf_value) { m_inf = inf_value; }
+    void set_inf_action(PyObject* inf_value) { m_inf = Selectors::incref(inf_value); }
 
     /// Define how a value of NaN will be interpreted
-    void set_nan_action(PyObject* nan_value) { m_nan = nan_value; }
+    void set_nan_action(PyObject* nan_value) { m_nan = Selectors::incref(nan_value); }
 
     /// Define how a conversion failure will be interpreted
-    void set_fail_action(PyObject* fail_value) { m_fail = fail_value; }
+    void set_fail_action(PyObject* fail_value)
+    {
+        m_fail = Selectors::incref(fail_value);
+    }
 
     /// Define how a type error will be interpreted
     void set_type_error_action(PyObject* type_error_value)
     {
-        m_type_error = type_error_value;
+        m_type_error = Selectors::incref(type_error_value);
     }
 
     /// Resolve the payload into a Python object

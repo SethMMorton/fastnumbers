@@ -539,22 +539,6 @@ static PyObject* fastnumbers_query_type(
         )) return nullptr;
     // clang-format on
 
-    // Allowed types must be a non-empty sequence.
-    if (allowed_types != nullptr) {
-        if (!PySequence_Check(allowed_types)) {
-            PyErr_Format(
-                PyExc_TypeError, "allowed_type is not a sequence type: %R", allowed_types
-            );
-            return nullptr;
-        }
-        if (PySequence_Length(allowed_types) < 1) {
-            PyErr_SetString(
-                PyExc_ValueError, "allowed_type must not be an empty sequence"
-            );
-            return nullptr;
-        }
-    }
-
     // Convert old-style arguments to new-style
     const PyObject* inf = allow_inf ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;
     const PyObject* nan = allow_nan ? Selectors::ALLOWED : Selectors::NUMBER_ONLY;

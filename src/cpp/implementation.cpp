@@ -85,6 +85,25 @@ void Implementation::set_consider(const PyObject* val)
     m_str_only = val == Selectors::STRING_ONLY;
 }
 
+void Implementation::set_allowed_types(PyObject* val)
+{
+    if (val != nullptr) {
+        if (!PySequence_Check(val)) {
+            PyErr_Format(
+                PyExc_TypeError, "allowed_type is not a sequence type: %R", val
+            );
+            throw exception_is_set();
+        }
+        if (PySequence_Length(val) < 1) {
+        throw fastnumbers_exception(
+            "allowed_type must not be an empty sequence"
+        );
+        }
+        Py_IncRef(val);
+    }
+    m_allowed_types = val;
+}
+
 Payload Implementation::collect_payload(PyObject* obj) const
 {
     Buffer buffer;

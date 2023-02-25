@@ -33,4 +33,31 @@ struct Selectors {
 
     /// Selector to only allow numbers
     static PyObject* NUMBER_ONLY;
+
+    static bool is_selector(PyObject* obj)
+    {
+        return obj == Selectors::POS_INFINITY || obj == Selectors::NEG_INFINITY
+            || obj == Selectors::POS_NAN || obj == Selectors::NEG_NAN
+            || obj == Selectors::ALLOWED || obj == Selectors::DISALLOWED
+            || obj == Selectors::INPUT || obj == Selectors::RAISE
+            || obj == Selectors::STRING_ONLY || obj == Selectors::NUMBER_ONLY;
+    }
+
+    /// Increment a Python object's reference count if the object is not a selector
+    static PyObject* incref(PyObject* obj)
+    {
+        if (!Selectors::is_selector(obj)) {
+            Py_XINCREF(obj);
+        }
+        return obj;
+    }
+
+    /// Decrement a Python object's reference count if the object is not a selector
+    static PyObject* decref(PyObject* obj)
+    {
+        if (!Selectors::is_selector(obj)) {
+            Py_XDECREF(obj);
+        }
+        return obj;
+    }
 };

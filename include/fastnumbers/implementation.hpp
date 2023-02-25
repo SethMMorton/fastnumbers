@@ -43,7 +43,9 @@ public:
     Implementation(const Implementation&) = default;
     Implementation(Implementation&&) = default;
     Implementation& operator=(const Implementation&) = default;
-    ~Implementation() = default;
+
+    /// Destruct
+    ~Implementation() { Py_XDECREF(m_allowed_types); }
 
     /// Convert the object to the desired user type
     PyObject* convert(PyObject* input) const;
@@ -118,7 +120,7 @@ public:
     void set_strict(const bool val) { m_strict = val; }
 
     /// Set the types we allow when querying for type
-    void set_allowed_types(PyObject* val) { m_allowed_types = val; }
+    void set_allowed_types(PyObject* val);
 
 private:
     /// Store the user-specified options
