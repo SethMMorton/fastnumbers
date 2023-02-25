@@ -55,16 +55,32 @@ public:
     PyObject* query_type(PyObject* input) const;
 
     /// Set the action to perform when INF is found
-    void set_inf_action(PyObject* val) { m_resolver.set_inf_action(val); }
+    void set_inf_action(PyObject* val)
+    {
+        validate_not_disallow(val);
+        m_resolver.set_inf_action(val);
+    }
 
     /// Set the action to perform when NaN is found
-    void set_nan_action(PyObject* val) { m_resolver.set_nan_action(val); }
+    void set_nan_action(PyObject* val)
+    {
+        validate_not_disallow(val);
+        m_resolver.set_nan_action(val);
+    }
 
     /// Set the action to perform on conversion failure
-    void set_fail_action(PyObject* val) { m_resolver.set_fail_action(val); }
+    void set_fail_action(PyObject* val)
+    {
+        validate_not_allow_disallow_str_only_num_only(val);
+        m_resolver.set_fail_action(val);
+    }
 
     /// Set the action to perform on type error
-    void set_type_error_action(PyObject* val) { m_resolver.set_type_error_action(val); }
+    void set_type_error_action(PyObject* val)
+    {
+        validate_not_allow_disallow_str_only_num_only(val);
+        m_resolver.set_type_error_action(val);
+    }
 
     /// Set whether or not underscores are allowed in strings
     void set_underscores_allowed(const bool val)
@@ -76,10 +92,18 @@ public:
     void set_coerce(const bool val) { m_options.set_coerce(val); }
 
     /// Set whether we accept NaN
-    void set_nan_allowed(const PyObject* val) { m_options.set_nan_allowed(val); }
+    void set_nan_allowed(const PyObject* val)
+    {
+        validate_allow_disallow_str_only_num_only(val);
+        m_options.set_nan_allowed(val);
+    }
 
     /// Set whether we accept INF
-    void set_inf_allowed(const PyObject* val) { m_options.set_inf_allowed(val); }
+    void set_inf_allowed(const PyObject* val)
+    {
+        validate_allow_disallow_str_only_num_only(val);
+        m_options.set_inf_allowed(val);
+    }
 
     /// Set whether we accept unicode characters
     void set_unicode_allowed(const bool val) { m_options.set_unicode_allowed(val); }
@@ -88,11 +112,7 @@ public:
     void set_unicode_allowed() { set_unicode_allowed(m_options.is_default_base()); }
 
     /// Set the types of input we consider for checking
-    void set_consider(const PyObject* val)
-    {
-        m_num_only = val == Selectors::NUMBER_ONLY;
-        m_str_only = val == Selectors::STRING_ONLY;
-    }
+    void set_consider(const PyObject* val);
 
     /// Set the types of strings allowed for float checking
     void set_strict(const bool val) { m_strict = val; }
@@ -147,6 +167,27 @@ private:
         options.set_base(base);
         return options;
     }
+
+    /**
+     * \brief Validate the selector has only a "yes, no, num, str" value
+     * \param selector The python object to validate
+     * \throws fastnumbers_exception if not one of the four valid values
+     */
+    void validate_allow_disallow_str_only_num_only(const PyObject* selector) const;
+
+    /**
+     * \brief Validate the selector is not a "yes, no, num, str" value
+     * \param selector The python object to validate
+     * \throws fastnumbers_exception if one of the four valid values
+     */
+    void validate_not_allow_disallow_str_only_num_only(const PyObject* selector) const;
+
+    /**
+     * \brief Validate the selector is not "DISALLOWED"
+     * \param selector The python object to validate
+     * \throws fastnumbers_exception if the value is "DISALLOWED"
+     */
+    void validate_not_disallow(const PyObject* selector) const;
 };
 
 /**

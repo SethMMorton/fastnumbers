@@ -71,6 +71,20 @@ PyObject* Implementation::query_type(PyObject* input) const
     return found_type;
 }
 
+void Implementation::set_consider(const PyObject* val)
+{
+    const bool ok = val == Py_None || val == Selectors::NUMBER_ONLY
+        || val == Selectors::STRING_ONLY;
+    if (!ok) {
+        throw fastnumbers_exception(
+            "allowed values for 'consider' are None, fastnumbers.NUMBER_ONLY, or "
+            "fastnumbers.STRING_ONLY"
+        );
+    }
+    m_num_only = val == Selectors::NUMBER_ONLY;
+    m_str_only = val == Selectors::STRING_ONLY;
+}
+
 Payload Implementation::collect_payload(PyObject* obj) const
 {
     Buffer buffer;
@@ -128,6 +142,46 @@ Implementation::Types Implementation::resolve_types(const NumberFlags& flags) co
                    /* ok_int */ bool(flags & NumberType::Integer),
                    /* ok_intlike */ m_options.allow_coerce()
                        && flags & NumberType::IntLike };
+}
+
+void Implementation::validate_allow_disallow_str_only_num_only(const PyObject* selector
+) const
+{
+    const bool ok = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
+    if (!ok) {
+        throw fastnumbers_exception(
+            "allowed values for 'inf' and 'nan' are fastnumbers.ALLOWED, "
+            "fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, or "
+            "fastnumbers.STRING_ONLY"
+        );
+    }
+}
+
+void Implementation::validate_not_allow_disallow_str_only_num_only(
+    const PyObject* selector
+) const
+{
+    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'on_fail' and 'on_type_error' cannot be fastnumbers.ALLOWED, "
+            "fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, or "
+            "fastnumbers.STRING_ONLY"
+        );
+    }
+}
+
+void Implementation::validate_not_disallow(const PyObject* selector) const
+{
+    const bool bad = selector == Selectors::DISALLOWED
+        || selector == Selectors::STRING_ONLY || selector == Selectors::NUMBER_ONLY;
+    if (bad) {
+        throw fastnumbers_exception("'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+                                    "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY"
+        );
+    }
 }
 
 // Implementation for iterating over a collection to populate a list
@@ -354,6 +408,46 @@ struct ArrayImpl {
     }
 };
 
+/**
+ * \brief Validate the selector is not a "yes, no, num, str, input" value
+ * \param selector The python object to validate
+ * \throws fastnumbers_exception if one of the four valid values
+ */
+static inline void
+validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector)
+{
+    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
+        || selector == Selectors::INPUT;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'on_fail', 'on_overflow', and 'on_type_error' cannot be "
+            "fastnumbers.ALLOWED, fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, "
+            "fastnumbers.STRING_ONLY, or fastnumbers.INPUT"
+        );
+    }
+}
+
+/**
+ * \brief Validate the selector is not a "no, num, str, input" value
+ * \param selector The python object to validate
+ * \throws fastnumbers_exception if one of the four valid values
+ */
+static inline void validate_not_disallow_str_only_num_only_input(const PyObject* selector
+)
+{
+    const bool bad = selector == Selectors::DISALLOWED
+        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
+        || selector == Selectors::INPUT || selector == Selectors::RAISE;
+    if (bad) {
+        throw fastnumbers_exception(
+            "values for 'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+            "fastnumbers.NUMBER_ONLY, fastnumbers.STRING_ONLY, fastnumbers.INPUT "
+            "or fastnumbers.RAISE"
+        );
+    }
+}
+
 // Implementation for iterating over a collection to populate an array
 void array_impl(
     PyObject* input,
@@ -367,6 +461,13 @@ void array_impl(
     int base
 )
 {
+    // Ensure the given parameters are valid.
+    validate_not_disallow_str_only_num_only_input(inf);
+    validate_not_disallow_str_only_num_only_input(nan);
+    validate_not_allow_disallow_str_only_num_only_input(on_fail);
+    validate_not_allow_disallow_str_only_num_only_input(on_overflow);
+    validate_not_allow_disallow_str_only_num_only_input(on_type_error);
+
     // Extract the underlying buffer data from the output object
     Py_buffer buf { nullptr, nullptr };
     constexpr auto flags = PyBUF_WRITABLE | PyBUF_STRIDES | PyBUF_FORMAT;

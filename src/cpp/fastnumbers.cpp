@@ -102,117 +102,7 @@ static inline PyObject* create_consider(const bool str_only, const bool num_only
     } else if (num_only) {
         return Selectors::NUMBER_ONLY;
     } else {
-        return nullptr;
-    }
-}
-
-/**
- * \brief Validate the selector has only a "yes, no, num, str" value
- * \param selector The python object to validate
- * \throws fastnumbers_exception if not one of the four valid values
- */
-static inline void validate_allow_disallow_str_only_num_only(const PyObject* selector)
-{
-    const bool ok = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
-        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
-    if (!ok) {
-        throw fastnumbers_exception(
-            "allowed values for 'inf' and 'nan' are fastnumbers.ALLOWED, "
-            "fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, or "
-            "fastnumbers.STRING_ONLY"
-        );
-    }
-}
-
-/**
- * \brief Validate the selector is not a "yes, no, num, str" value
- * \param selector The python object to validate
- * \throws fastnumbers_exception if one of the four valid values
- */
-static inline void validate_not_allow_disallow_str_only_num_only(const PyObject* selector
-)
-{
-    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
-        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
-    if (bad) {
-        throw fastnumbers_exception(
-            "values for 'on_fail' and 'on_type_error' cannot be fastnumbers.ALLOWED, "
-            "fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, or "
-            "fastnumbers.STRING_ONLY"
-        );
-    }
-}
-
-/**
- * \brief Validate the selector is not a "yes, no, num, str, input" value
- * \param selector The python object to validate
- * \throws fastnumbers_exception if one of the four valid values
- */
-static inline void
-validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector)
-{
-    const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
-        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
-        || selector == Selectors::INPUT;
-    if (bad) {
-        throw fastnumbers_exception(
-            "values for 'on_fail', 'on_overflow', and 'on_type_error' cannot be "
-            "fastnumbers.ALLOWED, fastnumbers.DISALLOWED, fastnumbers.NUMBER_ONLY, "
-            "fastnumbers.STRING_ONLY, or fastnumbers.INPUT"
-        );
-    }
-}
-
-/**
- * \brief Validate the selector is not a "no, num, str, input" value
- * \param selector The python object to validate
- * \throws fastnumbers_exception if one of the four valid values
- */
-static inline void validate_not_disallow_str_only_num_only_input(const PyObject* selector
-)
-{
-    const bool bad = selector == Selectors::DISALLOWED
-        || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
-        || selector == Selectors::INPUT || selector == Selectors::RAISE;
-    if (bad) {
-        throw fastnumbers_exception(
-            "values for 'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
-            "fastnumbers.NUMBER_ONLY, fastnumbers.STRING_ONLY, fastnumbers.INPUT "
-            "or fastnumbers.RAISE"
-        );
-    }
-}
-
-/**
- * \brief Validate the selector is not "DISALLOWED"
- * \param selector The python object to validate
- * \throws fastnumbers_exception if the value is "DISALLOWED"
- */
-static inline void validate_not_disallow(const PyObject* selector)
-{
-    const bool bad = selector == Selectors::DISALLOWED
-        || selector == Selectors::STRING_ONLY || selector == Selectors::NUMBER_ONLY;
-    if (bad) {
-        throw fastnumbers_exception("'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
-                                    "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY"
-        );
-    }
-}
-
-/**
- * \brief Validate the selector has only a "num, str, None" value
- * \param selector The python object to validate
- * \throws fastnumbers_exception if not one of the three valid values
- */
-static inline void validate_consider(const PyObject* selector)
-{
-    const bool ok = selector == Py_None || selector == Selectors::NUMBER_ONLY
-        || selector == Selectors::STRING_ONLY;
-    if (!ok) {
-        throw fastnumbers_exception(
-            "allowed values for 'consider' are None, fastnumbers.NUMBER_ONLY, or "
-            "fastnumbers.STRING_ONLY"
-        );
+        return Py_None;
     }
 }
 
@@ -286,10 +176,6 @@ static PyObject* fastnumbers_try_real(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_not_disallow(inf);
-        validate_not_disallow(nan);
-        validate_not_allow_disallow_str_only_num_only(on_fail);
-        validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [=](PyObject* x) -> PyObject* {
             Implementation impl(UserType::REAL);
             impl.set_fail_action(on_fail);
@@ -336,10 +222,6 @@ static PyObject* fastnumbers_try_float(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_not_disallow(inf);
-        validate_not_disallow(nan);
-        validate_not_allow_disallow_str_only_num_only(on_fail);
-        validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [=](PyObject* x) -> PyObject* {
             Implementation impl(UserType::FLOAT);
             impl.set_fail_action(on_fail);
@@ -383,11 +265,8 @@ static PyObject* fastnumbers_try_int(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_not_allow_disallow_str_only_num_only(on_fail);
-        validate_not_allow_disallow_str_only_num_only(on_type_error);
-        const int base = assess_integer_base_input(pybase);
         auto convert = [=](PyObject* x) -> PyObject* {
-            Implementation impl(UserType::INT, base);
+            Implementation impl(UserType::INT, assess_integer_base_input(pybase));
             impl.set_fail_action(on_fail);
             impl.set_type_error_action(on_type_error);
             impl.set_unicode_allowed(); // determine from base
@@ -426,8 +305,6 @@ static PyObject* fastnumbers_try_forceint(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_not_allow_disallow_str_only_num_only(on_fail);
-        validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [=](PyObject* x) -> PyObject* {
             Implementation impl(UserType::FORCEINT);
             impl.set_fail_action(on_fail);
@@ -475,12 +352,6 @@ static PyObject* fastnumbers_array(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_not_disallow_str_only_num_only_input(inf);
-        validate_not_disallow_str_only_num_only_input(nan);
-        validate_not_allow_disallow_str_only_num_only_input(on_fail);
-        validate_not_allow_disallow_str_only_num_only_input(on_overflow);
-        validate_not_allow_disallow_str_only_num_only_input(on_type_error);
-        const int base = assess_integer_base_input(pybase);
         array_impl(
             input,
             output,
@@ -490,7 +361,7 @@ static PyObject* fastnumbers_array(
             on_overflow,
             on_type_error,
             allow_underscores,
-            base
+            assess_integer_base_input(pybase)
         );
 
         // No return value, need to return None
@@ -526,10 +397,6 @@ static PyObject* fastnumbers_check_real(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_allow_disallow_str_only_num_only(inf);
-        validate_allow_disallow_str_only_num_only(nan);
-        validate_consider(consider);
-
         Implementation impl(UserType::REAL);
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -569,10 +436,6 @@ static PyObject* fastnumbers_check_float(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_allow_disallow_str_only_num_only(inf);
-        validate_allow_disallow_str_only_num_only(nan);
-        validate_consider(consider);
-
         Implementation impl(UserType::FLOAT);
         impl.set_inf_allowed(inf);
         impl.set_nan_allowed(nan);
@@ -609,10 +472,7 @@ static PyObject* fastnumbers_check_int(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_consider(consider);
-        const int base = assess_integer_base_input(pybase);
-
-        Implementation impl(UserType::INT, base);
+        Implementation impl(UserType::INT, assess_integer_base_input(pybase));
         impl.set_consider(consider);
         impl.set_underscores_allowed(allow_underscores);
         return impl.check(input);
@@ -643,8 +503,6 @@ static PyObject* fastnumbers_check_intlike(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        validate_consider(consider);
-
         Implementation impl(UserType::INTLIKE);
         impl.set_consider(consider);
         impl.set_coerce(true);
@@ -775,8 +633,7 @@ static PyObject* fastnumbers_int(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        const int base = assess_integer_base_input(pybase);
-        Implementation impl(UserType::INT, base);
+        Implementation impl(UserType::INT, assess_integer_base_input(pybase));
         impl.set_unicode_allowed(false);
         impl.set_underscores_allowed(true);
         return impl.convert(input);
@@ -944,9 +801,8 @@ static PyObject* fastnumbers_fast_int(
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
-        const int base = assess_integer_base_input(pybase);
 
-        Implementation impl(UserType::INT, base);
+        Implementation impl(UserType::INT, assess_integer_base_input(pybase));
         impl.set_fail_action(on_fail);
         impl.set_unicode_allowed(); // determine from base
         impl.set_underscores_allowed(allow_underscores);
