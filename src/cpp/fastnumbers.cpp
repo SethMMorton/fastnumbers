@@ -5,6 +5,7 @@
 #include <functional>
 #include <limits>
 #include <string>
+#include <utility>
 
 #include <Python.h>
 
@@ -176,14 +177,16 @@ static PyObject* fastnumbers_try_real(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        auto convert = [=](PyObject* x) -> PyObject* {
-            Implementation impl(UserType::REAL);
-            impl.set_fail_action(on_fail);
-            impl.set_type_error_action(on_type_error);
-            impl.set_inf_action(inf);
-            impl.set_nan_action(nan);
-            impl.set_coerce(coerce);
-            impl.set_underscores_allowed(allow_underscores);
+        // Use a lambda instead of the convert function directly so that the
+        // Implementation object stays in memory even if we return an iterator.
+        Implementation impl(UserType::REAL);
+        impl.set_fail_action(on_fail);
+        impl.set_type_error_action(on_type_error);
+        impl.set_inf_action(inf);
+        impl.set_nan_action(nan);
+        impl.set_coerce(coerce);
+        impl.set_underscores_allowed(allow_underscores);
+        auto convert = [impl = std::move(impl)](PyObject* x) -> PyObject* {
             return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
@@ -222,13 +225,15 @@ static PyObject* fastnumbers_try_float(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        auto convert = [=](PyObject* x) -> PyObject* {
-            Implementation impl(UserType::FLOAT);
-            impl.set_fail_action(on_fail);
-            impl.set_type_error_action(on_type_error);
-            impl.set_inf_action(inf);
-            impl.set_nan_action(nan);
-            impl.set_underscores_allowed(allow_underscores);
+        // Use a lambda instead of the convert function directly so that the
+        // Implementation object stays in memory even if we return an iterator.
+        Implementation impl(UserType::FLOAT);
+        impl.set_fail_action(on_fail);
+        impl.set_type_error_action(on_type_error);
+        impl.set_inf_action(inf);
+        impl.set_nan_action(nan);
+        impl.set_underscores_allowed(allow_underscores);
+        auto convert = [impl = std::move(impl)](PyObject* x) -> PyObject* {
             return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
@@ -265,12 +270,14 @@ static PyObject* fastnumbers_try_int(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        auto convert = [=](PyObject* x) -> PyObject* {
-            Implementation impl(UserType::INT, assess_integer_base_input(pybase));
-            impl.set_fail_action(on_fail);
-            impl.set_type_error_action(on_type_error);
-            impl.set_unicode_allowed(); // determine from base
-            impl.set_underscores_allowed(allow_underscores);
+        // Use a lambda instead of the convert function directly so that the
+        // Implementation object stays in memory even if we return an iterator.
+        Implementation impl(UserType::INT, assess_integer_base_input(pybase));
+        impl.set_fail_action(on_fail);
+        impl.set_type_error_action(on_type_error);
+        impl.set_unicode_allowed(); // determine from base
+        impl.set_underscores_allowed(allow_underscores);
+        auto convert = [impl = std::move(impl)](PyObject* x) -> PyObject* {
             return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
@@ -305,11 +312,13 @@ static PyObject* fastnumbers_try_forceint(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        auto convert = [=](PyObject* x) -> PyObject* {
-            Implementation impl(UserType::FORCEINT);
-            impl.set_fail_action(on_fail);
-            impl.set_type_error_action(on_type_error);
-            impl.set_underscores_allowed(allow_underscores);
+        // Use a lambda instead of the convert function directly so that the
+        // Implementation object stays in memory even if we return an iterator.
+        Implementation impl(UserType::FORCEINT);
+        impl.set_fail_action(on_fail);
+        impl.set_type_error_action(on_type_error);
+        impl.set_underscores_allowed(allow_underscores);
+        auto convert = [impl = std::move(impl)](PyObject* x) -> PyObject* {
             return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));

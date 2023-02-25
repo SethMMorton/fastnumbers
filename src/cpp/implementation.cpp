@@ -95,13 +95,10 @@ void Implementation::set_allowed_types(PyObject* val)
             throw exception_is_set();
         }
         if (PySequence_Length(val) < 1) {
-        throw fastnumbers_exception(
-            "allowed_type must not be an empty sequence"
-        );
+            throw fastnumbers_exception("allowed_type must not be an empty sequence");
         }
-        Py_IncRef(val);
     }
-    m_allowed_types = val;
+    m_allowed_types = Selectors::incref(val);
 }
 
 Payload Implementation::collect_payload(PyObject* obj) const

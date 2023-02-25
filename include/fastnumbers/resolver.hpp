@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <variant>
 
 #include <Python.h>
@@ -29,9 +30,25 @@ public:
         , m_base(base)
     { }
 
-    // Copy, assignment are deleted
-    Resolver(const Resolver&) = delete;
-    Resolver(Resolver&&) = delete;
+    /// Copy constructor makes sure to increment references
+    Resolver(const Resolver& rhs)
+        : m_inf(Selectors::incref(rhs.m_inf))
+        , m_nan(Selectors::incref(rhs.m_nan))
+        , m_fail(Selectors::incref(rhs.m_fail))
+        , m_type_error(Selectors::incref(rhs.m_type_error))
+        , m_base(rhs.m_base)
+    { }
+
+    /// Move constructor makes sure to increment references
+    Resolver(Resolver&& rhs)
+        : m_inf(Selectors::incref(std::exchange(rhs.m_inf, nullptr)))
+        , m_nan(Selectors::incref(std::exchange(rhs.m_nan, nullptr)))
+        , m_fail(Selectors::incref(std::exchange(rhs.m_fail, nullptr)))
+        , m_type_error(Selectors::incref(std::exchange(rhs.m_type_error, nullptr)))
+        , m_base(std::exchange(rhs.m_base, 0))
+    { }
+
+    // Assignment not allowed
     Resolver& operator=(const Resolver&) = delete;
 
     /// Destruct

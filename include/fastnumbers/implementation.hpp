@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <limits>
+#include <utility>
 
 #include <Python.h>
 
@@ -39,10 +40,30 @@ public:
         : Implementation(ntype, 10)
     { }
 
-    // Copy, assignment, and destruct are defaults
-    Implementation(const Implementation&) = default;
-    Implementation(Implementation&&) = default;
-    Implementation& operator=(const Implementation&) = default;
+    /// Copy constructor makes sure to increment references
+    Implementation(const Implementation& rhs)
+        : m_options(rhs.m_options)
+        , m_resolver(rhs.m_resolver)
+        , m_ntype(rhs.m_ntype)
+        , m_allowed_types(Selectors::incref(rhs.m_allowed_types))
+        , m_num_only(rhs.m_num_only)
+        , m_str_only(rhs.m_str_only)
+        , m_strict(rhs.m_strict)
+    { }
+
+    /// Move constructor makes sure to increment references
+    Implementation(Implementation&& rhs)
+        : m_options(std::move(rhs.m_options))
+        , m_resolver(std::move(rhs.m_resolver))
+        , m_ntype(std::move(rhs.m_ntype))
+        , m_allowed_types(Selectors::incref(std::exchange(rhs.m_allowed_types, nullptr)))
+        , m_num_only(std::exchange(rhs.m_num_only, false))
+        , m_str_only(std::exchange(rhs.m_str_only, false))
+        , m_strict(std::exchange(rhs.m_strict, false))
+    { }
+
+    // Assignment not allowed
+    Implementation& operator=(const Implementation&) = delete;
 
     /// Destruct
     ~Implementation() { Py_XDECREF(m_allowed_types); }
