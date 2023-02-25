@@ -4,7 +4,7 @@ import hypothesis
 # For some reason it thinks that the text/binary generation is too
 # slow then causes the tests to fail.
 hypothesis.settings.register_profile(
-    "slow-tests", suppress_health_check=[hypothesis.HealthCheck.too_slow]
+    "standard", suppress_health_check=[hypothesis.HealthCheck.too_slow]
 )
 
 # Explore less space in tests

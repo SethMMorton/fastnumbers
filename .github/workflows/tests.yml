@@ -51,10 +51,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: python setup.py install  # to see the compilation output and get coverage
 
-      - name: Run Tests
-        run: |
-          python -m doctest fastnumbers
-          pytest --hypothesis-profile=slow-tests --doctest-glob=README.rst
+      - name: Run Doctests
+        run: python -m doctest fastnumbers
+
+      - name: Run Unit Tests
+        run: pytest --hypothesis-profile=standard --doctest-glob=README.rst
 
       - name: Upload to CodeCov
         if: matrix.os == 'ubuntu-latest'
@@ -63,7 +64,7 @@ jobs:
           gcov: true
 
   test_no_numpy:
-    name: Test Works Without NumpPy
+    name: Try Without NumpPy
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -112,8 +113,8 @@ jobs:
           source .env/bin/activate && \
           echo -e "\e[1;34m Install Dependencies \e[0m" && \
           python -m pip install --upgrade pip && \
-          python -m pip install pytest pytest-faulthandler hypothesis numpy && \
+          python -m pip install pytest pytest-faulthandler hypothesis typing_extensions numpy && \
           echo -e "\e[1;34m Run Tests \e[0m" && \
           python -m pip install --editable . && \
-          pytest --hypothesis-profile=slow-tests && \
+          pytest --hypothesis-profile=fast && \
           deactivate'
