@@ -1773,7 +1773,7 @@ class TestMappingFunctions:
         print(4)
         assert next(result) == 3
         print(5)
-        assert next(result, None) == None
+        assert next(result, None) is None
         print(6)
 
     @parametrize(
