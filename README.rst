@@ -522,7 +522,7 @@ executing the following:
 
 .. code-block:: sh
 
-    $ tox -e py38
+    $ tox run -e py38
 
 ``tox`` will create virtual a virtual environment for your tests and install
 all the needed testing requirements for you.
@@ -531,7 +531,24 @@ If you want to run testing on all supported Python versions you can simply execu
 
 .. code-block:: sh
 
-    $ tox
+    $ tox run
+
+You can change the how much "random" input your tests will try with
+
+.. code-block:: sh
+
+    # Run fewer tests with "random" input - much faster
+    $ tox run -- --hypothesis-profile fast
+
+    # Run more tests with "random" input - takes much longer but is more thorough
+    $ tox run -- --hypothesis-profile thorough
+
+If you want to run the performce analysis yourself, you can execute
+
+.. code-block:: sh
+
+    # This assumes Python 3.9 - adjust for the version you want to profile
+    $ tox run -e py39-prof
 
 If you do not wish to use ``tox``, you can install the testing dependencies with the
 ``dev-requirements.txt`` file and then run the tests manually using

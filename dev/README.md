@@ -2,7 +2,8 @@
 
 This file contains some files useful for development.
 
-- `astyle.cfg` - Configuration settings for [astyle](http://astyle.sourceforge.net/).
+- `clang-format.cfg` - Configuration settings for
+  [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html).
 - `bump.py` - Execute `bumpversion` then post-processes the CHANGELOG to handle corner-cases
   that `bumpversion` cannot. Requires [`bump2version`](https://github.com/c4urself/bump2version),
   which is the maintained fork of [`bumpversion`](https://github.com/peritus/bumpversion).

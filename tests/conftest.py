@@ -7,6 +7,20 @@ hypothesis.settings.register_profile(
     "slow-tests", suppress_health_check=[hypothesis.HealthCheck.too_slow]
 )
 
+# Explore less space in tests
+hypothesis.settings.register_profile(
+    "fast",
+    suppress_health_check=[hypothesis.HealthCheck.too_slow],
+    max_examples=10,
+)
+
+# Explore more space in tests
+hypothesis.settings.register_profile(
+    "thorough",
+    suppress_health_check=[hypothesis.HealthCheck.too_slow],
+    max_examples=500,
+)
+
 
 def base_n(
     num: int, b: int, numerals: str = "0123456789abcdefghijklmnopqrstuvwxyz"
