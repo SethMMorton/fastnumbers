@@ -47,7 +47,7 @@ class Parser {
 public:
     // Constructors, destructors, and assignment
     // There is no constructor with arguments
-    Parser(const UserOptions& options)
+    Parser(const UserOptions& options) noexcept
         : Parser(ParserType::NUMERIC, options)
     { }
     Parser(const Parser&) = default;
@@ -56,26 +56,26 @@ public:
     virtual ~Parser() = default;
 
     /// What type of parser is this?
-    ParserType parser_type() const { return m_ptype; };
+    ParserType parser_type() const noexcept { return m_ptype; };
 
     /// Was an explict base given illegally?
-    bool illegal_explicit_base() const
+    bool illegal_explicit_base() const noexcept
     {
         return !is_explict_base_allowed() && !options().is_default_base();
     }
 
     /// Is the stored number negative?
-    bool is_negative() const { return m_negative; }
+    bool is_negative() const noexcept { return m_negative; }
 
     /// Access the user-given options for parsing
-    const UserOptions& options() const { return m_options; }
+    const UserOptions& options() const noexcept { return m_options; }
 
     // NOTE: ideally, the as_int() and as_float() templates would be defined
     //       as virtual functions here, but virtual functions are not allowed
     //       to also be templates, so we just define them at in the sub-classes.
 
     /// Convert the stored object to a python int
-    virtual RawPayload<PyObject*> as_pyint() const = 0;
+    virtual RawPayload<PyObject*> as_pyint() const noexcept(false) = 0;
 
     /**
      * \brief Convert the stored object to a python float but possibly
@@ -84,19 +84,21 @@ public:
      * \param coerce Return as integer if the float is int-like
      */
     virtual RawPayload<PyObject*>
-    as_pyfloat(const bool force_int = false, const bool coerce = false) const = 0;
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const
+        noexcept(false)
+        = 0;
 
     /// Check the type of the number.
-    virtual NumberFlags get_number_type() const { return m_number_type; }
+    virtual NumberFlags get_number_type() const noexcept { return m_number_type; }
 
     /// Check if the number is INF
-    virtual bool peek_inf() const { return false; }
+    virtual bool peek_inf() const noexcept { return false; }
 
     /// Check if the number is NaN
-    virtual bool peek_nan() const { return false; }
+    virtual bool peek_nan() const noexcept { return false; }
 
     /// Check if the should be parsed as an integer
-    virtual bool peek_try_as_int() const
+    virtual bool peek_try_as_int() const noexcept
     {
         return bool(get_number_type() & NumberType::Integer);
     }
@@ -107,7 +109,7 @@ public:
      * This is defined as a float that can be converted to an int with
      * no information loss.
      */
-    static bool float_is_intlike(const double x)
+    static bool float_is_intlike(const double x) noexcept
     {
         errno = 0;
         return std::isfinite(x) && std::floor(x) == x && errno == 0;
@@ -129,19 +131,19 @@ protected:
     { }
 
     /// Cache the number type
-    void set_number_type(const NumberFlags ntype) { m_number_type = ntype; }
+    void set_number_type(const NumberFlags ntype) noexcept { m_number_type = ntype; }
 
     /// Define whether an explicitly give base is allowed for integers
-    void set_explict_base_allowed(bool explicit_base_allowed)
+    void set_explict_base_allowed(bool explicit_base_allowed) noexcept
     {
         m_explicit_base_allowed = explicit_base_allowed;
     }
 
     /// Is an explicitly give base allowed for integers?
-    bool is_explict_base_allowed() const { return m_explicit_base_allowed; }
+    bool is_explict_base_allowed() const noexcept { return m_explicit_base_allowed; }
 
     /// Toggle whether the store value is negative or not
-    void set_negative(const bool negative = true) { m_negative = negative; }
+    void set_negative(const bool negative = true) noexcept { m_negative = negative; }
 
 private:
     /// The type of the parser
@@ -166,7 +168,7 @@ protected:
         typename T2,
         typename std::enable_if_t<std::is_integral_v<T1> && std::is_integral_v<T2>, bool>
         = true>
-    RawPayload<T1> cast_num_check_overflow(const T2 value) const
+    RawPayload<T1> cast_num_check_overflow(const T2 value) const noexcept
     {
         // Only do the overflow checking if T1 is a smaller type than T2
         // or if one is signed and the other is unsigned.

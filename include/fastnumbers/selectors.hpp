@@ -34,7 +34,7 @@ struct Selectors {
     /// Selector to only allow numbers
     static PyObject* NUMBER_ONLY;
 
-    static bool is_selector(PyObject* obj)
+    static bool is_selector(PyObject* obj) noexcept
     {
         return obj == Selectors::POS_INFINITY || obj == Selectors::NEG_INFINITY
             || obj == Selectors::POS_NAN || obj == Selectors::NEG_NAN
@@ -44,7 +44,7 @@ struct Selectors {
     }
 
     /// Increment a Python object's reference count if the object is not a selector
-    static PyObject* incref(PyObject* obj)
+    static PyObject* incref(PyObject* obj) noexcept
     {
         if (!Selectors::is_selector(obj)) {
             Py_XINCREF(obj);
@@ -53,7 +53,7 @@ struct Selectors {
     }
 
     /// Decrement a Python object's reference count if the object is not a selector
-    static PyObject* decref(PyObject* obj)
+    static PyObject* decref(PyObject* obj) noexcept
     {
         if (!Selectors::is_selector(obj)) {
             Py_XDECREF(obj);

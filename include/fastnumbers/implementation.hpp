@@ -22,7 +22,7 @@ public:
      * \param ntype The user type that will dominate the Implementation actions
      * \param base The integer base used in parsing
      */
-    Implementation(const UserType ntype, const int base)
+    Implementation(const UserType ntype, const int base) noexcept
         : m_options(create_options_with_base(base))
         , m_resolver(m_options.get_base())
         , m_ntype(ntype)
@@ -36,12 +36,12 @@ public:
      * \brief Construct an Implementation object
      * \param ntype The user type that will dominate the Implementation actions
      */
-    explicit Implementation(const UserType ntype)
+    explicit Implementation(const UserType ntype) noexcept
         : Implementation(ntype, 10)
     { }
 
     /// Copy constructor makes sure to increment references
-    Implementation(const Implementation& rhs)
+    Implementation(const Implementation& rhs) noexcept
         : m_options(rhs.m_options)
         , m_resolver(rhs.m_resolver)
         , m_ntype(rhs.m_ntype)
@@ -52,7 +52,7 @@ public:
     { }
 
     /// Move constructor makes sure to increment references
-    Implementation(Implementation&& rhs)
+    Implementation(Implementation&& rhs) noexcept
         : m_options(std::move(rhs.m_options))
         , m_resolver(std::move(rhs.m_resolver))
         , m_ntype(std::move(rhs.m_ntype))
@@ -66,82 +66,88 @@ public:
     Implementation& operator=(const Implementation&) = delete;
 
     /// Destruct
-    ~Implementation() { Py_XDECREF(m_allowed_types); }
+    ~Implementation() noexcept { Py_XDECREF(m_allowed_types); }
 
     /// Convert the object to the desired user type
-    PyObject* convert(PyObject* input) const;
+    PyObject* convert(PyObject* input) const noexcept(false);
 
     /// Check if the object is the desired user type
-    PyObject* check(PyObject* input) const;
+    PyObject* check(PyObject* input) const noexcept(false);
 
     /// Query the type of the object
-    PyObject* query_type(PyObject* input) const;
+    PyObject* query_type(PyObject* input) const noexcept(false);
 
     /// Set the action to perform when INF is found
-    void set_inf_action(PyObject* val)
+    void set_inf_action(PyObject* val) noexcept(false)
     {
         validate_not_disallow(val);
         m_resolver.set_inf_action(val);
     }
 
     /// Set the action to perform when NaN is found
-    void set_nan_action(PyObject* val)
+    void set_nan_action(PyObject* val) noexcept(false)
     {
         validate_not_disallow(val);
         m_resolver.set_nan_action(val);
     }
 
     /// Set the action to perform on conversion failure
-    void set_fail_action(PyObject* val)
+    void set_fail_action(PyObject* val) noexcept(false)
     {
         validate_not_allow_disallow_str_only_num_only(val);
         m_resolver.set_fail_action(val);
     }
 
     /// Set the action to perform on type error
-    void set_type_error_action(PyObject* val)
+    void set_type_error_action(PyObject* val) noexcept(false)
     {
         validate_not_allow_disallow_str_only_num_only(val);
         m_resolver.set_type_error_action(val);
     }
 
     /// Set whether or not underscores are allowed in strings
-    void set_underscores_allowed(const bool val)
+    void set_underscores_allowed(const bool val) noexcept
     {
         m_options.set_underscores_allowed(val);
     }
 
     /// Set whether intlike floats should be returned as ints
-    void set_coerce(const bool val) { m_options.set_coerce(val); }
+    void set_coerce(const bool val) noexcept { m_options.set_coerce(val); }
 
     /// Set whether we accept NaN
-    void set_nan_allowed(const PyObject* val)
+    void set_nan_allowed(const PyObject* val) noexcept(false)
     {
         validate_allow_disallow_str_only_num_only(val);
         m_options.set_nan_allowed(val);
     }
 
     /// Set whether we accept INF
-    void set_inf_allowed(const PyObject* val)
+    void set_inf_allowed(const PyObject* val) noexcept(false)
     {
         validate_allow_disallow_str_only_num_only(val);
         m_options.set_inf_allowed(val);
     }
 
     /// Set whether we accept unicode characters
-    void set_unicode_allowed(const bool val) { m_options.set_unicode_allowed(val); }
+    void set_unicode_allowed(const bool val) noexcept
+    {
+        m_options.set_unicode_allowed(val);
+    }
 
     /// Set whether we accept unicode characters based on if base is default or not
-    void set_unicode_allowed() { set_unicode_allowed(m_options.is_default_base()); }
+    void set_unicode_allowed() noexcept
+    {
+        set_unicode_allowed(m_options.is_default_base());
+    }
 
     /// Set the types of input we consider for checking
-    void set_consider(const PyObject* val);
+    void set_consider(const PyObject* val) noexcept(false);
 
     /// Set the types of strings allowed for float checking
-    void set_strict(const bool val) { m_strict = val; }
+    void set_strict(const bool val) noexcept { m_strict = val; }
 
     /// Set the types we allow when querying for type
-    void set_allowed_types(PyObject* val);
+    void set_allowed_types(PyObject* val) noexcept(false);
 
 private:
     /// Store the user-specified options
@@ -175,16 +181,16 @@ private:
 
 private:
     /// Retrieve the type from the input object
-    NumberFlags collect_type(PyObject* obj) const;
+    NumberFlags collect_type(PyObject* obj) const noexcept(false);
 
     /// Convert the object to the desired user type
-    Payload collect_payload(PyObject* obj) const;
+    Payload collect_payload(PyObject* obj) const noexcept(false);
 
     /// Figure out as what types we can label the input
-    Types resolve_types(const NumberFlags& flags) const;
+    Types resolve_types(const NumberFlags& flags) const noexcept;
 
     /// Create an options object with base - used in initialization list
-    UserOptions create_options_with_base(const int base) const
+    UserOptions create_options_with_base(const int base) const noexcept
     {
         UserOptions options;
         options.set_base(base);
@@ -196,21 +202,23 @@ private:
      * \param selector The python object to validate
      * \throws fastnumbers_exception if not one of the four valid values
      */
-    void validate_allow_disallow_str_only_num_only(const PyObject* selector) const;
+    void validate_allow_disallow_str_only_num_only(const PyObject* selector) const
+        noexcept(false);
 
     /**
      * \brief Validate the selector is not a "yes, no, num, str" value
      * \param selector The python object to validate
      * \throws fastnumbers_exception if one of the four valid values
      */
-    void validate_not_allow_disallow_str_only_num_only(const PyObject* selector) const;
+    void validate_not_allow_disallow_str_only_num_only(const PyObject* selector) const
+        noexcept(false);
 
     /**
      * \brief Validate the selector is not "DISALLOWED"
      * \param selector The python object to validate
      * \throws fastnumbers_exception if the value is "DISALLOWED"
      */
-    void validate_not_disallow(const PyObject* selector) const;
+    void validate_not_disallow(const PyObject* selector) const noexcept(false);
 };
 
 /**
@@ -220,8 +228,9 @@ private:
  * \param convert A function accepting a single argument that performs the conversion
  * \return A new python list containing the converted results, or nullptr on error
  */
-PyObject*
-list_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert);
+PyObject* list_iteration_impl(
+    PyObject* input, std::function<PyObject*(PyObject*)> convert
+) noexcept(false);
 
 /**
  * \brief Iterate over the elements of a collection and convert each one into an iterator
@@ -230,8 +239,9 @@ list_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert
  * \param convert A function accepting a single argument that performs the conversion
  * \return A new python iterator producing the converted results, or nullptr on error
  */
-PyObject*
-iter_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert);
+PyObject* iter_iteration_impl(
+    PyObject* input, std::function<PyObject*(PyObject*)> convert
+) noexcept(false);
 
 /**
  * \brief Iterate over the elements of a collection and convert each one
@@ -256,4 +266,4 @@ void array_impl(
     PyObject* on_type_error,
     bool allow_underscores,
     const int base = std::numeric_limits<int>::min()
-);
+) noexcept(false);

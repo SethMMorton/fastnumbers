@@ -26,7 +26,7 @@ template <typename T>
 class CTypeExtractor {
 public:
     /// Constructor
-    CTypeExtractor(const UserOptions& options)
+    CTypeExtractor(const UserOptions& options) noexcept
         : m_inf()
         , m_nan()
         , m_fail()
@@ -50,7 +50,7 @@ public:
      * \return The C number in the template type specified
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    T extract_c_number(PyObject* input)
+    T extract_c_number(PyObject* input) noexcept(false)
     {
         // Get the payload no matter which parser was returned
         RawPayload<T> payload;
@@ -96,7 +96,7 @@ public:
      * \param replacement The Python object to use to replace the value
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    void set_nan_replacement(PyObject* replacement)
+    void set_nan_replacement(PyObject* replacement) noexcept(false)
     {
         add_replacement_to_mapping(ReplaceType::NAN_, replacement);
     }
@@ -106,7 +106,7 @@ public:
      * \param replacement The Python object to use to replace the value
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    void set_inf_replacement(PyObject* replacement)
+    void set_inf_replacement(PyObject* replacement) noexcept(false)
     {
         add_replacement_to_mapping(ReplaceType::INF_, replacement);
     }
@@ -116,7 +116,7 @@ public:
      * \param replacement The Python object to use to replace the value
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    void set_fail_replacement(PyObject* replacement)
+    void set_fail_replacement(PyObject* replacement) noexcept(false)
     {
         add_replacement_to_mapping(ReplaceType::FAIL_, replacement);
     }
@@ -126,7 +126,7 @@ public:
      * \param replacement The Python object to use to replace the value
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    void set_overflow_replacement(PyObject* replacement)
+    void set_overflow_replacement(PyObject* replacement) noexcept(false)
     {
         add_replacement_to_mapping(ReplaceType::OVERFLOW_, replacement);
     }
@@ -136,7 +136,7 @@ public:
      * \param replacement The Python object to use to replace the value
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    void set_type_error_replacement(PyObject* replacement)
+    void set_type_error_replacement(PyObject* replacement) noexcept(false)
     {
         add_replacement_to_mapping(ReplaceType::TYPE_ERROR_, replacement);
     }
@@ -187,7 +187,7 @@ private:
 private:
     /// Return the object that corresponds to the user's requested key -
     /// the return is a reference so it can be edited
-    ReplaceValue& get_value(ReplaceType key)
+    ReplaceValue& get_value(ReplaceType key) noexcept
     {
         switch (key) {
         case ReplaceType::INF_:
@@ -205,7 +205,7 @@ private:
 
     /// Return the object that corresponds to the user's requested key -
     /// the return is a reference so it can be edited
-    const ReplaceValue& get_value(ReplaceType key) const
+    const ReplaceValue& get_value(ReplaceType key) const noexcept
     {
         switch (key) {
         case ReplaceType::INF_:
@@ -228,7 +228,7 @@ private:
      * \return The C number after replacement
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    T replace_value(ReplaceType key, PyObject* input) const
+    T replace_value(ReplaceType key, PyObject* input) const noexcept(false)
     {
         // Function to raise a Python exception on error
         auto raise_exception = [input, key](std::monostate) -> T {
@@ -284,7 +284,8 @@ private:
      * \param replacement The Python object representing the replacement method
      * \throw exception_is_set If a Python exception is set and needs to be raised
      */
-    void add_replacement_to_mapping(ReplaceType key, PyObject* replacement)
+    void
+    add_replacement_to_mapping(ReplaceType key, PyObject* replacement) noexcept(false)
     {
         // If we are supposed to raise an error for this type of failure
         // we don't store anything in our replacements mapping.

@@ -35,7 +35,7 @@ public:
 class ExceptionHandler {
 public:
     /// Construct with the original input sent to the function
-    explicit ExceptionHandler(PyObject* input)
+    explicit ExceptionHandler(PyObject* input) noexcept
         : m_input(input)
     { }
 
@@ -49,7 +49,7 @@ public:
 
     /// Handle all exceptions from running fastnumbers logic.
     /// This is a "function try block", hence the missing pair of braces.
-    PyObject* run(std::function<PyObject*()> func)
+    PyObject* run(std::function<PyObject*()> func) noexcept(false)
     try {
         return func();
     } catch (const exception_is_set&) {

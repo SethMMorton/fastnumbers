@@ -19,12 +19,12 @@
 #include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 
-PyObject* Implementation::convert(PyObject* input) const
+PyObject* Implementation::convert(PyObject* input) const noexcept(false)
 {
     return m_resolver.resolve(input, collect_payload(input));
 }
 
-PyObject* Implementation::check(PyObject* input) const
+PyObject* Implementation::check(PyObject* input) const noexcept(false)
 {
     // Assess what types we can call this input
     auto [from_str, ok_float, ok_int, ok_intlike] = resolve_types(collect_type(input));
@@ -49,7 +49,7 @@ PyObject* Implementation::check(PyObject* input) const
     Py_RETURN_FALSE;
 }
 
-PyObject* Implementation::query_type(PyObject* input) const
+PyObject* Implementation::query_type(PyObject* input) const noexcept(false)
 {
     // Assess what types we can call this input
     auto [from_str, ok_float, ok_int, ok_intlike] = resolve_types(collect_type(input));
@@ -71,7 +71,7 @@ PyObject* Implementation::query_type(PyObject* input) const
     return found_type;
 }
 
-void Implementation::set_consider(const PyObject* val)
+void Implementation::set_consider(const PyObject* val) noexcept(false)
 {
     const bool ok = val == Py_None || val == Selectors::NUMBER_ONLY
         || val == Selectors::STRING_ONLY;
@@ -85,7 +85,7 @@ void Implementation::set_consider(const PyObject* val)
     m_str_only = val == Selectors::STRING_ONLY;
 }
 
-void Implementation::set_allowed_types(PyObject* val)
+void Implementation::set_allowed_types(PyObject* val) noexcept(false)
 {
     if (val != nullptr) {
         if (!PySequence_Check(val)) {
@@ -101,7 +101,7 @@ void Implementation::set_allowed_types(PyObject* val)
     m_allowed_types = Selectors::incref(val);
 }
 
-Payload Implementation::collect_payload(PyObject* obj) const
+Payload Implementation::collect_payload(PyObject* obj) const noexcept(false)
 {
     Buffer buffer;
 
@@ -117,7 +117,7 @@ Payload Implementation::collect_payload(PyObject* obj) const
     );
 }
 
-NumberFlags Implementation::collect_type(PyObject* obj) const
+NumberFlags Implementation::collect_type(PyObject* obj) const noexcept(false)
 {
     Buffer buffer;
 
@@ -138,7 +138,8 @@ NumberFlags Implementation::collect_type(PyObject* obj) const
     );
 }
 
-Implementation::Types Implementation::resolve_types(const NumberFlags& flags) const
+Implementation::Types Implementation::resolve_types(const NumberFlags& flags
+) const noexcept
 {
     // Build up the logic with individual "Boolean chunks"
     const bool from_str = bool(flags & (NumberType::FromStr | NumberType::FromUni));
@@ -161,7 +162,7 @@ Implementation::Types Implementation::resolve_types(const NumberFlags& flags) co
 }
 
 void Implementation::validate_allow_disallow_str_only_num_only(const PyObject* selector
-) const
+) const noexcept(false)
 {
     const bool ok = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
         || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
@@ -176,7 +177,7 @@ void Implementation::validate_allow_disallow_str_only_num_only(const PyObject* s
 
 void Implementation::validate_not_allow_disallow_str_only_num_only(
     const PyObject* selector
-) const
+) const noexcept(false)
 {
     const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
         || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY;
@@ -190,6 +191,7 @@ void Implementation::validate_not_allow_disallow_str_only_num_only(
 }
 
 void Implementation::validate_not_disallow(const PyObject* selector) const
+    noexcept(false)
 {
     const bool bad = selector == Selectors::DISALLOWED
         || selector == Selectors::STRING_ONLY || selector == Selectors::NUMBER_ONLY;
@@ -201,8 +203,9 @@ void Implementation::validate_not_disallow(const PyObject* selector) const
 }
 
 // Implementation for iterating over a collection to populate a list
-PyObject*
-list_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+PyObject* list_iteration_impl(
+    PyObject* input, std::function<PyObject*(PyObject*)> convert
+) noexcept(false)
 {
     // Create a python list into which to store the return values
     ListBuilder list_builder(input);
@@ -246,20 +249,21 @@ struct FastnumbersIterator {
     bool it_first;
 
     /// Deallocate the itertor object
-    static void dealloc(FastnumbersIterator* it)
+    static void dealloc(FastnumbersIterator* it) noexcept
     {
         Py_DECREF(it->it_input);
         delete it->it_man;
     }
 
     /// Get a guess of the length of the iterator
-    static PyObject* len_guess(FastnumbersIterator* it, PyObject* Py_UNUSED(ignored))
+    static PyObject*
+    len_guess(FastnumbersIterator* it, PyObject* Py_UNUSED(ignored)) noexcept(false)
     {
         return PyLong_FromSsize_t(get_length_hint(it->it_input));
     }
 
     /// Return the next value of the iterator
-    static PyObject* next(FastnumbersIterator* it)
+    static PyObject* next(FastnumbersIterator* it) noexcept(false)
     {
         assert(it != nullptr);
         assert(it->it_man != nullptr);
@@ -331,8 +335,9 @@ PyTypeObject FastnumbersIteratorType = {
 };
 
 // Implementation for iterating over a collection to populate an iterator
-PyObject*
-iter_iteration_impl(PyObject* input, std::function<PyObject*(PyObject*)> convert)
+PyObject* iter_iteration_impl(
+    PyObject* input, std::function<PyObject*(PyObject*)> convert
+) noexcept(false)
 {
     // Create an instance of our iterator object as our iterator type
     FastnumbersIterator* it
@@ -391,11 +396,11 @@ struct ArrayImpl {
     int m_base;
 
     /// Release the Python memoryview buffer
-    ~ArrayImpl() { PyBuffer_Release(&m_output); }
+    ~ArrayImpl() noexcept { PyBuffer_Release(&m_output); }
 
     /// Perform the actual array population logic
     template <typename T>
-    void execute()
+    void execute() noexcept(false)
     {
         UserOptions options;
         options.set_base(m_base);
@@ -430,7 +435,8 @@ struct ArrayImpl {
  * \throws fastnumbers_exception if one of the four valid values
  */
 static inline void
-validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector)
+validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector
+) noexcept(false)
 {
     const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
         || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
@@ -450,7 +456,7 @@ validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector)
  * \throws fastnumbers_exception if one of the four valid values
  */
 static inline void validate_not_disallow_str_only_num_only_input(const PyObject* selector
-)
+) noexcept(false)
 {
     const bool bad = selector == Selectors::DISALLOWED
         || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY
@@ -475,7 +481,7 @@ void array_impl(
     PyObject* on_type_error,
     bool allow_underscores,
     int base
-)
+) noexcept(false)
 {
     // Ensure the given parameters are valid.
     validate_not_disallow_str_only_num_only_input(inf);

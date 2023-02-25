@@ -22,7 +22,7 @@ public:
     { }
 
     /// Construct with a base
-    explicit Resolver(const int base)
+    explicit Resolver(const int base) noexcept
         : m_inf(Selectors::ALLOWED)
         , m_nan(Selectors::ALLOWED)
         , m_fail(Selectors::RAISE)
@@ -31,7 +31,7 @@ public:
     { }
 
     /// Copy constructor makes sure to increment references
-    Resolver(const Resolver& rhs)
+    Resolver(const Resolver& rhs) noexcept
         : m_inf(Selectors::incref(rhs.m_inf))
         , m_nan(Selectors::incref(rhs.m_nan))
         , m_fail(Selectors::incref(rhs.m_fail))
@@ -40,7 +40,7 @@ public:
     { }
 
     /// Move constructor makes sure to increment references
-    Resolver(Resolver&& rhs)
+    Resolver(Resolver&& rhs) noexcept
         : m_inf(Selectors::incref(std::exchange(rhs.m_inf, nullptr)))
         , m_nan(Selectors::incref(std::exchange(rhs.m_nan, nullptr)))
         , m_fail(Selectors::incref(std::exchange(rhs.m_fail, nullptr)))
@@ -52,7 +52,7 @@ public:
     Resolver& operator=(const Resolver&) = delete;
 
     /// Destruct
-    ~Resolver()
+    ~Resolver() noexcept
     {
         Selectors::decref(m_inf);
         Selectors::decref(m_nan);
@@ -61,25 +61,31 @@ public:
     };
 
     /// Define how a value of infinity will be interpreted
-    void set_inf_action(PyObject* inf_value) { m_inf = Selectors::incref(inf_value); }
+    void set_inf_action(PyObject* inf_value) noexcept
+    {
+        m_inf = Selectors::incref(inf_value);
+    }
 
     /// Define how a value of NaN will be interpreted
-    void set_nan_action(PyObject* nan_value) { m_nan = Selectors::incref(nan_value); }
+    void set_nan_action(PyObject* nan_value) noexcept
+    {
+        m_nan = Selectors::incref(nan_value);
+    }
 
     /// Define how a conversion failure will be interpreted
-    void set_fail_action(PyObject* fail_value)
+    void set_fail_action(PyObject* fail_value) noexcept
     {
         m_fail = Selectors::incref(fail_value);
     }
 
     /// Define how a type error will be interpreted
-    void set_type_error_action(PyObject* type_error_value)
+    void set_type_error_action(PyObject* type_error_value) noexcept
     {
         m_type_error = Selectors::incref(type_error_value);
     }
 
     /// Resolve the payload into a Python object
-    PyObject* resolve(PyObject* input, const Payload& payload) const
+    PyObject* resolve(PyObject* input, const Payload& payload) const noexcept
     {
         // std::visit will call the appropriate logic depending on what value
         // is currently stored in the Payload object.
@@ -146,38 +152,38 @@ private:
 
 private:
     /// Increment the refcount of a non-null object, then return the object
-    static PyObject* increment_reference(PyObject* obj)
+    static PyObject* increment_reference(PyObject* obj) noexcept
     {
         Py_IncRef(obj);
         return obj;
     }
 
     /// Return the appropriate action for a infinity
-    PyObject* inf_obj(PyObject* input) const
+    PyObject* inf_obj(PyObject* input) const noexcept
     {
         return m_inf == Selectors::INPUT ? input : m_inf;
     }
 
     /// Return the appropriate action for a NaN
-    PyObject* nan_obj(PyObject* input) const
+    PyObject* nan_obj(PyObject* input) const noexcept
     {
         return m_nan == Selectors::INPUT ? input : m_nan;
     }
 
     /// Return the appropriate action for a conversion failure
-    PyObject* fail_obj(PyObject* input) const
+    PyObject* fail_obj(PyObject* input) const noexcept
     {
         return m_fail == Selectors::INPUT ? input : m_fail;
     }
 
     /// Return the appropriate action for a type error
-    PyObject* type_error_obj(PyObject* input) const
+    PyObject* type_error_obj(PyObject* input) const noexcept
     {
         return m_type_error == Selectors::INPUT ? input : m_type_error;
     }
 
     /// Return the appropriate value if infinity was detected
-    PyObject* inf_action(PyObject* input, bool negative) const
+    PyObject* inf_action(PyObject* input, bool negative) const noexcept
     {
         PyObject* my_inf = inf_obj(input);
         if (my_inf == Selectors::ALLOWED) {
@@ -195,7 +201,7 @@ private:
     }
 
     /// Return the appropriate value if NaN was detected
-    PyObject* nan_action(PyObject* input, bool negative) const
+    PyObject* nan_action(PyObject* input, bool negative) const noexcept
     {
         PyObject* my_nan = nan_obj(input);
         if (my_nan == Selectors::ALLOWED) {
@@ -213,7 +219,7 @@ private:
     }
 
     /// Return the appropriate value if a conversion failure occured
-    PyObject* fail_action(PyObject* input, ActionType atype) const
+    PyObject* fail_action(PyObject* input, ActionType atype) const noexcept
     {
         PyObject* my_fail = fail_obj(input);
         if (my_fail == Selectors::RAISE) {
@@ -224,7 +230,7 @@ private:
 
     /// Return the appropriate value if a conversion failure occured and
     /// an error has already been set
-    PyObject* fail_action(PyObject* input) const
+    PyObject* fail_action(PyObject* input) const noexcept
     {
         PyObject* my_fail = fail_obj(input);
         if (my_fail == Selectors::RAISE) {
@@ -234,7 +240,7 @@ private:
     }
 
     /// Return the appropriate value if a type error occured
-    PyObject* type_error_action(PyObject* input, ActionType atype) const
+    PyObject* type_error_action(PyObject* input, ActionType atype) const noexcept
     {
         PyObject* my_type_error = type_error_obj(input);
         if (my_type_error == Selectors::RAISE) {
@@ -244,7 +250,7 @@ private:
     }
 
     /// Implementation for non-raising fail action
-    PyObject* fail_action_impl(PyObject* input, PyObject* actionable) const
+    PyObject* fail_action_impl(PyObject* input, PyObject* actionable) const noexcept
     {
         PyErr_Clear();
         if (PyCallable_Check(actionable)) {
@@ -255,7 +261,8 @@ private:
     }
 
     /// Prepare and raise the appropriate exception given an action type
-    PyObject* raise_appropriate_exception(PyObject* input, const ActionType atype) const
+    PyObject*
+    raise_appropriate_exception(PyObject* input, const ActionType atype) const noexcept
     {
         switch (atype) {
         case ActionType::ERROR_BAD_TYPE_INT:

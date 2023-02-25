@@ -24,8 +24,9 @@ typedef int convert(PyObject*, void*);
  * @param va_orig Argument list to npy_parse_arguments
  * @return 0 on success, -1 on failure
  */
-static int
-initialize_keywords(const char* funcname, _FNArgParserCache* cache, va_list va_orig)
+static int initialize_keywords(
+    const char* funcname, _FNArgParserCache* cache, va_list va_orig
+) noexcept
 {
     va_list va;
     int nargs = 0;
@@ -188,7 +189,7 @@ error:
 
 static int raise_incorrect_number_of_positional_args(
     const char* funcname, const _FNArgParserCache* cache, Py_ssize_t len_args
-)
+) noexcept
 {
     if (cache->npositional == cache->nrequired) {
         PyErr_Format(
@@ -212,8 +213,9 @@ static int raise_incorrect_number_of_positional_args(
     return -1;
 }
 
-static void
-raise_missing_argument(const char* funcname, const _FNArgParserCache* cache, int i)
+static void raise_missing_argument(
+    const char* funcname, const _FNArgParserCache* cache, int i
+) noexcept
 {
     if (i < cache->npositional_only) {
         PyErr_Format(
@@ -254,7 +256,7 @@ int _fn_parse_arguments(
     PyObject* kwnames,
     /* ... is NULL, false, NULL terminated: name, as_bool, value */
     ...
-)
+) noexcept
 {
     if (cache->npositional == -1) {
         va_list va;

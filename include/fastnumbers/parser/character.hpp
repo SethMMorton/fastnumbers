@@ -25,7 +25,7 @@ public:
         const std::size_t len,
         const UserOptions& options,
         const bool explict_base_allowed = true
-    );
+    ) noexcept;
 
     // No default constructor
     CharacterParser() = delete;
@@ -37,7 +37,7 @@ public:
     ~CharacterParser() = default;
 
     /// Convert the stored object to a python int
-    RawPayload<PyObject*> as_pyint() const override;
+    RawPayload<PyObject*> as_pyint() const noexcept(false) override;
 
     /**
      * \brief Convert the stored object to a python float but possibly
@@ -46,19 +46,26 @@ public:
      * \param coerce Return as integer if the float is int-like
      */
     RawPayload<PyObject*>
-    as_pyfloat(const bool force_int = false, const bool coerce = false) const override;
+    as_pyfloat(const bool force_int = false, const bool coerce = false) const
+        noexcept(false) override;
 
     /// Check the type of the number.
-    NumberFlags get_number_type() const override;
+    NumberFlags get_number_type() const noexcept override;
 
     /// Check if the number is INF
-    bool peek_inf() const override { return quick_detect_infinity(m_start, m_str_len); }
+    bool peek_inf() const noexcept override
+    {
+        return quick_detect_infinity(m_start, m_str_len);
+    }
 
     /// Check if the number is NaN
-    bool peek_nan() const override { return quick_detect_nan(m_start, m_str_len); }
+    bool peek_nan() const noexcept override
+    {
+        return quick_detect_nan(m_start, m_str_len);
+    }
 
     /// Check if the should be parsed as an integer
-    bool peek_try_as_int() const override
+    bool peek_try_as_int() const noexcept override
     {
         // Attempt to simply see if all the characters are digits.
         // If so it is an integer.
@@ -73,7 +80,7 @@ public:
      * This template specialization is for integral types.
      */
     template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-    RawPayload<T> as_number() const
+    RawPayload<T> as_number() const noexcept(false)
     {
         bool error;
         bool overflow;
@@ -119,7 +126,7 @@ public:
     template <
         typename T,
         typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-    RawPayload<T> as_number() const
+    RawPayload<T> as_number() const noexcept(false)
     {
         bool error;
         T result = parse_float<T>(signed_start(), end(), error);
@@ -146,7 +153,7 @@ public:
      * You will need to check for conversion errors and overflows.
      */
     template <typename T>
-    void as_number(RawPayload<T>& value) const
+    void as_number(RawPayload<T>& value) const noexcept(false)
     {
         value = as_number<T>();
     }
@@ -166,36 +173,36 @@ private:
 
 private:
     /// Check if the character array contains valid underscores
-    bool has_valid_underscores() const
+    bool has_valid_underscores() const noexcept
     {
         return options().allow_underscores() && m_str_len > 0
             && std::memchr(m_start, '_', m_str_len);
     }
 
     /// Check if the character array contains invalid underscores
-    bool has_invalid_underscores() const
+    bool has_invalid_underscores() const noexcept
     {
         return !options().allow_underscores() && m_str_len > 0
             && std::memchr(m_start, '_', m_str_len);
     }
 
     /// The end of the stored character array
-    const char* end() const { return m_start + m_str_len; }
+    const char* end() const noexcept { return m_start + m_str_len; }
 
     /// Return the start of the character array when accounting for '-'
-    const char* signed_start() const
+    const char* signed_start() const noexcept
     {
         return m_start - static_cast<int>(is_negative());
     }
 
     /// Return the length of the character array when accounting for '-'
-    const std::size_t signed_len() const
+    const std::size_t signed_len() const noexcept
     {
         return m_str_len + static_cast<int>(is_negative());
     }
 
     /// Add FromStr to the return NumberFlags
-    static constexpr NumberFlags flag_wrap(const NumberFlags val)
+    static constexpr NumberFlags flag_wrap(const NumberFlags val) noexcept
     {
         return NumberType::FromStr | val;
     }

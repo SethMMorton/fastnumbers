@@ -23,7 +23,7 @@
  * \param base The base as an integer
  * \throws fastnumbers_exception on invalid input
  */
-static inline int assess_integer_base_input(PyObject* pybase)
+static inline int assess_integer_base_input(PyObject* pybase) noexcept(false)
 {
     Py_ssize_t longbase = 0;
 
@@ -58,7 +58,7 @@ static inline int assess_integer_base_input(PyObject* pybase)
  */
 static inline void handle_fail_backwards_compatibility(
     PyObject*& on_fail, PyObject*& key, PyObject*& default_value, int raise_on_invalid
-)
+) noexcept(false)
 {
     if (key != nullptr) {
         if (on_fail != nullptr) {
@@ -96,7 +96,8 @@ static inline void handle_fail_backwards_compatibility(
  *
  * \return Object containing the correct selector value, or nullptr.
  */
-static inline PyObject* create_consider(const bool str_only, const bool num_only)
+static inline PyObject*
+create_consider(const bool str_only, const bool num_only) noexcept
 {
     if (str_only) {
         return Selectors::STRING_ONLY;
@@ -112,7 +113,7 @@ static inline PyObject* create_consider(const bool str_only, const bool num_only
  * \param mapval The value of map given on input
  * \return Either PyList_Type, Py_True, or Py_False
  */
-static inline PyObject* normalize_map(PyObject* mapval)
+static inline PyObject* normalize_map(PyObject* mapval) noexcept
 {
     if (mapval == (PyObject*)&PyList_Type) {
         return mapval;
@@ -132,7 +133,7 @@ static inline PyObject* normalize_map(PyObject* mapval)
  */
 static PyObject* choose_execution_scheme(
     PyObject* input, std::function<PyObject*(PyObject*)> convert, const PyObject* map
-)
+) noexcept(false)
 {
     if (map == Py_True) {
         return iter_iteration_impl(input, convert);
@@ -148,7 +149,7 @@ static PyObject* choose_execution_scheme(
  */
 static PyObject* fastnumbers_try_real(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* inf = Selectors::ALLOWED;
@@ -198,7 +199,7 @@ static PyObject* fastnumbers_try_real(
  */
 static PyObject* fastnumbers_try_float(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* inf = Selectors::ALLOWED;
@@ -245,7 +246,7 @@ static PyObject* fastnumbers_try_float(
  */
 static PyObject* fastnumbers_try_int(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* on_fail = Selectors::INPUT;
@@ -289,7 +290,7 @@ static PyObject* fastnumbers_try_int(
  */
 static PyObject* fastnumbers_try_forceint(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* on_fail = Selectors::INPUT;
@@ -330,7 +331,7 @@ static PyObject* fastnumbers_try_forceint(
  */
 static PyObject* fastnumbers_array(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* output = nullptr;
@@ -383,7 +384,7 @@ static PyObject* fastnumbers_array(
  */
 static PyObject* fastnumbers_check_real(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
@@ -420,7 +421,7 @@ static PyObject* fastnumbers_check_real(
  */
 static PyObject* fastnumbers_check_float(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
@@ -460,7 +461,7 @@ static PyObject* fastnumbers_check_float(
  */
 static PyObject* fastnumbers_check_int(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
@@ -493,7 +494,7 @@ static PyObject* fastnumbers_check_int(
  */
 static PyObject* fastnumbers_check_intlike(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* consider = Py_None;
@@ -525,7 +526,7 @@ static PyObject* fastnumbers_check_intlike(
  */
 static PyObject* fastnumbers_query_type(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* allowed_types = nullptr;
@@ -568,7 +569,7 @@ static PyObject* fastnumbers_query_type(
  * \brief Drop-in replacement for float
  */
 static PyObject*
-fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args)
+fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args) noexcept
 {
     PyObject* input = nullptr;
 
@@ -600,7 +601,7 @@ fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args)
  */
 static PyObject* fastnumbers_int(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* pybase = nullptr;
@@ -638,7 +639,7 @@ static PyObject* fastnumbers_int(
  */
 static PyObject* fastnumbers_real(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     bool coerce = true;
@@ -671,7 +672,7 @@ static PyObject* fastnumbers_real(
 /// Deprecated, use try_real
 static PyObject* fastnumbers_fast_real(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -719,7 +720,7 @@ static PyObject* fastnumbers_fast_real(
 /// Deprecated, use try_float
 static PyObject* fastnumbers_fast_float(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -764,7 +765,7 @@ static PyObject* fastnumbers_fast_float(
 /// Deprecated, use try_int
 static PyObject* fastnumbers_fast_int(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -806,7 +807,7 @@ static PyObject* fastnumbers_fast_int(
 /// Deprecated, use try_forceint
 static PyObject* fastnumbers_fast_forceint(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* default_value = nullptr;
@@ -845,7 +846,7 @@ static PyObject* fastnumbers_fast_forceint(
 /// Deprecated, use check_real
 static PyObject* fastnumbers_isreal(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     int str_only = false;
@@ -887,7 +888,7 @@ static PyObject* fastnumbers_isreal(
 /// Deprecated, use check_float
 static PyObject* fastnumbers_isfloat(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     int str_only = false;
@@ -929,7 +930,7 @@ static PyObject* fastnumbers_isfloat(
 /// Deprecated, use check_int
 static PyObject* fastnumbers_isint(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     PyObject* pybase = nullptr;
@@ -966,7 +967,7 @@ static PyObject* fastnumbers_isint(
 /// Deprecated, use check_intlike
 static PyObject* fastnumbers_isintlike(
     PyObject* self, PyObject* const* args, Py_ssize_t len_args, PyObject* kwnames
-)
+) noexcept
 {
     PyObject* input = nullptr;
     bool str_only = false;

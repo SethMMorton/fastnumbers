@@ -19,4 +19,6 @@ using AnyParser = std::variant<CharacterParser, UnicodeParser, NumericParser>;
  *                specified by the user.
  * \return std::variant of CharacterParser, UnicodeParser, or NumericParser
  */
-AnyParser extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& options);
+AnyParser
+extract_parser(PyObject* obj, Buffer& buffer, const UserOptions& options) noexcept(false
+);

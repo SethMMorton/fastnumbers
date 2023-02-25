@@ -16,7 +16,7 @@ template <typename ParserT>
 class Evaluator {
 public:
     /// Constructor from a Python object
-    Evaluator(PyObject* obj, const UserOptions& options, const ParserT& parser)
+    Evaluator(PyObject* obj, const UserOptions& options, const ParserT& parser) noexcept
         : m_obj(obj)
         , m_parser(parser)
         , m_options(options)
@@ -31,7 +31,7 @@ public:
     ~Evaluator() { Py_DECREF(m_obj); }
 
     /// Assign a new object to analyze
-    void set_object(PyObject* obj)
+    void set_object(PyObject* obj) noexcept
     {
         Py_DECREF(m_obj);
         m_obj = obj;
@@ -39,13 +39,13 @@ public:
     }
 
     /// Access the user-given options for evaluating
-    const UserOptions& options() const { return m_options; }
+    const UserOptions& options() const noexcept { return m_options; }
 
     /// Return the parser type currenly associated with the Evaluator
-    ParserType parser_type() const { return m_parser.parser_type(); }
+    ParserType parser_type() const noexcept { return m_parser.parser_type(); }
 
     /// Return the type of number contained in the given object
-    NumberFlags number_type() const { return m_parser.get_number_type(); }
+    NumberFlags number_type() const noexcept { return m_parser.get_number_type(); }
 
     /**
      * \brief Convert the stored object to the desired number type
@@ -55,7 +55,7 @@ public:
      * \param ntype PyNumberType indicating the desired type to check
      * \return Payload
      */
-    Payload as_type(const UserType ntype)
+    Payload as_type(const UserType ntype) noexcept
     {
         // Send to the appropriate convenience function based on the found type
         switch (parser_type()) {
@@ -84,7 +84,7 @@ private:
 
 private:
     /// Logic for evaluating a numeric python object
-    Payload from_numeric_as_type(const UserType ntype)
+    Payload from_numeric_as_type(const UserType ntype) noexcept
     {
         const NumberFlags typeflags = m_parser.get_number_type();
         constexpr NumberFlags nan_or_inf = NumberType::Infinity | NumberType::NaN;
@@ -125,7 +125,7 @@ private:
     }
 
     /// Logic for evaluating a text python object
-    Payload from_text_as_type(const UserType ntype)
+    Payload from_text_as_type(const UserType ntype) noexcept
     {
         switch (ntype) {
         case UserType::FLOAT:
@@ -141,7 +141,7 @@ private:
     }
 
     /// Logic for evaluating a text python object as a float or integer
-    Payload from_text_as_int_or_float(const bool force_int)
+    Payload from_text_as_int_or_float(const bool force_int) noexcept
     {
         // Integers are returned as-is
         // NaN and infinity are illegal with force_int
@@ -169,7 +169,7 @@ private:
     }
 
     /// Logic for evaluating a text python object as a float
-    Payload from_text_as_float()
+    Payload from_text_as_float() noexcept
     {
         // Special-case handling of infinity and NaN
         if (m_parser.peek_inf()) {
@@ -183,7 +183,7 @@ private:
     }
 
     /// Logic for evaluating a text python object as an int
-    Payload from_text_as_int()
+    Payload from_text_as_int() noexcept
     {
         // We use python to convert non-base-10 integer strings.
         // Some strings are not allowed to use an explict base,
@@ -199,7 +199,7 @@ private:
     }
 
     /// Return an error due to a bad type
-    static Payload typed_error(const UserType ntype, const bool type = true)
+    static Payload typed_error(const UserType ntype, const bool type = true) noexcept
     {
         if (ntype == UserType::REAL || ntype == UserType::FLOAT) {
             if (type) {
@@ -217,19 +217,19 @@ private:
     }
 
     /// Return the correct action if an INF was found
-    static ActionType inf_action(const bool is_negative)
+    static ActionType inf_action(const bool is_negative) noexcept
     {
         return is_negative ? ActionType::NEG_INF_ACTION : ActionType::INF_ACTION;
     }
 
     /// Return the correct action if an NAN was found
-    static ActionType nan_action(const bool is_negative)
+    static ActionType nan_action(const bool is_negative) noexcept
     {
         return is_negative ? ActionType::NEG_NAN_ACTION : ActionType::NAN_ACTION;
     }
 
     /// Helper to properly respond to NaN and infinity
-    ActionType handle_nan_and_inf()
+    ActionType handle_nan_and_inf() noexcept
     {
         // Assume infinity or NaN.
         const NumberFlags typeflags = m_parser.get_number_type();
@@ -238,7 +238,8 @@ private:
     }
 
     /// Convert the RawPayload data into Paylod data
-    Payload convert(const RawPayload<PyObject*>& payload, const UserType ntype) const
+    Payload
+    convert(const RawPayload<PyObject*>& payload, const UserType ntype) const noexcept
     {
         return std::visit(
             overloaded {

@@ -87,7 +87,7 @@ int _fn_parse_arguments(
     PyObject* kwnames,
     /* va_list is nullptr, false, nullptr terminated: name, as_bool, value */
     ...
-);
+) noexcept;
 
 #define fn_parse_arguments(funcname, args, len_args, kwnames, ...)                      \
     _fn_parse_arguments(                                                                \
