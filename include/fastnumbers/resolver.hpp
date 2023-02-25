@@ -16,47 +16,44 @@
 class Resolver {
 public:
     /// Default construct
-    Resolver(PyObject* input, const UserOptions& options)
-        : m_input(input)
-        , m_inf(Selectors::ALLOWED)
+    Resolver()
+        : Resolver(10)
+    { }
+
+    /// Construct with a base
+    explicit Resolver(const int base)
+        : m_inf(Selectors::ALLOWED)
         , m_nan(Selectors::ALLOWED)
         , m_fail(Selectors::RAISE)
         , m_type_error(Selectors::RAISE)
-        , m_base(options.get_base())
+        , m_base(base)
     { }
 
-    // Copy, assignment, and destruct are defaults
-    Resolver(const Resolver&) = default;
-    Resolver(Resolver&&) = default;
-    Resolver& operator=(const Resolver&) = default;
+    // Copy, assignment are deleted
+    Resolver(const Resolver&) = delete;
+    Resolver(Resolver&&) = delete;
+    Resolver& operator=(const Resolver&) = delete;
+
+    // Default destruct
     ~Resolver() = default;
 
     /// Define how a value of infinity will be interpreted
-    void set_inf_action(PyObject* inf_value)
-    {
-        m_inf = inf_value == Selectors::INPUT ? m_input : inf_value;
-    }
+    void set_inf_action(PyObject* inf_value) { m_inf = inf_value; }
 
     /// Define how a value of NaN will be interpreted
-    void set_nan_action(PyObject* nan_value)
-    {
-        m_nan = nan_value == Selectors::INPUT ? m_input : nan_value;
-    }
+    void set_nan_action(PyObject* nan_value) { m_nan = nan_value; }
 
     /// Define how a conversion failure will be interpreted
-    void set_fail_action(PyObject* fail_value)
-    {
-        m_fail = fail_value == Selectors::INPUT ? m_input : fail_value;
-    }
+    void set_fail_action(PyObject* fail_value) { m_fail = fail_value; }
 
     /// Define how a type error will be interpreted
     void set_type_error_action(PyObject* type_error_value)
     {
-        m_type_error = type_error_value == Selectors::INPUT ? m_input : type_error_value;
+        m_type_error = type_error_value;
     }
 
     /// Resolve the payload into a Python object
-    PyObject* resolve(const Payload& payload) const
+    PyObject* resolve(PyObject* input, const Payload& payload) const
     {
         // std::visit will call the appropriate logic depending on what value
         // is currently stored in the Payload object.
@@ -64,40 +61,40 @@ public:
             overloaded {
 
                 // If the payload contains a Python object, just return directly
-                [this](PyObject* retval) -> PyObject* {
+                [this, input](PyObject* retval) -> PyObject* {
                     if (retval == nullptr) {
-                        return fail_action();
+                        return fail_action(input);
                     }
                     return retval; // do not increment, already has a refcount
                 },
 
                 // If the payload contains an action type, act on it
-                [this](const ActionType atype) -> PyObject* {
+                [this, input](const ActionType atype) -> PyObject* {
                     switch (atype) {
                     // Return the appropriate value for when infinity is found
                     case ActionType::INF_ACTION:
-                        return inf_action(false);
+                        return inf_action(input, false);
 
                     // Return the appropriate value for when negative infinity is found
                     case ActionType::NEG_INF_ACTION:
-                        return inf_action(true);
+                        return inf_action(input, true);
 
                     // Return the appropriate value for when NaN is found
                     case ActionType::NAN_ACTION:
-                        return nan_action(false);
+                        return nan_action(input, false);
 
                     // Return the appropriate value for when negative NaN is found
                     case ActionType::NEG_NAN_ACTION:
-                        return nan_action(true);
+                        return nan_action(input, true);
 
                     // These actions are indicative of TypeErrors
                     case ActionType::ERROR_BAD_TYPE_INT:
                     case ActionType::ERROR_BAD_TYPE_FLOAT:
                     case ActionType::ERROR_ILLEGAL_EXPLICIT_BASE:
-                        return type_error_action(atype);
+                        return type_error_action(input, atype);
 
                     default:
-                        return fail_action(atype);
+                        return fail_action(input, atype);
                     }
                 },
             },
@@ -106,9 +103,6 @@ public:
     }
 
 private:
-    /// The orginal Python input
-    PyObject* m_input;
-
     /// The desired return action for infinity
     PyObject* m_inf;
 
@@ -132,81 +126,110 @@ private:
         return obj;
     }
 
-    /// Return the appropriate value if infinity was detected
-    PyObject* inf_action(bool negative) const
+    /// Return the appropriate action for a infinity
+    PyObject* inf_obj(PyObject* input) const
     {
-        if (m_inf == Selectors::ALLOWED) {
+        return m_inf == Selectors::INPUT ? input : m_inf;
+    }
+
+    /// Return the appropriate action for a NaN
+    PyObject* nan_obj(PyObject* input) const
+    {
+        return m_nan == Selectors::INPUT ? input : m_nan;
+    }
+
+    /// Return the appropriate action for a conversion failure
+    PyObject* fail_obj(PyObject* input) const
+    {
+        return m_fail == Selectors::INPUT ? input : m_fail;
+    }
+
+    /// Return the appropriate action for a type error
+    PyObject* type_error_obj(PyObject* input) const
+    {
+        return m_type_error == Selectors::INPUT ? input : m_type_error;
+    }
+
+    /// Return the appropriate value if infinity was detected
+    PyObject* inf_action(PyObject* input, bool negative) const
+    {
+        PyObject* my_inf = inf_obj(input);
+        if (my_inf == Selectors::ALLOWED) {
             return increment_reference(
                 negative ? Selectors::NEG_INFINITY : Selectors::POS_INFINITY
             );
-        } else if (m_inf == Selectors::RAISE) {
+        } else if (my_inf == Selectors::RAISE) {
             PyErr_SetString(PyExc_ValueError, "infinity is disallowed");
             return nullptr;
-        } else if (PyCallable_Check(m_inf)) {
-            return PyObject_CallFunctionObjArgs(m_inf, m_input, nullptr);
+        } else if (PyCallable_Check(my_inf)) {
+            return PyObject_CallFunctionObjArgs(my_inf, input, nullptr);
         } else { // handles INPUT and a custom default value
-            return increment_reference(m_inf);
+            return increment_reference(my_inf);
         }
     }
 
     /// Return the appropriate value if NaN was detected
-    PyObject* nan_action(bool negative) const
+    PyObject* nan_action(PyObject* input, bool negative) const
     {
-        if (m_nan == Selectors::ALLOWED) {
+        PyObject* my_nan = nan_obj(input);
+        if (my_nan == Selectors::ALLOWED) {
             return increment_reference(
                 negative ? Selectors::NEG_NAN : Selectors::POS_NAN
             );
-        } else if (m_nan == Selectors::RAISE) {
+        } else if (my_nan == Selectors::RAISE) {
             PyErr_SetString(PyExc_ValueError, "NaN is disallowed");
             return nullptr;
-        } else if (PyCallable_Check(m_nan)) {
-            return PyObject_CallFunctionObjArgs(m_nan, m_input, nullptr);
+        } else if (PyCallable_Check(my_nan)) {
+            return PyObject_CallFunctionObjArgs(my_nan, input, nullptr);
         } else { // handles INPUT and a custom default value
-            return increment_reference(m_nan);
+            return increment_reference(my_nan);
         }
     }
 
     /// Return the appropriate value if a conversion failure occured
-    PyObject* fail_action(ActionType atype) const
+    PyObject* fail_action(PyObject* input, ActionType atype) const
     {
-        if (m_fail == Selectors::RAISE) {
-            return raise_appropriate_exception(atype);
+        PyObject* my_fail = fail_obj(input);
+        if (my_fail == Selectors::RAISE) {
+            return raise_appropriate_exception(input, atype);
         }
-        return fail_action_impl(m_fail);
+        return fail_action_impl(input, my_fail);
     }
 
     /// Return the appropriate value if a conversion failure occured and
     /// an error has already been set
-    PyObject* fail_action() const
+    PyObject* fail_action(PyObject* input) const
     {
-        if (m_fail == Selectors::RAISE) {
+        PyObject* my_fail = fail_obj(input);
+        if (my_fail == Selectors::RAISE) {
             return nullptr; // an error has already been set
         }
-        return fail_action_impl(m_fail);
+        return fail_action_impl(input, my_fail);
     }
 
     /// Return the appropriate value if a type error occured
-    PyObject* type_error_action(ActionType atype) const
+    PyObject* type_error_action(PyObject* input, ActionType atype) const
     {
-        if (m_type_error == Selectors::RAISE) {
-            return raise_appropriate_exception(atype);
+        PyObject* my_type_error = type_error_obj(input);
+        if (my_type_error == Selectors::RAISE) {
+            return raise_appropriate_exception(input, atype);
         }
-        return fail_action_impl(m_type_error);
+        return fail_action_impl(input, my_type_error);
     }
 
     /// Implementation for non-raising fail action
-    PyObject* fail_action_impl(PyObject* actionable) const
+    PyObject* fail_action_impl(PyObject* input, PyObject* actionable) const
     {
         PyErr_Clear();
         if (PyCallable_Check(actionable)) {
-            return PyObject_CallFunctionObjArgs(actionable, m_input, nullptr);
+            return PyObject_CallFunctionObjArgs(actionable, input, nullptr);
         } else { // handles INPUT and a custom default value
             return increment_reference(actionable);
         }
     }
 
     /// Prepare and raise the appropriate exception given an action type
-    PyObject* raise_appropriate_exception(const ActionType atype) const
+    PyObject* raise_appropriate_exception(PyObject* input, const ActionType atype) const
     {
         switch (atype) {
         case ActionType::ERROR_BAD_TYPE_INT:
@@ -215,7 +238,7 @@ private:
                 PyExc_TypeError,
                 "int() argument must be a string, a bytes-like object or a number, not "
                 "'%s'",
-                Py_TYPE(m_input)->tp_name
+                Py_TYPE(input)->tp_name
             );
             break;
 
@@ -224,7 +247,7 @@ private:
             PyErr_Format(
                 PyExc_TypeError,
                 "float() argument must be a string or a number, not '%s'",
-                Py_TYPE(m_input)->tp_name
+                Py_TYPE(input)->tp_name
             );
             break;
 
@@ -234,14 +257,14 @@ private:
                 PyExc_ValueError,
                 "invalid literal for int() with base %d: %.200R",
                 m_base,
-                m_input
+                input
             );
             break;
 
         case ActionType::ERROR_INVALID_FLOAT:
             // Raise an exception due to an invalid float
             PyErr_Format(
-                PyExc_ValueError, "could not convert string to float: %.200R", m_input
+                PyExc_ValueError, "could not convert string to float: %.200R", input
             );
             break;
 

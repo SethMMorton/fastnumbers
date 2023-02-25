@@ -6,198 +6,148 @@
 #include <Python.h>
 
 #include "fastnumbers/evaluator.hpp"
+#include "fastnumbers/resolver.hpp"
+#include "fastnumbers/selectors.hpp"
 #include "fastnumbers/user_options.hpp"
 
 /**
- * \brief Implementation for converting floats
- *
- * This is the "full" implementation.
- *
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param inf The value indicating what action to take when an infinity is encountered
- * \param nan The value indicating what action to take when an NaN is encountered
- * \param ntype The desired type of the converted object
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param coerce For ntype REAL, return int-like floats as int
- *
- * \return Converted python object or nullptr with appropriate error set
+ * \class Implementation
+ * \brief Encapsulates the logic of driving conversion/checking
  */
-PyObject* float_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* inf,
-    PyObject* nan,
-    const UserType ntype,
-    const bool allow_underscores,
-    const bool coerce = false
-);
+class Implementation {
+public:
+    /**
+     * \brief Construct an Implementation object
+     * \param ntype The user type that will dominate the Implementation actions
+     * \param base The integer base used in parsing
+     */
+    Implementation(const UserType ntype, const int base)
+        : m_options(create_options_with_base(base))
+        , m_resolver(m_options.get_base())
+        , m_ntype(ntype)
+        , m_allowed_types(nullptr)
+        , m_num_only(false)
+        , m_str_only(false)
+        , m_strict(false)
+    { }
 
-/**
- * \brief Implementation for converting floats
- *
- * This is the "fuller" implementation.
- *
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param on_type_error The value indicating what action to take on invalid type
- * \param inf The value indicating what action to take when an infinity is encountered
- * \param nan The value indicating what action to take when an NaN is encountered
- * \param ntype The desired type of the converted object
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param coerce For ntype REAL, return int-like floats as int
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-PyObject* float_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* on_type_error,
-    PyObject* inf,
-    PyObject* nan,
-    const UserType ntype,
-    const bool allow_underscores,
-    const bool coerce = false
-);
+    /**
+     * \brief Construct an Implementation object
+     * \param ntype The user type that will dominate the Implementation actions
+     */
+    explicit Implementation(const UserType ntype)
+        : Implementation(ntype, 10)
+    { }
 
-/**
- * \brief Implementation for converting floats
- *
- * This is the "reduced" implementation, intended for the drop-in-replacement functions
- *
- * \param input The python object to consider for conversion
- * \param ntype The desired type of the converted object
- * \param coerce For ntype REAL, return int-like floats as int
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-PyObject*
-float_conv_impl(PyObject* input, const UserType ntype, const bool coerce = false);
+    // Copy, assignment, and destruct are defaults
+    Implementation(const Implementation&) = default;
+    Implementation(Implementation&&) = default;
+    Implementation& operator=(const Implementation&) = default;
+    ~Implementation() = default;
 
-/**
- * \brief Implementation for converting integers
- *
- * This is the "full" implementation.
- *
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param ntype The desired type of the converted object
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param base The integer base use when parsing ints, use INT_MIN for default
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-PyObject* int_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    const UserType ntype,
-    const bool allow_underscores,
-    const int base = std::numeric_limits<int>::min()
-);
+    /// Convert the object to the desired user type
+    PyObject* convert(PyObject* input) const;
 
-/**
- * \brief Implementation for converting integers
- *
- * This is the "full" implementation.
- *
- * \param input The python object to consider for conversion
- * \param on_fail The value indicating what action to take on failure to convert
- * \param on_type_error The value indicating what action to take on invalid type
- * \param ntype The desired type of the converted object
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param base The integer base use when parsing ints, use INT_MIN for default
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-PyObject* int_conv_impl(
-    PyObject* input,
-    PyObject* on_fail,
-    PyObject* on_type_error,
-    const UserType ntype,
-    const bool allow_underscores,
-    const int base = std::numeric_limits<int>::min()
-);
+    /// Check if the object is the desired user type
+    PyObject* check(PyObject* input) const;
 
-/**
- * \brief Implementation for converting integers
- *
- * This is the "reduced" implementation, intended for the drop-in-replacement functions
- *
- * \param input The python object to consider for conversion
- * \param ntype The desired type of the converted object
- * \param base The integer base use when parsing ints, use INT_MIN for default
- *
- * \return Converted python object or nullptr with appropriate error set
- */
-PyObject* int_conv_impl(
-    PyObject* input,
-    const UserType ntype,
-    const int base = std::numeric_limits<int>::min()
-);
+    /// Query the type of the object
+    PyObject* query_type(PyObject* input) const;
 
-/**
- * \brief Implementation for checking floats
- *
- * \param input The python object to consider
- * \param inf The value indicating how infinity will be considered
- * \param nan The value indicating how NaN will be considered
- * \param consider Indicate if str, num, or both will be checked
- * \param ntype The desired type to check for
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param strict For ntype FLOAT, whether or not to consider int strings as floats
- *
- * \return Python True or False
- */
-PyObject* float_check_impl(
-    PyObject* input,
-    const PyObject* inf,
-    const PyObject* nan,
-    const PyObject* consider,
-    const UserType ntype,
-    const bool allow_underscores,
-    const bool strict = false
-);
+    /// Set the action to perform when INF is found
+    void set_inf_action(PyObject* val) { m_resolver.set_inf_action(val); }
 
-/**
- * \brief Implementation for checking integers
- *
- * \param input The python object to consider
- * \param consider Indicate if str, num, or both will be checked
- * \param ntype The desired type to check for
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param base The integer base use when parsing ints, use INT_MIN for default
- *
- * \return Python True or False
- */
-PyObject* int_check_impl(
-    PyObject* input,
-    const PyObject* consider,
-    const UserType ntype,
-    const bool allow_underscores,
-    const int base = std::numeric_limits<int>::min()
-);
+    /// Set the action to perform when NaN is found
+    void set_nan_action(PyObject* val) { m_resolver.set_nan_action(val); }
 
-/**
- * \brief Implementation for returning object type
- *
- * \param input The python object to query
- * \param allowed_types Non-empty sequence of allowed types, or nullptr
- * \param inf The value indicating how infinity will be considered
- * \param nan The value indicating how NaN will be considered
- * \param allow_underscores Whether or not it is OK for numbers to contain underscores
- * \param coerce Consider int-like floats as int
- *
- * \return Python type of input, or None if allowed_types was not empty and the type
- *         did not appear in the sequence
- */
-PyObject* type_query_impl(
-    PyObject* input,
-    PyObject* allowed_types,
-    const PyObject* inf,
-    const PyObject* nan,
-    const bool allow_underscores,
-    const bool coerce
-);
+    /// Set the action to perform on conversion failure
+    void set_fail_action(PyObject* val) { m_resolver.set_fail_action(val); }
+
+    /// Set the action to perform on type error
+    void set_type_error_action(PyObject* val) { m_resolver.set_type_error_action(val); }
+
+    /// Set whether or not underscores are allowed in strings
+    void set_underscores_allowed(const bool val)
+    {
+        m_options.set_underscores_allowed(val);
+    }
+
+    /// Set whether intlike floats should be returned as ints
+    void set_coerce(const bool val) { m_options.set_coerce(val); }
+
+    /// Set whether we accept NaN
+    void set_nan_allowed(const PyObject* val) { m_options.set_nan_allowed(val); }
+
+    /// Set whether we accept INF
+    void set_inf_allowed(const PyObject* val) { m_options.set_inf_allowed(val); }
+
+    /// Set whether we accept unicode characters
+    void set_unicode_allowed(const bool val) { m_options.set_unicode_allowed(val); }
+
+    /// Set whether we accept unicode characters based on if base is default or not
+    void set_unicode_allowed() { set_unicode_allowed(m_options.is_default_base()); }
+
+    /// Set the types of input we consider for checking
+    void set_consider(const PyObject* val)
+    {
+        m_num_only = val == Selectors::NUMBER_ONLY;
+        m_str_only = val == Selectors::STRING_ONLY;
+    }
+
+    /// Set the types of strings allowed for float checking
+    void set_strict(const bool val) { m_strict = val; }
+
+    /// Set the types we allow when querying for type
+    void set_allowed_types(PyObject* val) { m_allowed_types = val; }
+
+private:
+    /// Store the user-specified options
+    UserOptions m_options;
+
+    /// The object that resovles a payload into the appropriate return value
+    Resolver m_resolver;
+
+    /// The type the user wants to conver/check
+    const UserType m_ntype;
+
+    /// For type querying, a sequence of allowed types
+    PyObject* m_allowed_types;
+
+    /// For checking, indicate if only numbers are allowed as input
+    bool m_num_only;
+
+    /// For checking, indicate if only strings are allowed as input
+    bool m_str_only;
+
+    /// For checking floats, indicate input must be strictly floating-point
+    bool m_strict;
+
+    /// Return value for resolve_types() function
+    struct Types {
+        bool from_str;
+        bool ok_float;
+        bool ok_int;
+        bool ok_intlike;
+    };
+
+private:
+    /// Retrieve the type from the input object
+    NumberFlags collect_type(PyObject* obj) const;
+
+    /// Convert the object to the desired user type
+    Payload collect_payload(PyObject* obj) const;
+
+    /// Figure out as what types we can label the input
+    Types resolve_types(const NumberFlags& flags) const;
+
+    /// Create an options object with base - used in initialization list
+    UserOptions create_options_with_base(const int base) const
+    {
+        UserOptions options;
+        options.set_base(base);
+        return options;
+    }
+};
 
 /**
  * \brief Iterate over the elements of a collection and convert each one into a list

@@ -372,13 +372,9 @@ private:
         // of the iteration and we return return the sigil. If an exception is
         // set, well, we need to raise it.
         if ((item = PyIter_Next(m_iterator)) == nullptr) {
-            PyObject* exc = nullptr;
-            if ((exc = PyErr_Occurred()) != nullptr) {
-                if (PyErr_GivenExceptionMatches(exc, PyExc_StopIteration)) {
-                    PyErr_Clear();
-                } else {
-                    throw exception_is_set();
-                }
+            // StopIteration is already cleared by PyIter_Next()
+            if (PyErr_Occurred()) {
+                throw exception_is_set();
             }
             return std::nullopt;
         }

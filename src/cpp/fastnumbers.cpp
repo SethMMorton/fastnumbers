@@ -291,16 +291,14 @@ static PyObject* fastnumbers_try_real(
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [=](PyObject* x) -> PyObject* {
-            return float_conv_impl(
-                x,
-                on_fail,
-                on_type_error,
-                inf,
-                nan,
-                UserType::REAL,
-                allow_underscores,
-                coerce
-            );
+            Implementation impl(UserType::REAL);
+            impl.set_fail_action(on_fail);
+            impl.set_type_error_action(on_type_error);
+            impl.set_inf_action(inf);
+            impl.set_nan_action(nan);
+            impl.set_coerce(coerce);
+            impl.set_underscores_allowed(allow_underscores);
+            return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
     });
@@ -343,9 +341,13 @@ static PyObject* fastnumbers_try_float(
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [=](PyObject* x) -> PyObject* {
-            return float_conv_impl(
-                x, on_fail, on_type_error, inf, nan, UserType::FLOAT, allow_underscores
-            );
+            Implementation impl(UserType::FLOAT);
+            impl.set_fail_action(on_fail);
+            impl.set_type_error_action(on_type_error);
+            impl.set_inf_action(inf);
+            impl.set_nan_action(nan);
+            impl.set_underscores_allowed(allow_underscores);
+            return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
     });
@@ -385,9 +387,12 @@ static PyObject* fastnumbers_try_int(
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         const int base = assess_integer_base_input(pybase);
         auto convert = [=](PyObject* x) -> PyObject* {
-            return int_conv_impl(
-                x, on_fail, on_type_error, UserType::INT, allow_underscores, base
-            );
+            Implementation impl(UserType::INT, base);
+            impl.set_fail_action(on_fail);
+            impl.set_type_error_action(on_type_error);
+            impl.set_unicode_allowed(); // determine from base
+            impl.set_underscores_allowed(allow_underscores);
+            return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
     });
@@ -424,9 +429,11 @@ static PyObject* fastnumbers_try_forceint(
         validate_not_allow_disallow_str_only_num_only(on_fail);
         validate_not_allow_disallow_str_only_num_only(on_type_error);
         auto convert = [=](PyObject* x) -> PyObject* {
-            return int_conv_impl(
-                x, on_fail, on_type_error, UserType::FORCEINT, allow_underscores
-            );
+            Implementation impl(UserType::FORCEINT);
+            impl.set_fail_action(on_fail);
+            impl.set_type_error_action(on_type_error);
+            impl.set_underscores_allowed(allow_underscores);
+            return impl.convert(x);
         };
         return choose_execution_scheme(input, convert, normalize_map(map));
     });
@@ -522,9 +529,13 @@ static PyObject* fastnumbers_check_real(
         validate_allow_disallow_str_only_num_only(inf);
         validate_allow_disallow_str_only_num_only(nan);
         validate_consider(consider);
-        return float_check_impl(
-            input, inf, nan, consider, UserType::REAL, allow_underscores
-        );
+
+        Implementation impl(UserType::REAL);
+        impl.set_inf_allowed(inf);
+        impl.set_nan_allowed(nan);
+        impl.set_consider(consider);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -561,9 +572,14 @@ static PyObject* fastnumbers_check_float(
         validate_allow_disallow_str_only_num_only(inf);
         validate_allow_disallow_str_only_num_only(nan);
         validate_consider(consider);
-        return float_check_impl(
-            input, inf, nan, consider, UserType::FLOAT, allow_underscores, strict
-        );
+
+        Implementation impl(UserType::FLOAT);
+        impl.set_inf_allowed(inf);
+        impl.set_nan_allowed(nan);
+        impl.set_consider(consider);
+        impl.set_strict(strict);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -595,7 +611,11 @@ static PyObject* fastnumbers_check_int(
     return ExceptionHandler(input).run([&]() {
         validate_consider(consider);
         const int base = assess_integer_base_input(pybase);
-        return int_check_impl(input, consider, UserType::INT, allow_underscores, base);
+
+        Implementation impl(UserType::INT, base);
+        impl.set_consider(consider);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -624,7 +644,12 @@ static PyObject* fastnumbers_check_intlike(
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
         validate_consider(consider);
-        return int_check_impl(input, consider, UserType::INTLIKE, allow_underscores);
+
+        Implementation impl(UserType::INTLIKE);
+        impl.set_consider(consider);
+        impl.set_coerce(true);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -678,9 +703,13 @@ static PyObject* fastnumbers_query_type(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        return type_query_impl(
-            input, allowed_types, inf, nan, allow_underscores, coerce
-        );
+        Implementation impl(UserType::REAL); // type doesn't matter, choose REAL
+        impl.set_inf_allowed(inf);
+        impl.set_nan_allowed(nan);
+        impl.set_coerce(coerce);
+        impl.set_allowed_types(allowed_types);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.query_type(input);
     });
 }
 
@@ -708,7 +737,10 @@ fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args)
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        return float_conv_impl(input, UserType::FLOAT);
+        Implementation impl(UserType::FLOAT);
+        impl.set_unicode_allowed(false);
+        impl.set_underscores_allowed(true);
+        return impl.convert(input);
     });
 }
 
@@ -744,7 +776,10 @@ static PyObject* fastnumbers_int(
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
         const int base = assess_integer_base_input(pybase);
-        return int_conv_impl(input, UserType::INT, base);
+        Implementation impl(UserType::INT, base);
+        impl.set_unicode_allowed(false);
+        impl.set_underscores_allowed(true);
+        return impl.convert(input);
     });
 }
 
@@ -775,7 +810,11 @@ static PyObject* fastnumbers_real(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        return float_conv_impl(input, UserType::REAL, coerce);
+        Implementation impl(UserType::REAL);
+        impl.set_coerce(coerce);
+        impl.set_unicode_allowed(false);
+        impl.set_underscores_allowed(true);
+        return impl.convert(input);
     });
 }
 
@@ -816,9 +855,14 @@ static PyObject* fastnumbers_fast_real(
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
-        return float_conv_impl(
-            input, on_fail, inf, nan, UserType::REAL, allow_underscores, coerce
-        );
+
+        Implementation impl(UserType::REAL);
+        impl.set_fail_action(on_fail);
+        impl.set_inf_action(inf);
+        impl.set_nan_action(nan);
+        impl.set_coerce(coerce);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.convert(input);
     });
 }
 
@@ -857,9 +901,13 @@ static PyObject* fastnumbers_fast_float(
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
-        return float_conv_impl(
-            input, on_fail, inf, nan, UserType::FLOAT, allow_underscores
-        );
+
+        Implementation impl(UserType::FLOAT);
+        impl.set_fail_action(on_fail);
+        impl.set_inf_action(inf);
+        impl.set_nan_action(nan);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.convert(input);
     });
 }
 
@@ -897,7 +945,12 @@ static PyObject* fastnumbers_fast_int(
             on_fail, key, default_value, raise_on_invalid
         );
         const int base = assess_integer_base_input(pybase);
-        return int_conv_impl(input, on_fail, UserType::INT, allow_underscores, base);
+
+        Implementation impl(UserType::INT, base);
+        impl.set_fail_action(on_fail);
+        impl.set_unicode_allowed(); // determine from base
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.convert(input);
     });
 }
 
@@ -932,7 +985,11 @@ static PyObject* fastnumbers_fast_forceint(
         handle_fail_backwards_compatibility(
             on_fail, key, default_value, raise_on_invalid
         );
-        return int_conv_impl(input, on_fail, UserType::FORCEINT, allow_underscores);
+
+        Implementation impl(UserType::FORCEINT);
+        impl.set_fail_action(on_fail);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.convert(input);
     });
 }
 
@@ -969,9 +1026,12 @@ static PyObject* fastnumbers_isreal(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        return float_check_impl(
-            input, inf, nan, consider, UserType::REAL, allow_underscores
-        );
+        Implementation impl(UserType::REAL);
+        impl.set_inf_allowed(inf);
+        impl.set_nan_allowed(nan);
+        impl.set_consider(consider);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -1008,9 +1068,12 @@ static PyObject* fastnumbers_isfloat(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        return float_check_impl(
-            input, inf, nan, consider, UserType::FLOAT, allow_underscores
-        );
+        Implementation impl(UserType::FLOAT);
+        impl.set_inf_allowed(inf);
+        impl.set_nan_allowed(nan);
+        impl.set_consider(consider);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -1044,7 +1107,10 @@ static PyObject* fastnumbers_isint(
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
         const int base = assess_integer_base_input(pybase);
-        return int_check_impl(input, consider, UserType::INT, allow_underscores, base);
+        Implementation impl(UserType::INT, base);
+        impl.set_consider(consider);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 
@@ -1075,7 +1141,11 @@ static PyObject* fastnumbers_isintlike(
 
     // Execute main logic in an exception handler to convert C++ exceptions
     return ExceptionHandler(input).run([&]() {
-        return int_check_impl(input, consider, UserType::INTLIKE, allow_underscores);
+        Implementation impl(UserType::INTLIKE);
+        impl.set_consider(consider);
+        impl.set_coerce(true);
+        impl.set_underscores_allowed(allow_underscores);
+        return impl.check(input);
     });
 }
 

@@ -110,10 +110,12 @@ private:
                 return convert(m_parser.as_pyfloat(), ntype);
             }
 
-        default: // INT, INTLIKE, FORCEINT
+        case UserType::INT:
             if (!options().is_default_base()) {
                 return ActionType::ERROR_INVALID_BASE;
             }
+            // DELIBERATE FALL-THROUGH
+        default: // INTLIKE, FORCEINT
             return convert(
                 (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
                                                 : m_parser.as_pyint(),
