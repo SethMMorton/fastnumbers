@@ -63,7 +63,7 @@ public:
             if (!options().allow_unicode()) {
                 return typed_error(ntype, false);
             }
-            /* DELIBERATE FALL-THROUGH */
+            [[fallthrough]];
         case ParserType::CHARACTER:
             return from_text_as_type(ntype);
 
@@ -114,7 +114,7 @@ private:
             if (!options().is_default_base()) {
                 return ActionType::ERROR_INVALID_BASE;
             }
-            // DELIBERATE FALL-THROUGH
+            [[fallthrough]];
         default: // INTLIKE, FORCEINT
             return convert(
                 (typeflags & NumberType::Float) ? m_parser.as_pyfloat(true, false)
