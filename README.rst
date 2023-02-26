@@ -314,7 +314,7 @@ Checking Functions
 - `Checking function API <https://fastnumbers.readthedocs.io/en/stable/api.html#the-checking-functions>`_
 
 ``check_float`` will be used to demonstrate the functionality of the
-``check_*`` functions, as well as the ``query_type`` function.
+``check_*`` functions. There is also the ``query_type`` function.
 
 .. code-block:: python
 
