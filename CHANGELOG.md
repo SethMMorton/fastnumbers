@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[5.0.0] - 2023-02-25
+---
+
 ### Added
 - Added the `map` option to all ``try_*`` functions
   to enable very fast conversions of lists or other iterables (Issues
@@ -421,6 +424,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[5.0.0]: https://github.com/SethMMorton/fastnumbers/compare/4.0.1...5.0.0
 [4.0.1]: https://github.com/SethMMorton/fastnumbers/compare/4.0.0...4.0.1
 [4.0.0]: https://github.com/SethMMorton/fastnumbers/compare/3.2.1...4.0.0
 [3.2.1]: https://github.com/SethMMorton/fastnumbers/compare/3.2.0...3.2.1
