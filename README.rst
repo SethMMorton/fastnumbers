@@ -16,6 +16,9 @@ fastnumbers
 .. image:: https://codecov.io/gh/SethMMorton/fastnumbers/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/SethMMorton/fastnumbers
 
+.. image:: https://img.shields.io/pypi/dw/fastnumbers.svg
+    :target: https://pypi.org/project/fastnumbers/
+
 Super-fast and clean conversions to numbers.
 
     - Source Code: https://github.com/SethMMorton/fastnumbers
