@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[5.0.1] - 2023-02-26
+---
+
 ### Fixed
 - Add back missing `key` option in type hints for deprecated `fast_*`
   functions
@@ -428,6 +431,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[5.0.1]: https://github.com/SethMMorton/fastnumbers/compare/5.0.0...5.0.1
 [5.0.0]: https://github.com/SethMMorton/fastnumbers/compare/4.0.1...5.0.0
 [4.0.1]: https://github.com/SethMMorton/fastnumbers/compare/4.0.0...4.0.1
 [4.0.0]: https://github.com/SethMMorton/fastnumbers/compare/3.2.1...4.0.0
