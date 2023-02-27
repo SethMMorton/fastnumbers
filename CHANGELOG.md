@@ -1,6 +1,10 @@
 Unreleased
 ---
 
+### Fixed
+- Add back missing `key` option in type hints for deprecated `fast_*`
+  functions
+
 [5.0.0] - 2023-02-25
 ---
 

@@ -992,6 +992,18 @@ def fast_real(
 ) -> pyint: ...
 @overload
 def fast_real(
+    x: pyint,
+    default: Any = ...,
+    *,
+    key: Callable[[Any], Any] = ...,
+    raise_on_invalid: bool = ...,
+    coerce: bool = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
+    allow_underscores: bool = ...,
+) -> pyint: ...
+@overload
+def fast_real(
     x: pyfloat,
     default: Any = ...,
     *,
@@ -1004,10 +1016,34 @@ def fast_real(
 ) -> pyfloat: ...
 @overload
 def fast_real(
+    x: pyfloat,
+    default: Any = ...,
+    *,
+    key: Callable[[Any], Any] = ...,
+    raise_on_invalid: bool = ...,
+    coerce: Literal[False],
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
+    allow_underscores: bool = ...,
+) -> pyfloat: ...
+@overload
+def fast_real(
     x: NumInputType,
     default: Any = ...,
     *,
     on_fail: Callable[[Any], Any] = ...,
+    raise_on_invalid: bool = ...,
+    coerce: Literal[True] = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
+    allow_underscores: bool = ...,
+) -> FloatInt: ...
+@overload
+def fast_real(
+    x: NumInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
     coerce: Literal[True] = ...,
     inf: pyfloat = ...,
@@ -1049,9 +1085,32 @@ def fast_real(
 @overload
 def fast_real(
     x: StrInputType,
+    *,
+    key: Callable[[StrInputType], FloatInt],
+    raise_on_invalid: Literal[False] = ...,
+    coerce: bool = ...,
+    inf: FloatInt = ...,
+    nan: FloatInt = ...,
+    allow_underscores: bool = ...,
+) -> FloatInt: ...
+@overload
+def fast_real(
+    x: StrInputType,
     default: StrInputType = ...,
     *,
     on_fail: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    coerce: bool = ...,
+    inf: FloatInt | StrInputType = ...,
+    nan: FloatInt | StrInputType = ...,
+    allow_underscores: bool = ...,
+) -> FloatInt | StrInputType: ...
+@overload
+def fast_real(
+    x: StrInputType,
+    default: StrInputType = ...,
+    *,
+    key: Callable[[StrInputType], StrInputType] = ...,
     raise_on_invalid: Literal[False] = ...,
     coerce: bool = ...,
     inf: FloatInt | StrInputType = ...,
@@ -1070,6 +1129,18 @@ def fast_real(
     nan: Any = ...,
     allow_underscores: bool = ...,
 ) -> FloatInt | Any: ...
+@overload
+def fast_real(
+    x: StrInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    coerce: bool = ...,
+    inf: Any = ...,
+    nan: Any = ...,
+    allow_underscores: bool = ...,
+) -> FloatInt | Any: ...
 
 # Fast float
 @overload
@@ -1078,6 +1149,17 @@ def fast_float(
     default: Any = ...,
     *,
     on_fail: Callable[[Any], Any] = ...,
+    raise_on_invalid: bool = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
+    allow_underscores: bool = ...,
+) -> pyfloat: ...
+@overload
+def fast_float(
+    x: NumInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
     inf: pyfloat = ...,
     nan: pyfloat = ...,
@@ -1115,6 +1197,16 @@ def fast_float(
 @overload
 def fast_float(
     x: StrInputType,
+    *,
+    key: Callable[[StrInputType], pyfloat],
+    raise_on_invalid: Literal[False] = ...,
+    inf: pyfloat = ...,
+    nan: pyfloat = ...,
+    allow_underscores: bool = ...,
+) -> pyfloat: ...
+@overload
+def fast_float(
+    x: StrInputType,
     default: StrInputType = ...,
     *,
     on_fail: Callable[[StrInputType], StrInputType] = ...,
@@ -1126,9 +1218,31 @@ def fast_float(
 @overload
 def fast_float(
     x: StrInputType,
+    default: StrInputType = ...,
+    *,
+    key: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    inf: pyfloat | StrInputType = ...,
+    nan: pyfloat | StrInputType = ...,
+    allow_underscores: bool = ...,
+) -> pyfloat | StrInputType: ...
+@overload
+def fast_float(
+    x: StrInputType,
     default: Any = ...,
     *,
     on_fail: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    inf: Any = ...,
+    nan: Any = ...,
+    allow_underscores: bool = ...,
+) -> pyfloat | Any: ...
+@overload
+def fast_float(
+    x: StrInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[StrInputType], Any] = ...,
     raise_on_invalid: Literal[False] = ...,
     inf: Any = ...,
     nan: Any = ...,
@@ -1147,6 +1261,15 @@ def fast_int(
 ) -> pyint: ...
 @overload
 def fast_int(
+    x: NumInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[Any], Any] = ...,
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> pyint: ...
+@overload
+def fast_int(
     x: StrInputType,
     default: pyint,
     *,
@@ -1174,9 +1297,28 @@ def fast_int(
 @overload
 def fast_int(
     x: StrInputType,
+    *,
+    key: Callable[[StrInputType], pyint],
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
+    allow_underscores: bool = ...,
+) -> pyint: ...
+@overload
+def fast_int(
+    x: StrInputType,
     default: StrInputType = ...,
     *,
     on_fail: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
+    allow_underscores: bool = ...,
+) -> pyint | StrInputType: ...
+@overload
+def fast_int(
+    x: StrInputType,
+    default: StrInputType = ...,
+    *,
+    key: Callable[[StrInputType], StrInputType] = ...,
     raise_on_invalid: Literal[False] = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
@@ -1191,6 +1333,16 @@ def fast_int(
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
 ) -> pyint | Any: ...
+@overload
+def fast_int(
+    x: StrInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    base: IntBaseType = ...,
+    allow_underscores: bool = ...,
+) -> pyint | Any: ...
 
 # Fast forceint
 @overload
@@ -1199,6 +1351,15 @@ def fast_forceint(
     default: Any = ...,
     *,
     on_fail: Callable[[Any], Any] = ...,
+    raise_on_invalid: bool = ...,
+    allow_underscores: bool = ...,
+) -> pyint: ...
+@overload
+def fast_forceint(
+    x: NumInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[Any], Any] = ...,
     raise_on_invalid: bool = ...,
     allow_underscores: bool = ...,
 ) -> pyint: ...
@@ -1228,6 +1389,14 @@ def fast_forceint(
 @overload
 def fast_forceint(
     x: StrInputType,
+    *,
+    key: Callable[[StrInputType], pyint],
+    raise_on_invalid: Literal[False] = ...,
+    allow_underscores: bool = ...,
+) -> pyint: ...
+@overload
+def fast_forceint(
+    x: StrInputType,
     default: StrInputType = ...,
     *,
     on_fail: Callable[[StrInputType], StrInputType] = ...,
@@ -1237,9 +1406,27 @@ def fast_forceint(
 @overload
 def fast_forceint(
     x: StrInputType,
+    default: StrInputType = ...,
+    *,
+    key: Callable[[StrInputType], StrInputType] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    allow_underscores: bool = ...,
+) -> pyint | StrInputType: ...
+@overload
+def fast_forceint(
+    x: StrInputType,
     default: Any = ...,
     *,
     on_fail: Callable[[StrInputType], Any] = ...,
+    raise_on_invalid: Literal[False] = ...,
+    allow_underscores: bool = ...,
+) -> pyint | Any: ...
+@overload
+def fast_forceint(
+    x: StrInputType,
+    default: Any = ...,
+    *,
+    key: Callable[[StrInputType], Any] = ...,
     raise_on_invalid: Literal[False] = ...,
     allow_underscores: bool = ...,
 ) -> pyint | Any: ...
