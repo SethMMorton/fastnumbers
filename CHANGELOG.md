@@ -13,24 +13,24 @@ Unreleased
 
 ### Added
 - Added the `map` option to all ``try_*`` functions
-  to enable very fast conversions of lists or other iterables (Issues
+  to enable very fast conversions of lists or other iterables (issues
  [#61](https://github.com/SethMMorton/fastnumbers/issues/61),
  [#63](https://github.com/SethMMorton/fastnumbers/issues/63) and
  [#67](https://github.com/SethMMorton/fastnumbers/issues/67))
 - Added `try_array` to enable very fast conversions
- directly to numpy arrays (Issues
+ directly to numpy arrays (issues
  [#62](https://github.com/SethMMorton/fastnumbers/issues/62) and
  [#65](https://github.com/SethMMorton/fastnumbers/issues/65))
 
 ### Changed
 - Move to a model where the return code is a value or error instead of
   a model where one has to check the error state after getting a value
-  (Issue [#66](https://github.com/SethMMorton/fastnumbers/pull/66))
+  (issue [#66](https://github.com/SethMMorton/fastnumbers/pull/66))
 - *Significantly* simplified the type annotations (by 4000+ lines!)
 
 ### Fixed
 - Increased code coverage and fixed missing headers in codecov reaport
-  (Issue [#64](https://github.com/SethMMorton/fastnumbers/pull/64))
+  (issue [#64](https://github.com/SethMMorton/fastnumbers/pull/64))
 
 [4.0.1] - 2023-02-05
 ---
@@ -45,29 +45,29 @@ Unreleased
 ### Added
 - Added `check_real`, `check_float`, `check_int`, and `check_intlike`
  to provide a more flexible interface than `isreal`, `isfloat`, `isint`,
- and `isintlike`, respectively (Issues
+ and `isintlike`, respectively (issues
  [#37](https://github.com/SethMMorton/fastnumbers/issues/37) and
  [#39](https://github.com/SethMMorton/fastnumbers/issues/39))
 - Added `try_real`, `try_float`, `try_int`, and `try_forceint`
  to provide a more flexible interface than `fast_real`, `fast_float`, `fast_int`,
- and `fast_forceint`, respectively (Issues
+ and `fast_forceint`, respectively (issues
  [#37](https://github.com/SethMMorton/fastnumbers/issues/37) and
  [#40](https://github.com/SethMMorton/fastnumbers/issues/40))
 - Added Python 3.11 support
 
 ### Changed
 - `query_type` now sets `allow_underscores` to `False` by default
-- Complete rewrite into C++ (Issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45),
+- Complete rewrite into C++ (issues [#45](https://github.com/SethMMorton/fastnumbers/issues/45),
   [#56](https://github.com/SethMMorton/fastnumbers/issues/56),
   [#55](https://github.com/SethMMorton/fastnumbers/issues/55), and
   [#35](https://github.com/SethMMorton/fastnumbers/issues/35))
 - All functions now use use `METH_FASTCALL` to pass arguments from
-  Python to C (Issue [#59](https://github.com/SethMMorton/fastnumbers/issues/59))
+  Python to C (issue [#59](https://github.com/SethMMorton/fastnumbers/issues/59))
 - Always parse integers using `int64_t` instead of using `long` to ensure
   we can always quickly parse at least 18 digits
 - Parsing floats now always uses the fast and robust parser
   [`fast_float::from_chars()`](https://github.com/fastfloat/fast_float)
-  (Issues [#57](https://github.com/SethMMorton/fastnumbers/issues/57) and
+  (issues [#57](https://github.com/SethMMorton/fastnumbers/issues/57) and
   [#28](https://github.com/SethMMorton/fastnumbers/issues/28))
 
 ### Deprecated
@@ -92,9 +92,11 @@ Unreleased
 ---
 
 ### Added
-- Support for ARM wheels ([@odidev](https://github.com/odidev), issues #48, #49)
-- Support for Python 3.10 (issue #50)
-- Full coverage of mypy type-checking (issue #51)
+- Support for ARM wheels ([@odidev](https://github.com/odidev), issues
+  [#48](https://github.com/SethMMorton/fastnumbers/issues/48) and
+  [#49](https://github.com/SethMMorton/fastnumbers/issues/49))
+- Support for Python 3.10 (issue [#50](https://github.com/SethMMorton/fastnumbers/issues/50))
+- Full coverage of mypy type-checking (issue [#51](https://github.com/SethMMorton/fastnumbers/issues/51))
 
 ### Removed
 - Support for Python 3.5
@@ -108,7 +110,7 @@ Unreleased
 
 ### Fixed
 - Support for Python 3.9 (eliminate use of private Python C function that is now
-  hidden in 3.9) (issue #43)
+  hidden in 3.9) (issue [#43](https://github.com/SethMMorton/fastnumbers/issues/43))
 
 [3.0.0] - 2020-01-06
 ---
@@ -156,7 +158,8 @@ Unreleased
  - Add `allow_underscores` option to toggle whether or not underscores
    are allowed inside numbers on Python >= 3.6
  - Update CHANGELOG format to style from https://keepachangelog.com/
- - Build system now uses pip in stead of pipenv (issue #22)
+ - Build system now uses pip in stead of pipenv (issue
+   [#22](https://github.com/SethMMorton/fastnumbers/issues/22))
  - Simplify tox.ini file
 
 [2.1.1] - 2018-08-19
