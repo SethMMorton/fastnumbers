@@ -1,6 +1,10 @@
 Unreleased
 ---
 
+### Changed
+
+- The changelog now only explictly exists in the repository
+
 [5.0.1] - 2023-02-26
 ---
 

@@ -3,4 +3,4 @@
 Changelog
 =========
 
-.. mdinclude:: ../../CHANGELOG.md
+Please visit https://github.com/SethMMorton/fastnumbers/blob/main/CHANGELOG.md.

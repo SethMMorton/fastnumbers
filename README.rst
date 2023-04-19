@@ -570,5 +570,4 @@ Seth M. Morton
 History
 -------
 
-Please visit the changelog `on GitHub <https://github.com/SethMMorton/fastnumbers/blob/main/CHANGELOG.md>`_
-or `in the documentation <https://fastnumbers.readthedocs.io/en/stable/changelog.html>`_.
+Please visit the changelog `on GitHub <https://github.com/SethMMorton/fastnumbers/blob/main/CHANGELOG.md>`_.
