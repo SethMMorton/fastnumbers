@@ -1,6 +1,12 @@
 Unreleased
 ---
 
+### Added
+
+- Support for Python 3.12 (issues
+  [#73](https://github.com/SethMMorton/fastnumbers/issues/73) and
+  [#75](https://github.com/SethMMorton/fastnumbers/pull/75))
+
 ### Changed
 
 - The changelog now only explictly exists in the repository
