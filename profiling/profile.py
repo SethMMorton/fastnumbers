@@ -277,7 +277,7 @@ def forceint_try(x):
 def check_int_re(x, int_match=re.compile(r"[-+]?\d+$").match):
     """Function to simulate check_int but with regular expressions."""
     t = type(x)
-    return t == int if t in (float, int) else bool(int_match(x))
+    return t is int if t in (float, int) else bool(int_match(x))
 
 
 def check_int_try(x):
@@ -287,7 +287,7 @@ def check_int_try(x):
     except ValueError:
         return False
     else:
-        return type(x) != float
+        return type(x) is not float
 
 
 def check_float_re(
@@ -295,7 +295,7 @@ def check_float_re(
 ):
     """Function to simulate check_float but with regular expressions."""
     t = type(x)
-    return t == float if t in (float, int) else bool(float_match(x))
+    return t is float if t in (float, int) else bool(float_match(x))
 
 
 def check_float_try(x):
@@ -305,7 +305,7 @@ def check_float_try(x):
     except ValueError:
         return False
     else:
-        return type(x) != int
+        return type(x) is not int
 
 
 def check_real_re(x, real_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match):
