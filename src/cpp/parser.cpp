@@ -177,26 +177,28 @@ NumberFlags CharacterParser::get_number_type() const noexcept
 
     // If the string contains a numeric representation,
     // report which representation type is contained.
-    int value = string_contains_what(m_start, end(), options().get_base());
+    StringType value = StringChecker(m_start, end(), options().get_base()).get_type();
 
     // If it still looks like there is no numeric representation in the string,
     // check to see if it it contains underscores, and if so remove them and
     // try a numeric representation again. No need to check for infinity and
     // NaN here because those are not allowed to contain underscores.
-    if (value == 0 && has_valid_underscores()) {
+    if (value == StringType::INVALID && has_valid_underscores()) {
         Buffer buffer(m_start, m_str_len);
         buffer.remove_valid_underscores(!options().is_default_base());
-        value = string_contains_what(buffer.start(), buffer.end(), options().get_base());
+        value = StringChecker(buffer.start(), buffer.end(), options().get_base())
+                    .get_type();
     }
 
-    // Map integer values to numeric flag values
-    static constexpr NumberFlags type_mapping[] = {
-        /* 0 */ NumberType::INVALID,
-        /* 1 */ flag_wrap(NumberType::Integer),
-        /* 2 */ flag_wrap(NumberType::Float),
-        /* 3 */ flag_wrap(NumberType::Float | NumberType::IntLike),
-    };
-
     // Return the found type
-    return type_mapping[value];
+    switch (value) {
+    case StringType::INVALID:
+        return NumberType::INVALID;
+    case StringType::INTEGER:
+        return flag_wrap(NumberType::Integer);
+    case StringType::FLOAT:
+        return flag_wrap(NumberType::Float);
+    case StringType::INTLIKE_FLOAT:
+        return flag_wrap(NumberType::Float | NumberType::IntLike);
+    }
 }
