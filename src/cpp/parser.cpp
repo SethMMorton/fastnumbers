@@ -112,10 +112,8 @@ RawPayload<PyObject*> CharacterParser::as_pyint() const noexcept(false)
     // Parse and record the location where parsing ended (including trailing whitespace)
     // No need to do input validation with the second argument because we already know
     // the input is valid from above.
-    PyObject* retval = PyLong_FromString(m_start_orig, nullptr, options().get_base());
-
-    // Return the value without checking python's error state
-    return retval;
+    // Return the value without checking python's error state.
+    return PyLong_FromString(m_start_orig, nullptr, options().get_base());
 }
 
 RawPayload<PyObject*>

@@ -350,11 +350,6 @@ constexpr inline bool is_sign(const char c) noexcept
  */
 constexpr inline bool is_base_prefix(const char c) noexcept
 {
-    // The ASCII standard was quite clever... upper- and lower-case
-    // letters only differ from each other by the 32 bit, otherwise
-    // they are identical.
-    // So, we can OR the 32 bit to force the character to be
-    // lowercase and then just check against the lowercase characters.
     const char lowered = lowercase(c);
     return (lowered == 'x') || (lowered == 'o') || (lowered == 'b');
 }
@@ -513,7 +508,7 @@ constexpr inline int detect_base(const char* str, const char* end) noexcept
  * \brief Return the number of digits an integer type can safely parse without overflow
  */
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-constexpr inline int8_t overflow_cutoff() noexcept
+constexpr inline uint8_t overflow_cutoff() noexcept
 {
     // len('std::numeric_limits<T>::max()') - 1 == return value
     constexpr uint64_t limit = static_cast<uint64_t>(std::numeric_limits<T>::max());
@@ -551,7 +546,7 @@ constexpr inline int8_t overflow_cutoff() noexcept
  * \param always_convert
  */
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-T parse_int(
+inline T parse_int(
     const char* str,
     const char* end,
     int base,
@@ -671,7 +666,7 @@ T parse_int(
 template <
     typename T,
     typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-T parse_float(const char* str, const char* end, bool& error) noexcept
+inline T parse_float(const char* str, const char* end, bool& error) noexcept
 {
     // Use a very fast and accurate string-to-floating point parser
     T value;

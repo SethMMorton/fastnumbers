@@ -105,7 +105,7 @@ StringChecker::StringChecker(const char* str, const char* end, int base) noexcep
             const char* exp_digit_start = str;
             int32_t this_char_as_digit = 0L;
             while (str != end && (this_char_as_digit = to_digit<int32_t>(*str)) >= 0) {
-                set_exponent(exponent_value() * 10L + this_char_as_digit);
+                set_exponent(exponent_value() * 10UL + this_char_as_digit);
                 str += 1;
             }
 
@@ -130,11 +130,7 @@ StringChecker::StringChecker(const char* str, const char* end, int base) noexcep
         // exponent sign and magnitude, all digits after the decimal
         // must be zero.
         set_int_trailing_zeros(number_trailing_zeros(integer_start(), integer_end()));
-        set_dec_trailing_zeros(
-            decimal_length() > 0 ? 0U
-                                 : number_trailing_zeros(decimal_start(), decimal_end())
-        );
-
+        set_dec_trailing_zeros(number_trailing_zeros(decimal_start(), decimal_end()));
         const uint32_t expval = exponent_value();
         if (is_exponent_negative()) {
             if (expval <= integer_trailing_zeros() && truncated_decimal_length() == 0) {
