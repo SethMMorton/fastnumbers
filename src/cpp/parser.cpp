@@ -32,16 +32,6 @@ inline void strip_trailing_whitespace(const char* start, const char*& end) noexc
     }
 }
 
-/// Convert a 64-int with the appropriate function depending on the compiler's long size
-inline PyObject* pyobject_from_int64(const int64_t value) noexcept
-{
-    if constexpr (std::numeric_limits<long>::max() == std::numeric_limits<int64_t>::max()) {
-        return PyLong_FromLong(static_cast<long>(value));
-    } else {
-        return PyLong_FromLongLong(static_cast<long long>(value));
-    };
-}
-
 CharacterParser::CharacterParser(
     const char* str,
     const std::size_t len,
@@ -116,7 +106,7 @@ RawPayload<PyObject*> CharacterParser::as_pyint() const noexcept(false)
         return ErrorType::BAD_VALUE;
     }
     if (!overflow) {
-        return pyobject_from_int64(result);
+        return pyobject_from_int(result);
     }
 
     // Parse and record the location where parsing ended (including trailing whitespace)
