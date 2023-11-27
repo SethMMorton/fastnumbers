@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -12,7 +13,233 @@
 #include "fastnumbers/parser/numeric.hpp"
 #include "fastnumbers/parser/unicode.hpp"
 #include "fastnumbers/payload.hpp"
+#include "fastnumbers/third_party/ipow.hpp"
 #include "fastnumbers/user_options.hpp"
+
+// C++ version of https://docs.python.org/3/library/math.html#math.ulp
+static double ulp(const double x)
+{
+    if (x > 0)
+        return std::nexttoward(x, std::numeric_limits<double>::infinity()) - x;
+    else
+        return x - std::nexttoward(x, -std::numeric_limits<double>::infinity());
+}
+
+// Parse a sequence of characters as a Python long
+static PyObject*
+parse_long_helper(const char* start, const char* end, const std::size_t length)
+{
+    // We know by construction that this correctly stores a number, so we skip
+    // the error checking.
+    if (length < overflow_cutoff<uint64_t>()) {
+        bool error = false;
+        bool overflow = false;
+        return pyobject_from_int(
+            length ? parse_int<uint64_t>(start, end, 10, error, overflow) : 0ULL
+        );
+    } else {
+        char* this_end = const_cast<char*>(end);
+        return length ? PyLong_FromString(start, &this_end, 10) : pyobject_from_int(0);
+    }
+}
+
+PyObject* Parser::float_as_int_without_noise(PyObject* obj) noexcept
+{
+    const double val = PyFloat_AsDouble(obj);
+    if (val == -1.0 && PyErr_Occurred()) {
+        return nullptr;
+    }
+
+    // To begin, get the absolute value of the input as a C++ double.
+    // Also store the input as a Python int to use as the basis for calculation.
+    const double abs_val = std::abs(val);
+    PyObject* val_int = PyLong_FromDouble(val);
+    if (val_int == nullptr) {
+        return nullptr;
+    }
+
+    // If the given float can fit a C long without loss then no need
+    // to go through the below rounding steps.
+    const double floor_val = std::floor(val);
+    if (floor_val == static_cast<long>(floor_val)) {
+        return val_int;
+    }
+
+    // Determine the number of digits that are "noise". Do this by using ULP to
+    // get the number that closest represents the noise inherint from the
+    // floating point representation, then using log10 to find the number of
+    // digits this represents.
+    // Note that the largest exponent component of a double is around 308, so
+    // we can be confident that this value will fit in an int.
+    // There is special case hanlding for if the abs_val is the next lowest value
+    // from infinity, in which case double_digits would be returned as infinity...
+    // in that case, we return 293, which is known to be the correct result for
+    // that number.
+    const double double_digits = std::ceil(std::log10(ulp(abs_val)));
+    constexpr int MAX_DIGITS = 293;
+    const int digits
+        = std::isfinite(double_digits) ? static_cast<int>(double_digits) : MAX_DIGITS;
+
+    // If the number of digits is less than 1 (e.g. the float is already noiselessly
+    // converted to an integer) just return the integer directly.
+    if (digits < 1) {
+        return val_int;
+    }
+
+    // Use Python's built-in round to round the number to the desired number of
+    // digits. A negative input rounds to the left of the decimal place.
+    PyObject* retval = PyObject_CallMethod(val_int, "__round__", "i", -digits);
+
+    // Free the int value, and then return the rounded number.
+    Py_DecRef(val_int);
+    return retval;
+}
+
+PyObject* Parser::float_as_int_without_noise(
+    const StringChecker& checker, const bool is_negative
+) noexcept
+{
+    PyObject* py_integer = nullptr;
+
+    // As a special case, if the number of digits in the integer and decimal
+    // parts of the float are small enough that we know it could fit into a unsigned
+    // 65-bit integer, parse using C++ methods in the name of efficiency.
+    if (checker.total_length() < overflow_cutoff<uint64_t>()) {
+        bool error = false;
+        bool overflow = false;
+        uint64_t integer = 0;
+
+        // First parse the integer component (if there is anything to parse).
+        if (checker.integer_length()) {
+            integer = parse_int<uint64_t>(
+                checker.integer_start(), checker.integer_end(), 10, error, overflow
+            );
+        }
+
+        // Next, parse the decimal component (if there is anything to parse) and
+        // then combine with the existing integer component to get a single integer.
+        if (checker.truncated_decimal_length()) {
+            uint64_t decimal = parse_int<uint64_t>(
+                checker.decimal_start(), checker.decimal_end(), 10, error, overflow
+            );
+            // We "remove" trailing zeros from the decimal component by dividing by
+            // the power of ten that corresponds to the number of trailing zeros.
+            if (checker.decimal_trailing_zeros()) {
+                decimal /= ipow::ipow(10ULL, checker.decimal_trailing_zeros());
+            }
+            // Add powers of 10 to the integer that correspond to the number of
+            // decimal digits parser (minus trailing zeros) so that when the decimal
+            // comppnent is added it results in a integer with all digits represented.
+            integer *= ipow::ipow(10ULL, checker.truncated_decimal_length());
+            integer += decimal;
+        }
+
+        // Convert this integer into a Python long object.
+        py_integer = pyobject_from_int(integer);
+    }
+
+    // Otherwise, if there are too manu digits to store in a C++ integer type, we
+    // need to use Python's arithmatic so we can take advantage of the arbitrarily
+    // long integer type.
+    else {
+        // First parse the integer components of the floating point number.
+        py_integer = parse_long_helper(
+            checker.integer_start(), checker.integer_end(), checker.integer_length()
+        );
+        if (py_integer == nullptr) {
+            return py_integer;
+        }
+
+        // We then parse the decimal components if they exist, adding the values to
+        // the integer using the exact same algorithm as the C++ method above... it's
+        // just that this has to use a bunch more error checking and reference counting.
+        if (checker.truncated_decimal_length()) {
+            // Parse the decimal component...
+            PyObject* py_decimal = parse_long_helper(
+                checker.decimal_start(), checker.decimal_end(), checker.decimal_length()
+            );
+            if (py_decimal == nullptr) {
+                return py_decimal;
+            }
+
+            // ... and then "remove" trailing zeros if they exist...
+            if (checker.decimal_trailing_zeros()) {
+                PyObject* divisor = pyobject_from_int(
+                    ipow::ipow(10ULL, checker.decimal_trailing_zeros())
+                );
+                if (divisor == nullptr) {
+                    return divisor;
+                }
+
+                in_place_divide(py_decimal, divisor);
+                Py_DECREF(divisor);
+                if (py_decimal == nullptr) {
+                    return py_decimal;
+                }
+            }
+
+            // ... and then "shift" the integer py powers of ten so we can
+            //     add in the decimal component...
+            {
+                PyObject* offset = pyobject_from_int(
+                    ipow::ipow(10ULL, checker.truncated_decimal_length())
+                );
+                if (offset == nullptr) {
+                    Py_DECREF(py_integer);
+                    return offset;
+                }
+
+                in_place_multiply(py_integer, offset);
+                Py_DECREF(offset);
+                if (py_integer == nullptr) {
+                    return py_integer;
+                }
+            }
+
+            // ... and finally add in the decimal component.
+            in_place_add(py_integer, py_decimal);
+            Py_DECREF(py_decimal);
+        }
+    }
+
+    // Error check this integer result.
+    if (py_integer == nullptr) {
+        return py_integer;
+    }
+
+    // If there is an exponent value (ajusted by the number of decimal digits that were
+    // present) then we have to multiply our integer by this value raised to the power
+    // of ten. Because this value could be *huge*, we cannot do power nor the
+    // mutliplication in the C++ space - it must be all done with Python's types.
+    if (checker.adjusted_exponent_value() > 0) {
+        PyObject* py_expon = pyobject_from_int(10);
+        PyObject* py_exp_component
+            = pyobject_from_int(checker.adjusted_exponent_value());
+        in_place_pow(py_expon, py_exp_component);
+        Py_DECREF(py_exp_component);
+        if (py_expon == nullptr) {
+            Py_DECREF(py_integer);
+            return py_expon;
+        }
+
+        // We are carrying around the exponent as an unsigned integer,
+        // so we handle negatives by dividing, and positives by multiplying.
+        if (checker.is_adjusted_exponent_negative()) {
+            in_place_divide(py_integer, py_expon);
+        } else {
+            in_place_multiply(py_integer, py_expon);
+        }
+        Py_DECREF(py_expon);
+    }
+
+    // Finally, we negate the result if it is supposed to be negative.
+    if (is_negative) {
+        PyObject* temp = py_integer;
+        py_integer = PyNumber_Negative(temp);
+        Py_DECREF(temp);
+    }
+    return py_integer;
+}
 
 /**
  * \brief Remove whitespace at the end of a string
@@ -120,6 +347,21 @@ RawPayload<PyObject*>
 CharacterParser::as_pyfloat(const bool force_int, const bool coerce) const
     noexcept(false)
 {
+    // If denoise is requested, use this algorithm *instead* of converting to a double
+    if (options().do_denoise() && (force_int || coerce)) {
+        StringChecker checker(m_start, end(), options().get_base());
+        if (checker.is_intlike_float()) {
+            return Parser::float_as_int_without_noise(checker, is_negative());
+        } else if (checker.is_invalid() && has_valid_underscores()) {
+            Buffer buffer(m_start, m_str_len);
+            buffer.remove_valid_underscores(options().get_base() != 10);
+            StringChecker checker(buffer.start(), buffer.end(), options().get_base());
+            if (checker.is_intlike_float()) {
+                return Parser::float_as_int_without_noise(checker, is_negative());
+            }
+        }
+    }
+
     // Perform the correct action depending on the payload's contents
     return std::visit(
         overloaded {

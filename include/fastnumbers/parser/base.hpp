@@ -8,6 +8,7 @@
 
 #include <Python.h>
 
+#include "fastnumbers/c_str_parsing.hpp"
 #include "fastnumbers/helpers.hpp"
 #include "fastnumbers/payload.hpp"
 #include "fastnumbers/third_party/EnumClass.h"
@@ -114,6 +115,19 @@ public:
         errno = 0;
         return std::isfinite(x) && std::floor(x) == x && errno == 0;
     }
+
+    /**
+     * \brief Convert a Python float to Python int without floating-point noise
+     *
+     * Set to zero digits that are likely non-zero due to mis-representations
+     * arising from how floating point numbers are stored in memory.
+     */
+    static PyObject* float_as_int_without_noise(PyObject* obj) noexcept;
+
+    /// Same as above, but with string input
+    static PyObject* float_as_int_without_noise(
+        const StringChecker& checker, const bool is_negative
+    ) noexcept;
 
 protected:
     /// Constructor for use only by base-classes to define the parser type

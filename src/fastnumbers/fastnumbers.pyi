@@ -49,6 +49,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> pyint: ...
@@ -61,6 +62,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: Literal[False],
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> pyfloat: ...
@@ -73,6 +75,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> FloatInt: ...
@@ -91,6 +94,7 @@ def try_real(
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> FloatInt | StrInputType: ...
@@ -103,6 +107,7 @@ def try_real(
     on_fail: RAISE_T | FloatInt | Callable[[StrInputType], FloatInt],
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> FloatInt: ...
@@ -115,6 +120,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> Any: ...
@@ -127,6 +133,7 @@ def try_real(
     on_fail: Any,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> Any: ...
@@ -139,6 +146,7 @@ def try_real(
     on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
     on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> FloatInt: ...
@@ -151,6 +159,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> Any: ...
@@ -163,6 +172,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[pyint]: ...
@@ -175,6 +185,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: Literal[False],
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[pyfloat]: ...
@@ -187,6 +198,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[FloatInt]: ...
@@ -205,6 +217,7 @@ def try_real(
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[FloatInt | StrInputType]: ...
@@ -217,6 +230,7 @@ def try_real(
     on_fail: RAISE_T | FloatInt | Callable[[StrInputType], FloatInt],
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[FloatInt]: ...
@@ -229,6 +243,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[Any]: ...
@@ -241,6 +256,7 @@ def try_real(
     on_fail: Any,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[Any]: ...
@@ -253,6 +269,7 @@ def try_real(
     on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
     on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[FloatInt]: ...
@@ -265,6 +282,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[Any]: ...
@@ -277,6 +295,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[pyint]: ...
@@ -289,6 +308,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: Literal[False],
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[pyfloat]: ...
@@ -301,6 +321,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[FloatInt]: ...
@@ -319,6 +340,7 @@ def try_real(
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[FloatInt | StrInputType]: ...
@@ -331,6 +353,7 @@ def try_real(
     on_fail: RAISE_T | FloatInt | Callable[[StrInputType], FloatInt],
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[FloatInt]: ...
@@ -343,6 +366,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[Any]: ...
@@ -355,6 +379,7 @@ def try_real(
     on_fail: Any,
     on_type_error: Any = ...,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[Any]: ...
@@ -367,6 +392,7 @@ def try_real(
     on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
     on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[FloatInt]: ...
@@ -379,6 +405,7 @@ def try_real(
     on_fail: Any = ...,
     on_type_error: Any,
     coerce: bool = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[Any]: ...
@@ -820,6 +847,7 @@ def try_forceint(
     *,
     on_fail: Any = ...,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> pyint: ...
@@ -829,6 +857,7 @@ def try_forceint(
     *,
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> pyint | StrInputType: ...
@@ -838,6 +867,7 @@ def try_forceint(
     *,
     on_fail: RAISE_T | pyint | Callable[[StrInputType], pyint],
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> pyint: ...
@@ -847,6 +877,7 @@ def try_forceint(
     *,
     on_fail: Any,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> Any: ...
@@ -856,6 +887,7 @@ def try_forceint(
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
     on_type_error: pyint | Callable[[AnyInputType], pyint],
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> pyint: ...
@@ -865,6 +897,7 @@ def try_forceint(
     *,
     on_fail: Any = ...,
     on_type_error: Any,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[False] = ...,
 ) -> Any: ...
@@ -874,6 +907,7 @@ def try_forceint(
     *,
     on_fail: Any = ...,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[pyint]: ...
@@ -883,6 +917,7 @@ def try_forceint(
     *,
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[pyint | StrInputType]: ...
@@ -892,6 +927,7 @@ def try_forceint(
     *,
     on_fail: RAISE_T | pyint | Callable[[StrInputType], pyint],
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[pyint]: ...
@@ -901,6 +937,7 @@ def try_forceint(
     *,
     on_fail: Any,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[Any]: ...
@@ -910,6 +947,7 @@ def try_forceint(
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
     on_type_error: pyint | Callable[[AnyInputType], pyint],
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[pyint]: ...
@@ -919,6 +957,7 @@ def try_forceint(
     *,
     on_fail: Any = ...,
     on_type_error: Any,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Type[list],
 ) -> list[Any]: ...
@@ -928,6 +967,7 @@ def try_forceint(
     *,
     on_fail: Any = ...,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[pyint]: ...
@@ -937,6 +977,7 @@ def try_forceint(
     *,
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[pyint | StrInputType]: ...
@@ -946,6 +987,7 @@ def try_forceint(
     *,
     on_fail: RAISE_T | pyint | Callable[[StrInputType], pyint],
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[pyint]: ...
@@ -955,6 +997,7 @@ def try_forceint(
     *,
     on_fail: Any,
     on_type_error: Any = ...,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[Any]: ...
@@ -964,6 +1007,7 @@ def try_forceint(
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
     on_type_error: pyint | Callable[[AnyInputType], pyint],
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[pyint]: ...
@@ -973,6 +1017,7 @@ def try_forceint(
     *,
     on_fail: Any = ...,
     on_type_error: Any,
+    denoise: bool = ...,
     allow_underscores: bool = ...,
     map: Literal[True],
 ) -> Iterator[Any]: ...

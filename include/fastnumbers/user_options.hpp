@@ -26,6 +26,7 @@ public:
         , m_default_base(true)
         , m_underscore_allowed(false)
         , m_coerce(false)
+        , m_denoise(false)
         , m_nan_allowed_str(false)
         , m_nan_allowed_num(false)
         , m_inf_allowed_str(false)
@@ -61,6 +62,12 @@ public:
 
     /// Indicate if we are allowing coersion of floats to ints
     bool allow_coerce() const noexcept { return m_coerce; }
+
+    /// Tell the analyzer whether or not to denoise float to int
+    void set_denoise(const bool denoise) noexcept { m_denoise = denoise; }
+
+    /// Indicate if we are allowing denoise for float to int
+    bool do_denoise() const noexcept { return m_denoise; }
 
     /// Tell the analyzer if NaN is allowed when type checking
     void set_nan_allowed(const bool nan_allowed) noexcept
@@ -153,6 +160,10 @@ private:
 
     /// Whether or not floats should be coerced to integers if user wants REAL
     bool m_coerce;
+
+    /// When converting float to integer, remove digits that could be incorrect
+    /// due to floating-point representations
+    bool m_denoise;
 
     /// Whether or not an NaN is allowed for strings
     bool m_nan_allowed_str;

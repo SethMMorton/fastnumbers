@@ -3,6 +3,10 @@ Unreleased
 
 ### Added
 
+- Added the ``denoise`` option to convert floats to int without
+  numerical noise (issues
+  [#69](https://github.com/SethMMorton/fastnumbers/issues/69) and
+  [#77](https://github.com/SethMMorton/fastnumbers/pull/77))
 - Support for Python 3.12 (issues
   [#73](https://github.com/SethMMorton/fastnumbers/issues/73) and
   [#75](https://github.com/SethMMorton/fastnumbers/pull/75))

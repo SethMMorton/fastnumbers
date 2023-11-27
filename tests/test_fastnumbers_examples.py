@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# Find the build location and add that to the path
 import math
 from typing import cast
 
@@ -98,6 +97,11 @@ def test_try_real() -> None:
     # 20. Handling of type errors
     assert fastnumbers.try_real(["invalid"], on_fail=6, on_type_error=7.0) == 7.0
     assert fastnumbers.try_real(["invalid"], on_type_error=None) is None
+    # 21. Denoising large float to integer conversions
+    assert fastnumbers.try_real(3.453e21) == 3452999999999999737856
+    assert fastnumbers.try_real(3.453e21, denoise=True) == 3453000000000000000000
+    assert fastnumbers.try_real("3.453e21") == 3452999999999999737856
+    assert fastnumbers.try_real("3.453e21", denoise=True) == 3453000000000000000000
 
 
 def test_try_float() -> None:
@@ -290,6 +294,11 @@ def test_try_forceint() -> None:
     # 20. Handling of type errors
     assert fastnumbers.try_forceint(["invalid"], on_fail=6, on_type_error=7) == 7
     assert fastnumbers.try_forceint(["invalid"], on_type_error=None) is None
+    # 21. Denoising large float to integer conversions
+    assert fastnumbers.try_forceint(3.453e21) == 3452999999999999737856
+    assert fastnumbers.try_forceint(3.453e21, denoise=True) == 3453000000000000000000
+    assert fastnumbers.try_forceint("3.453e21") == 3452999999999999737856
+    assert fastnumbers.try_forceint("3.453e21", denoise=True) == 3453000000000000000000
 
 
 def test_check_real() -> None:
