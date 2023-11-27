@@ -1104,6 +1104,14 @@ class TestTryReal:
         assert_integers_close(result, expected)
 
     @given(floats(allow_nan=False).filter(an_integer).map(repr))
+    @example("1234.56E56")
+    @example("12345.60000E56")
+    @example("1234560000E-3")
+    @example("1234.56789012345678901234567890123456789e56")
+    @example("1234.5678901234567890123456789012345678900000e56")
+    @example("1234567890123456789012345678901234567890000000000000.")
+    @example("123456789012345678901234567890123456789.0000000000000000000000000000")
+    @example("1234567890123456789012345678901234567890000000000000e-5")
     def test_given_float_str_returns_int_matching_decimal_object_with_denoise(
         self, x: str
     ) -> None:
@@ -1268,6 +1276,14 @@ class TestTryForceInt:
         assert_integers_close(result, expected)
 
     @given(floats(allow_nan=False, allow_infinity=False).map(repr))
+    @example("1234.56E56")
+    @example("12345.60000E56")
+    @example("1234560000E-3")
+    @example("1234.56789012345678901234567890123456789e56")
+    @example("1234.5678901234567890123456789012345678900000e56")
+    @example("1234567890123456789012345678901234567890000000000000.")
+    @example("123456789012345678901234567890123456789.0000000000000000000000000000")
+    @example("1234567890123456789012345678901234567890000000000000e-5")
     def test_given_float_str_returns_int_matching_decimal_object_with_denoise(
         self, x: str
     ) -> None:

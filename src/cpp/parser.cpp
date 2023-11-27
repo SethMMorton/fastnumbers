@@ -19,15 +19,17 @@
 // C++ version of https://docs.python.org/3/library/math.html#math.ulp
 static double ulp(const double x)
 {
-    if (x > 0)
-        return std::nexttoward(x, std::numeric_limits<double>::infinity()) - x;
-    else
-        return x - std::nexttoward(x, -std::numeric_limits<double>::infinity());
+    // Assumes positive input
+    return std::nexttoward(x, std::numeric_limits<double>::infinity()) - x;
 }
 
 // Parse a sequence of characters as a Python long
-static PyObject*
-parse_long_helper(const char* start, const char* end, const std::size_t length)
+static PyObject* parse_long_helper(
+    const char* start,
+    const char* end,
+    const std::size_t length,
+    const std::size_t length_to_end
+)
 {
     // We know by construction that this correctly stores a number, so we skip
     // the error checking.
@@ -38,9 +40,39 @@ parse_long_helper(const char* start, const char* end, const std::size_t length)
             length ? parse_int<uint64_t>(start, end, 10, error, overflow) : 0ULL
         );
     } else {
-        char* this_end = const_cast<char*>(end);
-        return length ? PyLong_FromString(start, &this_end, 10) : pyobject_from_int(0);
+        // This Python parse won't let us specify the end of the string, and it errors
+        // out on non-numeric characters, so we have to copy our data to a buffer
+        // and set the exponent character to '\0' so that Python can parse it.
+        Buffer buffer(start, length_to_end);
+        buffer.mark_integer_end();
+        return PyLong_FromString(buffer.start(), nullptr, 10);
     }
+}
+
+// Convert a value into a power of ten Python long in the most efficient method
+// depending on the value of the exponent.
+static PyObject* exponent_creation_helper(const uint32_t exp_val)
+{
+    if (exp_val < overflow_cutoff<uint64_t>()) {
+        return pyobject_from_int(ipow::ipow(10ULL, exp_val));
+    } else {
+        PyObject* py_expon = pyobject_from_int(10);
+        PyObject* py_exp_component = pyobject_from_int(exp_val);
+        in_place_pow(py_expon, py_exp_component);
+        Py_DECREF(py_exp_component);
+        return py_expon;
+    }
+}
+
+// Convert a PyObject to a negative number if needed.
+static PyObject* do_negative(PyObject* obj, const bool negative)
+{
+    if (negative) {
+        PyObject* temp = obj;
+        obj = PyNumber_Negative(temp);
+        Py_DECREF(temp);
+    }
+    return obj;
 }
 
 PyObject* Parser::float_as_int_without_noise(PyObject* obj) noexcept
@@ -82,6 +114,8 @@ PyObject* Parser::float_as_int_without_noise(PyObject* obj) noexcept
 
     // If the number of digits is less than 1 (e.g. the float is already noiselessly
     // converted to an integer) just return the integer directly.
+    // Because of the floor check above, it is unlikely this will ever be true, but
+    // include it for completeness' sake.
     if (digits < 1) {
         return val_int;
     }
@@ -103,8 +137,8 @@ PyObject* Parser::float_as_int_without_noise(
 
     // As a special case, if the number of digits in the integer and decimal
     // parts of the float are small enough that we know it could fit into a unsigned
-    // 65-bit integer, parse using C++ methods in the name of efficiency.
-    if (checker.total_length() < overflow_cutoff<uint64_t>()) {
+    // 64-bit integer, parse using C++ methods in the name of efficiency.
+    if (checker.digit_length() < overflow_cutoff<uint64_t>()) {
         bool error = false;
         bool overflow = false;
         uint64_t integer = 0;
@@ -144,7 +178,10 @@ PyObject* Parser::float_as_int_without_noise(
     else {
         // First parse the integer components of the floating point number.
         py_integer = parse_long_helper(
-            checker.integer_start(), checker.integer_end(), checker.integer_length()
+            checker.integer_start(),
+            checker.integer_end(),
+            checker.integer_length(),
+            checker.total_length()
         );
         if (py_integer == nullptr) {
             return py_integer;
@@ -156,7 +193,10 @@ PyObject* Parser::float_as_int_without_noise(
         if (checker.truncated_decimal_length()) {
             // Parse the decimal component...
             PyObject* py_decimal = parse_long_helper(
-                checker.decimal_start(), checker.decimal_end(), checker.decimal_length()
+                checker.decimal_start(),
+                checker.decimal_end(),
+                checker.decimal_length(),
+                checker.decimal_and_exponent_length()
             );
             if (py_decimal == nullptr) {
                 return py_decimal;
@@ -164,9 +204,8 @@ PyObject* Parser::float_as_int_without_noise(
 
             // ... and then "remove" trailing zeros if they exist...
             if (checker.decimal_trailing_zeros()) {
-                PyObject* divisor = pyobject_from_int(
-                    ipow::ipow(10ULL, checker.decimal_trailing_zeros())
-                );
+                PyObject* divisor
+                    = exponent_creation_helper(checker.decimal_trailing_zeros());
                 if (divisor == nullptr) {
                     return divisor;
                 }
@@ -181,9 +220,8 @@ PyObject* Parser::float_as_int_without_noise(
             // ... and then "shift" the integer py powers of ten so we can
             //     add in the decimal component...
             {
-                PyObject* offset = pyobject_from_int(
-                    ipow::ipow(10ULL, checker.truncated_decimal_length())
-                );
+                PyObject* offset
+                    = exponent_creation_helper(checker.truncated_decimal_length());
                 if (offset == nullptr) {
                     Py_DECREF(py_integer);
                     return offset;
@@ -212,11 +250,7 @@ PyObject* Parser::float_as_int_without_noise(
     // of ten. Because this value could be *huge*, we cannot do power nor the
     // mutliplication in the C++ space - it must be all done with Python's types.
     if (checker.adjusted_exponent_value() > 0) {
-        PyObject* py_expon = pyobject_from_int(10);
-        PyObject* py_exp_component
-            = pyobject_from_int(checker.adjusted_exponent_value());
-        in_place_pow(py_expon, py_exp_component);
-        Py_DECREF(py_exp_component);
+        PyObject* py_expon = exponent_creation_helper(checker.adjusted_exponent_value());
         if (py_expon == nullptr) {
             Py_DECREF(py_integer);
             return py_expon;
@@ -224,7 +258,7 @@ PyObject* Parser::float_as_int_without_noise(
 
         // We are carrying around the exponent as an unsigned integer,
         // so we handle negatives by dividing, and positives by multiplying.
-        if (checker.is_adjusted_exponent_negative()) {
+        if (checker.is_exponent_negative()) {
             in_place_divide(py_integer, py_expon);
         } else {
             in_place_multiply(py_integer, py_expon);
@@ -233,12 +267,7 @@ PyObject* Parser::float_as_int_without_noise(
     }
 
     // Finally, we negate the result if it is supposed to be negative.
-    if (is_negative) {
-        PyObject* temp = py_integer;
-        py_integer = PyNumber_Negative(temp);
-        Py_DECREF(temp);
-    }
-    return py_integer;
+    return do_negative(py_integer, is_negative);
 }
 
 /**
@@ -336,10 +365,10 @@ RawPayload<PyObject*> CharacterParser::as_pyint() const noexcept(false)
         return pyobject_from_int(result);
     }
 
-    // Parse and record the location where parsing ended (including trailing whitespace)
-    // No need to do input validation with the second argument because we already know
-    // the input is valid from above.
-    // Return the value without checking python's error state.
+    // Parse and record the location where parsing ended (including trailing
+    // whitespace) No need to do input validation with the second argument because we
+    // already know the input is valid from above. Return the value without checking
+    // python's error state.
     return PyLong_FromString(m_start_orig, nullptr, options().get_base());
 }
 

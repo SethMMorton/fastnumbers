@@ -20,6 +20,7 @@ StringChecker::StringChecker(const char* str, const char* end, int base) noexcep
     : m_integer_start(nullptr)
     , m_decimal_start(nullptr)
     , m_decimal_end(nullptr)
+    , m_total_end(nullptr)
     , m_expon(0U)
     , m_exp_negative(false)
     , m_int_trailing_zeros(0U)
@@ -38,6 +39,7 @@ StringChecker::StringChecker(const char* str, const char* end, int base) noexcep
         set_integer_start(str);
         set_decimal_start(str);
         set_decimal_end(str);
+        set_total_end(str);
         return;
     }
 
@@ -55,6 +57,7 @@ StringChecker::StringChecker(const char* str, const char* end, int base) noexcep
         }
         set_decimal_start(str);
         set_decimal_end(str);
+        set_total_end(str);
         set_type(
             (str == end && str != integer_start()) ? StringType::INTEGER
                                                    : StringType::INVALID
@@ -119,6 +122,7 @@ StringChecker::StringChecker(const char* str, const char* end, int base) noexcep
             set_type(StringType::FLOAT);
         }
     }
+    set_total_end(str);
 
     // If the parsing was not valid or we are not at the end of the string
     // then the string is invalid.

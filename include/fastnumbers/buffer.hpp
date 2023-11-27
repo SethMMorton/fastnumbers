@@ -112,6 +112,24 @@ public:
         }
     }
 
+    /// Mark the first '.', 'e', or 'E' as '\0'.
+    void mark_integer_end() noexcept
+    {
+        // Technically, we set the exponent character to '\0'
+        // and then adjust the length. We are not actually removing data.
+        // Look for '.' or 'e'/'E'. Instead of searching simulataneously
+        // use memchr because it is so darn fast.
+        char* exp_loc = nullptr;
+        for (const char c : { '.', 'e', 'E' }) {
+            exp_loc = static_cast<char*>(std::memchr(m_buffer, c, m_len));
+            if (exp_loc != nullptr) {
+                *exp_loc = '\0';
+                m_len = m_size = exp_loc - m_buffer;
+                return;
+            }
+        }
+    }
+
     /// The largest amount of data the buffer can contain
     std::size_t max_size() const noexcept
     {

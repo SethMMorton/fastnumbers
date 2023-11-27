@@ -109,7 +109,10 @@ public:
     const char* integer_end() const { return m_decimal_start; }
 
     /// The length of the integer component of the contained number.
-    uint32_t integer_length() const { return integer_end() - integer_start(); }
+    uint32_t integer_length() const
+    {
+        return std::max(static_cast<uint32_t>(integer_end() - integer_start()), 0U);
+    }
 
     /// The number of zeros that trail the integer part of the contained number.
     uint32_t integer_trailing_zeros() const { return m_int_trailing_zeros; }
@@ -125,7 +128,10 @@ public:
     const char* decimal_end() const { return m_decimal_end; }
 
     /// The length of the decimal component of the contained number.
-    uint32_t decimal_length() const { return decimal_end() - decimal_start(); }
+    uint32_t decimal_length() const
+    {
+        return std::max(static_cast<uint32_t>(decimal_end() - decimal_start()), 0U);
+    }
 
     /// The number of zeros that trail the decimal part of the contained number.
     uint32_t decimal_trailing_zeros() const { return m_dec_trailing_zeros; }
@@ -140,28 +146,34 @@ public:
     bool is_exponent_negative() const { return m_exp_negative; }
 
     /// The total length of the integer plus decimal components.
-    uint32_t total_length() const { return integer_length() + decimal_length(); }
+    uint32_t digit_length() const { return integer_length() + decimal_length(); }
 
     /// The decimal length after removing trailing zeros.
     uint32_t truncated_decimal_length() const
     {
-        return decimal_length() - decimal_trailing_zeros();
+        return std::max(decimal_length() - decimal_trailing_zeros(), 0U);
     }
 
     /// The exponent after taking into account the decimal digits.
     uint32_t adjusted_exponent_value() const
     {
-        if (is_adjusted_exponent_negative()) {
-            return truncated_decimal_length() - exponent_value();
+        if (is_exponent_negative()) {
+            return exponent_value();
         } else {
-            return exponent_value() - truncated_decimal_length();
+            return std::max(exponent_value() - truncated_decimal_length(), 0U);
         }
     }
 
-    /// Is the adjusted exponent negative?
-    bool is_adjusted_exponent_negative() const
+    /// The total length of the entire number.
+    uint32_t total_length() const
     {
-        return truncated_decimal_length() > exponent_value();
+        return std::max(static_cast<uint32_t>(m_total_end - integer_start()), 0U);
+    }
+
+    /// The length of the start of the decimal component to the end of the number.
+    uint32_t decimal_and_exponent_length() const
+    {
+        return std::max(static_cast<uint32_t>(m_total_end - decimal_start()), 0U);
     }
 
 private:
@@ -176,6 +188,9 @@ private:
 
     /// Set the decimal end.
     void set_decimal_end(const char* val) { m_decimal_end = val; }
+
+    /// Set the total end.
+    void set_total_end(const char* val) { m_total_end = val; }
 
     /// Set the exponent value.
     void set_exponent(const uint32_t val) { m_expon = val; }
@@ -197,6 +212,9 @@ private:
 
     /// The end of the decimal component of the contained number.
     const char* m_decimal_end;
+
+    /// The end of the contained number.
+    const char* m_total_end;
 
     /// The value of the exponent of the nubmer.
     uint32_t m_expon;
