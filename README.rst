@@ -95,6 +95,7 @@ Error-Handling Functions
 - `Error-handling function API <https://fastnumbers.readthedocs.io/en/stable/api.html#the-error-handling-functions>`_
 - `Fast operations on lists and other iterables`_
 - `About the on_fail option`_
+- `About the denoise option`_
 
 ``try_float`` will be used to demonstrate the functionality of the
 ``try_*`` functions.
@@ -310,6 +311,57 @@ invalid type and b) the default value is ``fastnumbers.RAISE``, not
     >>> try_float('invalid input', on_fail=lambda x: log_and_default(x, default=float('nan')))
     The input 'invalid input' is not valid!
     nan
+
+About the ``denoise`` option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``denoise`` option is available on the ``try_real`` and ``try_forceint`` options.
+To best understand its usage, consider the following native Python behavior:
+
+.. code-block:: python
+
+    >>> int(3.453e21)
+    3452999999999999737856
+    >>> int(float("3.453e21"))
+    3452999999999999737856
+    >>> # Most users would likely expect this result from decimal.Decimal
+    >>> import decimal
+    >>> int(decimal.Decimal("3.453e21"))
+    3453000000000000000000
+    >>> # But watch out, even decimal.Decimal doesn't help for float input
+    >>> import decimal
+    >>> int(decimal.Decimal(3.453e21))
+    3452999999999999737856
+
+Because the conversion of a float to an int goes through the C ``double`` data type which
+has inherent limitations on accuracy (See
+`this Stack Overflow question for examples <https://stackoverflow.com/questions/588004/is-floating-point-math-broken>`_)
+the resulting ``int`` result has "noise" digits that are not part of the original float
+representation.
+
+For functions where this makes sense, ``fastnumbers`` provides the ``denoise`` option to
+give you the results that ``decimal.Decimal`` would give for strings containing floats.
+
+.. code-block:: python
+
+    >>> from fastnumbers import try_real
+    >>> try_real(3.453e21)
+    3452999999999999737856
+    >>> try_real("3.453e21")
+    3452999999999999737856
+    >>> try_real(3.453e21, denoise=True)
+    3453000000000000000000
+    >>> try_real("3.453e21", denoise=True)
+    3453000000000000000000
+
+Two things to keep in mind:
+
+1. The ``denoise`` option adds additional overhead to the conversion calculation, so please consider
+   the trade-offs between speed and accuracy when determining whether or not to use it. It is
+   *significantly* faster than using ``decimal.Decimal``, but much slower than not using it at all.
+2. For string input, ``denoise`` will return results identical to ``decimal.Decimal``. For float
+   input, ``denoise`` will return results that are accurate to about 15 digits (C ``double`` can
+   only store 16 decimal digits, so this means that only the last possible digit may not be accurate).
 
 Checking Functions
 ++++++++++++++++++

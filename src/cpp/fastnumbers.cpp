@@ -157,6 +157,7 @@ static PyObject* fastnumbers_try_real(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     bool coerce = true;
+    bool denoise = false;
     bool allow_underscores = false;
     PyObject* map = Py_False;
 
@@ -172,6 +173,7 @@ static PyObject* fastnumbers_try_real(
                            "$coerce", true, &coerce,
                            "$allow_underscores", true, &allow_underscores,
                            "$map", false, &map,
+                           "$denoise", true, &denoise,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -186,6 +188,7 @@ static PyObject* fastnumbers_try_real(
         impl.set_inf_action(inf);
         impl.set_nan_action(nan);
         impl.set_coerce(coerce);
+        impl.set_denoise(denoise);
         impl.set_underscores_allowed(allow_underscores);
         auto convert = [impl = std::move(impl)](PyObject* x) -> PyObject* {
             return impl.convert(x);
@@ -296,6 +299,7 @@ static PyObject* fastnumbers_try_forceint(
     PyObject* on_fail = Selectors::INPUT;
     PyObject* on_type_error = Selectors::RAISE;
     bool allow_underscores = false;
+    bool denoise = false;
     PyObject* map = Py_False;
 
     // Read the function arguments
@@ -307,6 +311,7 @@ static PyObject* fastnumbers_try_forceint(
                            "$on_type_error", false, &on_type_error,
                            "$allow_underscores", true, &allow_underscores,
                            "$map", false, &map,
+                           "$denoise", true, &denoise,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -318,6 +323,7 @@ static PyObject* fastnumbers_try_forceint(
         Implementation impl(UserType::FORCEINT);
         impl.set_fail_action(on_fail);
         impl.set_type_error_action(on_type_error);
+        impl.set_denoise(denoise);
         impl.set_underscores_allowed(allow_underscores);
         auto convert = [impl = std::move(impl)](PyObject* x) -> PyObject* {
             return impl.convert(x);
@@ -643,6 +649,7 @@ static PyObject* fastnumbers_real(
 {
     PyObject* input = nullptr;
     bool coerce = true;
+    bool denoise = false;
 
     // Read the function arguments
     FN_PREPARE_ARGPARSER;
@@ -650,6 +657,7 @@ static PyObject* fastnumbers_real(
     if (fn_parse_arguments("real", args, len_args, kwnames,
                            "|", false,  &input,
                            "$coerce", true, &coerce,
+                           "$denoise", true, &denoise,
                            nullptr, false, nullptr
         )) return nullptr;
     // clang-format on
@@ -663,6 +671,7 @@ static PyObject* fastnumbers_real(
     return ExceptionHandler(input).run([&]() -> PyObject* {
         Implementation impl(UserType::REAL);
         impl.set_coerce(coerce);
+        impl.set_denoise(denoise);
         impl.set_unicode_allowed(false);
         impl.set_underscores_allowed(true);
         return impl.convert(input);

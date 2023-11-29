@@ -16,15 +16,18 @@
 /* EXPOSED FUNCTIONS */
 /*********************/
 
-int string_contains_what(const char* str, const char* end, int base) noexcept
+StringChecker::StringChecker(const char* str, const char* end, int base) noexcept
+    : m_integer_start(nullptr)
+    , m_decimal_start(nullptr)
+    , m_decimal_end(nullptr)
+    , m_total_end(nullptr)
+    , m_expon(0U)
+    , m_exp_negative(false)
+    , m_int_trailing_zeros(0U)
+    , m_dec_trailing_zeros(0U)
+    , m_contained_type(StringType::INVALID)
 {
     const std::size_t len = static_cast<std::size_t>(end - str);
-
-    // Define possible return values
-    static constexpr int INVALID = 0;
-    static constexpr int INTEGER = 1;
-    static constexpr int FLOAT = 2;
-    static constexpr int INTLIKE_FLOAT = 3;
 
     // If the base needs to be guessed, do so now and get it over with.
     if (base == 0) {
@@ -33,7 +36,11 @@ int string_contains_what(const char* str, const char* end, int base) noexcept
 
     // Negative bases are illegal. So is zero length.
     if (base < 0 || len == 0) {
-        return INVALID;
+        set_integer_start(str);
+        set_decimal_start(str);
+        set_decimal_end(str);
+        set_total_end(str);
+        return;
     }
 
     // Special-case non-base 10.
@@ -44,26 +51,32 @@ int string_contains_what(const char* str, const char* end, int base) noexcept
         }
 
         // The rest behaves as normal.
-        const char* digit_start = str;
+        set_integer_start(str);
         while (str != end && is_valid_digit(*str, base)) {
             str += 1;
         }
-        return (str == end && str != digit_start) ? INTEGER : INVALID;
+        set_decimal_start(str);
+        set_decimal_end(str);
+        set_total_end(str);
+        set_type(
+            (str == end && str != integer_start()) ? StringType::INTEGER
+                                                   : StringType::INVALID
+        );
+        return;
     }
 
     // Before decimal. Keep track of the start location.
     bool valid = false;
-    int value = INVALID;
-    const char* int_start = str;
+    set_integer_start(str);
     consume_digits(str, len);
-    if (str != int_start) {
+    if (str != integer_start()) {
         valid = true;
-        value = INTEGER;
+        set_type(StringType::INTEGER);
     }
 
     // Decimal part of float. Keep track of number of digits read
     // as well as beginning and end locations.
-    const char* decimal_start = str;
+    set_decimal_start(str);
     uint32_t dec_length = 0;
     if (str != end && *str == '.') {
         str += 1;
@@ -72,16 +85,14 @@ int string_contains_what(const char* str, const char* end, int base) noexcept
         dec_length = static_cast<uint32_t>(str - dec_digits_start);
         valid = valid || dec_length > 0;
     }
-    const char* decimal_end = str;
+    set_decimal_end(str);
 
     // If there are any decimal components then we are looking at a float.
-    if (valid && decimal_end != decimal_start) {
-        value = FLOAT;
+    if (valid && has_decimal_data()) {
+        set_type(StringType::FLOAT);
     }
 
     // Exponential part of float. Parse the magnitude.
-    uint32_t expon = 0;
-    bool exp_negative = false;
     if (valid) {
         const char* exp_start = str;
         if (str != end && (*str == 'e' || *str == 'E')) {
@@ -89,7 +100,7 @@ int string_contains_what(const char* str, const char* end, int base) noexcept
             // Skip the 'e' and any sign that might be present.
             str += 1;
             if (str != end && is_sign(*str)) {
-                exp_negative = *str == '-';
+                set_exponent_negative(*str == '-');
                 str += 1;
             }
 
@@ -97,7 +108,7 @@ int string_contains_what(const char* str, const char* end, int base) noexcept
             const char* exp_digit_start = str;
             int32_t this_char_as_digit = 0L;
             while (str != end && (this_char_as_digit = to_digit<int32_t>(*str)) >= 0) {
-                expon = expon * 10L + this_char_as_digit;
+                set_exponent(exponent_value() * 10UL + this_char_as_digit);
                 str += 1;
             }
 
@@ -108,36 +119,33 @@ int string_contains_what(const char* str, const char* end, int base) noexcept
 
         // If we found an exponent AND it was parsed validly then this is a float.
         if (exp_end != exp_start && valid) {
-            value = FLOAT;
+            set_type(StringType::FLOAT);
         }
     }
+    set_total_end(str);
 
     // If the parsing was not valid or we are not at the end of the string
     // then the string is invalid.
     // Othewise, do a check to see if it is an *intlike* float.
     if (!valid || str != end) {
-        return INVALID;
-    } else if (value == FLOAT) {
+        set_type(StringType::INVALID);
+    } else if (is_float()) {
         // If we "move the decimal place" left or right depending on
         // exponent sign and magnitude, all digits after the decimal
         // must be zero.
-        const unsigned int_trailing_zeros
-            = number_trailing_zeros(int_start, decimal_start);
-        const unsigned dec_trailing_zeros = decimal_start == decimal_end
-            ? 0U
-            : number_trailing_zeros(decimal_start + 1, decimal_end);
-
-        if (exp_negative) {
-            if (expon <= int_trailing_zeros && dec_length == dec_trailing_zeros) {
-                value = INTLIKE_FLOAT;
+        set_int_trailing_zeros(number_trailing_zeros(integer_start(), integer_end()));
+        set_dec_trailing_zeros(number_trailing_zeros(decimal_start(), decimal_end()));
+        const uint32_t expval = exponent_value();
+        if (is_exponent_negative()) {
+            if (expval <= integer_trailing_zeros() && truncated_decimal_length() == 0) {
+                set_type(StringType::INTLIKE_FLOAT);
             }
         } else {
-            if (expon >= (dec_length - dec_trailing_zeros)) {
-                value = INTLIKE_FLOAT;
+            if (expval >= truncated_decimal_length()) {
+                set_type(StringType::INTLIKE_FLOAT);
             }
         }
     }
-    return value;
 }
 
 void remove_valid_underscores(char* str, const char*& end, const bool based) noexcept

@@ -55,21 +55,182 @@ constexpr int8_t DIGIT_TABLE_ARBITRARY_BASE[]
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
+/// Selector for the type of data a string can contain
+enum class StringType {
+    INVALID, ///< Contains an invalid number
+    INTEGER, ///< Contains an integer
+    FLOAT, ///< Contains a float
+    INTLIKE_FLOAT, ///< Contains an integer-like float
+};
+
 /**
- * \brief Check if a string could be converted to some numeric type
- *
- * Assumes no sign or whitespace.
- *
- * \param str The string to parse, assumed to be non-NULL
- * \param end The end of the string being checked
- * \param base The base to assume when checking an integer, set to 10
- *             unless you know it *must* be an integer.
- * \return 0 - invalid
- *         1 - integer
- *         2 - float
- *         3 - "intlike" float
+ * \class StringChecker
+ * \brief Assess the type of number that is contained in a string
  */
-int string_contains_what(const char* str, const char* end, int base) noexcept;
+class StringChecker {
+public:
+    /**
+     * \brief Check if a string could be converted to some numeric type
+     *
+     * Assumes no sign or whitespace.
+     *
+     * \param str The string to parse, assumed to be non-NULL
+     * \param end The end of the string being checked
+     * \param base The base to assume when checking an integer, set to 10
+     *             unless you know it *must* be an integer.
+     */
+    StringChecker(const char* str, const char* end, int base) noexcept;
+
+    // Default copy/move/assign/destruct
+    StringChecker(const StringChecker&) = default;
+    StringChecker(StringChecker&&) = default;
+    StringChecker& operator=(const StringChecker&) = default;
+    ~StringChecker() = default;
+
+    /// Return the contained type of the string
+    StringType get_type() const { return m_contained_type; }
+
+    /// Is the contained string an invalid number?
+    bool is_invalid() const { return get_type() == StringType::INVALID; }
+
+    /// Is the contained string an integer?
+    bool is_integer() const { return get_type() == StringType::INTEGER; }
+
+    /// Is the contained string a float?
+    bool is_float() const { return get_type() == StringType::FLOAT; }
+
+    /// Is the contained string an int-like float?
+    bool is_intlike_float() const { return get_type() == StringType::INTLIKE_FLOAT; }
+
+    /// The start of the integer component of the contained number.
+    const char* integer_start() const { return m_integer_start; }
+
+    /// The end of the integer component of the contained number.
+    const char* integer_end() const { return m_decimal_start; }
+
+    /// The length of the integer component of the contained number.
+    uint32_t integer_length() const
+    {
+        return std::max(static_cast<uint32_t>(integer_end() - integer_start()), 0U);
+    }
+
+    /// The number of zeros that trail the integer part of the contained number.
+    uint32_t integer_trailing_zeros() const { return m_int_trailing_zeros; }
+
+    /// The start of the decimal component of the contained number.
+    const char* decimal_start() const
+    {
+        return (m_decimal_start == m_decimal_end) ? m_decimal_start
+                                                  : (m_decimal_start + 1);
+    }
+
+    /// The end of the decimal component of the contained number.
+    const char* decimal_end() const { return m_decimal_end; }
+
+    /// The length of the decimal component of the contained number.
+    uint32_t decimal_length() const
+    {
+        return std::max(static_cast<uint32_t>(decimal_end() - decimal_start()), 0U);
+    }
+
+    /// The number of zeros that trail the decimal part of the contained number.
+    uint32_t decimal_trailing_zeros() const { return m_dec_trailing_zeros; }
+
+    /// Was any decimal data found in the string?
+    bool has_decimal_data() const { return m_decimal_start != m_decimal_end; }
+
+    /// The value of the exponent of the nubmer.
+    uint32_t exponent_value() const { return m_expon; }
+
+    /// Is the exponent negative?
+    bool is_exponent_negative() const { return m_exp_negative; }
+
+    /// The total length of the integer plus decimal components.
+    uint32_t digit_length() const { return integer_length() + decimal_length(); }
+
+    /// The decimal length after removing trailing zeros.
+    uint32_t truncated_decimal_length() const
+    {
+        return std::max(decimal_length() - decimal_trailing_zeros(), 0U);
+    }
+
+    /// The exponent after taking into account the decimal digits.
+    uint32_t adjusted_exponent_value() const
+    {
+        if (is_exponent_negative()) {
+            return exponent_value();
+        } else {
+            return std::max(exponent_value() - truncated_decimal_length(), 0U);
+        }
+    }
+
+    /// The total length of the entire number.
+    uint32_t total_length() const
+    {
+        return std::max(static_cast<uint32_t>(m_total_end - integer_start()), 0U);
+    }
+
+    /// The length of the start of the decimal component to the end of the number.
+    uint32_t decimal_and_exponent_length() const
+    {
+        return std::max(static_cast<uint32_t>(m_total_end - decimal_start()), 0U);
+    }
+
+private:
+    /// Set the contained type.
+    void set_type(StringType val) { m_contained_type = val; }
+
+    /// Set the integer start.
+    void set_integer_start(const char* val) { m_integer_start = val; }
+
+    /// Set the decimal start.
+    void set_decimal_start(const char* val) { m_decimal_start = val; }
+
+    /// Set the decimal end.
+    void set_decimal_end(const char* val) { m_decimal_end = val; }
+
+    /// Set the total end.
+    void set_total_end(const char* val) { m_total_end = val; }
+
+    /// Set the exponent value.
+    void set_exponent(const uint32_t val) { m_expon = val; }
+
+    /// Set whether or not the exponent is negative.
+    void set_exponent_negative(const bool val) { m_exp_negative = val; }
+
+    /// Set the number of trailing zeros on the integer part.
+    void set_int_trailing_zeros(const uint32_t val) { m_int_trailing_zeros = val; }
+
+    /// Set the number of trailing zeros on the decimal part.
+    void set_dec_trailing_zeros(const uint32_t val) { m_dec_trailing_zeros = val; }
+
+    /// The start of the integer component of the contained number.
+    const char* m_integer_start;
+
+    /// The start of the decimal component of the contained number.
+    const char* m_decimal_start;
+
+    /// The end of the decimal component of the contained number.
+    const char* m_decimal_end;
+
+    /// The end of the contained number.
+    const char* m_total_end;
+
+    /// The value of the exponent of the nubmer.
+    uint32_t m_expon;
+
+    /// Whether or not the exponent is negative.
+    bool m_exp_negative;
+
+    /// The number of zeros that trail the integer part of the contained number.
+    uint32_t m_int_trailing_zeros;
+
+    /// The number of zeros that trail the decimal part of the contained number.
+    uint32_t m_dec_trailing_zeros;
+
+    /// The contained type of the string.
+    StringType m_contained_type;
+};
 
 /**
  * \brief Remove underscores in a numeric-representing string
@@ -207,11 +368,6 @@ constexpr inline bool is_sign(const char c) noexcept
  */
 constexpr inline bool is_base_prefix(const char c) noexcept
 {
-    // The ASCII standard was quite clever... upper- and lower-case
-    // letters only differ from each other by the 32 bit, otherwise
-    // they are identical.
-    // So, we can OR the 32 bit to force the character to be
-    // lowercase and then just check against the lowercase characters.
     const char lowered = lowercase(c);
     return (lowered == 'x') || (lowered == 'o') || (lowered == 'b');
 }
@@ -370,7 +526,7 @@ constexpr inline int detect_base(const char* str, const char* end) noexcept
  * \brief Return the number of digits an integer type can safely parse without overflow
  */
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-constexpr inline int8_t overflow_cutoff() noexcept
+constexpr inline uint8_t overflow_cutoff() noexcept
 {
     // len('std::numeric_limits<T>::max()') - 1 == return value
     constexpr uint64_t limit = static_cast<uint64_t>(std::numeric_limits<T>::max());
@@ -408,7 +564,7 @@ constexpr inline int8_t overflow_cutoff() noexcept
  * \param always_convert
  */
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-T parse_int(
+inline T parse_int(
     const char* str,
     const char* end,
     int base,
@@ -528,7 +684,7 @@ T parse_int(
 template <
     typename T,
     typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-T parse_float(const char* str, const char* end, bool& error) noexcept
+inline T parse_float(const char* str, const char* end, bool& error) noexcept
 {
     // Use a very fast and accurate string-to-floating point parser
     T value;

@@ -9,7 +9,7 @@
 // in obtaining the name of a type.
 // The implementation was basically copied from the 3.11 source code,
 // but adjustments were made to make it C++.
-PyObject* PyType_GetName(PyTypeObject* type)
+inline PyObject* PyType_GetName(PyTypeObject* type)
 {
     auto _PyType_Name = [](PyTypeObject* type) -> const char* {
         assert(type->tp_name != nullptr);

@@ -66,9 +66,15 @@ public:
         if (get_number_type() == static_cast<NumberFlags>(NumberType::INVALID)) {
             return ErrorType::TYPE_ERROR;
         } else if (force_int) {
-            return PyNumber_Long(m_obj);
+            if (options().do_denoise() && (get_number_type() & NumberType::IntLike)) {
+                return Parser::float_as_int_without_noise(m_obj);
+            } else {
+                return PyNumber_Long(m_obj);
+            }
         } else if (coerce) {
-            if (get_number_type() & (NumberType::IntLike | NumberType::Integer)) {
+            if (options().do_denoise() && (get_number_type() & NumberType::IntLike)) {
+                return Parser::float_as_int_without_noise(m_obj);
+            } else if (get_number_type() & (NumberType::IntLike | NumberType::Integer)) {
                 return PyNumber_Long(m_obj);
             } else {
                 return PyNumber_Float(m_obj);

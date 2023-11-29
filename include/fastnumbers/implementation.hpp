@@ -114,6 +114,9 @@ public:
     /// Set whether intlike floats should be returned as ints
     void set_coerce(const bool val) noexcept { m_options.set_coerce(val); }
 
+    /// Set whether float to int conversion should include denoising
+    void set_denoise(const bool val) noexcept { m_options.set_denoise(val); }
+
     /// Set whether we accept NaN
     void set_nan_allowed(const PyObject* val) noexcept(false)
     {

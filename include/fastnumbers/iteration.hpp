@@ -9,7 +9,7 @@
 #include "fastnumbers/selectors.hpp"
 
 /// Obtain the length hint from a Python object
-Py_ssize_t get_length_hint(PyObject* length_hint_base) noexcept(false)
+inline Py_ssize_t get_length_hint(PyObject* length_hint_base) noexcept(false)
 {
     Py_ssize_t length_hint = PyObject_LengthHint(length_hint_base, 0);
     if (length_hint < 0) {

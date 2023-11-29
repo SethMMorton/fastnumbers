@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Find the build location and add that to the path
+import decimal
 import math
 import random
 import re
@@ -18,7 +18,7 @@ from typing import (
     Union,
 )
 
-from hypothesis import example, given
+from hypothesis import example, given, settings
 from hypothesis.strategies import (
     binary,
     dictionaries,
@@ -53,6 +53,7 @@ class TryReal(Protocol):
         on_fail: Any = ...,
         on_type_error: Any = ...,
         coerce: bool = ...,
+        denoise: bool = ...,
         allow_underscores: bool = ...,
     ) -> Any:
         ...
@@ -92,6 +93,7 @@ class TryForceInt(Protocol):
         *,
         on_fail: Any = ...,
         on_type_error: Any = ...,
+        denoise: bool = ...,
         allow_underscores: bool = ...,
     ) -> Any:
         ...
@@ -233,6 +235,32 @@ def capture_result(  # type: ignore [no-untyped-def]
         return func(*args, **kwargs)
     except Exception as e:
         return str(e)
+
+
+def assert_integers_close(x: int, y: int) -> None:
+    """Integers are the same except for the last non-zero digit"""
+    x_str = str(x)
+    y_str = str(y)
+
+    # Get length with non-trailing zeros removed
+    x_len = len(re.sub(r"0+$", "", x_str))
+    y_len = len(re.sub(r"0+$", "", y_str))
+
+    # Remove the non-trailing zeros, only keep 16 digits, then round the last digit.
+    # Python's integer rounding seems to sometimes five up or down with no pattern
+    # that I can detect - so if an integer ends in "5", it is forced to be both ending
+    # in "4" and "6" to explore both rounding spaces.
+    comp_len = min(max(x_len, y_len), 16)
+    x_trimmed_1 = round(int(re.sub(r"5$", "4", x_str[:comp_len]) or 0), -1)
+    y_trimmed_1 = round(int(re.sub(r"5$", "4", y_str[:comp_len]) or 0), -1)
+    x_trimmed_2 = round(int(re.sub(r"5$", "6", x_str[:comp_len]) or 0), -1)
+    y_trimmed_2 = round(int(re.sub(r"5$", "6", y_str[:comp_len]) or 0), -1)
+    assert (
+        x_trimmed_1 == y_trimmed_1
+        or x_trimmed_1 == y_trimmed_2
+        or x_trimmed_2 == y_trimmed_1
+        or x_trimmed_2 == y_trimmed_2
+    )
 
 
 class DumbFloatClass(object):
@@ -1064,6 +1092,34 @@ class TestTryReal:
         assert result == expected
         assert isinstance(result, int)
 
+    @given(floats(allow_nan=False).filter(an_integer))
+    @settings(max_examples=500)
+    def test_given_float_returns_int_matching_decimal_object_with_denoise(
+        self, x: float
+    ) -> None:
+        expected = int(decimal.Decimal(str(x)))
+        result = fastnumbers.try_real(x, coerce=True, denoise=True)
+        # This is "best effort", and should be accurate to the final non-zero digit
+        assert isinstance(result, int)
+        assert_integers_close(result, expected)
+
+    @given(floats(allow_nan=False).filter(an_integer).map(repr))
+    @example("1234.56E56")
+    @example("12345.60000E56")
+    @example("1234560000E-3")
+    @example("1234.56789012345678901234567890123456789e56")
+    @example("1234.5678901234567890123456789012345678900000e56")
+    @example("1234567890123456789012345678901234567890000000000000.")
+    @example("123456789012345678901234567890123456789.0000000000000000000000000000")
+    @example("1234567890123456789012345678901234567890000000000000e-5")
+    def test_given_float_str_returns_int_matching_decimal_object_with_denoise(
+        self, x: str
+    ) -> None:
+        expected = int(decimal.Decimal(x))
+        result = fastnumbers.try_real(x, coerce=True, denoise=True)
+        assert isinstance(result, int)
+        assert result == expected
+
     @given(floats(allow_nan=False))
     def test_given_float_returns_float_or_int_with_coerce(self, x: float) -> None:
         expected = int(x) if x.is_integer() else x
@@ -1080,6 +1136,12 @@ class TestTryReal:
         result = fastnumbers.try_real(x, coerce=True)
         assert result == expected
         assert isinstance(result, int)
+
+    def test_underscores_with_denoise(self) -> None:
+        given = "3.4_5_3e2_1"
+        expected = 3453000000000000000000
+        result = fastnumbers.try_real(given, denoise=True, allow_underscores=True)
+        assert result == expected
 
 
 class TestTryFloat:
@@ -1201,6 +1263,40 @@ class TestTryForceInt:
         assert result == expected
         assert isinstance(result, int)
         assert fastnumbers.try_forceint(pad(x)) == expected  # Accepts padding
+
+    @given(floats(allow_nan=False, allow_infinity=False))
+    @settings(max_examples=500)
+    def test_given_float_returns_int_matching_decimal_object_with_denoise(
+        self, x: float
+    ) -> None:
+        expected = int(decimal.Decimal(str(x)))
+        result = fastnumbers.try_forceint(x, denoise=True)
+        # This is "best effort", and should be accurate to the final non-zero digit
+        assert isinstance(result, int)
+        assert_integers_close(result, expected)
+
+    @given(floats(allow_nan=False, allow_infinity=False).map(repr))
+    @example("1234.56E56")
+    @example("12345.60000E56")
+    @example("1234560000E-3")
+    @example("1234.56789012345678901234567890123456789e56")
+    @example("1234.5678901234567890123456789012345678900000e56")
+    @example("1234567890123456789012345678901234567890000000000000.")
+    @example("123456789012345678901234567890123456789.0000000000000000000000000000")
+    @example("1234567890123456789012345678901234567890000000000000e-5")
+    def test_given_float_str_returns_int_matching_decimal_object_with_denoise(
+        self, x: str
+    ) -> None:
+        expected = int(decimal.Decimal(x))
+        result = fastnumbers.try_forceint(x, denoise=True)
+        assert isinstance(result, int)
+        assert result == expected
+
+    def test_underscores_with_denoise(self) -> None:
+        given = "3.4_5_3e2_1"
+        expected = 3453000000000000000000
+        result = fastnumbers.try_forceint(given, denoise=True, allow_underscores=True)
+        assert result == expected
 
 
 class TestCheckingFunctions:
