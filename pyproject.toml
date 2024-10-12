@@ -49,3 +49,8 @@ Changelog = "https://github.com/SethMMorton/fastnumbers/blob/main/CHANGELOG.md"
 [tool.setuptools_scm]
 version_file = "src/fastnumbers/_version.py"
 
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"
+
+[tool.pytest.ini_options]
+addopts = "--tb=short"
