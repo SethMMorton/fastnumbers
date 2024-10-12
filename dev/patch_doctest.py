@@ -8,6 +8,7 @@ and modifies it so that
 
 With these enhancements, doctest can be run on a C python extension module.
 """
+
 from __future__ import print_function
 
 import doctest

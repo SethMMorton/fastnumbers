@@ -96,8 +96,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | CallToInt = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> np.ndarray[IntT]:
-        ...
+    ) -> np.ndarray[IntT]: ...
 
     @overload
     def try_array(
@@ -112,8 +111,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> np.ndarray[FloatT]:
-        ...
+    ) -> np.ndarray[FloatT]: ...
 
     @overload
     def try_array(
@@ -127,8 +125,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | CallToInt = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def try_array(
@@ -142,8 +139,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def try_array(
@@ -157,8 +153,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | CallToInt = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def try_array(
@@ -172,8 +167,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 def try_array(input, output=None, *, dtype=None, **kwargs):

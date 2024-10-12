@@ -55,8 +55,7 @@ class TryReal(Protocol):
         coerce: bool = ...,
         denoise: bool = ...,
         allow_underscores: bool = ...,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
 
 class TryFloat(Protocol):
@@ -69,8 +68,7 @@ class TryFloat(Protocol):
         on_fail: Any = ...,
         on_type_error: Any = ...,
         allow_underscores: bool = ...,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
 
 class TryInt(Protocol):
@@ -82,8 +80,7 @@ class TryInt(Protocol):
         on_type_error: Any = ...,
         base: int = ...,
         allow_underscores: bool = ...,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
 
 class TryForceInt(Protocol):
@@ -95,8 +92,7 @@ class TryForceInt(Protocol):
         on_type_error: Any = ...,
         denoise: bool = ...,
         allow_underscores: bool = ...,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
 
 class CheckReal(Protocol):
@@ -108,8 +104,7 @@ class CheckReal(Protocol):
         inf: Any = ...,
         nan: Any = ...,
         allow_underscores: bool = ...,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
 
 class CheckFloat(Protocol):
@@ -121,8 +116,7 @@ class CheckFloat(Protocol):
         inf: Any = ...,
         nan: Any = ...,
         allow_underscores: bool = ...,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
 
 class CheckInt(Protocol):
@@ -133,8 +127,7 @@ class CheckInt(Protocol):
         consider: Any = ...,
         base: int = ...,
         allow_underscores: bool = ...,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
 
 class CheckIntLike(Protocol):
@@ -144,13 +137,11 @@ class CheckIntLike(Protocol):
         *,
         consider: Any = ...,
         allow_underscores: bool = ...,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
 
 class Real(Protocol):
-    def __call__(self, x: Any = ..., *, coerce: bool = ...) -> Union[int, float]:
-        ...
+    def __call__(self, x: Any = ..., *, coerce: bool = ...) -> Union[int, float]: ...
 
 
 ConversionFuncs = Union[TryReal, TryFloat, TryInt, TryForceInt]
@@ -892,7 +883,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     funcs = ["try_real", "try_float"]
 
     @given(sampled_from(numeric_not_digit_not_int))
-    @example("\u0F33")  # the only negative unicode character
+    @example("\u0f33")  # the only negative unicode character
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_float(
         self, func: Union[TryReal, TryInt, TryForceInt], x: str
@@ -1229,9 +1220,9 @@ class TestTryInt:
         assert fastnumbers.try_int(hex(x), base=16) == x
         assert fastnumbers.try_int(hex(x), base=0) == x
         # Force unicode path
-        assert fastnumbers.try_int(hex(x).replace("0", "\uFF10"), base=0) == x
+        assert fastnumbers.try_int(hex(x).replace("0", "\uff10"), base=0) == x
 
-    @parametrize("zero", ["0", "\uFF10"])
+    @parametrize("zero", ["0", "\uff10"])
     @parametrize("base", [0, 2, 8, 18])
     def test_given_multiple_zeros_with_base_returns_zero(
         self, zero: str, base: int
@@ -1533,7 +1524,7 @@ class TestCheckInt:
         assert fastnumbers.check_int(hex(x), base=16)
         assert fastnumbers.check_int(hex(x), base=0)
         # Force unicode path
-        assert fastnumbers.check_int(hex(x).replace("0", "\uFF10"), base=0)
+        assert fastnumbers.check_int(hex(x).replace("0", "\uff10"), base=0)
 
     def test_underscores(self) -> None:
         assert fastnumbers.check_int("0_0_0", allow_underscores=True)

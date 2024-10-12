@@ -196,7 +196,8 @@ void remove_valid_underscores(char* str, const char*& end, const bool based) noe
             }
         }
         // No underscore in the base selector, e.g. 0_b0 is invalid.
-        else if ((len - i) > 2 && str[i] == '0' && str[i + 1] == '_' && is_base_prefix(str[i + 2])) {
+        else if ((len - i) > 2 && str[i] == '0' && str[i + 1] == '_'
+                 && is_base_prefix(str[i + 2])) {
             i += 3;
         }
 

@@ -162,7 +162,7 @@ def test_require_output_if_numpy_is_not_installed() -> None:
     [np.array([[0, 0], [0, 0]]), np.array(0)],
 )
 def test_require_identically_one_ndarray_dimension(
-    output: np.ndarray[Any, np.dtype[np.int_]]
+    output: np.ndarray[Any, np.dtype[np.int_]],
 ) -> None:
     with pytest.raises(ValueError, match="Can only accept arrays of dimension 1"):
         fastnumbers.try_array([0, 9], output)

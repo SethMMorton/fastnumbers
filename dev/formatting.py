@@ -13,12 +13,11 @@ import sys
 check = "--check" in sys.argv
 
 # Check that python code is formatted
-black = ["black"]
+ruff = ["ruff", "format"]
 if check:
-    black.extend(["--quiet", "--check", "--diff"])
-black.append(".")
-print(*map(shlex.quote, black))
-black_ret = subprocess.run(black)
+    ruff.extend(["--quiet", "--check", "--diff"])
+print(*map(shlex.quote, ruff))
+ruff_ret = subprocess.run(ruff)
 
 # Check that C++ code is formatted
 clang_format = [
@@ -50,7 +49,7 @@ any_cpp_formatting = any(
 )
 
 # "Roll up" what happened into a single exit code.
-all_return_zero = all(ret.returncode == 0 for ret in [black_ret, clang_format_ret])
+all_return_zero = all(ret.returncode == 0 for ret in [ruff_ret, clang_format_ret])
 if any_cpp_formatting or not all_return_zero:
     sys.exit("Not all files are formatted correctly. Run 'tox -e format'.")
 else:

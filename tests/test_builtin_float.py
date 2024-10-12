@@ -51,7 +51,7 @@ class GeneralFloatCases(unittest.TestCase):
         self.assertRaisesRegex(TypeError, "not 'dict'", float, {})
         # Lone surrogate
         if sys.version_info >= (3, 7):
-            self.assertRaises(ValueError, float, "\uD8F0")
+            self.assertRaises(ValueError, float, "\ud8f0")
         # check that we don't accept alternate exponent markers
         self.assertRaises(ValueError, float, "-1.7d29")
         self.assertRaises(ValueError, float, "3D-14")
