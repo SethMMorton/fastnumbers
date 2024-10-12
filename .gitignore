@@ -1,5 +1,5 @@
 *.py[co]
-.venv
+_version.py
 
 # Packages
 *.egg
@@ -24,12 +24,14 @@ MANIFEST
 pip-log.txt
 
 # Unit test / coverage reports
+.hypothesis
 .coverage
 .tox
 .cache
 .pytest_cache
-.hypothesis
+.pytest
 .envrc
+.venv
 
 #Translations
 *.mo
@@ -39,9 +41,6 @@ pip-log.txt
 
 # PyCharm
 .idea
-
-# Jupyter
-.ipynb_checkpoints/
 
 # VSCode
 .vscode

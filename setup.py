@@ -5,7 +5,7 @@ import glob
 import os
 import sys
 
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension, setup
 
 
 # Compilation arguments are platform-dependent
@@ -44,14 +44,5 @@ ext = [
 ]
 
 # Define how to build the extension module.
-# All other data is in the setup.cfg file.
-setup(
-    name="fastnumbers",
-    version="5.1.0",
-    python_requires=">=3.7",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    package_data={"fastnumbers": ["py.typed", "*.pyi"]},
-    zip_safe=False,
-    ext_modules=ext,
-)
+# All other data is in the pyproject.toml file.
+setup(ext_modules=ext)

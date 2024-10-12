@@ -1,5 +1,12 @@
 from typing import TYPE_CHECKING
 
+try:
+    # The redundant "as" tells mypy to treat as explict import
+    from fastnumbers._version import __version__ as __version__
+    from fastnumbers._version import __version_tuple__ as __version_tuple__
+except ImportError:
+    __version__ = "unknown version"
+    __version_tuple__ = (0, 0, "unknown version")
 from .fastnumbers import (
     ALLOWED,
     DISALLOWED,
@@ -7,7 +14,6 @@ from .fastnumbers import (
     NUMBER_ONLY,
     RAISE,
     STRING_ONLY,
-    __version__,
     array as _array,
     check_float,
     check_int,

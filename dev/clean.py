@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """
 Cross-platform clean of working directory.
@@ -34,3 +34,8 @@ for f in pathlib.Path.cwd().glob("doctest.py*"):
 # Shouldn't be any .pyc left, but just in case
 for f in pathlib.Path.cwd().rglob("*.pyc"):
     f.unlink()
+
+# Remove _version.py
+version = pathlib.Path("src/fastnumbers/_version.py")
+if version.is_file():
+    version.unlink()
