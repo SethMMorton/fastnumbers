@@ -1,12 +1,8 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import glob
 import os
 import sys
 
 from setuptools import Extension, setup
-
 
 # Compilation arguments are platform-dependent
 if sys.platform == "win32":

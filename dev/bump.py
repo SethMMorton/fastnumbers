@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 """
 Cross-platform bump of version with special CHANGELOG modification.
 INTENDED TO BE CALLED FROM PROJECT ROOT, NOT FROM dev/!

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 """
 Cross-platform checking if code is appropriately formatted.
 INTENDED TO BE CALLED FROM PROJECT ROOT, NOT FROM dev/!
@@ -35,7 +33,7 @@ clang_format_ret = subprocess.run(
     clang_format,
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
-    universal_newlines=True,
+    text=True,
 )
 print(clang_format_ret.stdout)
 

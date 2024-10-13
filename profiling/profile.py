@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 import copy
 import decimal
 import gc
@@ -23,7 +21,7 @@ else:
     class Tee:
         def __init__(self, stream, filepath):
             self.stream = stream
-            self.fo = open(filepath, "w")
+            self.fo = open(filepath, "w")  # noqa: SIM115
 
         def write(self, data):
             self.stream.write(data)
@@ -43,7 +41,7 @@ else:
     sys.stdout = Tee(sys.stdout, outloc)
 
 
-class Timer(object):
+class Timer:
     """Class to time functions and make pretty tables of the output."""
 
     # This is a list of all the things we will time with an associated label.
@@ -125,7 +123,7 @@ class Timer(object):
 
     @staticmethod
     def bold(x):
-        return "**{}**".format(x)
+        return f"**{x}**"
 
     def _timeit(self, call, setup, repeat=5):
         """Perform the actual timing and return a formatted string of the runtime"""
@@ -183,8 +181,7 @@ def int_re(x, int_match=re.compile(r"[-+]?\d+$").match):
     try:
         if int_match(x):
             return int(x)
-        else:
-            return x
+        return x
     except TypeError:
         return int(x)
 
@@ -202,8 +199,7 @@ def float_re(x, float_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").matc
     try:
         if float_match(x):
             return float(x)
-        else:
-            return x
+        return x
     except TypeError:
         return float(x)
 
@@ -225,15 +221,13 @@ def real_re(
     try:
         if int_match(x):
             return int(x)
-        elif real_match(x):
+        if real_match(x):
             return float(x)
-        else:
-            return x
+        return x
     except TypeError:
         if type(x) in (float, int):
             return x
-        else:
-            raise TypeError
+        raise
 
 
 def real_try(x):
@@ -256,10 +250,9 @@ def forceint_re(
     try:
         if int_match(x):
             return int(x)
-        elif float_match(x):
+        if float_match(x):
             return int(float(x))
-        else:
-            return x
+        return x
     except TypeError:
         return int(x)
 
@@ -292,8 +285,8 @@ if sys.version_info >= (3, 9):
             # String method
             try:
                 return int(_decimal(x))
-            except decimal.InvalidOperation:
-                raise TypeError
+            except decimal.InvalidOperation as e:
+                raise TypeError from e
 
     def forceint_denoise_fn(x, try_forceint=fastnumbers.try_forceint):
         """Function to noiselessly convert a float to an integer using fastnumbers."""
@@ -358,10 +351,9 @@ def check_intlike_re(
     try:
         if int_match(x):
             return True
-        elif float_match(x):
+        if float_match(x):
             return float(x).is_integer()
-        else:
-            return False
+        return False
     except TypeError:
         return int(x) == x
 

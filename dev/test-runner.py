@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 """
 This script will run tests using gdb as a means to catch segfaults.
 

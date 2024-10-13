@@ -14,7 +14,6 @@ from .fastnumbers import (
     NUMBER_ONLY,
     RAISE,
     STRING_ONLY,
-    array as _array,
     check_float,
     check_int,
     check_intlike,
@@ -35,6 +34,9 @@ from .fastnumbers import (
     try_forceint,
     try_int,
     try_real,
+)
+from .fastnumbers import (
+    array as _array,
 )
 
 try:
@@ -170,7 +172,7 @@ if TYPE_CHECKING:
     ) -> None: ...
 
 
-def try_array(input, output=None, *, dtype=None, **kwargs):
+def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002
     """
     Quickly convert an iterable's contents into an array.
 
@@ -283,14 +285,15 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
         # Construct a numpy ndarray of the appropriate length and
         # dtype to contain the output.
         if not has_numpy:
-            raise RuntimeError(
+            msg = (
                 "To use fastnumbers.try_array without an explict "
                 "output requires numpy to also be installed"
             )
+            raise RuntimeError(msg)
         try:
             length = len(input)
         except TypeError:
-            input = list(input)
+            input = list(input)  # noqa: A001
             length = len(input)
         output = np.empty(length, dtype=dtype or np.float64)
     else:
@@ -306,10 +309,11 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
                 )
         except AttributeError:
             if not hasattr(output, "typecode"):
-                raise TypeError(
+                msg = (
                     "Only numpy ndarray and array.array types for output are "
                     f"supported, not {type(output)}"
                 )
+                raise TypeError(msg) from None
 
     # Call the C++ extension
     _array(input, output, **kwargs)
@@ -317,6 +321,7 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
     # If no output value was given on calling, we return the output as a return value.
     if return_output:
         return output
+    return None
 
 
 __all__ = [

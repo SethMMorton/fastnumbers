@@ -83,7 +83,7 @@ def _parse_guards(guards: Dict[str, bool]) -> Tuple[Dict[str, bool], bool]:
     # Returns a tuple ({platform_name: run_me}, default_value)
     if not guards:
         return ({"cpython": True}, False)
-    is_true = list(guards.values())[0]
+    is_true = next(iter(guards.values()))
     assert list(guards.values()) == [is_true] * len(guards)  # all True or all False
     return (guards, not is_true)
 

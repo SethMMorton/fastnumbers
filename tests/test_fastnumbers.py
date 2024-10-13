@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import decimal
 import math
 import random
@@ -18,6 +17,8 @@ from typing import (
     Union,
 )
 
+import pytest
+from conftest import base_n
 from hypothesis import example, given, settings
 from hypothesis.strategies import (
     binary,
@@ -31,13 +32,11 @@ from hypothesis.strategies import (
     text,
     tuples,
 )
-from pytest import mark, raises
 from typing_extensions import Protocol
 
 import fastnumbers
-from conftest import base_n
 
-parametrize = mark.parametrize
+parametrize = pytest.mark.parametrize
 
 
 FloatOrInt = Union[float, int]
@@ -191,9 +190,7 @@ def a_number(s: Union[str, bytes]) -> bool:
         return True
     if re.match(r"\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$", s, re.U):
         return True
-    if s.strip().lstrip("[-+]") in numeric:
-        return True
-    return False
+    return s.strip().lstrip("[-+]") in numeric
 
 
 def space() -> str:
@@ -219,12 +216,12 @@ def not_an_integer(x: float) -> bool:
 
 
 def capture_result(  # type: ignore [no-untyped-def]
-    func: Union[ConversionFuncs, ConversionFuncs], *args, **kwargs
+    func: Union[ConversionFuncs, IdentificationFuncs], *args, **kwargs
 ) -> Any:
     """Execute a function, and either return the result or the exception message"""
     try:
         return func(*args, **kwargs)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return str(e)
 
 
@@ -246,22 +243,22 @@ def assert_integers_close(x: int, y: int) -> None:
     y_trimmed_1 = round(int(re.sub(r"5$", "4", y_str[:comp_len]) or 0), -1)
     x_trimmed_2 = round(int(re.sub(r"5$", "6", x_str[:comp_len]) or 0), -1)
     y_trimmed_2 = round(int(re.sub(r"5$", "6", y_str[:comp_len]) or 0), -1)
-    assert (
-        x_trimmed_1 == y_trimmed_1
-        or x_trimmed_1 == y_trimmed_2
-        or x_trimmed_2 == y_trimmed_1
-        or x_trimmed_2 == y_trimmed_2
+    assert x_trimmed_2 in (y_trimmed_1, y_trimmed_2) or x_trimmed_1 in (
+        y_trimmed_1,
+        y_trimmed_2,
     )
 
 
-class DumbFloatClass(object):
+class DumbFloatClass:
     def __float__(self) -> NoReturn:
-        raise ValueError("something here might go wrong")
+        msg = "something here might go wrong"
+        raise ValueError(msg)
 
 
-class DumbIntClass(object):
+class DumbIntClass:
     def __int__(self) -> NoReturn:
-        raise ValueError("something here might go wrong")
+        msg = "something here might go wrong"
+        raise ValueError(msg)
 
 
 # Map function names to the actual functions,
@@ -332,7 +329,8 @@ class TestArguments:
     def test_real_no_arguments_returns_0(self) -> None:
         assert fastnumbers.real() == 0
 
-    funcs = non_builtin_funcs + [
+    funcs = [
+        *non_builtin_funcs,
         "query_type",
         "int",
         "real",
@@ -350,14 +348,17 @@ class TestArguments:
     def test_invalid_argument_raises_type_error(
         self, func: Union[Callable[[Any], Any], Real]
     ) -> None:
-        with raises(TypeError, match="got an unexpected keyword argument 'invalid'"):
+        with pytest.raises(
+            TypeError, match="got an unexpected keyword argument 'invalid'"
+        ):
             func(5, invalid="dummy")  # type: ignore
 
     def test_invalid_argument_raises_type_error_no_kwargs(self) -> None:
-        with raises(TypeError, match="takes no keyword arguments"):
+        with pytest.raises(TypeError, match="takes no keyword arguments"):
             fastnumbers.float("5", invalid="dummy")  # type: ignore
 
-    funcs = non_builtin_funcs + [
+    funcs = [
+        *non_builtin_funcs,
         "query_type",
         "fast_real",
         "fast_float",
@@ -371,11 +372,11 @@ class TestArguments:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_no_arguments_raises_type_error(self, func: Callable[[Any], Any]) -> None:
-        with raises(TypeError, match="missing required argument 'x'"):
+        with pytest.raises(TypeError, match="missing required argument 'x'"):
             func()  # type: ignore
 
     def test_invalid_argument_and_missing_positional(self) -> None:
-        with raises(TypeError, match="missing required argument 'x'"):
+        with pytest.raises(TypeError, match="missing required argument 'x'"):
             fastnumbers.try_float(on_fail=0.0)  # type: ignore
 
     def test_positional_as_kwarg_is_ok(self) -> None:
@@ -383,17 +384,17 @@ class TestArguments:
 
     def test_duplicate_argument(self) -> None:
         msg = r"argument for .* given by name \('x'\) and position"
-        with raises(TypeError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             fastnumbers.try_float("5", x="4")  # type: ignore
 
     def test_too_many_positional_arguments1(self) -> None:
         msg = r"takes 1 positional arguments but 2 were given"
-        with raises(TypeError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             fastnumbers.try_float("5", "4")  # type: ignore
 
     def test_too_many_positional_arguments2(self) -> None:
         msg = r"takes from 0 to 1 positional arguments but 2 were given"
-        with raises(TypeError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             fastnumbers.float("5", "4")  # type: ignore
 
 
@@ -427,7 +428,7 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_inf_conv(
         self, func: Union[TryReal, TryFloat], inf: object
     ) -> None:
-        with raises(ValueError, match="'inf' and 'nan' cannot be"):
+        with pytest.raises(ValueError, match="'inf' and 'nan' cannot be"):
             func("5", inf=inf)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
@@ -438,7 +439,7 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_nan_conv(
         self, func: Union[TryReal, TryFloat], nan: object
     ) -> None:
-        with raises(ValueError, match="'inf' and 'nan' cannot be"):
+        with pytest.raises(ValueError, match="'inf' and 'nan' cannot be"):
             func("5", nan=nan)
 
     funcs = ["check_real", "check_float"]
@@ -451,7 +452,7 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_inf_check(
         self, func: Union[CheckReal, CheckFloat], inf: object
     ) -> None:
-        with raises(ValueError, match="allowed values for 'inf' and 'nan'"):
+        with pytest.raises(ValueError, match="allowed values for 'inf' and 'nan'"):
             func("5", inf=inf)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
@@ -462,7 +463,7 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_nan_check(
         self, func: Union[CheckReal, CheckFloat], nan: object
     ) -> None:
-        with raises(ValueError, match="allowed values for 'inf' and 'nan'"):
+        with pytest.raises(ValueError, match="allowed values for 'inf' and 'nan'"):
             func("5", nan=nan)
 
     funcs = identification_funcs
@@ -483,7 +484,7 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_for_consider(
         self, func: IdentificationFuncs, consider: object
     ) -> None:
-        with raises(ValueError, match="allowed values for 'consider'"):
+        with pytest.raises(ValueError, match="allowed values for 'consider'"):
             func("5", consider=consider)
 
     funcs = conversion_funcs
@@ -501,7 +502,9 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_for_on_fail(
         self, func: ConversionFuncs, on_fail: object
     ) -> None:
-        with raises(ValueError, match="values for 'on_fail' and 'on_type_error'"):
+        with pytest.raises(
+            ValueError, match="values for 'on_fail' and 'on_type_error'"
+        ):
             func("5", on_fail=on_fail)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
@@ -517,7 +520,9 @@ class TestSelectors:
     def test_selectors_are_rejected_when_invalid_for_on_type_error(
         self, func: ConversionFuncs, on_type_error: object
     ) -> None:
-        with raises(ValueError, match="values for 'on_fail' and 'on_type_error'"):
+        with pytest.raises(
+            ValueError, match="values for 'on_fail' and 'on_type_error'"
+        ):
             func("5", on_type_error=on_type_error)
 
 
@@ -528,16 +533,18 @@ class TestBackwardsCompatibility:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_key(self, func: Any) -> None:
-        with raises(ValueError, match=r"^Cannot set both on_fail and key$"):
+        with pytest.raises(ValueError, match=r"^Cannot set both on_fail and key$"):
             func("dummy", key=len, on_fail=len)
         assert func("dummy", key=len) == 5
         assert func("dummy", key=len) == func("dummy", on_fail=len)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_new_invalid_parings(self, func: Any) -> None:
-        with raises(ValueError, match="Cannot set both on_fail and default"):
+        with pytest.raises(ValueError, match="Cannot set both on_fail and default"):
             func("5", default=0.0, on_fail=0.0)
-        with raises(ValueError, match="Cannot set both on_fail and raise_on_invalid"):
+        with pytest.raises(
+            ValueError, match="Cannot set both on_fail and raise_on_invalid"
+        ):
             func("5", raise_on_invalid=True, on_fail=0.0)
 
     old_to_new_conversion_pairing = []
@@ -579,7 +586,8 @@ class TestBackwardsCompatibility:
             old_result = capture_result(old_func, value)
             new_result = capture_result(new_func, value)
             if old_result != old_result and new_result != new_result:
-                assert math.isnan(old_result) and math.isnan(new_result)
+                assert math.isnan(old_result)
+                assert math.isnan(new_result)
             else:
                 assert old_result == new_result
 
@@ -713,7 +721,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert math.isnan(func(float("nan"), nan=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", all_nan + [pad("nan"), pad("-NAN")])
+    @parametrize("x", [*all_nan, pad("nan"), pad("-NAN")])
     def test_given_nan_string_returns_nan(
         self, func: Union[TryReal, TryFloat], x: str
     ) -> None:
@@ -724,9 +732,9 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     def test_given_nan_returns_sub_value(self, func: Union[TryReal, TryFloat]) -> None:
         assert func(float("nan"), nan=0) == 0
         assert math.isnan(func(float("nan"), nan=fastnumbers.INPUT))
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func(float("nan"), nan=fastnumbers.RAISE)
-        assert func(float("nan"), nan=lambda x: "hello") == "hello"
+        assert func(float("nan"), nan=lambda _: "hello") == "hello"
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_with_nan_given_nan_string_returns_sub_value(
@@ -734,9 +742,9 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     ) -> None:
         assert func("nan", nan=0.0) == 0.0
         assert func("nan", nan=fastnumbers.INPUT) == "nan"
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func("nan", nan=fastnumbers.RAISE)
-        assert func("nan", nan=lambda x: "hello") == "hello"
+        assert func("nan", nan=lambda _: "hello") == "hello"
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_inf_returns_inf(self, func: Union[TryReal, TryFloat]) -> None:
@@ -744,7 +752,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert math.isinf(func(float("inf"), inf=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", most_inf + [pad("inf"), pad("+INFINITY")])
+    @parametrize("x", [*most_inf, pad("inf"), pad("+INFINITY")])
     def test_given_inf_string_returns_inf(
         self, func: Union[TryReal, TryFloat], x: str
     ) -> None:
@@ -752,7 +760,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert math.isinf(func(float("inf"), inf=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", neg_inf + [pad("-inf"), pad("-INFINITY")])
+    @parametrize("x", [*neg_inf, pad("-inf"), pad("-INFINITY")])
     def test_given_negative_inf_string_returns_negative_inf(
         self, func: Union[TryReal, TryFloat], x: str
     ) -> None:
@@ -762,9 +770,9 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     def test_given_inf_returns_sub_value(self, func: Union[TryReal, TryFloat]) -> None:
         assert func(float("inf"), inf=1000.0) == 1000.0
         assert math.isinf(func(float("inf"), inf=fastnumbers.INPUT))
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func(float("inf"), inf=fastnumbers.RAISE)
-        assert func(float("inf"), inf=lambda x: "hello") == "hello"
+        assert func(float("inf"), inf=lambda _: "hello") == "hello"
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_with_inf_given_inf_string_returns_sub_value(
@@ -773,9 +781,9 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert func("inf", inf=10000.0) == 10000.0
         assert func("-inf", inf=10000.0) == 10000.0
         assert func("inf", inf=fastnumbers.INPUT) == "inf"
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func("inf", inf=fastnumbers.RAISE)
-        assert func("inf", inf=lambda x: "hello") == "hello"
+        assert func("inf", inf=lambda _: "hello") == "hello"
 
     # Float handling - both actual float input and strings containing floats.
 
@@ -950,7 +958,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
     ) -> None:
         x = DumbFloatClass()
         assert func(x) is x
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func(x, on_fail=fastnumbers.RAISE)
         assert func(x, on_fail=5.0) == 5.0
 
@@ -962,7 +970,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
     ) -> None:
         x = DumbIntClass()
         assert func(x) is x
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func(x, on_fail=fastnumbers.RAISE)
         assert func(x, on_fail=5) == 5
 
@@ -1008,9 +1016,9 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_invalid_type_raises_typeerror(self, func: ConversionFuncs) -> None:
-        with raises(TypeError):
+        with pytest.raises(TypeError):
             func([1])
-        with raises(TypeError):
+        with pytest.raises(TypeError):
             func([1], on_type_error=fastnumbers.RAISE)  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
@@ -1027,14 +1035,14 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
     def test_given_nan_raises_valueerror_for_int_funcions(
         self, func: Union[TryInt, TryForceInt]
     ) -> None:
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func(float("nan"), on_fail=fastnumbers.RAISE)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_inf_raises_overflowerror_for_int_funcions(
         self, func: Union[TryInt, TryForceInt]
     ) -> None:
-        with raises(OverflowError):
+        with pytest.raises(OverflowError):
             func(float("inf"), on_fail=fastnumbers.RAISE)
 
     # Demonstrate that the error handling options kick in on invalid input
@@ -1045,7 +1053,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
     def test_given_invalid_raises_valueerror_if_raise_is_given(
         self, func: ConversionFuncs
     ) -> None:
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             func("this is invalid", on_fail=fastnumbers.RAISE)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
@@ -1142,10 +1150,10 @@ class TestTryFloat:
 
     def test_with_range_of_exponents_correctly_parses(self) -> None:
         for x in range(-300, 300):
-            val = "1.0E{0:d}".format(x)
+            val = f"1.0E{x:d}"
             assert fastnumbers.try_float(val) == float(val)
         for x in range(-300, 300):
-            val = "1.0000000000E{0:d}".format(x)
+            val = f"1.0000000000E{x:d}"
             assert fastnumbers.try_float(val) == float(val)
 
     @given(integers())
@@ -1179,7 +1187,7 @@ class TestTryInt:
 
     @parametrize("base", [-1, 1, 37])
     def test_given_invalid_base_errors_with_valueerror(self, base: int) -> None:
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             fastnumbers.try_int("10", base=base)
 
     @given(floats(allow_nan=False))
@@ -1193,7 +1201,7 @@ class TestTryInt:
     def test_given_float_string_raises_valueerror_if_raise_on_invalid_is_true(
         self, x: str
     ) -> None:
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             fastnumbers.try_int(x, on_fail=fastnumbers.RAISE)
 
     @given(integers())
@@ -1317,7 +1325,7 @@ class TestCheckingFunctions:
         assert func(x, nan=fastnumbers.ALLOWED, inf=fastnumbers.ALLOWED)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", all_nan + [pad("nan"), pad("-NAN")])
+    @parametrize("x", [*all_nan, pad("nan"), pad("-NAN")])
     def test_returns_false_for_nan_string_unless_allow_nan_is_true(
         self, func: Union[CheckReal, CheckFloat], x: str
     ) -> None:
@@ -1571,7 +1579,8 @@ class TestCheckInt:
 
 class TestCheckIntLike:
     """
-    Tests for the check_intlike function that are too specific for the generalized tests.
+    Tests for the check_intlike function that are too specific
+    for the generalized tests.
     """
 
     @given(floats().filter(not_an_integer))
@@ -1607,11 +1616,13 @@ class TestQueryType:
     """Tests for the query_type function."""
 
     def test_allowed_type_must_be_a_sequence(self) -> None:
-        with raises(TypeError, match="allowed_type is not a sequence type"):
+        with pytest.raises(TypeError, match="allowed_type is not a sequence type"):
             fastnumbers.query_type("5", allowed_types={str: float})  # type: ignore
 
     def test_allowed_type_must_non_empty(self) -> None:
-        with raises(ValueError, match="allowed_type must not be an empty sequence"):
+        with pytest.raises(
+            ValueError, match="allowed_type must not be an empty sequence"
+        ):
             fastnumbers.query_type("5", allowed_types=[])
 
     @given(integers())
@@ -1695,7 +1706,7 @@ class TestQueryType:
     ) -> None:
         assert fastnumbers.query_type(x, allowed_types=(int, float)) is None
 
-    @parametrize("x", all_nan + [pad("+nan"), pad("-NAN")])
+    @parametrize("x", [*all_nan, pad("+nan"), pad("-NAN")])
     def test_returns_str_for_nan_string_unless_allow_nan_is_true(self, x: str) -> None:
         assert fastnumbers.query_type(x) is str
         assert fastnumbers.query_type(x, allow_nan=True) is float
@@ -1715,12 +1726,12 @@ class TestQueryType:
 
     @given(floats(allow_nan=False).filter(an_integer))
     def test_given_float_returns_int_if_intlike_with_coerce(self, x: float) -> None:
-        assert fastnumbers.query_type(x, coerce=True) == int
+        assert fastnumbers.query_type(x, coerce=True) is int
 
     @given(floats(allow_nan=False))
     def test_given_float_returns_float_or_int_with_coerce(self, x: float) -> None:
         assert (
-            fastnumbers.query_type(x, coerce=True) == int if x.is_integer() else float
+            fastnumbers.query_type(x, coerce=True) is int if x.is_integer() else float
         )
 
     @given(
@@ -1773,7 +1784,8 @@ class TestMappingFunctions:
         nonmapping = capture_result(lambda y: list(map(nomapper, y)), x)  # type: ignore
         mapping = capture_result(mapper, x)
         if nonmapping != nonmapping and mapping != mapping:
-            assert math.isnan(nonmapping) and math.isnan(mapping)
+            assert math.isnan(nonmapping)
+            assert math.isnan(mapping)
         else:
             assert nonmapping == mapping
 
@@ -1883,9 +1895,10 @@ class TestMappingFunctions:
             """Not a good generator"""
             yield "5"
             yield "6"
-            raise ValueError("Fëanor")
+            msg = "Fëanor"
+            raise ValueError(msg)
 
-        with raises(ValueError, match="Fëanor"):
+        with pytest.raises(ValueError, match="Fëanor"):  # noqa: PT012
             for _ in func(broken()):
                 pass
 
@@ -1901,7 +1914,7 @@ class TestMappingFunctions:
     @parametrize(
         "iterable_gen",
         [
-            lambda: [],
+            list,
             lambda: (),
             lambda: set(),
             lambda: iter([]),
@@ -1927,7 +1940,7 @@ class TestMappingFunctions:
     @parametrize(
         "iterable_gen",
         [
-            lambda: [],
+            list,
             lambda: (),
             lambda: set(),
             lambda: iter([]),
@@ -1937,7 +1950,7 @@ class TestMappingFunctions:
     def test_mapping_iterable_handles_empty_iterable(
         self, func: ConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
     ) -> None:
-        with raises(StopIteration):
+        with pytest.raises(StopIteration):
             next(func(iterable_gen()))
 
     @parametrize(
@@ -1956,7 +1969,7 @@ class TestMappingFunctions:
     def test_mapping_raises_type_error_on_non_iterable(
         self, func: ConversionFuncs
     ) -> None:
-        with raises(TypeError, match="'int' object is not iterable"):
+        with pytest.raises(TypeError, match="'int' object is not iterable"):
             func(5)
 
     @parametrize(
@@ -1976,7 +1989,7 @@ class TestMappingFunctions:
     def test_invalid_types_behave_as_expected(
         self, func: ConversionFuncs, style: Callable[[Any], Any]
     ) -> None:
-        with raises(TypeError, match="not 'tuple'"):
+        with pytest.raises(TypeError, match="not 'tuple'"):  # noqa: PT012
             for _ in func(style([("Fëanor",)])):
                 pass
         expected = [5]

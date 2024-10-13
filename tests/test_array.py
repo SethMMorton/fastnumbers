@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import array
 import ctypes
-from typing import Any, Callable, Dict, Iterator, List, NoReturn, Tuple, Union
+from typing import Any, Callable, Iterator, NoReturn
 
 import numpy as np
 import pytest
+from conftest import base_n
 from hypothesis import given as hyp_given
 from hypothesis.strategies import (
     binary,
@@ -17,8 +18,6 @@ from hypothesis.strategies import (
 from typing_extensions import TypedDict
 
 import fastnumbers
-from conftest import base_n
-
 
 # Map supported data types to the Python array internal format designator
 formats = {
@@ -204,7 +203,7 @@ class TestCPPProtections:
     def test_non_memorybuffer_type_raises_correct_type_error(self) -> None:
         """Ensure we only accept well-behaved memory views as input"""
         with pytest.raises(TypeError, match="not 'list'"):
-            fastnumbers._array([0, 1], [0, 0])  # type: ignore
+            fastnumbers._array([0, 1], [0, 0])  # type: ignore # noqa: SLF001
 
     @pytest.mark.parametrize("dtype", other_dtypes)
     def test_invalid_memorybuffer_type_raises_correct_type_error(
@@ -215,15 +214,18 @@ class TestCPPProtections:
         output = np.array([0, 0], dtype=dtype)
         exception = r"Unknown buffer format '\S+' for object"
         with pytest.raises(TypeError, match=exception):
-            fastnumbers._array(given, output)  # type: ignore
+            fastnumbers._array(given, output)  # type: ignore # noqa: SLF001
 
 
 kwargs = ["inf", "nan", "on_fail", "on_overflow", "on_type_error"]
-KwargsType = TypedDict(
-    "KwargsType",
-    {"inf": int, "nan": int, "on_fail": int, "on_overflow": int, "on_type_error": int},
-    total=False,
-)
+
+
+class KwargsType(TypedDict, total=False):
+    inf: int
+    nan: int
+    on_fail: int
+    on_overflow: int
+    on_type_error: int
 
 
 class TestReplacements:
@@ -396,14 +398,16 @@ class TestReplacements:
         assert result == expected
 
 
-class DumbFloatClass(object):
+class DumbFloatClass:
     def __float__(self) -> NoReturn:
-        raise ValueError("something here might go wrong")
+        msg = "something here might go wrong"
+        raise ValueError(msg)
 
 
-class DumbIntClass(object):
+class DumbIntClass:
     def __int__(self) -> NoReturn:
-        raise ValueError("something here might go wrong")
+        msg = "something here might go wrong"
+        raise ValueError(msg)
 
 
 class TestErrors:
@@ -454,7 +458,8 @@ class TestErrors:
             """Not a good generator"""
             yield "5"
             yield "6"
-            raise ValueError("Fëanor")
+            msg = "Fëanor"
+            raise ValueError(msg)
 
         output = array.array(formats[data_type], [0, 0, 0, 0])
         with pytest.raises(ValueError, match="Fëanor"):
@@ -564,16 +569,16 @@ class TestSuccess:
     @pytest.mark.parametrize("base", range(2, 37))
     @pytest.mark.parametrize("data_type", int_data_types)
     def test_integer_bases(self, base: int, data_type: str) -> None:
-        given = map(
-            lambda x: base_n(x, base),
-            [
+        given = (
+            base_n(x, base)
+            for x in [
                 extremes[data_type][0],
                 extremes[data_type][0] - 1,
                 extremes[data_type][1],
                 extremes[data_type][1] + 1,
                 0,
                 100,
-            ],
+            ]
         )
         result = array.array(formats[data_type], [0, 0, 0, 0, 0, 0])
         expected = array.array(
@@ -620,22 +625,22 @@ class TestSuccess:
 
 
 # Create shortcuts to collections of dtypes to test
-signed_dtypes: List[Any] = [
+signed_dtypes: list[Any] = [
     np.int8,
     np.int16,
     np.int32,
     np.int64,
 ]
-unsigned_dtypes: List[Any] = [
+unsigned_dtypes: list[Any] = [
     np.uint8,
     np.uint16,
     np.uint32,
     np.uint64,
 ]
 int_dtypes = signed_dtypes + unsigned_dtypes
-float_dtypes: List[Any] = [np.float32, np.float64]
+float_dtypes: list[Any] = [np.float32, np.float64]
 dtypes = int_dtypes + float_dtypes
-dtype_extremes: Dict[Any, Tuple[int, int]] = {
+dtype_extremes: dict[Any, tuple[int, int]] = {
     np.int8: signed_size_extreme[1],
     np.uint8: unsigned_size_extreme[1],
     np.int16: signed_size_extreme[2],
@@ -646,7 +651,7 @@ dtype_extremes: Dict[Any, Tuple[int, int]] = {
     np.uint64: unsigned_size_extreme[8],
 }
 
-dtype_float_extremes: Dict[Any, Tuple[float, float]] = {
+dtype_float_extremes: dict[Any, tuple[float, float]] = {
     np.float32: (1.17549e-38, 3.40282e38),
     np.float64: (2.22507e-308, 1.79769e308),
 }
@@ -670,7 +675,7 @@ class TestNumpy:
 
     @pytest.mark.parametrize("dtype", dtypes)
     def test_supported_dtypes(
-        self, dtype: Union[np.dtype[np.int_], np.dtype[np.float_]]
+        self, dtype: np.dtype[np.int_] | np.dtype[np.float_]
     ) -> None:
         given = [4, "5", "⑦"]
         expected = np.array([4, 5, 7], dtype=dtype)
@@ -736,7 +741,7 @@ class TestNumpy:
 
     @pytest.mark.parametrize("dtype", dtypes)
     def test_accepts_output_array(
-        self, dtype: Union[np.dtype[np.int_], np.dtype[np.float_]]
+        self, dtype: np.dtype[np.int_] | np.dtype[np.float_]
     ) -> None:
         given = [4, "5", "⑦"]
         result = np.array([0, 0, 0], dtype=dtype)
@@ -814,7 +819,7 @@ class TestNumpy:
     )
 )
 @pytest.mark.parametrize("dtype", int_dtypes)
-def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: List[Any]) -> None:
+def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: list[Any]) -> None:
     # Using try_array should give the same results
     # as try_int with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -846,7 +851,7 @@ def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: List[Any]) -> None
 )
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
-def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: List[Any]) -> None:
+def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: list[Any]) -> None:
     # Using try_array should give the same results
     # as try_float with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -876,7 +881,7 @@ def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: List[Any]) -> 
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
 def test_all_the_things_for_floats_with_nan_inf_replacement(
-    dtype: np.dtype[np.float_], x: List[Any]
+    dtype: np.dtype[np.float_], x: list[Any]
 ) -> None:
     # Using try_array should give the same results
     # as try_float with map=list then converted to an array.

@@ -9,11 +9,8 @@ and modifies it so that
 With these enhancements, doctest can be run on a C python extension module.
 """
 
-from __future__ import print_function
-
 import doctest
 import inspect
-import sys
 
 # Get the source file location
 dt_location = inspect.getsourcefile(doctest)
@@ -53,22 +50,15 @@ doctest_str = doctest_str.replace(
 )
 
 # Replace the configuration extension with nothing on Python3
-if sys.version[0] == "3":
-    doctest_str = doctest_str.replace(
-        "m = __import__(filename[:-3])",
-        'm = __import__(filename[:-3] if filename.endswith(".py") '
-        'else filename.replace(get_config_var("EXT_SUFFIX"), ""))',
-    )
-    # We need to import the get_config_var variable.
-    doctest_str = doctest_str.replace(
-        "def _test():", "from sysconfig import get_config_var\ndef _test():"
-    )
-else:
-    doctest_str = doctest_str.replace(
-        "m = __import__(filename[:-3])",
-        "m = __import__(filename[:-3] "
-        'if filename.endswith((".py", ".so", ".pyd")) else filename)',
-    )
+doctest_str = doctest_str.replace(
+    "m = __import__(filename[:-3])",
+    'm = __import__(filename[:-3] if filename.endswith(".py") '
+    'else filename.replace(get_config_var("EXT_SUFFIX"), ""))',
+)
+# We need to import the get_config_var variable.
+doctest_str = doctest_str.replace(
+    "def _test():", "from sysconfig import get_config_var\ndef _test():"
+)
 
 # To silence mypy
 doctest_str = "# type: ignore\n" + doctest_str
