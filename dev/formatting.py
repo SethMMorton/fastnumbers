@@ -13,7 +13,7 @@ check = "--check" in sys.argv
 # Check that python code is formatted
 ruff = ["ruff", "format"]
 if check:
-    ruff.extend(["--quiet", "--check", "--diff"])
+    ruff.extend(["--check", "--diff"])
 print(*map(shlex.quote, ruff))
 ruff_ret = subprocess.run(ruff)
 
