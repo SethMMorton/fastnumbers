@@ -15,6 +15,8 @@ if sys.platform == "win32":
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("/Od")
         compile_args.append("/Z7")
+    if "FN_WARNINGS_AS_ERRORS":
+        compile_args.append("/WX")
 else:
     compile_args = [
         "-std=c++17",
@@ -27,6 +29,8 @@ else:
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("-Og")
         compile_args.append("-g")
+    if "FN_WARNINGS_AS_ERRORS":
+        compile_args.append("-Werror")
 
 
 ext = [

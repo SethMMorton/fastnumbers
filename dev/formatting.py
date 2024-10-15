@@ -49,6 +49,6 @@ any_cpp_formatting = any(
 # "Roll up" what happened into a single exit code.
 all_return_zero = all(ret.returncode == 0 for ret in [ruff_ret, clang_format_ret])
 if any_cpp_formatting or not all_return_zero:
-    sys.exit("Not all files are formatted correctly. Run 'tox -e format'.")
+    sys.exit("Not all files are formatted correctly. Run 'tox run -e format'.")
 else:
     sys.exit(0)
