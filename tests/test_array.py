@@ -675,7 +675,7 @@ class TestNumpy:
 
     @pytest.mark.parametrize("dtype", dtypes)
     def test_supported_dtypes(
-        self, dtype: np.dtype[np.int_] | np.dtype[np.float_]
+        self, dtype: np.dtype[np.int_] | np.dtype[np.float64]
     ) -> None:
         given = [4, "5", "⑦"]
         expected = np.array([4, 5, 7], dtype=dtype)
@@ -712,7 +712,7 @@ class TestNumpy:
         assert np.array_equal(result, expected)
 
     @pytest.mark.parametrize("dtype", float_dtypes)
-    def test_float_extremes(self, dtype: np.dtype[np.float_]) -> None:
+    def test_float_extremes(self, dtype: np.dtype[np.float64]) -> None:
         given = [
             dtype_float_extremes[dtype][0],
             str(dtype_float_extremes[dtype][0]),
@@ -741,7 +741,7 @@ class TestNumpy:
 
     @pytest.mark.parametrize("dtype", dtypes)
     def test_accepts_output_array(
-        self, dtype: np.dtype[np.int_] | np.dtype[np.float_]
+        self, dtype: np.dtype[np.int_] | np.dtype[np.float64]
     ) -> None:
         given = [4, "5", "⑦"]
         result = np.array([0, 0, 0], dtype=dtype)
@@ -851,7 +851,7 @@ def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: list[Any]) -> None
 )
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
-def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: list[Any]) -> None:
+def test_all_the_things_for_floats(dtype: np.dtype[np.float64], x: list[Any]) -> None:
     # Using try_array should give the same results
     # as try_float with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -881,7 +881,7 @@ def test_all_the_things_for_floats(dtype: np.dtype[np.float_], x: list[Any]) -> 
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
 def test_all_the_things_for_floats_with_nan_inf_replacement(
-    dtype: np.dtype[np.float_], x: list[Any]
+    dtype: np.dtype[np.float64], x: list[Any]
 ) -> None:
     # Using try_array should give the same results
     # as try_float with map=list then converted to an array.

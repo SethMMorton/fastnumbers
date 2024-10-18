@@ -15,6 +15,7 @@ from typing import (
     NoReturn,
     Tuple,
     Union,
+    cast,
 )
 
 import pytest
@@ -143,8 +144,112 @@ class Real(Protocol):
     def __call__(self, x: Any = ..., *, coerce: bool = ...) -> Union[int, float]: ...
 
 
+class FastReal(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        default: Any = ...,
+        *,
+        on_fail: Callable[[Any], Any] = ...,
+        raise_on_invalid: bool = ...,
+        coerce: bool = ...,
+        inf: Any = ...,
+        nan: Any = ...,
+        allow_underscores: bool = ...,
+    ) -> Any: ...
+
+
+class FastFloat(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        default: Any = ...,
+        *,
+        on_fail: Callable[[Any], Any] = ...,
+        raise_on_invalid: bool = ...,
+        inf: Any = ...,
+        nan: Any = ...,
+        allow_underscores: bool = ...,
+    ) -> Any: ...
+
+
+class FastInt(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        default: Any = ...,
+        *,
+        on_fail: Callable[[Any], Any] = ...,
+        raise_on_invalid: bool = ...,
+        allow_underscores: bool = ...,
+    ) -> Any: ...
+
+
+class FastForceInt(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        default: Any = ...,
+        *,
+        on_fail: Callable[[Any], Any] = ...,
+        raise_on_invalid: bool = ...,
+        allow_underscores: bool = ...,
+    ) -> Any: ...
+
+
+class IsReal(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        *,
+        str_only: bool = ...,
+        num_only: bool = ...,
+        allow_inf: bool = ...,
+        allow_nan: bool = ...,
+        allow_underscores: bool = ...,
+    ) -> bool: ...
+
+
+class IsFloat(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        *,
+        str_only: bool = ...,
+        num_only: bool = ...,
+        allow_inf: bool = ...,
+        allow_nan: bool = ...,
+        allow_underscores: bool = ...,
+    ) -> bool: ...
+
+
+class IsInt(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        *,
+        str_only: bool = ...,
+        num_only: bool = ...,
+        base: Any = ...,
+        allow_underscores: bool = ...,
+    ) -> bool: ...
+
+
+class IsIntLike(Protocol):
+    def __call__(
+        self,
+        x: Any,
+        *,
+        str_only: bool = ...,
+        num_only: bool = ...,
+        allow_underscores: bool = ...,
+    ) -> bool: ...
+
+
 ConversionFuncs = Union[TryReal, TryFloat, TryInt, TryForceInt]
+OldConversionFuncs = Union[FastReal, FastFloat, FastInt, FastForceInt]
 IdentificationFuncs = Union[CheckReal, CheckFloat, CheckInt, CheckIntLike]
+OldIdentificationFuncs = Union[IsReal, IsFloat, IsInt, IsIntLike]
 
 # Predefine Unicode digits, numbers, and not those.
 digits = []
@@ -548,7 +653,7 @@ class TestBackwardsCompatibility:
             func("5", raise_on_invalid=True, on_fail=0.0)
 
     old_to_new_conversion_pairing = []
-    func_pairs: List[Tuple[Callable[[Any], Any], Callable[[Any], Any]]] = [
+    conv_pairs: List[Tuple[OldConversionFuncs, ConversionFuncs]] = [
         (partial(fastnumbers.fast_real, allow_underscores=False), fastnumbers.try_real),
         (
             partial(fastnumbers.fast_float, allow_underscores=False),
@@ -560,20 +665,20 @@ class TestBackwardsCompatibility:
             fastnumbers.try_forceint,
         ),
     ]
-    for old, new in func_pairs:
+    for old1, new1 in conv_pairs:
         old_to_new_conversion_pairing += [
-            (old, new),
+            (old1, new1),
             (
-                partial(old, raise_on_invalid=True),
-                partial(new, on_fail=fastnumbers.RAISE),
+                partial(old1, raise_on_invalid=True),
+                partial(new1, on_fail=fastnumbers.RAISE),
             ),
             (
-                partial(old, default="bananas"),
-                partial(new, on_fail="bananas"),
+                partial(old1, default="bananas"),
+                partial(new1, on_fail="bananas"),
             ),
             (
-                partial(old),
-                partial(new, on_fail=fastnumbers.INPUT),  # default
+                partial(old1),
+                partial(new1, on_fail=fastnumbers.INPUT),  # default
             ),
         ]
 
@@ -592,7 +697,7 @@ class TestBackwardsCompatibility:
                 assert old_result == new_result
 
     old_to_new_checking_pairing = []
-    func_pairs = [
+    check_pairs: List[Tuple[OldIdentificationFuncs, IdentificationFuncs]] = [
         (partial(fastnumbers.isreal, allow_underscores=False), fastnumbers.check_real),
         (
             partial(fastnumbers.isfloat, allow_underscores=False),
@@ -604,20 +709,25 @@ class TestBackwardsCompatibility:
             fastnumbers.check_intlike,
         ),
     ]
-    for old, new in func_pairs:
+    for old2, new2 in check_pairs:
         old_to_new_checking_pairing += [
-            (old, new),
-            (partial(old, str_only=False, num_only=False), partial(new, consider=None)),
+            (old2, new2),
             (
-                partial(old, str_only=True),
-                partial(new, consider=fastnumbers.STRING_ONLY),
+                partial(old2, str_only=False, num_only=False),
+                partial(new2, consider=None),
             ),
             (
-                partial(old, num_only=True),
-                partial(new, consider=fastnumbers.NUMBER_ONLY),
+                partial(old2, str_only=True),
+                partial(new2, consider=fastnumbers.STRING_ONLY),
+            ),
+            (
+                partial(old2, num_only=True),
+                partial(new2, consider=fastnumbers.NUMBER_ONLY),
             ),
         ]
-    for old, new in func_pairs[:2]:
+    for old3, new3 in check_pairs[:2]:
+        old = cast(Union[IsReal, IsFloat], old3)
+        new = cast(Union[CheckReal, CheckFloat], new3)
         old_to_new_checking_pairing += [
             (partial(old, allow_inf=True), partial(new, inf=fastnumbers.ALLOWED)),
             (partial(old, allow_inf=False), partial(new, inf=fastnumbers.NUMBER_ONLY)),
@@ -1781,7 +1891,7 @@ class TestMappingFunctions:
     ) -> None:
         nomapper = partial(nomapper, **kwargs)
         mapper = partial(mapper, **kwargs)
-        nonmapping = capture_result(lambda y: list(map(nomapper, y)), x)  # type: ignore
+        nonmapping = capture_result(lambda y: list(map(nomapper, y)), x)
         mapping = capture_result(mapper, x)
         if nonmapping != nonmapping and mapping != mapping:
             assert math.isnan(nonmapping)
@@ -1802,7 +1912,7 @@ class TestMappingFunctions:
         self, nomapper: ConversionFuncs, mapper: ConversionFuncs
     ) -> None:
         x = ["7", "5", None]
-        nonmapping = capture_result(lambda y: list(map(nomapper, y)), x)  # type: ignore
+        nonmapping = capture_result(lambda y: list(map(nomapper, y)), x)
         mapping = capture_result(mapper, x)
         assert nonmapping == mapping
 
