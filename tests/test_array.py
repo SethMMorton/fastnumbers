@@ -93,7 +93,7 @@ data_types = int_data_types + float_data_types
 def test_invalid_argument_raises_type_error() -> None:
     given = [0, 1]
     with pytest.raises(TypeError, match="got an unexpected keyword argument 'invalid'"):
-        fastnumbers.try_array(given, invalid="dummy")  # type: ignore
+        fastnumbers.try_array(given, invalid="dummy")  # type: ignore[call-overload]
 
 
 @pytest.mark.parametrize(
@@ -141,7 +141,7 @@ def test_invalid_input_type_gives_type_error() -> None:
     expected = "Only numpy ndarray and array.array types for output are "
     expected += r"supported, not <class 'list'>"
     with pytest.raises(TypeError, match=expected):
-        fastnumbers.try_array(given, [])  # type: ignore
+        fastnumbers.try_array(given, [])  # type: ignore[call-overload]
 
 
 def test_require_output_if_numpy_is_not_installed() -> None:
@@ -203,7 +203,7 @@ class TestCPPProtections:
     def test_non_memorybuffer_type_raises_correct_type_error(self) -> None:
         """Ensure we only accept well-behaved memory views as input"""
         with pytest.raises(TypeError, match="not 'list'"):
-            fastnumbers._array([0, 1], [0, 0])  # type: ignore # noqa: SLF001
+            fastnumbers._array([0, 1], [0, 0])  # type: ignore[attr-defined] # noqa: SLF001
 
     @pytest.mark.parametrize("dtype", other_dtypes)
     def test_invalid_memorybuffer_type_raises_correct_type_error(
@@ -214,7 +214,7 @@ class TestCPPProtections:
         output = np.array([0, 0], dtype=dtype)
         exception = r"Unknown buffer format '\S+' for object"
         with pytest.raises(TypeError, match=exception):
-            fastnumbers._array(given, output)  # type: ignore # noqa: SLF001
+            fastnumbers._array(given, output)  # type: ignore[attr-defined] # noqa: SLF001
 
 
 kwargs = ["inf", "nan", "on_fail", "on_overflow", "on_type_error"]
@@ -241,7 +241,7 @@ class TestReplacements:
         expected = f"The default value of 'not ok' given to option '{kwarg}' "
         expected += "has type 'str' which cannot be converted to a numeric value"
         with pytest.raises(TypeError, match=expected):
-            fastnumbers.try_array(given, result, **{kwarg: "not ok"})  # type: ignore
+            fastnumbers.try_array(given, result, **{kwarg: "not ok"})  # type: ignore[call-overload]
 
     @pytest.mark.parametrize("data_type", int_data_types)
     @pytest.mark.parametrize("kwarg", kwargs)
@@ -253,7 +253,7 @@ class TestReplacements:
         expected = rf"The default value of 1\.3 given to option '{kwarg}' "
         expected += f"cannot be converted to C type '{data_type}'"
         with pytest.raises(ValueError, match=expected):
-            fastnumbers.try_array(given, result, **{kwarg: 1.3})  # type: ignore
+            fastnumbers.try_array(given, result, **{kwarg: 1.3})  # type: ignore[call-overload]
 
     @pytest.mark.parametrize("data_type", float_data_types)
     @pytest.mark.parametrize(
@@ -417,7 +417,10 @@ class TestErrors:
     @pytest.mark.parametrize("data_type", data_types)
     @pytest.mark.parametrize("style", [list, iter])
     def test_given_junk_float_type_raises_error(
-        self, data_type: str, dumb: Any, style: Callable[[Any], Any]
+        self,
+        data_type: str,
+        dumb: DumbFloatClass | DumbIntClass,
+        style: Callable[[Any], Any],
     ) -> None:
         given = style([dumb])
         result = array.array(formats[data_type], [0])
@@ -469,7 +472,7 @@ class TestErrors:
     def test_given_non_iterable_raises_type_error(self, data_type: str) -> None:
         output = array.array(formats[data_type], [0, 0, 0, 0])
         with pytest.raises(TypeError, match="'int' object is not iterable"):
-            fastnumbers.try_array(5, output)  # type: ignore
+            fastnumbers.try_array(5, output)  # type: ignore[call-overload]
 
     @pytest.mark.parametrize("data_type", data_types)
     @pytest.mark.parametrize("style", [list, iter])

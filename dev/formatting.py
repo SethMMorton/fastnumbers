@@ -1,10 +1,13 @@
+#! /usr/bin/env python3
 """
 Cross-platform checking if code is appropriately formatted.
+
 INTENDED TO BE CALLED FROM PROJECT ROOT, NOT FROM dev/!
 """
 
-import glob
-import shlex
+from __future__ import annotations
+
+import pathlib
 import subprocess
 import sys
 
@@ -14,28 +17,26 @@ check = "--check" in sys.argv
 ruff = ["ruff", "format"]
 if check:
     ruff.extend(["--check", "--diff"])
-print(*map(shlex.quote, ruff))
-ruff_ret = subprocess.run(ruff)
+ruff_ret = subprocess.run(ruff, check=False, text=True)
 
 # Check that C++ code is formatted
-clang_format = [
+clang_format: list[pathlib.Path | str] = [
     "clang-format",
     "--style=file:dev/clang-format.cfg",
     "--dry-run" if check else "-i",
 ]
-cpp = glob.glob("src/cpp/*.cpp")
-hpp = glob.glob("include/fastnumbers/*.hpp")
-hpp += glob.glob("include/fastnumbers/parser/*.hpp")
+cpp = list(pathlib.Path("src/cpp").glob("*.cpp"))
+hpp = list(pathlib.Path("include/fastnumbers").glob("*.hpp"))
+hpp.extend(pathlib.Path("include/fastnumbers/parser").glob("*.hpp"))
 
-clang_format = clang_format + cpp + hpp
-print(*map(shlex.quote, clang_format))
+clang_format += cpp + hpp
 clang_format_ret = subprocess.run(
     clang_format,
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True,
+    check=False,
 )
-print(clang_format_ret.stdout)
 
 # Stop here if not checking
 if not check:

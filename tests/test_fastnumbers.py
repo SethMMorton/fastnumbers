@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import decimal
 import math
 import random
@@ -8,12 +10,9 @@ from itertools import combinations
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
-    List,
     NoReturn,
-    Tuple,
     Union,
     cast,
 )
@@ -141,7 +140,7 @@ class CheckIntLike(Protocol):
 
 
 class Real(Protocol):
-    def __call__(self, x: Any = ..., *, coerce: bool = ...) -> Union[int, float]: ...
+    def __call__(self, x: Any = ..., *, coerce: bool = ...) -> int | float: ...
 
 
 class FastReal(Protocol):
@@ -276,7 +275,7 @@ numeric_not_digit_not_int = [
 ]
 
 
-def a_number(s: Union[str, bytes]) -> bool:
+def a_number(s: str | bytes) -> bool:
     s = s.strip()
     try:
         int(s)
@@ -291,9 +290,9 @@ def a_number(s: Union[str, bytes]) -> bool:
         return True
     if isinstance(s, bytes):
         return False
-    if re.match(r"\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$", s, re.U):
+    if re.match(r"\s*([-+]?\d+\.?\d*(?:[eE][-+]?\d+)?)\s*$", s, re.UNICODE):
         return True
-    if re.match(r"\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$", s, re.U):
+    if re.match(r"\s*([-+]?\.\d+(?:[eE][-+]?\d+)?)\s*$", s, re.UNICODE):
         return True
     return s.strip().lstrip("[-+]") in numeric
 
@@ -308,7 +307,7 @@ def pad(value: str) -> str:
     return random.randint(1, 100) * space() + value + random.randint(1, 100) * space()
 
 
-def not_a_number(s: Union[str, bytes]) -> bool:
+def not_a_number(s: str | bytes) -> bool:
     return not a_number(s)
 
 
@@ -321,7 +320,7 @@ def not_an_integer(x: float) -> bool:
 
 
 def capture_result(  # type: ignore [no-untyped-def]
-    func: Union[ConversionFuncs, IdentificationFuncs], *args, **kwargs
+    func: ConversionFuncs | IdentificationFuncs, *args, **kwargs
 ) -> Any:
     """Execute a function, and either return the result or the exception message"""
     try:
@@ -368,7 +367,7 @@ class DumbIntClass:
 
 # Map function names to the actual functions,
 # for dymamic declaration of which functions test below.
-func_mapping: Dict[str, Callable[..., Any]] = {
+func_mapping: dict[str, Callable[..., Any]] = {
     "check_real": fastnumbers.check_real,
     "check_float": fastnumbers.check_float,
     "check_int": fastnumbers.check_int,
@@ -396,7 +395,7 @@ func_mapping: Dict[str, Callable[..., Any]] = {
 }
 
 
-def get_funcs(function_names: Iterable[str]) -> List[Callable[..., Any]]:
+def get_funcs(function_names: Iterable[str]) -> list[Callable[..., Any]]:
     """Given a list of function names, return the associated functions"""
     return [func_mapping[x] for x in function_names]
 
@@ -451,16 +450,16 @@ class TestArguments:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_invalid_argument_raises_type_error(
-        self, func: Union[Callable[[Any], Any], Real]
+        self, func: Callable[[Any], Any] | Real
     ) -> None:
         with pytest.raises(
             TypeError, match="got an unexpected keyword argument 'invalid'"
         ):
-            func(5, invalid="dummy")  # type: ignore
+            func(5, invalid="dummy")  # type: ignore[call-arg]
 
     def test_invalid_argument_raises_type_error_no_kwargs(self) -> None:
         with pytest.raises(TypeError, match="takes no keyword arguments"):
-            fastnumbers.float("5", invalid="dummy")  # type: ignore
+            fastnumbers.float("5", invalid="dummy")  # type: ignore[call-arg]
 
     funcs = [
         *non_builtin_funcs,
@@ -478,11 +477,11 @@ class TestArguments:
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_no_arguments_raises_type_error(self, func: Callable[[Any], Any]) -> None:
         with pytest.raises(TypeError, match="missing required argument 'x'"):
-            func()  # type: ignore
+            func()  # type: ignore[call-arg]
 
     def test_invalid_argument_and_missing_positional(self) -> None:
         with pytest.raises(TypeError, match="missing required argument 'x'"):
-            fastnumbers.try_float(on_fail=0.0)  # type: ignore
+            fastnumbers.try_float(on_fail=0.0)  # type: ignore[call-overload]
 
     def test_positional_as_kwarg_is_ok(self) -> None:
         assert fastnumbers.try_float(x="5") == 5.0
@@ -490,17 +489,17 @@ class TestArguments:
     def test_duplicate_argument(self) -> None:
         msg = r"argument for .* given by name \('x'\) and position"
         with pytest.raises(TypeError, match=msg):
-            fastnumbers.try_float("5", x="4")  # type: ignore
+            fastnumbers.try_float("5", x="4")  # type: ignore[call-overload]
 
     def test_too_many_positional_arguments1(self) -> None:
         msg = r"takes 1 positional arguments but 2 were given"
         with pytest.raises(TypeError, match=msg):
-            fastnumbers.try_float("5", "4")  # type: ignore
+            fastnumbers.try_float("5", "4")  # type: ignore[call-overload]
 
     def test_too_many_positional_arguments2(self) -> None:
         msg = r"takes from 0 to 1 positional arguments but 2 were given"
         with pytest.raises(TypeError, match=msg):
-            fastnumbers.float("5", "4")  # type: ignore
+            fastnumbers.float("5", "4")  # type: ignore[call-arg]
 
 
 class TestSelectors:
@@ -531,7 +530,7 @@ class TestSelectors:
         [fastnumbers.DISALLOWED, fastnumbers.STRING_ONLY, fastnumbers.NUMBER_ONLY],
     )
     def test_selectors_are_rejected_when_invalid_inf_conv(
-        self, func: Union[TryReal, TryFloat], inf: object
+        self, func: TryReal | TryFloat, inf: object
     ) -> None:
         with pytest.raises(ValueError, match="'inf' and 'nan' cannot be"):
             func("5", inf=inf)
@@ -542,7 +541,7 @@ class TestSelectors:
         [fastnumbers.DISALLOWED, fastnumbers.STRING_ONLY, fastnumbers.NUMBER_ONLY],
     )
     def test_selectors_are_rejected_when_invalid_nan_conv(
-        self, func: Union[TryReal, TryFloat], nan: object
+        self, func: TryReal | TryFloat, nan: object
     ) -> None:
         with pytest.raises(ValueError, match="'inf' and 'nan' cannot be"):
             func("5", nan=nan)
@@ -555,7 +554,7 @@ class TestSelectors:
         [fastnumbers.INPUT, fastnumbers.RAISE, str, float, int],
     )
     def test_selectors_are_rejected_when_invalid_inf_check(
-        self, func: Union[CheckReal, CheckFloat], inf: object
+        self, func: CheckReal | CheckFloat, inf: object
     ) -> None:
         with pytest.raises(ValueError, match="allowed values for 'inf' and 'nan'"):
             func("5", inf=inf)
@@ -566,7 +565,7 @@ class TestSelectors:
         [fastnumbers.INPUT, fastnumbers.RAISE, str, float, int],
     )
     def test_selectors_are_rejected_when_invalid_nan_check(
-        self, func: Union[CheckReal, CheckFloat], nan: object
+        self, func: CheckReal | CheckFloat, nan: object
     ) -> None:
         with pytest.raises(ValueError, match="allowed values for 'inf' and 'nan'"):
             func("5", nan=nan)
@@ -653,7 +652,7 @@ class TestBackwardsCompatibility:
             func("5", raise_on_invalid=True, on_fail=0.0)
 
     old_to_new_conversion_pairing = []
-    conv_pairs: List[Tuple[OldConversionFuncs, ConversionFuncs]] = [
+    conv_pairs: list[tuple[OldConversionFuncs, ConversionFuncs]] = [
         (partial(fastnumbers.fast_real, allow_underscores=False), fastnumbers.try_real),
         (
             partial(fastnumbers.fast_float, allow_underscores=False),
@@ -697,7 +696,7 @@ class TestBackwardsCompatibility:
                 assert old_result == new_result
 
     old_to_new_checking_pairing = []
-    check_pairs: List[Tuple[OldIdentificationFuncs, IdentificationFuncs]] = [
+    check_pairs: list[tuple[OldIdentificationFuncs, IdentificationFuncs]] = [
         (partial(fastnumbers.isreal, allow_underscores=False), fastnumbers.check_real),
         (
             partial(fastnumbers.isfloat, allow_underscores=False),
@@ -826,20 +825,20 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     funcs = ["try_real", "try_float"]
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    def test_given_nan_returns_nan(self, func: Union[TryReal, TryFloat]) -> None:
+    def test_given_nan_returns_nan(self, func: TryReal | TryFloat) -> None:
         assert math.isnan(func(float("nan")))
         assert math.isnan(func(float("nan"), nan=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", [*all_nan, pad("nan"), pad("-NAN")])
     def test_given_nan_string_returns_nan(
-        self, func: Union[TryReal, TryFloat], x: str
+        self, func: TryReal | TryFloat, x: str
     ) -> None:
         assert math.isnan(func(x))
         assert math.isnan(func(x, nan=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    def test_given_nan_returns_sub_value(self, func: Union[TryReal, TryFloat]) -> None:
+    def test_given_nan_returns_sub_value(self, func: TryReal | TryFloat) -> None:
         assert func(float("nan"), nan=0) == 0
         assert math.isnan(func(float("nan"), nan=fastnumbers.INPUT))
         with pytest.raises(ValueError):
@@ -848,7 +847,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_with_nan_given_nan_string_returns_sub_value(
-        self, func: Union[TryReal, TryFloat]
+        self, func: TryReal | TryFloat
     ) -> None:
         assert func("nan", nan=0.0) == 0.0
         assert func("nan", nan=fastnumbers.INPUT) == "nan"
@@ -857,14 +856,14 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert func("nan", nan=lambda _: "hello") == "hello"
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    def test_given_inf_returns_inf(self, func: Union[TryReal, TryFloat]) -> None:
+    def test_given_inf_returns_inf(self, func: TryReal | TryFloat) -> None:
         assert math.isinf(func(float("inf")))
         assert math.isinf(func(float("inf"), inf=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", [*most_inf, pad("inf"), pad("+INFINITY")])
     def test_given_inf_string_returns_inf(
-        self, func: Union[TryReal, TryFloat], x: str
+        self, func: TryReal | TryFloat, x: str
     ) -> None:
         assert math.isinf(func(x))
         assert math.isinf(func(float("inf"), inf=fastnumbers.ALLOWED))  # default
@@ -872,12 +871,12 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", [*neg_inf, pad("-inf"), pad("-INFINITY")])
     def test_given_negative_inf_string_returns_negative_inf(
-        self, func: Union[TryReal, TryFloat], x: str
+        self, func: TryReal | TryFloat, x: str
     ) -> None:
         assert func(x) == float("-inf")
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    def test_given_inf_returns_sub_value(self, func: Union[TryReal, TryFloat]) -> None:
+    def test_given_inf_returns_sub_value(self, func: TryReal | TryFloat) -> None:
         assert func(float("inf"), inf=1000.0) == 1000.0
         assert math.isinf(func(float("inf"), inf=fastnumbers.INPUT))
         with pytest.raises(ValueError):
@@ -886,7 +885,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_with_inf_given_inf_string_returns_sub_value(
-        self, func: Union[TryReal, TryFloat]
+        self, func: TryReal | TryFloat
     ) -> None:
         assert func("inf", inf=10000.0) == 10000.0
         assert func("-inf", inf=10000.0) == 10000.0
@@ -902,7 +901,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @given(floats(allow_nan=False))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_float_returns_float(
-        self, func: Union[TryReal, TryFloat], x: float
+        self, func: TryReal | TryFloat, x: float
     ) -> None:
         result = func(x)
         assert result == x
@@ -913,7 +912,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @example("10." + "0" * 1050)  # absurdly large number of zeros
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_float_string_returns_float(
-        self, func: Union[TryReal, TryFloat], x: str
+        self, func: TryReal | TryFloat, x: str
     ) -> None:
         expected = float(x)
         result = func(x)
@@ -926,7 +925,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @given(floats(allow_nan=False, allow_infinity=False))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_float_returns_int(
-        self, func: Union[TryInt, TryForceInt], x: float
+        self, func: TryInt | TryForceInt, x: float
     ) -> None:
         expected = int(x)
         result = func(x)
@@ -946,7 +945,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @example(int(10 * 300))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_int_returns_int(
-        self, func: Union[TryReal, TryInt, TryForceInt], x: int
+        self, func: TryReal | TryInt | TryForceInt, x: int
     ) -> None:
         result = func(x)
         assert result == x
@@ -970,7 +969,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @example("33684944745210074227862907273261282807602986571245071790093633147269")
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_int_string_returns_int(
-        self, func: Union[TryReal, TryInt, TryForceInt], x: str
+        self, func: TryReal | TryInt | TryForceInt, x: str
     ) -> None:
         expected = int(x)
         result = func(x)
@@ -990,7 +989,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @given(sampled_from(digits))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_digit_returns_int(
-        self, func: Union[TryReal, TryInt, TryForceInt], x: str
+        self, func: TryReal | TryInt | TryForceInt, x: str
     ) -> None:
         expected = unicodedata.digit(x)
         result = func(x)
@@ -1004,7 +1003,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     @example("\u0f33")  # the only negative unicode character
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_float(
-        self, func: Union[TryReal, TryInt, TryForceInt], x: str
+        self, func: TryReal | TryInt | TryForceInt, x: str
     ) -> None:
         expected = unicodedata.numeric(x)
         result = func(x)
@@ -1064,7 +1063,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_dumb_float_class_responds_to_internal_valueerror(
-        self, func: Union[TryReal, TryFloat]
+        self, func: TryReal | TryFloat
     ) -> None:
         x = DumbFloatClass()
         assert func(x) is x
@@ -1076,7 +1075,7 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_dumb_int_class_responds_to_internal_valueerror(
-        self, func: Union[TryInt, TryForceInt]
+        self, func: TryInt | TryForceInt
     ) -> None:
         x = DumbIntClass()
         assert func(x) is x
@@ -1143,14 +1142,14 @@ class TestErrorHandlingConversionFunctionsUnsucessful:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_nan_raises_valueerror_for_int_funcions(
-        self, func: Union[TryInt, TryForceInt]
+        self, func: TryInt | TryForceInt
     ) -> None:
         with pytest.raises(ValueError):
             func(float("nan"), on_fail=fastnumbers.RAISE)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_inf_raises_overflowerror_for_int_funcions(
-        self, func: Union[TryInt, TryForceInt]
+        self, func: TryInt | TryForceInt
     ) -> None:
         with pytest.raises(OverflowError):
             func(float("inf"), on_fail=fastnumbers.RAISE)
@@ -1426,7 +1425,7 @@ class TestCheckingFunctions:
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", [float("nan"), float("inf"), float("-inf")])
     def test_returns_true_for_nan_and_inf(
-        self, func: Union[CheckReal, CheckFloat], x: float
+        self, func: CheckReal | CheckFloat, x: float
     ) -> None:
         assert func(x)
         assert func(x, nan=fastnumbers.NUMBER_ONLY, inf=fastnumbers.NUMBER_ONLY)
@@ -1437,7 +1436,7 @@ class TestCheckingFunctions:
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", [*all_nan, pad("nan"), pad("-NAN")])
     def test_returns_false_for_nan_string_unless_allow_nan_is_true(
-        self, func: Union[CheckReal, CheckFloat], x: str
+        self, func: CheckReal | CheckFloat, x: str
     ) -> None:
         assert not func(x)
         assert not func(x, nan=fastnumbers.NUMBER_ONLY)  # default
@@ -1448,7 +1447,7 @@ class TestCheckingFunctions:
     @parametrize("func", get_funcs(funcs), ids=funcs)
     @parametrize("x", most_inf + neg_inf + [pad("-inf"), pad("+INFINITY")])
     def test_returns_false_for_inf_string_unless_allow_infinity_is_true(
-        self, func: Union[CheckReal, CheckFloat], x: str
+        self, func: CheckReal | CheckFloat, x: str
     ) -> None:
         assert not func(x)
         assert not func(x, nan=fastnumbers.NUMBER_ONLY)  # default
@@ -1463,7 +1462,7 @@ class TestCheckingFunctions:
     @given(integers())
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_true_if_given_int(
-        self, func: Union[CheckReal, CheckInt, CheckIntLike], x: int
+        self, func: CheckReal | CheckInt | CheckIntLike, x: int
     ) -> None:
         assert func(x)
         assert func(x, consider=None)  # default
@@ -1474,7 +1473,7 @@ class TestCheckingFunctions:
     @given(floats())
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_true_if_given_float(
-        self, func: Union[CheckReal, CheckFloat], x: float
+        self, func: CheckReal | CheckFloat, x: float
     ) -> None:
         assert func(x)
         assert func(x, consider=None)  # default
@@ -1497,7 +1496,7 @@ class TestCheckingFunctions:
     @example("10." + "0" * 1050)
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_true_if_given_float_string(
-        self, func: Union[CheckReal, CheckFloat], x: str
+        self, func: CheckReal | CheckFloat, x: str
     ) -> None:
         assert func(x)
         assert func(pad(x))  # Accepts padding
@@ -1544,7 +1543,7 @@ class TestCheckingFunctions:
     @given(sampled_from(numeric_not_digit_not_int))
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_unicode_numeral_returns_true(
-        self, func: Union[CheckReal, CheckFloat], x: str
+        self, func: CheckReal | CheckFloat, x: str
     ) -> None:
         assert func(x)
         assert func(pad(x))  # Accepts padding
@@ -1585,7 +1584,7 @@ class TestCheckingFunctions:
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_returns_false_for_nan_or_inf_string(
-        self, func: Union[CheckInt, CheckIntLike]
+        self, func: CheckInt | CheckIntLike
     ) -> None:
         assert not func("nan")
         assert not func("inf")
@@ -1727,7 +1726,7 @@ class TestQueryType:
 
     def test_allowed_type_must_be_a_sequence(self) -> None:
         with pytest.raises(TypeError, match="allowed_type is not a sequence type"):
-            fastnumbers.query_type("5", allowed_types={str: float})  # type: ignore
+            fastnumbers.query_type("5", allowed_types={str: float})  # type: ignore[call-overload]
 
     def test_allowed_type_must_non_empty(self) -> None:
         with pytest.raises(
@@ -1852,7 +1851,7 @@ class TestQueryType:
         | iterables(floats())
     )
     def test_containers_returns_container_type(
-        self, x: Union[Dict[float, float], Iterable[float]]
+        self, x: dict[float, float] | Iterable[float]
     ) -> None:
         assert fastnumbers.query_type(x) is type(x)
         assert fastnumbers.query_type(x, allowed_types=(float, int, str)) is None
@@ -1886,8 +1885,8 @@ class TestMappingFunctions:
         self,
         nomapper: ConversionFuncs,
         mapper: ConversionFuncs,
-        kwargs: Dict[str, Any],
-        x: List[Union[float, int, str]],
+        kwargs: dict[str, Any],
+        x: list[float | int | str],
     ) -> None:
         nomapper = partial(nomapper, **kwargs)
         mapper = partial(mapper, **kwargs)
@@ -1973,17 +1972,11 @@ class TestMappingFunctions:
     def test_mapping_iterator_handles_range(self, func: ConversionFuncs) -> None:
         """Range is a sequence but is not a 'fast sequence'"""
         result = func(range(4))
-        print(1)
         assert next(result) == 0
-        print(2)
         assert next(result) == 1
-        print(3)
         assert next(result) == 2
-        print(4)
         assert next(result) == 3
-        print(5)
         assert next(result, None) is None
-        print(6)
 
     @parametrize(
         "func",
@@ -2034,7 +2027,7 @@ class TestMappingFunctions:
     def test_mapping_handles_empty_iterable(
         self, func: ConversionFuncs, iterable_gen: Callable[[], Iterable[Any]]
     ) -> None:
-        expected: List[Any] = []
+        expected: list[Any] = []
         result = func(iterable_gen())
         assert result == expected
 

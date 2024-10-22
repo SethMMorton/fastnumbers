@@ -50,6 +50,7 @@ Changelog = "https://github.com/SethMMorton/fastnumbers/blob/main/CHANGELOG.md"
 version_file = "src/fastnumbers/_version.py"
 
 [tool.mypy]
+mypy_path = "mypy_stubs"
 plugins = "numpy.typing.mypy_plugin"
 
 [tool.pytest.ini_options]
@@ -64,38 +65,7 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 fixable = ["ALL"]
-select = [
-	"F",
-	"E",
-	"W",
-	"C90",  # mccabe
-	"B",    # flake8-bugbear
-	"N",    # pep8-naming
-	"I",    # isort
-	"UP",   # pyupgrade
-	"YTT",  # flake8-2020
-	"BLE",  # flake8-blind-except
-	"A",    # flake8-builtins
-	"COM",  # flake8-commas
-	"C4",   # flake8-comprehensions
-	"EM",   # flake8-errmsg
-	"EXE",  # flake8-executable
-	"ISC",  # flake8-implicit-str-concat
-	"ICN",  # flake8-import-conventions
-	"PIE",  # flake8-pie
-	"PYI",  # flake8-pyi
-	"PT",   # flake8-pytest-style
-	"Q",    # flake8-quotes
-	"RSE",  # flake8-raise
-	"RET",  # flake8-return
-	"SLF",  # flake8-self
-	"SIM",  # flake8-simplify
-	"TID",  # flake8-tidy-imports
-	"TCH",  # flake8-type-checking
-	"ARG",  # flake8-unused-arguments
-	"ERA",  # eradicate
-	"RUF",  # ruff-specific-rules
-]
+select = ["ALL"]
 ignore = [
 	"RUF001",  # ambiguous-unicode-character-string
 	"RUF012",  # mutable class variables need annotation
@@ -103,21 +73,66 @@ ignore = [
 	"ISC001",  # single line implicit string concatenation
 	"PT011",   # pytest.raises without match
 	"PYI001",  # prefix private types with '_'
+	"DTZ",     # flaek8-datetimez
+	"D203",    # one blank line before docstring in class
+	"D212",    # docstring on same line as quotes
 ]
 # doctests = true  # enable when/if available
 
 [tool.ruff.lint.per-file-ignores]
-"tests/test_builtin*.py" = [
-	"PT027",  # unittest-style assert
-	"PT009",  # unittest-style assert
-	"PT017",  # use pytest.raises
-]
-"tests/test_fastnumbers.py"= [
-	"PIE794",  # class filed defined multiple times
+"fastnumbers/__init__.py" = [
+	"PLC0414",  # useless import alias
 ]
 "fastnumbers.pyi" = [
-	"A001",  # shadowing a builtin
+	"A001",     # shadowing a builtin
+	"ANN401",   # Any type disallowed
+	"PLR0913",  # too many arguments in function definition
+]
+"tests/**.py" = [
+	"S101",     # use of assert
+	"S110",     # log a try/except/pass
+	"S311",     # pseudo-random
+	"D",        # docstring checks
+	"INP",      # implicit namespace package
+	"PLR2004",  # magic value comparison
+	"PERF",     # performance checks
+]
+"tests/builtin_support.py" = [
+	"ANN401",   # Any type disallowed
+]
+"tests/test_builtin*.py" = [
+	"PT027",    # unittest-style assert
+	"PT009",    # unittest-style assert
+	"PT017",    # use pytest.raises
+	"PLR0915",  # too many statements
+]
+"tests/test_fastnumbers.py" = [
+	"ANN401",   # Any type disallowed
+	"ANN002",   # need type annotation for *args
+	"ANN003",   # need type annotation for **kwargs
+	"PLR0913",  # too many arguments in function definition
+	"PIE794",   # class filed defined multiple times
+	"PLR0124",  # name compared with itself (used to check for NaN)
+]
+"tests/test_fastnumbers_examples.py" = [
+	"PLR0915",  # too many statements
+]
+"dev/**.py" = [
+	"S603",  # subprocess call of untrusted input
+	"S606",  # start process without a shell
+	"S607",  # executable with partial path
+]
+"dev/bump.py" = [
+	"T201",  # print found
+]
+"profiling/profile.py" = [
+	"ANN",   # annotations
+	"T201",  # print found
 ]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+known-local-folder = ["builtin_grammar", "builtin_support"]

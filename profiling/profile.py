@@ -1,3 +1,8 @@
+#! /usr/bin/env python
+"""Profile the performance of fastnumbers."""
+
+from __future__ import annotations
+
 import copy
 import decimal
 import gc
@@ -19,23 +24,30 @@ except IndexError:
 else:
 
     class Tee:
+        """Redirect an output stream to both file and the stream."""
+
         def __init__(self, stream, filepath):
+            """Initialize."""
             self.stream = stream
-            self.fo = open(filepath, "w")  # noqa: SIM115
+            self.fo = open(filepath, "w")  # noqa: SIM115, PTH123
 
         def write(self, data):
+            """Write the data to the streams."""
             self.stream.write(data)
             self.stream.flush()
             self.fo.write(data)
 
         def flush(self):
+            """Flush the buffer."""
             self.stream.flush()
             self.fo.flush()
 
         def close(self):
+            """Close the open file object."""
             self.fo.close()
 
         def __del__(self):
+            """Close the data on instance deletion."""
             self.close()
 
     sys.stdout = Tee(sys.stdout, outloc)
@@ -59,17 +71,17 @@ class Timer:
     )
 
     def __init__(self, title):
+        """Initialize."""
         print("### " + title)
         print()
         self.functions = []
 
-    def add_function(self, func, label, setup="pass", iterable=False):
+    def add_function(self, func, label, *, setup="pass", iterable=False):
         """Add a function to be timed and compared."""
         self.functions.append((func, setup, label, iterable))
 
-    def time_functions(self, repeat=5):
+    def time_functions(self, *, repeat=5):
         """Time all the given functions against all input then display results."""
-
         # Collect the function labels to make the header of this table.
         # Show that the units are seconds for each.
         function_labels = [label + " (ms)" for _, _, label, _ in self.functions]
@@ -85,7 +97,7 @@ class Timer:
             row = []
             for func, setup, _, iterable in self.functions:
                 if iterable:
-                    setup += f"; iterable = [{value!r}] * 50"
+                    setup += f"; iterable = [{value!r}] * 50"  # noqa: PLW2901
                     call = f"{func}(iterable)"
                 else:
                     call = f"{func}({value!r})"
@@ -113,20 +125,23 @@ class Timer:
 
     @staticmethod
     def mean(x):
+        """Compute the mean of the measured times."""
         return math.fsum(x) / len(x)
 
     @staticmethod
     def stddev(x):
+        """Compute the standard deviation of the measured times."""
         mean = Timer.mean(x)
         sum_of_squares = math.fsum((v - mean) ** 2 for v in x)
         return math.sqrt(sum_of_squares / (len(x) - 1))
 
     @staticmethod
     def bold(x):
+        """Make text bold."""
         return f"**{x}**"
 
     def _timeit(self, call, setup, repeat=5):
-        """Perform the actual timing and return a formatted string of the runtime"""
+        """Perform the actual timing and return a formatted string of the runtime."""
         result = timeit.repeat(call, setup, number=100000, repeat=repeat)
         return self.mean(result), self.stddev(result)
 
@@ -135,12 +150,15 @@ class Table(list):
     """List of strings that can be made into a Markdown table."""
 
     def add_row(self, *elements):
+        """Insert a row into the table."""
         self.append(list(elements))
 
     def add_header(self, *elements):
+        """Insert a row into the table."""
         self.add_row(*elements)
 
     def __str__(self):
+        """Convert the table into a markdown string."""
         header = copy.deepcopy(self[0])
         rows = copy.deepcopy(self[1:])
 
@@ -177,17 +195,15 @@ class Table(list):
 
 
 def int_re(x, int_match=re.compile(r"[-+]?\d+$").match):
-    """Function to simulate fast_int but with regular expressions."""
+    """Simulate fast_int but with regular expressions."""
     try:
-        if int_match(x):
-            return int(x)
-        return x
+        return int(x) if int_match(x) else x
     except TypeError:
         return int(x)
 
 
 def int_try(x):
-    """Function to simulate fast_int but with try/except."""
+    """Simulate fast_int but with try/except."""
     try:
         return int(x)
     except ValueError:
@@ -195,17 +211,15 @@ def int_try(x):
 
 
 def float_re(x, float_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match):
-    """Function to simulate fast_float but with regular expressions."""
+    """Simulate fast_float but with regular expressions."""
     try:
-        if float_match(x):
-            return float(x)
-        return x
+        return float(x) if float_match(x) else x
     except TypeError:
         return float(x)
 
 
 def float_try(x):
-    """Function to simulate fast_float but with try/except."""
+    """Simulate fast_float but with try/except."""
     try:
         return float(x)
     except ValueError:
@@ -217,13 +231,9 @@ def real_re(
     int_match=re.compile(r"[-+]?\d+$").match,
     real_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match,
 ):
-    """Function to simulate fast_real but with regular expressions."""
+    """Simulate fast_real but with regular expressions."""
     try:
-        if int_match(x):
-            return int(x)
-        if real_match(x):
-            return float(x)
-        return x
+        return int(x) if int_match(x) else float(x) if real_match(x) else x
     except TypeError:
         if type(x) in (float, int):
             return x
@@ -231,7 +241,7 @@ def real_re(
 
 
 def real_try(x):
-    """Function to simulate fast_real but with try/except."""
+    """Simulate fast_real but with try/except."""
     try:
         a = float(x)
     except ValueError:
@@ -246,19 +256,15 @@ def forceint_re(
     int_match=re.compile(r"[-+]\d+$").match,
     float_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match,
 ):
-    """Function to simulate fast_forceint but with regular expressions."""
+    """Simulate fast_forceint but with regular expressions."""
     try:
-        if int_match(x):
-            return int(x)
-        if float_match(x):
-            return int(float(x))
-        return x
+        return int(x) if int_match(x) else int(float(x)) if float_match(x) else x
     except TypeError:
         return int(x)
 
 
 def forceint_try(x):
-    """Function to simulate fast_forceint but with try/except."""
+    """Simulate fast_forceint but with try/except."""
     try:
         return int(x)
     except ValueError:
@@ -273,7 +279,7 @@ if sys.version_info >= (3, 9):
     def forceint_denoise(
         x, _decimal=decimal.Decimal, ceil=math.ceil, log10=math.log10, ulp=math.ulp
     ):
-        """Function to noiselessly convert a float to an integer."""
+        """Noiselessly convert a float to an integer."""
         try:
             # Integer method
             int_val = int(x)
@@ -289,18 +295,18 @@ if sys.version_info >= (3, 9):
                 raise TypeError from e
 
     def forceint_denoise_fn(x, try_forceint=fastnumbers.try_forceint):
-        """Function to noiselessly convert a float to an integer using fastnumbers."""
+        """Noiselessly convert a float to an integer using fastnumbers."""
         return try_forceint(x, denoise=True)
 
 
 def check_int_re(x, int_match=re.compile(r"[-+]?\d+$").match):
-    """Function to simulate check_int but with regular expressions."""
+    """Simulate check_int but with regular expressions."""
     t = type(x)
     return t is int if t in (float, int) else bool(int_match(x))
 
 
 def check_int_try(x):
-    """Function to simulate check_int but with try/except."""
+    """Simulate check_int but with try/except."""
     try:
         int(x)
     except ValueError:
@@ -312,13 +318,13 @@ def check_int_try(x):
 def check_float_re(
     x, float_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match
 ):
-    """Function to simulate check_float but with regular expressions."""
+    """Simulate check_float but with regular expressions."""
     t = type(x)
     return t is float if t in (float, int) else bool(float_match(x))
 
 
 def check_float_try(x):
-    """Function to simulate check_float but with try/except."""
+    """Simulate check_float but with try/except."""
     try:
         float(x)
     except ValueError:
@@ -328,12 +334,12 @@ def check_float_try(x):
 
 
 def check_real_re(x, real_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match):
-    """Function to simulate check_real but with regular expressions."""
+    """Simulate check_real but with regular expressions."""
     return type(x) in (float, int) or bool(real_match(x))
 
 
 def check_real_try(x):
-    """Function to simulate check_real but with try/except."""
+    """Simulate check_real but with try/except."""
     try:
         float(x)
     except ValueError:
@@ -347,19 +353,17 @@ def check_intlike_re(
     int_match=re.compile(r"[-+]?\d+$").match,
     float_match=re.compile(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$").match,
 ):
-    """Function to simulate check_intlike but with regular expressions."""
+    """Simulate check_intlike but with regular expressions."""
     try:
-        if int_match(x):
-            return True
-        if float_match(x):
-            return float(x).is_integer()
-        return False
+        return bool(int_match(x)) or (
+            float(x).is_integer() if float_match(x) else False
+        )
     except TypeError:
         return int(x) == x
 
 
 def check_intlike_try(x):
-    """Function to simulate check_intlike but with try/except."""
+    """Simulate check_intlike but with try/except."""
     try:
         a = int(x)
     except ValueError:
@@ -374,22 +378,27 @@ def check_intlike_try(x):
 
 
 def fn_listcomp(iterable, func=fastnumbers.try_float):
+    """Execute the function in a list comprehension."""
     return [func(x) for x in iterable]
 
 
 def fn_map(iterable, func=fastnumbers.try_float):
+    """Execute the function with map."""
     return list(map(func, iterable))
 
 
 def fn_map_option(iterable, func=fastnumbers.try_float):
+    """Execute the function with the map option."""
     return func(iterable, map=list)
 
 
 def fn_map_iter_option(iterable, func=fastnumbers.try_float):
+    """Execute the function with the iter option."""
     return list(func(iterable, map=True))
 
 
 def fn_then_array(iterable, func=fastnumbers.try_float):
+    """Execute the function as an array."""
     return np.array(func(iterable, map=list), dtype=np.float64)
 
 
@@ -397,6 +406,7 @@ output = np.empty(50, dtype=np.float64)
 
 
 def fn_into_array(iterable, func=fastnumbers.try_array, out=output):
+    """Execute the function into an existing array."""
     func(iterable, out)
 
 

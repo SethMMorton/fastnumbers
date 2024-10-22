@@ -1,17 +1,21 @@
+from __future__ import annotations
+
+import ast
 import builtins
 import contextlib
 import sys
 import unittest
-from typing import Callable, List, Optional, Union
+from typing import Callable
+
+import pytest
+
+from fastnumbers import int
 
 import builtin_support as support
-import pytest
 from builtin_grammar import (
     INVALID_UNDERSCORE_LITERALS,
     VALID_UNDERSCORE_LITERALS,
 )
-
-from fastnumbers import int
 
 L = [
     ("0", 0),
@@ -61,7 +65,7 @@ class IntTestCases(unittest.TestCase):
                     ss = prefix + sign + s
                     vv = v
                     if sign == "-" and v is not ValueError:
-                        vv = -v  # type: ignore
+                        vv = -v  # type: ignore[operator]
                     with contextlib.suppress(ValueError):
                         assert int(ss) == vv
 
@@ -223,7 +227,7 @@ class IntTestCases(unittest.TestCase):
         for lit in VALID_UNDERSCORE_LITERALS:
             if any(ch in lit for ch in ".eEjJ"):
                 continue
-            assert int(lit, 0) == eval(lit)
+            assert int(lit, 0) == ast.literal_eval(lit)
             assert int(lit, 0) == int(lit.replace("_", ""), 0)
         for lit in INVALID_UNDERSCORE_LITERALS:
             if any(ch in lit for ch in ".eEjJ"):
@@ -279,9 +283,9 @@ class IntTestCases(unittest.TestCase):
     def test_int_base_bad_types(self) -> None:
         """Not integer types are not valid bases; issue16772."""
         with pytest.raises(TypeError):
-            int("0", 5.5)  # type: ignore
+            int("0", 5.5)  # type: ignore[call-overload]
         with pytest.raises(TypeError):
-            int("0", 5.0)  # type: ignore
+            int("0", 5.0)  # type: ignore[call-overload]
 
     def test_int_base_indexable(self) -> None:
         class MyIndexable:
@@ -304,7 +308,7 @@ class IntTestCases(unittest.TestCase):
     def test_non_numeric_input_types(self) -> None:
         # Test possible non-numeric types for the argument x, including
         # subclasses of the explicitly documented accepted types.
-        class CustomStr(str):
+        class CustomStr(str):  # noqa: SLOT000
             pass
 
         class CustomBytes(bytes):
@@ -313,7 +317,7 @@ class IntTestCases(unittest.TestCase):
         class CustomByteArray(bytearray):
             pass
 
-        factories: List[Callable[[bytes], Union[bytes, bytearray, str]]] = [
+        factories: list[Callable[[bytes], bytes | bytearray | str]] = [
             bytes,
             bytearray,
             lambda b: CustomStr(b.decode()),
@@ -326,7 +330,7 @@ class IntTestCases(unittest.TestCase):
         except ImportError:
             pass
         else:
-            factories.append(lambda b: array("B", b))  # type: ignore
+            factories.append(lambda b: array("B", b))  # type: ignore[arg-type,return-value]
 
         for f in factories:
             x = f(b"100")
@@ -374,7 +378,7 @@ class IntTestCases(unittest.TestCase):
 
         for base in (object, Classic):
 
-            class IntOverridesTrunc(base):  # type: ignore
+            class IntOverridesTrunc(base):  # type: ignore[misc,valid-type]
                 def __int__(self) -> builtins.int:
                     return 42
 
@@ -390,8 +394,8 @@ class IntTestCases(unittest.TestCase):
                 return 42
 
         class BadIndex(builtins.int):
-            def __index__(self) -> builtins.float:  # type: ignore
-                return 42.0
+            def __index__(self) -> builtins.float:  # type: ignore[override]
+                return 42.0  # noqa: PLE0305
 
         my_int = MyIndex(7)
         assert my_int == 7
@@ -405,10 +409,10 @@ class IntTestCases(unittest.TestCase):
                 return 42
 
         class BadInt(builtins.int):
-            def __int__(self) -> builtins.float:  # type: ignore
+            def __int__(self) -> builtins.float:  # type: ignore[override]
                 return 42.0
 
-        my_int: Union[MyInt, BadInt] = MyInt(7)
+        my_int: MyInt | BadInt = MyInt(7)
         assert my_int == 7
         assert int(my_int) == 42
 
@@ -419,11 +423,11 @@ class IntTestCases(unittest.TestCase):
     def test_int_returns_int_subclass(self) -> None:
         class BadIndex:
             def __index__(self) -> bool:
-                return True
+                return True  # noqa: PLE0305
 
         class BadIndex2(builtins.int):
             def __index__(self) -> bool:
-                return True
+                return True  # noqa: PLE0305
 
         class BadInt:
             def __int__(self) -> bool:
@@ -433,7 +437,7 @@ class IntTestCases(unittest.TestCase):
             def __int__(self) -> bool:
                 return True
 
-        bad_int: Union[BadInt, BadIndex, BadIndex2]
+        bad_int: BadInt | BadIndex | BadIndex2
         bad_int = BadIndex()
         with self.assertWarns(DeprecationWarning):
             n = int(bad_int)
@@ -458,7 +462,7 @@ class IntTestCases(unittest.TestCase):
         assert type(n) is builtins.int
 
     def test_error_message(self) -> None:
-        def check(s: Union[str, bytes], base: Optional[builtins.int] = None) -> None:
+        def check(s: str | bytes, base: builtins.int | None = None) -> None:
             with self.assertRaises(ValueError, msg=f"int({s!r}, {base!r})") as cm:
                 if base is None:
                     int(s)

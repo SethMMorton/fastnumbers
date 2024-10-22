@@ -1,5 +1,9 @@
-import glob
+"""Rules for compilation of C++ extension module."""
+
+from __future__ import annotations
+
 import os
+import pathlib
 import sys
 
 from setuptools import Extension, setup
@@ -36,8 +40,8 @@ else:
 ext = [
     Extension(
         "fastnumbers.fastnumbers",
-        sorted(glob.glob("src/cpp/*.cpp")),
-        include_dirs=[os.path.abspath(os.path.join("include"))],
+        sorted(pathlib.Path("src/cpp").glob("*.cpp")),
+        include_dirs=[pathlib.Path("include").resolve()],
         extra_compile_args=compile_args,
         extra_link_args=["-lm"],
     )

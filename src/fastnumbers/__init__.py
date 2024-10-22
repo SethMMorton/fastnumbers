@@ -1,9 +1,12 @@
+"""Public interface for the fastnumbers package."""
+
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 try:
     # The redundant "as" tells mypy to treat as explict import
-    from fastnumbers._version import __version__ as __version__
-    from fastnumbers._version import __version_tuple__ as __version_tuple__
+    from fastnumbers._version import __version__, __version_tuple__
 except ImportError:
     __version__ = "unknown version"
     __version_tuple__ = (0, 0, "unknown version")
@@ -64,7 +67,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Iterable, NewType, TypeVar, overload
 
     IntT = TypeVar("IntT", np.int_)
-    FloatT = TypeVar("FloatT", np.float_)
+    FloatT = TypeVar("FloatT", np.float64)
     CallToInt = Callable[[Any], int]
     CallToFloat = Callable[[Any], float]
     ALLOWED_T = NewType("ALLOWED_T", object)
@@ -172,8 +175,8 @@ if TYPE_CHECKING:
     ) -> None: ...
 
 
-def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002
-    """
+def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002, D417
+    r"""
     Quickly convert an iterable's contents into an array.
 
     Is basically a direct analogue to using the ``map`` option in :func:`try_float`
@@ -266,7 +269,6 @@ def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002
 
     Examples
     --------
-
         >>> from fastnumbers import try_array
         >>> import numpy as np
         >>> try_array(["5", "3", "8"])

@@ -1,18 +1,23 @@
+from __future__ import annotations
+
+import ast
 import builtins
 import sys
 import time
 import unittest
 from math import copysign, isinf, isnan
-from typing import Callable, List, Union
+from typing import Callable
+
+import pytest
+from typing_extensions import Self
+
+from fastnumbers import float
 
 import builtin_support as support
-import pytest
 from builtin_grammar import (
     INVALID_UNDERSCORE_LITERALS,
     VALID_UNDERSCORE_LITERALS,
 )
-
-from fastnumbers import float
 
 INF = float("inf")
 NAN = float("nan")
@@ -68,7 +73,7 @@ class GeneralFloatCases(unittest.TestCase):
     def test_underscores(self) -> None:
         for lit in VALID_UNDERSCORE_LITERALS:
             if not any(ch in lit for ch in "jJxXoObB"):
-                assert float(lit) == eval(lit)
+                assert float(lit) == ast.literal_eval(lit)
                 assert float(lit) == float(lit.replace("_", ""))
         for lit in INVALID_UNDERSCORE_LITERALS:
             if lit in ("0_7", "09_99"):  # octals are not recognized here
@@ -89,7 +94,7 @@ class GeneralFloatCases(unittest.TestCase):
     def test_non_numeric_input_types(self) -> None:
         # Test possible non-numeric types for the argument x, including
         # subclasses of the explicitly documented accepted types.
-        class CustomStr(str):
+        class CustomStr(str):  # noqa: SLOT000
             pass
 
         class CustomBytes(bytes):
@@ -98,7 +103,7 @@ class GeneralFloatCases(unittest.TestCase):
         class CustomByteArray(bytearray):
             pass
 
-        factories: List[Callable[[bytes], Union[bytes, bytearray, str]]] = [
+        factories: list[Callable[[bytes], bytes | bytearray | str]] = [
             bytes,
             bytearray,
             lambda b: CustomStr(b.decode()),
@@ -111,7 +116,7 @@ class GeneralFloatCases(unittest.TestCase):
         except ImportError:
             pass
         else:
-            factories.append(lambda b: array("B", b))  # type: ignore
+            factories.append(lambda b: array("B", b))  # type: ignore[return-value,arg-type]
 
         for f in factories:
             x = f(b" 3.14  ")
@@ -138,7 +143,7 @@ class GeneralFloatCases(unittest.TestCase):
                 self.fail(f"Expected int({s!r}) to raise a ValueError")
 
     def test_error_message(self) -> None:
-        def check(s: Union[str, bytes]) -> None:
+        def check(s: str | bytes) -> None:
             with self.assertRaises(ValueError, msg=f"float({s!r})") as cm:
                 float(s)
             assert str(cm.exception) == f"could not convert string to float: {s!r}"
@@ -202,7 +207,7 @@ class GeneralFloatCases(unittest.TestCase):
                 return 42.0
 
         class Foo3(builtins.float):
-            def __new__(cls, value: builtins.float = 0.0) -> "Foo3":
+            def __new__(cls, value: builtins.float = 0.0) -> Self:
                 return builtins.float.__new__(cls, 2 * value)
 
             def __float__(self) -> builtins.float:
@@ -214,7 +219,7 @@ class GeneralFloatCases(unittest.TestCase):
 
         # Issue 5759: __float__ not called on str subclasses (though it is on
         # unicode subclasses).
-        class FooStr(str):
+        class FooStr(str):  # noqa: SLOT000
             def __float__(self) -> builtins.float:
                 return float(str(self)) + 1
 

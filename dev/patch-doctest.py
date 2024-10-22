@@ -1,6 +1,9 @@
+#! /usr/bin/env python3
 """
+Patch the doctest module.
+
 Copies doctest.py from the stdlib to the current directory,
-and modifies it so that
+and modifies it so that.
 
   a) It will load "*.so" files as modules just like a "*.py" file
   b) It recognizes functions defined in "*.so" files
@@ -9,15 +12,20 @@ and modifies it so that
 With these enhancements, doctest can be run on a C python extension module.
 """
 
+from __future__ import annotations
+
 import doctest
 import inspect
+import pathlib
+import sys
 
 # Get the source file location
 dt_location = inspect.getsourcefile(doctest)
+if dt_location is None:
+    sys.exit("Could not locate doctest module location.")
 
 # Read the module into memory
-with open(dt_location) as fl:
-    doctest_str = fl.read()
+doctest_str = pathlib.Path(dt_location).read_text()
 
 # Let's add the glob module.
 # Also define a function to detect if we could import this module name.
@@ -64,5 +72,4 @@ doctest_str = doctest_str.replace(
 doctest_str = "# type: ignore\n" + doctest_str
 
 # Open up the new output file and write the modified input to it.
-with open("doctest.py", "w") as fl:
-    print(doctest_str, file=fl, end="")
+pathlib.Path("doctest.py").write_text(doctest_str)

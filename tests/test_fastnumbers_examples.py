@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from typing import cast
 
@@ -59,7 +61,7 @@ def test_try_real() -> None:
     assert isinstance(fastnumbers.try_real("4029.0", coerce=False), float)
     # 11. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_real(["hey"])  # type: ignore
+        fastnumbers.try_real(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_real("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
@@ -132,7 +134,7 @@ def test_try_float() -> None:
     assert isinstance(fastnumbers.try_float("4029"), float)
     # 11. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_float(["hey"])  # type: ignore
+        fastnumbers.try_float(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_float("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
@@ -197,7 +199,7 @@ def test_try_int() -> None:
     assert isinstance(fastnumbers.try_int(4029.00), int)
     # 11. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_int(["hey"])  # type: ignore
+        fastnumbers.try_int(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_int("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
@@ -259,7 +261,7 @@ def test_try_forceint() -> None:
     assert isinstance(fastnumbers.try_forceint("4029.00"), int)
     # 11. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_forceint(["hey"])  # type: ignore
+        fastnumbers.try_forceint(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_forceint("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
