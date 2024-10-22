@@ -460,4 +460,7 @@ NumberFlags CharacterParser::get_number_type() const noexcept
     case StringType::INTLIKE_FLOAT:
         return flag_wrap(NumberType::Float | NumberType::IntLike);
     }
+
+    /* Is not reachable, but silences compiler warnings. */
+    return NumberType::INVALID;
 }
