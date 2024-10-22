@@ -9,6 +9,7 @@ import sys
 from setuptools import Extension, setup
 
 # Compilation arguments are platform-dependent
+link_args = ["-lm"]
 if sys.platform == "win32":
     compile_args = [
         "/std:c++17",
@@ -19,7 +20,7 @@ if sys.platform == "win32":
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("/Od")
         compile_args.append("/Z7")
-    if "FN_WARNINGS_AS_ERRORS":
+    if "FN_WARNINGS_AS_ERRORS" in os.environ:
         compile_args.append("/WX")
 else:
     compile_args = [
@@ -33,17 +34,20 @@ else:
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("-Og")
         compile_args.append("-g")
-    if "FN_WARNINGS_AS_ERRORS":
+        if "FN_COV" in os.environ:
+            compile_args.append("--coverage")
+            link_args.append("--coverage")
+    if "FN_WARNINGS_AS_ERRORS" in os.environ:
         compile_args.append("-Werror")
 
 
 ext = [
     Extension(
         "fastnumbers.fastnumbers",
-        sorted(pathlib.Path("src/cpp").glob("*.cpp")),
-        include_dirs=[pathlib.Path("include").resolve()],
+        sorted(map(str, pathlib.Path("src/cpp").glob("*.cpp"))),
+        include_dirs=[str(pathlib.Path("include").resolve())],
         extra_compile_args=compile_args,
-        extra_link_args=["-lm"],
+        extra_link_args=link_args,
     )
 ]
 
