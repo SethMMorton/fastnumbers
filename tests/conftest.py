@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hypothesis
 
 # This disables the "too slow" hypothesis heath check globally.

@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -40,7 +40,7 @@ jobs:
 
       - name: Build Source Distribution
         if: matrix.os == 'ubuntu-latest' && matrix.arch != 'aarch64'
-        run: python setup.py sdist --format=gztar
+        run: python -m build --sdist
 
       - name: Build Wheel
         run: python -m cibuildwheel --output-dir dist
@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download artifacts
         uses: actions/download-artifact@v3

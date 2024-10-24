@@ -1,4 +1,5 @@
-from builtins import float as pyfloat, int as pyint
+from builtins import float as pyfloat
+from builtins import int as pyint
 from typing import (
     Any,
     Callable,
@@ -6,14 +7,13 @@ from typing import (
     Iterator,
     Literal,
     Sequence,
-    Type,
     TypeVar,
     overload,
 )
 
-from typing_extensions import Protocol
+from typing_extensions import Protocol, TypeAlias
 
-from . import ALLOWED_T, DISALLOWED_T, INPUT_T, RAISE_T, STRING_ONLY_T, NUMBER_ONLY_T
+from . import ALLOWED_T, DISALLOWED_T, INPUT_T, NUMBER_ONLY_T, RAISE_T, STRING_ONLY_T
 
 __version__: str
 
@@ -26,7 +26,9 @@ class HasInt(Protocol):
 class ItWillFloat(Protocol):
     def __float__(self) -> pyfloat: ...
 
-InputType = pyint | pyfloat | ItWillFloat | HasIndex | HasInt | str | bytes | bytearray
+InputType: TypeAlias = (
+    pyint | pyfloat | ItWillFloat | HasIndex | HasInt | str | bytes | bytearray
+)
 AnyInputType = TypeVar("AnyInputType")
 QueryInputType = TypeVar("QueryInputType")
 
@@ -34,10 +36,10 @@ NumInputType = TypeVar("NumInputType", pyint, pyfloat, ItWillFloat, HasIndex, Ha
 StrInputType = TypeVar("StrInputType", str, bytes, bytearray)
 IntBaseType = TypeVar("IntBaseType", pyint, HasIndex)
 
-ConsiderType = STRING_ONLY_T | NUMBER_ONLY_T | None
-InfNanCheckType = STRING_ONLY_T | NUMBER_ONLY_T | ALLOWED_T | DISALLOWED_T
-TrySelectorsType = ALLOWED_T | INPUT_T | RAISE_T
-FloatInt = pyfloat | pyint
+ConsiderType: TypeAlias = STRING_ONLY_T | NUMBER_ONLY_T | None
+InfNanCheckType: TypeAlias = STRING_ONLY_T | NUMBER_ONLY_T | ALLOWED_T | DISALLOWED_T
+TrySelectorsType: TypeAlias = ALLOWED_T | INPUT_T | RAISE_T
+FloatInt: TypeAlias = pyfloat | pyint
 
 # Try real
 @overload
@@ -174,7 +176,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_real(
@@ -187,7 +189,7 @@ def try_real(
     coerce: Literal[False],
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyfloat]: ...
 @overload
 def try_real(
@@ -200,7 +202,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[FloatInt]: ...
 @overload
 def try_real(
@@ -219,7 +221,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[FloatInt | StrInputType]: ...
 @overload
 def try_real(
@@ -232,7 +234,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[FloatInt]: ...
 @overload
 def try_real(
@@ -245,7 +247,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_real(
@@ -258,7 +260,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_real(
@@ -271,7 +273,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[FloatInt]: ...
 @overload
 def try_real(
@@ -284,7 +286,7 @@ def try_real(
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_real(
@@ -503,7 +505,7 @@ def try_float(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyfloat]: ...
 @overload
 def try_float(
@@ -520,7 +522,7 @@ def try_float(
     on_fail: INPUT_T = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyfloat | StrInputType]: ...
 @overload
 def try_float(
@@ -531,7 +533,7 @@ def try_float(
     on_fail: RAISE_T | pyfloat | Callable[[StrInputType], pyfloat],
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyfloat]: ...
 @overload
 def try_float(
@@ -542,7 +544,7 @@ def try_float(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_float(
@@ -553,7 +555,7 @@ def try_float(
     on_fail: Any,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_float(
@@ -564,7 +566,7 @@ def try_float(
     on_fail: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat],
     on_type_error: pyfloat | Callable[[AnyInputType], pyfloat],
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyfloat]: ...
 @overload
 def try_float(
@@ -575,7 +577,7 @@ def try_float(
     on_fail: Any = ...,
     on_type_error: Any,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_float(
@@ -728,7 +730,7 @@ def try_int(
     on_fail: Any = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_int(
@@ -738,7 +740,7 @@ def try_int(
     on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint | StrInputType]: ...
 @overload
 def try_int(
@@ -748,7 +750,7 @@ def try_int(
     on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_int(
@@ -758,7 +760,7 @@ def try_int(
     on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_int(
@@ -768,7 +770,7 @@ def try_int(
     on_type_error: pyint | Callable[[AnyInputType], pyint],
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_int(
@@ -778,7 +780,7 @@ def try_int(
     on_type_error: Any,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_int(
@@ -909,7 +911,7 @@ def try_forceint(
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_forceint(
@@ -919,7 +921,7 @@ def try_forceint(
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint | StrInputType]: ...
 @overload
 def try_forceint(
@@ -929,7 +931,7 @@ def try_forceint(
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_forceint(
@@ -939,7 +941,7 @@ def try_forceint(
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_forceint(
@@ -949,7 +951,7 @@ def try_forceint(
     on_type_error: pyint | Callable[[AnyInputType], pyint],
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[pyint]: ...
 @overload
 def try_forceint(
@@ -959,7 +961,7 @@ def try_forceint(
     on_type_error: Any,
     denoise: bool = ...,
     allow_underscores: bool = ...,
-    map: Type[list],
+    map: type[list],
 ) -> list[Any]: ...
 @overload
 def try_forceint(
@@ -1554,7 +1556,7 @@ def query_type(
     allow_nan: bool = ...,
     coerce: bool = ...,
     allow_underscores: bool = ...,
-) -> Type[QueryInputType] | Type[pyint] | Type[pyfloat]: ...
+) -> type[QueryInputType | pyint | pyfloat]: ...
 @overload
 def query_type(
     x: QueryInputType,
@@ -1562,9 +1564,9 @@ def query_type(
     allow_inf: bool = ...,
     allow_nan: bool = ...,
     coerce: bool = ...,
-    allowed_types: Sequence[Type[Any]],
+    allowed_types: Sequence[type[Any]],
     allow_underscores: bool = ...,
-) -> Type[QueryInputType] | Type[pyint] | Type[pyfloat] | None: ...
+) -> type[QueryInputType | pyint | pyfloat] | None: ...
 
 # Buitin replacements
 @overload

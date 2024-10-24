@@ -58,8 +58,10 @@ inline T1 ipow(T1 base, T2 exp) {
             return 1;
         }
         
-        if (base == -1) {
-            return 1 - 2 * (exp & 1);
+        if constexpr(std::is_signed_v<T1>) {
+            if (base == -1) {
+                return 1 - 2 * (exp & 1);
+            }
         }
         
         return 0;

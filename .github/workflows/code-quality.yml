@@ -15,16 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
       - name: Install deps
-        run: |
-          pip install black clang-format
+        run: python -m pip install ruff clang-format
 
       - name: Run formatting checks
         run: python dev/formatting.py --check
@@ -34,28 +33,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
-      - name: Install Flake8
-        run: pip install flake8 flake8-import-order flake8-bugbear pep8-naming
+      - name: Install ruff
+        run: python -m pip install ruff
 
-      - name: Run Flake8
-        run: flake8
+      - name: Run ruff
+        run: ruff check
 
   type-checking:
     name: Type Checking
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
@@ -64,7 +63,7 @@ jobs:
 
       - name: Run MyPy
         run: |
-          python setup.py install
+          python -m pip install --editable .
           mypy --strict tests
 
   package-validation:
@@ -72,18 +71,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
       - name: Install Validators
-        run: pip install twine check-manifest
+        run: python -m pip install twine build
 
       - name: Run Validation
         run: |
-          check-manifest --ignore ".github*,*.md,.coveragerc"
-          python setup.py sdist
+          python -m build
           twine check dist/*
+
+  warning-free-compilation:
+    name: Warning-free Compilation
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # Note, clang is used on macos, even though it says gcc
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+
+      - name: Set Environment
+        run: echo FN_WARNINGS_AS_ERRORS=1 >> $GITHUB_ENV
+
+      - name: Compile
+        run: python -m build --wheel

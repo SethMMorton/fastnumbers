@@ -5,6 +5,8 @@
 #
 # Note: since several test cases filter out floats by looking for "e" and ".",
 # don't add hexadecimal literals that contain "e" or "E".
+from __future__ import annotations
+
 VALID_UNDERSCORE_LITERALS = [
     "0_0_0",
     "4_2",

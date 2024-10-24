@@ -1,5 +1,15 @@
+"""Public interface for the fastnumbers package."""
+
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
+try:
+    # The redundant "as" tells mypy to treat as explict import
+    from fastnumbers._version import __version__, __version_tuple__
+except ImportError:
+    __version__ = "unknown version"
+    __version_tuple__ = (0, 0, "unknown version")
 from .fastnumbers import (
     ALLOWED,
     DISALLOWED,
@@ -7,8 +17,6 @@ from .fastnumbers import (
     NUMBER_ONLY,
     RAISE,
     STRING_ONLY,
-    __version__,
-    array as _array,
     check_float,
     check_int,
     check_intlike,
@@ -29,6 +37,9 @@ from .fastnumbers import (
     try_forceint,
     try_int,
     try_real,
+)
+from .fastnumbers import (
+    array as _array,
 )
 
 try:
@@ -56,7 +67,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Iterable, NewType, TypeVar, overload
 
     IntT = TypeVar("IntT", np.int_)
-    FloatT = TypeVar("FloatT", np.float_)
+    FloatT = TypeVar("FloatT", np.float64)
     CallToInt = Callable[[Any], int]
     CallToFloat = Callable[[Any], float]
     ALLOWED_T = NewType("ALLOWED_T", object)
@@ -90,8 +101,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | CallToInt = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> np.ndarray[IntT]:
-        ...
+    ) -> np.ndarray[IntT]: ...
 
     @overload
     def try_array(
@@ -106,8 +116,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> np.ndarray[FloatT]:
-        ...
+    ) -> np.ndarray[FloatT]: ...
 
     @overload
     def try_array(
@@ -121,8 +130,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | CallToInt = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def try_array(
@@ -136,8 +144,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def try_array(
@@ -151,8 +158,7 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | CallToInt = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def try_array(
@@ -166,12 +172,11 @@ if TYPE_CHECKING:
         on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
         base: int = 10,
         allow_underscores: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
-def try_array(input, output=None, *, dtype=None, **kwargs):
-    """
+def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002, D417
+    r"""
     Quickly convert an iterable's contents into an array.
 
     Is basically a direct analogue to using the ``map`` option in :func:`try_float`
@@ -264,7 +269,6 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
 
     Examples
     --------
-
         >>> from fastnumbers import try_array
         >>> import numpy as np
         >>> try_array(["5", "3", "8"])
@@ -283,14 +287,15 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
         # Construct a numpy ndarray of the appropriate length and
         # dtype to contain the output.
         if not has_numpy:
-            raise RuntimeError(
+            msg = (
                 "To use fastnumbers.try_array without an explict "
                 "output requires numpy to also be installed"
             )
+            raise RuntimeError(msg)
         try:
             length = len(input)
         except TypeError:
-            input = list(input)
+            input = list(input)  # noqa: A001
             length = len(input)
         output = np.empty(length, dtype=dtype or np.float64)
     else:
@@ -306,10 +311,11 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
                 )
         except AttributeError:
             if not hasattr(output, "typecode"):
-                raise TypeError(
+                msg = (
                     "Only numpy ndarray and array.array types for output are "
                     f"supported, not {type(output)}"
                 )
+                raise TypeError(msg) from None
 
     # Call the C++ extension
     _array(input, output, **kwargs)
@@ -317,6 +323,7 @@ def try_array(input, output=None, *, dtype=None, **kwargs):
     # If no output value was given on calling, we return the output as a return value.
     if return_output:
         return output
+    return None
 
 
 __all__ = [

@@ -14,7 +14,6 @@
 #include "fastnumbers/exception.hpp"
 #include "fastnumbers/implementation.hpp"
 #include "fastnumbers/selectors.hpp"
-#include "fastnumbers/version.hpp"
 
 /**
  * \brief Function to handle the conversion of base to integers.
@@ -1124,9 +1123,6 @@ PyMODINIT_FUNC PyInit_fastnumbers()
     if (m == nullptr) {
         return nullptr;
     }
-
-    // Add module level constants.
-    PyModule_AddStringConstant(m, "__version__", FASTNUMBERS_VERSION);
 
     // Selectors
     Selectors::ALLOWED = PyObject_New(PyObject, &PyBaseObject_Type);
