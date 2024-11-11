@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import math
 from typing import cast
 
-from pytest import raises
+import pytest
 
 import fastnumbers
 
@@ -59,15 +60,15 @@ def test_try_real() -> None:
     assert isinstance(fastnumbers.try_real("4029.0"), int)
     assert isinstance(fastnumbers.try_real("4029.0", coerce=False), float)
     # 11. TypeError for invalid input
-    with raises(TypeError):
-        fastnumbers.try_real(["hey"])  # type: ignore
+    with pytest.raises(TypeError):
+        fastnumbers.try_real(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_real("not_a_number") == "not_a_number"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_real("not_a_number", on_fail=fastnumbers.RAISE)
     # 13. Invalid input string with numbers
     assert fastnumbers.try_real("26.8 lb") == "26.8 lb"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_real("26.8 lb", on_fail=fastnumbers.RAISE)
     # 14. Infinity
     assert fastnumbers.try_real("inf") == float("inf")
@@ -132,15 +133,15 @@ def test_try_float() -> None:
     assert isinstance(fastnumbers.try_float(4029), float)
     assert isinstance(fastnumbers.try_float("4029"), float)
     # 11. TypeError for invalid input
-    with raises(TypeError):
-        fastnumbers.try_float(["hey"])  # type: ignore
+    with pytest.raises(TypeError):
+        fastnumbers.try_float(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_float("not_a_number") == "not_a_number"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_float("not_a_number", on_fail=fastnumbers.RAISE)
     # 13. Invalid input string with numbers
     assert fastnumbers.try_float("26.8 lb") == "26.8 lb"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_float("26.8 lb", on_fail=fastnumbers.RAISE)
     # 14. Infinity
     assert fastnumbers.try_float("inf") == float("inf")
@@ -178,7 +179,7 @@ def test_try_int() -> None:
     assert fastnumbers.try_int(-367.3268, on_fail=fastnumbers.RAISE) == -367
     # 2. signed float string
     assert fastnumbers.try_int("+367.3268") == "+367.3268"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_int("+367.3268", on_fail=fastnumbers.RAISE)
     # 3. float string with exponents
     assert fastnumbers.try_int("-367.3268e207") == "-367.3268e207"
@@ -197,15 +198,15 @@ def test_try_int() -> None:
     # 10. return type
     assert isinstance(fastnumbers.try_int(4029.00), int)
     # 11. TypeError for invalid input
-    with raises(TypeError):
-        fastnumbers.try_int(["hey"])  # type: ignore
+    with pytest.raises(TypeError):
+        fastnumbers.try_int(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_int("not_a_number") == "not_a_number"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_int("not_a_number", on_fail=fastnumbers.RAISE)
     # 13. Invalid input string with numbers
     assert fastnumbers.try_int("26.8 lb") == "26.8 lb"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_int("26.8 lb", on_fail=fastnumbers.RAISE)
     # 14. Infinity
     assert fastnumbers.try_int("inf") == "inf"
@@ -259,15 +260,15 @@ def test_try_forceint() -> None:
     assert isinstance(fastnumbers.try_forceint(4029.00), int)
     assert isinstance(fastnumbers.try_forceint("4029.00"), int)
     # 11. TypeError for invalid input
-    with raises(TypeError):
-        fastnumbers.try_forceint(["hey"])  # type: ignore
+    with pytest.raises(TypeError):
+        fastnumbers.try_forceint(["hey"])  # type: ignore[call-overload]
     # 12. Invalid input string
     assert fastnumbers.try_forceint("not_a_number") == "not_a_number"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_forceint("not_a_number", on_fail=fastnumbers.RAISE)
     # 13. Invalid input string with numbers
     assert fastnumbers.try_forceint("26.8 lb") == "26.8 lb"
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         assert fastnumbers.try_forceint("26.8 lb", on_fail=fastnumbers.RAISE)
     # 14. Infinity
     assert fastnumbers.try_forceint("inf") == "inf"

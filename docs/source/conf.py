@@ -14,6 +14,8 @@
 
 import os
 
+import fastnumbers
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -67,7 +69,7 @@ copyright = "2014, Seth M. Morton"
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = "5.1.0"
+release = fastnumbers.__version__
 # The short X.Y version.
 version = ".".join(release.split(".")[0:2])
 
@@ -130,10 +132,7 @@ else:
 # html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-if on_rtd:
-    html_theme_path = ["."]
-else:
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_path = ["."]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

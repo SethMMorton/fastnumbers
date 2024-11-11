@@ -1,8 +1,10 @@
 """Supporting definitions for the Python regression tests."""
 
+from __future__ import annotations
+
 import platform
 import unittest
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable
 
 __all__ = [
     "run_with_locale",
@@ -26,15 +28,15 @@ def run_with_locale(catstr: str, *locales: str) -> Callable[..., Any]:
             except AttributeError:
                 # if the test author gives us an invalid category string
                 raise
-            except:  # noqa
+            except:  # noqa: E722
                 # cannot retrieve original locale, so do nothing
-                locale = orig_locale = None  # type: ignore
+                locale = orig_locale = None  # type: ignore[assignment]
             else:
                 for loc in locales:
                     try:
                         locale.setlocale(category, loc)
                         break
-                    except:  # noqa
+                    except:  # noqa: E722
                         pass
 
             # now run the function, resetting the locale on exceptions
@@ -66,7 +68,7 @@ def cpython_only(test: Any) -> Any:
     return impl_detail(cpython=True)(test)
 
 
-def impl_detail(msg: Optional[str] = None, **guards: bool) -> Callable[[Any], Any]:
+def impl_detail(msg: str | None = None, **guards: bool) -> Callable[[Any], Any]:
     if check_impl_detail(**guards):
         return _id
     if msg is None:
@@ -79,11 +81,11 @@ def impl_detail(msg: Optional[str] = None, **guards: bool) -> Callable[[Any], An
     return unittest.skip(msg)
 
 
-def _parse_guards(guards: Dict[str, bool]) -> Tuple[Dict[str, bool], bool]:
+def _parse_guards(guards: dict[str, bool]) -> tuple[dict[str, bool], bool]:
     # Returns a tuple ({platform_name: run_me}, default_value)
     if not guards:
         return ({"cpython": True}, False)
-    is_true = list(guards.values())[0]
+    is_true = next(iter(guards.values()))
     assert list(guards.values()) == [is_true] * len(guards)  # all True or all False
     return (guards, not is_true)
 

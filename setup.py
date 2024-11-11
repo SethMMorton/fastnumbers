@@ -1,14 +1,15 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Rules for compilation of C++ extension module."""
 
-import glob
+from __future__ import annotations
+
 import os
+import pathlib
 import sys
 
-from setuptools import Extension, find_packages, setup
-
+from setuptools import Extension, setup
 
 # Compilation arguments are platform-dependent
+link_args = ["-lm"]
 if sys.platform == "win32":
     compile_args = [
         "/std:c++17",
@@ -19,6 +20,8 @@ if sys.platform == "win32":
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("/Od")
         compile_args.append("/Z7")
+    if "FN_WARNINGS_AS_ERRORS" in os.environ:
+        compile_args.append("/WX")
 else:
     compile_args = [
         "-std=c++17",
@@ -31,27 +34,23 @@ else:
     if "FN_DEBUG" in os.environ or "FN_COV" in os.environ:
         compile_args.append("-Og")
         compile_args.append("-g")
+        if "FN_COV" in os.environ:
+            compile_args.append("--coverage")
+            link_args.append("--coverage")
+    if "FN_WARNINGS_AS_ERRORS" in os.environ:
+        compile_args.append("-Werror")
 
 
 ext = [
     Extension(
         "fastnumbers.fastnumbers",
-        sorted(glob.glob("src/cpp/*.cpp")),
-        include_dirs=[os.path.abspath(os.path.join("include"))],
+        sorted(map(str, pathlib.Path("src/cpp").glob("*.cpp"))),
+        include_dirs=[str(pathlib.Path("include").resolve())],
         extra_compile_args=compile_args,
-        extra_link_args=["-lm"],
+        extra_link_args=link_args,
     )
 ]
 
 # Define how to build the extension module.
-# All other data is in the setup.cfg file.
-setup(
-    name="fastnumbers",
-    version="5.1.0",
-    python_requires=">=3.7",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    package_data={"fastnumbers": ["py.typed", "*.pyi"]},
-    zip_safe=False,
-    ext_modules=ext,
-)
+# All other data is in the pyproject.toml file.
+setup(ext_modules=ext)
