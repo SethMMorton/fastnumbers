@@ -26,8 +26,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - uses: docker/setup-qemu-action@v2
         if: ${{ matrix.arch == 'aarch64' }}
@@ -40,7 +38,9 @@ jobs:
 
       - name: Build Source Distribution
         if: matrix.os == 'ubuntu-latest' && matrix.arch != 'aarch64'
-        run: python -m build --sdist
+        run: |
+          python -m pip install build
+          python -m build --sdist
 
       - name: Build Wheel
         run: python -m cibuildwheel --output-dir dist
