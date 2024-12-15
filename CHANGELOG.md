@@ -1,6 +1,9 @@
 Unreleased
 ---
 
+[5.1.1] - 2024-12-14
+---
+
 ### Added
 
 - Support for Python 3.13 (issue
@@ -460,6 +463,7 @@ Unreleased
   - Initial release of `fastnumbers`
 
 <!---Comparison links-->
+[5.1.1]: https://github.com/SethMMorton/fastnumbers/compare/5.1.0...5.1.1
 [5.1.0]: https://github.com/SethMMorton/fastnumbers/compare/5.0.1...5.1.0
 [5.0.1]: https://github.com/SethMMorton/fastnumbers/compare/5.0.0...5.0.1
 [5.0.0]: https://github.com/SethMMorton/fastnumbers/compare/4.0.1...5.0.0
