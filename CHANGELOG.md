@@ -1,6 +1,15 @@
 Unreleased
 ---
 
+### Added
+
+- Support for Python 3.13 (issue
+  [#80](https://github.com/SethMMorton/fastnumbers/issues/80))
+
+### Removed
+
+- Support for Python 3.7
+
 [5.1.0] - 2023-11-28
 ---
 
