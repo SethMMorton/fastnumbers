@@ -7,8 +7,8 @@ import unittest
 from typing import Any, Callable
 
 __all__ = [
-    "run_with_locale",
     "cpython_only",
+    "run_with_locale",
 ]
 
 

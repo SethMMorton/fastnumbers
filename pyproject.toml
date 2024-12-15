@@ -80,8 +80,9 @@ ignore = [
 # doctests = true  # enable when/if available
 
 [tool.ruff.lint.per-file-ignores]
-"fastnumbers/__init__.py" = [
+"__init__.py" = [
 	"PLC0414",  # useless import alias
+        "A004",     # shadowing builtin
 ]
 "fastnumbers.pyi" = [
 	"A001",     # shadowing a builtin
@@ -96,6 +97,7 @@ ignore = [
 	"INP",      # implicit namespace package
 	"PLR2004",  # magic value comparison
 	"PERF",     # performance checks
+        "A004",     # shadowing builtin
 ]
 "tests/builtin_support.py" = [
 	"ANN401",   # Any type disallowed

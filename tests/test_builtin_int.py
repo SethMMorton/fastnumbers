@@ -468,12 +468,9 @@ class IntTestCases(unittest.TestCase):
                     int(s)
                 else:
                     int(s, base)
-            assert cm.exception.args[
-                0
-            ] == "invalid literal for int() with base %d: %r" % (
-                10 if base is None else base,
-                s,
-            )
+            msg = "invalid literal for int() with base "
+            msg += f"{10 if base is None else base}: {s!r}"
+            assert cm.exception.args[0] == msg
 
         check("\xbd")
         check("123\xbd")
