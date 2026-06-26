@@ -372,9 +372,9 @@ RawPayload<PyObject*> CharacterParser::as_pyint() const noexcept(false)
     return PyLong_FromString(m_start_orig, nullptr, options().get_base());
 }
 
-RawPayload<PyObject*>
-CharacterParser::as_pyfloat(const bool force_int, const bool coerce) const
-    noexcept(false)
+RawPayload<PyObject*> CharacterParser::as_pyfloat(
+    const bool force_int, const bool coerce
+) const noexcept(false)
 {
     // If denoise is requested, use this algorithm *instead* of converting to a double
     if (options().do_denoise() && (force_int || coerce)) {

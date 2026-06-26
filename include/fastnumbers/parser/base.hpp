@@ -84,10 +84,9 @@ public:
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    virtual RawPayload<PyObject*>
-    as_pyfloat(const bool force_int = false, const bool coerce = false) const
-        noexcept(false)
-        = 0;
+    virtual RawPayload<PyObject*> as_pyfloat(
+        const bool force_int = false, const bool coerce = false
+    ) const noexcept(false) = 0;
 
     /// Check the type of the number.
     virtual NumberFlags get_number_type() const noexcept { return m_number_type; }

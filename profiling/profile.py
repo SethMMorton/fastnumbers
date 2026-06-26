@@ -454,8 +454,7 @@ timer.time_functions()
 
 if sys.version_info >= (3, 9):
     timer = Timer(
-        "Timing comparison of forced `int` functions with error handling "
-        "and denoising"
+        "Timing comparison of forced `int` functions with error handling and denoising"
     )
     timer.add_function(
         "forceint_denoise", "Python", "from __main__ import forceint_denoise"

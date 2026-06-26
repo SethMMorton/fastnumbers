@@ -205,16 +205,18 @@ private:
      * \param selector The python object to validate
      * \throws fastnumbers_exception if not one of the four valid values
      */
-    void validate_allow_disallow_str_only_num_only(const PyObject* selector) const
-        noexcept(false);
+    void validate_allow_disallow_str_only_num_only(
+        const PyObject* selector
+    ) const noexcept(false);
 
     /**
      * \brief Validate the selector is not a "yes, no, num, str" value
      * \param selector The python object to validate
      * \throws fastnumbers_exception if one of the four valid values
      */
-    void validate_not_allow_disallow_str_only_num_only(const PyObject* selector) const
-        noexcept(false);
+    void validate_not_allow_disallow_str_only_num_only(
+        const PyObject* selector
+    ) const noexcept(false);
 
     /**
      * \brief Validate the selector is not "DISALLOWED"
