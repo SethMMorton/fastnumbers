@@ -22,12 +22,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
 
-      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-qemu-action@v4
         if: ${{ matrix.arch == 'aarch64' }}
         name: Set up QEMU
 
@@ -49,7 +51,7 @@ jobs:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
       - name: Save artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: distributions
           path: dist/
@@ -62,10 +64,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v8
         with:
           name: distributions
           path: dist/
