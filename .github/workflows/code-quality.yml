@@ -109,7 +109,12 @@ jobs:
           python -m pip install build
 
       - name: Set Environment
+        if: matrix.os != 'windows-latest'
         run: echo FN_WARNINGS_AS_ERRORS=1 >> $GITHUB_ENV
+
+      - name: Set Environment (Windows)
+        if: matrix.os == 'windows-latest'
+        run: echo FN_WARNINGS_AS_ERRORS=1 >> $env:GITHUB_ENV
 
       - name: Compile
         run: python -m build --wheel
