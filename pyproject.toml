@@ -8,10 +8,10 @@ authors = [
     {name = "Seth M. Morton", email = "drtuba78@gmail.com"},
 ]
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 description = "Super-fast and clean conversions to numbers."
 readme = "README.rst"
-license = {text = "MIT"}
+license = "MIT"
 keywords = ["conversion", "numeric", "performance"]
 classifiers = [
 	"Development Status :: 5 - Production/Stable",
@@ -21,15 +21,14 @@ classifiers = [
 	"Intended Audience :: System Administrators",
 	"Intended Audience :: Financial and Insurance Industry",
 	"Operating System :: OS Independent",
-	"License :: OSI Approved :: MIT License",
 	"Natural Language :: English",
 	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
 	"Programming Language :: Python :: 3.12",
 	"Programming Language :: Python :: 3.13",
+	"Programming Language :: Python :: 3.14",
 	"Topic :: Scientific/Engineering :: Information Analysis",
 	"Topic :: Utilities",
 	"Topic :: Text Processing",
@@ -51,13 +50,12 @@ version_file = "src/fastnumbers/_version.py"
 
 [tool.mypy]
 mypy_path = "mypy_stubs"
-plugins = "numpy.typing.mypy_plugin"
 
 [tool.pytest.ini_options]
 addopts = "--tb=short"
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 extend-exclude = ["build", "dist", "docs", "_version.py"]
 
 [tool.ruff.format]

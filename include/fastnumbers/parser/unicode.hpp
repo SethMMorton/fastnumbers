@@ -54,9 +54,9 @@ public:
      * \param force_int Force the output to integer (takes precidence)
      * \param coerce Return as integer if the float is int-like
      */
-    RawPayload<PyObject*>
-    as_pyfloat(const bool force_int = false, const bool coerce = false) const
-        noexcept(false) override
+    RawPayload<PyObject*> as_pyfloat(
+        const bool force_int = false, const bool coerce = false
+    ) const noexcept(false) override
     {
         const NumberFlags ntype = get_number_type();
 

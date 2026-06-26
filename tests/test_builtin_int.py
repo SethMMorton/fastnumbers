@@ -317,7 +317,9 @@ class IntTestCases(unittest.TestCase):
         class CustomByteArray(bytearray):
             pass
 
-        factories: list[Callable[[bytes], bytes | bytearray | str]] = [
+        factories: list[
+            Callable[[bytes], bytes | bytearray | str | memoryview[builtins.int]]
+        ] = [
             bytes,
             bytearray,
             lambda b: CustomStr(b.decode()),
@@ -326,7 +328,7 @@ class IntTestCases(unittest.TestCase):
             memoryview,
         ]
         try:
-            from array import array
+            from array import array  # noqa: PLC0415
         except ImportError:
             pass
         else:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import array
 import ctypes
-from typing import Any, Callable, Iterator, NoReturn
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypedDict
 
 import numpy as np
 import pytest
@@ -15,9 +15,11 @@ from hypothesis.strategies import (
     lists,
     text,
 )
-from typing_extensions import TypedDict
 
 import fastnumbers
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # Map supported data types to the Python array internal format designator
 formats = {
@@ -334,7 +336,7 @@ class TestReplacements:
         result = array.array(formats[data_type], [0])
         expected = "bad operand type for abs()"
         with pytest.raises(TypeError, match=expected):
-            fastnumbers.try_array(given, result, on_fail=lambda x: abs(x))
+            fastnumbers.try_array(given, result, on_fail=abs)
 
     @pytest.mark.parametrize("data_type", int_data_types)
     def test_replacements_trigger_new_values_for_int(self, data_type: str) -> None:

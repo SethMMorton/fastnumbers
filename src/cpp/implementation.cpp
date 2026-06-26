@@ -138,8 +138,8 @@ NumberFlags Implementation::collect_type(PyObject* obj) const noexcept(false)
     );
 }
 
-Implementation::Types Implementation::resolve_types(const NumberFlags& flags
-) const noexcept
+Implementation::Types
+Implementation::resolve_types(const NumberFlags& flags) const noexcept
 {
     // Build up the logic with individual "Boolean chunks"
     const bool from_str = bool(flags & (NumberType::FromStr | NumberType::FromUni));
@@ -161,7 +161,8 @@ Implementation::Types Implementation::resolve_types(const NumberFlags& flags
                        && flags & NumberType::IntLike };
 }
 
-void Implementation::validate_allow_disallow_str_only_num_only(const PyObject* selector
+void Implementation::validate_allow_disallow_str_only_num_only(
+    const PyObject* selector
 ) const noexcept(false)
 {
     const bool ok = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
@@ -190,14 +191,16 @@ void Implementation::validate_not_allow_disallow_str_only_num_only(
     }
 }
 
-void Implementation::validate_not_disallow(const PyObject* selector) const
-    noexcept(false)
+void Implementation::validate_not_disallow(const PyObject* selector) const noexcept(
+    false
+)
 {
     const bool bad = selector == Selectors::DISALLOWED
         || selector == Selectors::STRING_ONLY || selector == Selectors::NUMBER_ONLY;
     if (bad) {
-        throw fastnumbers_exception("'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
-                                    "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY"
+        throw fastnumbers_exception(
+            "'inf' and 'nan' cannot be fastnumbers.DISALLOWED, "
+            "fastnumbers.STRING_ONLY, or fastnumbers.NUMBER_ONLY"
         );
     }
 }
@@ -434,8 +437,8 @@ struct ArrayImpl {
  * \param selector The python object to validate
  * \throws fastnumbers_exception if one of the four valid values
  */
-static inline void
-validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector
+static inline void validate_not_allow_disallow_str_only_num_only_input(
+    const PyObject* selector
 ) noexcept(false)
 {
     const bool bad = selector == Selectors::ALLOWED || selector == Selectors::DISALLOWED
@@ -455,8 +458,8 @@ validate_not_allow_disallow_str_only_num_only_input(const PyObject* selector
  * \param selector The python object to validate
  * \throws fastnumbers_exception if one of the four valid values
  */
-static inline void validate_not_disallow_str_only_num_only_input(const PyObject* selector
-) noexcept(false)
+static inline void
+validate_not_disallow_str_only_num_only_input(const PyObject* selector) noexcept(false)
 {
     const bool bad = selector == Selectors::DISALLOWED
         || selector == Selectors::NUMBER_ONLY || selector == Selectors::STRING_ONLY

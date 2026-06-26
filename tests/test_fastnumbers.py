@@ -8,11 +8,11 @@ import unicodedata
 from functools import partial
 from itertools import combinations
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
-    Iterable,
-    Iterator,
     NoReturn,
+    Protocol,
     Union,
     cast,
 )
@@ -32,9 +32,11 @@ from hypothesis.strategies import (
     text,
     tuples,
 )
-from typing_extensions import Protocol
 
 import fastnumbers
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 parametrize = pytest.mark.parametrize
 
@@ -320,7 +322,7 @@ def not_an_integer(x: float) -> bool:
 
 
 def capture_result(  # type: ignore [no-untyped-def]
-    func: ConversionFuncs | IdentificationFuncs, *args, **kwargs
+    func: Any, *args, **kwargs
 ) -> Any:
     """Execute a function, and either return the result or the exception message"""
     try:
@@ -518,7 +520,7 @@ class TestSelectors:
     def test_selectors_have_no_type(self, x: object) -> None:
         assert type(x) is object
 
-    @parametrize("a, b", combinations(selectors, 2))
+    @parametrize("a, b", list(combinations(selectors, 2)))
     def test_selectors_are_mutually_exclusive(self, a: object, b: object) -> None:
         assert a is not b
 
@@ -725,8 +727,8 @@ class TestBackwardsCompatibility:
             ),
         ]
     for old3, new3 in check_pairs[:2]:
-        old = cast(Union[IsReal, IsFloat], old3)
-        new = cast(Union[CheckReal, CheckFloat], new3)
+        old = cast("IsReal | IsFloat", old3)
+        new = cast("CheckReal | CheckFloat", new3)
         old_to_new_checking_pairing += [
             (partial(old, allow_inf=True), partial(new, inf=fastnumbers.ALLOWED)),
             (partial(old, allow_inf=False), partial(new, inf=fastnumbers.NUMBER_ONLY)),
@@ -942,7 +944,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     ]
 
     @given(integers())
-    @example(int(10 * 300))
+    @example(10 * 300)
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_int_returns_int(
         self, func: TryReal | TryInt | TryForceInt, x: int
@@ -2001,7 +2003,7 @@ class TestMappingFunctions:
             msg = "Fëanor"
             raise ValueError(msg)
 
-        with pytest.raises(ValueError, match="Fëanor"):  # noqa: PT012
+        with pytest.raises(ValueError, match="Fëanor"):
             for _ in func(broken()):
                 pass
 
@@ -2018,8 +2020,8 @@ class TestMappingFunctions:
         "iterable_gen",
         [
             list,
-            lambda: (),
-            lambda: set(),
+            tuple,
+            set,
             lambda: iter([]),
             lambda: (x for x in []),  # type: ignore [var-annotated]
         ],
@@ -2044,8 +2046,8 @@ class TestMappingFunctions:
         "iterable_gen",
         [
             list,
-            lambda: (),
-            lambda: set(),
+            tuple,
+            set,
             lambda: iter([]),
             lambda: (x for x in []),  # type: ignore [var-annotated]
         ],
@@ -2092,7 +2094,7 @@ class TestMappingFunctions:
     def test_invalid_types_behave_as_expected(
         self, func: ConversionFuncs, style: Callable[[Any], Any]
     ) -> None:
-        with pytest.raises(TypeError, match="not 'tuple'"):  # noqa: PT012
+        with pytest.raises(TypeError, match="not 'tuple'"):
             for _ in func(style([("Fëanor",)])):
                 pass
         expected = [5]
