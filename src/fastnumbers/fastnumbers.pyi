@@ -1,12 +1,10 @@
 from builtins import float as pyfloat
 from builtins import int as pyint
+from collections.abc import Iterable, Iterator, Sequence
 from typing import (
     Any,
     Callable,
-    Iterable,
-    Iterator,
     Literal,
-    Sequence,
     TypeVar,
     overload,
 )

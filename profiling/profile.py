@@ -274,29 +274,28 @@ def forceint_try(x):
             return x
 
 
-if sys.version_info >= (3, 9):
-
-    def forceint_denoise(
-        x, _decimal=decimal.Decimal, ceil=math.ceil, log10=math.log10, ulp=math.ulp
-    ):
-        """Noiselessly convert a float to an integer."""
+def forceint_denoise(
+    x, _decimal=decimal.Decimal, ceil=math.ceil, log10=math.log10, ulp=math.ulp
+):
+    """Noiselessly convert a float to an integer."""
+    try:
+        # Integer method
+        int_val = int(x)
+        if x == int_val:
+            return int_val
+        double_digits = ceil(log10(ulp(abs(x))))
+        return round(int_val, -int(double_digits))
+    except (TypeError, ValueError):
+        # String method
         try:
-            # Integer method
-            int_val = int(x)
-            if x == int_val:
-                return int_val
-            double_digits = ceil(log10(ulp(abs(x))))
-            return round(int_val, -int(double_digits))
-        except (TypeError, ValueError):
-            # String method
-            try:
-                return int(_decimal(x))
-            except decimal.InvalidOperation as e:
-                raise TypeError from e
+            return int(_decimal(x))
+        except decimal.InvalidOperation as e:
+            raise TypeError from e
 
-    def forceint_denoise_fn(x, try_forceint=fastnumbers.try_forceint):
-        """Noiselessly convert a float to an integer using fastnumbers."""
-        return try_forceint(x, denoise=True)
+
+def forceint_denoise_fn(x, try_forceint=fastnumbers.try_forceint):
+    """Noiselessly convert a float to an integer using fastnumbers."""
+    return try_forceint(x, denoise=True)
 
 
 def check_int_re(x, int_match=re.compile(r"[-+]?\d+$").match):
@@ -452,17 +451,16 @@ timer.add_function(
 )
 timer.time_functions()
 
-if sys.version_info >= (3, 9):
-    timer = Timer(
-        "Timing comparison of forced `int` functions with error handling and denoising"
-    )
-    timer.add_function(
-        "forceint_denoise", "Python", "from __main__ import forceint_denoise"
-    )
-    timer.add_function(
-        "forceint_denoise_fn", "fastnumbers", "from __main__ import forceint_denoise_fn"
-    )
-    timer.time_functions()
+timer = Timer(
+    "Timing comparison of forced `int` functions with error handling and denoising"
+)
+timer.add_function(
+    "forceint_denoise", "Python", "from __main__ import forceint_denoise"
+)
+timer.add_function(
+    "forceint_denoise_fn", "fastnumbers", "from __main__ import forceint_denoise_fn"
+)
+timer.time_functions()
 
 timer = Timer("Timing comparison to check if value can be converted to `int`")
 timer.add_function("check_int_try", "try/except", "from __main__ import check_int_try")

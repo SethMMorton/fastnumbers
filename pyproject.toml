@@ -55,7 +55,7 @@ mypy_path = "mypy_stubs"
 addopts = "--tb=short"
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 extend-exclude = ["build", "dist", "docs", "_version.py"]
 
 [tool.ruff.format]

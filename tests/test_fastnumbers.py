@@ -8,11 +8,11 @@ import unicodedata
 from functools import partial
 from itertools import combinations
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
-    Iterable,
-    Iterator,
     NoReturn,
+    Protocol,
     Union,
     cast,
 )
@@ -32,9 +32,11 @@ from hypothesis.strategies import (
     text,
     tuples,
 )
-from typing_extensions import Protocol
 
 import fastnumbers
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 parametrize = pytest.mark.parametrize
 

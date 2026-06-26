@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import array
 import ctypes
-from typing import Any, Callable, Iterator, NoReturn
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypedDict
 
 import numpy as np
 import pytest
@@ -15,9 +15,11 @@ from hypothesis.strategies import (
     lists,
     text,
 )
-from typing_extensions import TypedDict
 
 import fastnumbers
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # Map supported data types to the Python array internal format designator
 formats = {
