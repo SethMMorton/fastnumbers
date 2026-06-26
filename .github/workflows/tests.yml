@@ -17,7 +17,9 @@ jobs:
       matrix:
         python-version: [3.9, "3.10", "3.11", "3.12", "3.13", "3.14"]
         # Note, clang is used on macos, even though it says gcc
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-15-intel, macos-latest]
+        # At the time of this writing windows-11.arm does not have all python version installed
+        # so we will skip it for now. ARM should be covered by ubuntu and macos.
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-15-intel, macos-latest]
 
     steps:
       - name: Checkout Code
