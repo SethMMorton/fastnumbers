@@ -384,9 +384,9 @@ RawPayload<PyObject*> CharacterParser::as_pyfloat(
         } else if (checker.is_invalid() && has_valid_underscores()) {
             Buffer buffer(m_start, m_str_len);
             buffer.remove_valid_underscores(options().get_base() != 10);
-            StringChecker checker(buffer.start(), buffer.end(), options().get_base());
-            if (checker.is_intlike_float()) {
-                return Parser::float_as_int_without_noise(checker, is_negative());
+            StringChecker checker_(buffer.start(), buffer.end(), options().get_base());
+            if (checker_.is_intlike_float()) {
+                return Parser::float_as_int_without_noise(checker_, is_negative());
             }
         }
     }
