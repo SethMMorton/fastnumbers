@@ -9,7 +9,7 @@ import sys
 from setuptools import Extension, setup
 
 # Compilation arguments are platform-dependent
-link_args = ["-lm"]
+link_args = ["-lm", "-lstdc++"]
 if sys.platform == "win32":
     compile_args = [
         "/std:c++17",
@@ -48,6 +48,7 @@ ext = [
         include_dirs=[str(pathlib.Path("include").resolve())],
         extra_compile_args=compile_args,
         extra_link_args=link_args,
+        language="c++",
     )
 ]
 
