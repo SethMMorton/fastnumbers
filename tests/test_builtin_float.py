@@ -103,7 +103,9 @@ class GeneralFloatCases(unittest.TestCase):
         class CustomByteArray(bytearray):
             pass
 
-        factories: list[Callable[[bytes], bytes | bytearray | str]] = [
+        factories: list[
+            Callable[[bytes], bytes | bytearray | str | memoryview[builtins.int]]
+        ] = [
             bytes,
             bytearray,
             lambda b: CustomStr(b.decode()),

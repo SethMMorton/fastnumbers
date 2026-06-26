@@ -320,7 +320,7 @@ def not_an_integer(x: float) -> bool:
 
 
 def capture_result(  # type: ignore [no-untyped-def]
-    func: ConversionFuncs | IdentificationFuncs, *args, **kwargs
+    func: Any, *args, **kwargs
 ) -> Any:
     """Execute a function, and either return the result or the exception message"""
     try:

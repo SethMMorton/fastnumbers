@@ -27,13 +27,21 @@ class ItWillFloat(Protocol):
     def __float__(self) -> pyfloat: ...
 
 InputType: TypeAlias = (
-    pyint | pyfloat | ItWillFloat | HasIndex | HasInt | str | bytes | bytearray
+    pyint
+    | pyfloat
+    | ItWillFloat
+    | HasIndex
+    | HasInt
+    | str
+    | bytes
+    | bytearray
+    | memoryview[pyint]
 )
 AnyInputType = TypeVar("AnyInputType")
 QueryInputType = TypeVar("QueryInputType")
 
 NumInputType = TypeVar("NumInputType", pyint, pyfloat, ItWillFloat, HasIndex, HasInt)
-StrInputType = TypeVar("StrInputType", str, bytes, bytearray)
+StrInputType = TypeVar("StrInputType", str, bytes, bytearray | memoryview[pyint])
 IntBaseType = TypeVar("IntBaseType", pyint, HasIndex)
 
 ConsiderType: TypeAlias = STRING_ONLY_T | NUMBER_ONLY_T | None
