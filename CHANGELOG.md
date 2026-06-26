@@ -1,6 +1,24 @@
 Unreleased
 ---
 
+### Added
+
+- Support for Python 3.14
+
+### Fixed
+
+- Fixed invalid license classifier (
+  [@jzerfowski](https://github.com/jzerfowski), issues
+  [#83](https://github.com/SethMMorton/fastnumbers/issues/83) and
+  [#84](https://github.com/SethMMorton/fastnumbers/pull/84))
+- Fix bug where compilation warnings for MSVC were not turned into
+  errors for CI testing
+- Eliminate various static analysis warnings
+
+### Removed
+
+- Support for Python 3.8
+
 [5.1.1] - 2024-12-14
 ---
 
