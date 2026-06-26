@@ -520,7 +520,7 @@ class TestSelectors:
     def test_selectors_have_no_type(self, x: object) -> None:
         assert type(x) is object
 
-    @parametrize("a, b", combinations(selectors, 2))
+    @parametrize("a, b", list(combinations(selectors, 2)))
     def test_selectors_are_mutually_exclusive(self, a: object, b: object) -> None:
         assert a is not b
 
