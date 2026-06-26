@@ -21,7 +21,7 @@ def run_with_locale(catstr: str, *locales: str) -> Callable[..., Any]:
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         def inner(*args: Any, **kwds: Any) -> Any:
             try:
-                import locale
+                import locale  # noqa: PLC0415
 
                 category = getattr(locale, catstr)
                 orig_locale = locale.setlocale(category)

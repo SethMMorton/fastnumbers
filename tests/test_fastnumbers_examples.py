@@ -75,8 +75,8 @@ def test_try_real() -> None:
     assert fastnumbers.try_real("-iNFinity") == float("-inf")
     assert fastnumbers.try_real("-iNFinity", inf=7608) == 7608
     # 15. NaN
-    assert math.isnan(cast(float, fastnumbers.try_real("nan")))
-    assert math.isnan(cast(float, fastnumbers.try_real("-NaN")))
+    assert math.isnan(cast("float", fastnumbers.try_real("nan")))
+    assert math.isnan(cast("float", fastnumbers.try_real("-NaN")))
     assert fastnumbers.try_real("-NaN", nan=0) == 0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.try_real("+") == "+"
@@ -148,8 +148,8 @@ def test_try_float() -> None:
     assert fastnumbers.try_float("-iNFinity") == float("-inf")
     assert fastnumbers.try_float("-iNFinity", inf=523.0) == 523.0
     # 15. NaN
-    assert math.isnan(cast(float, fastnumbers.try_float("nAn")))
-    assert math.isnan(cast(float, fastnumbers.try_float("-NaN")))
+    assert math.isnan(cast("float", fastnumbers.try_float("nAn")))
+    assert math.isnan(cast("float", fastnumbers.try_float("-NaN")))
     assert fastnumbers.try_float("-NaN", nan=0.0) == 0.0
     # 16. Sign/'e'/'.' only
     assert fastnumbers.try_float("+") == "+"

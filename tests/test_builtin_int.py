@@ -326,7 +326,7 @@ class IntTestCases(unittest.TestCase):
             memoryview,
         ]
         try:
-            from array import array
+            from array import array  # noqa: PLC0415
         except ImportError:
             pass
         else:

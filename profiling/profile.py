@@ -248,7 +248,7 @@ def real_try(x):
         return x
     else:
         b = int(a)
-        return b if a == b else b
+        return b if a == b else a
 
 
 def forceint_re(

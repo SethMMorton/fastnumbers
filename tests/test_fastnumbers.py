@@ -725,8 +725,8 @@ class TestBackwardsCompatibility:
             ),
         ]
     for old3, new3 in check_pairs[:2]:
-        old = cast(Union[IsReal, IsFloat], old3)
-        new = cast(Union[CheckReal, CheckFloat], new3)
+        old = cast("IsReal | IsFloat", old3)
+        new = cast("CheckReal | CheckFloat", new3)
         old_to_new_checking_pairing += [
             (partial(old, allow_inf=True), partial(new, inf=fastnumbers.ALLOWED)),
             (partial(old, allow_inf=False), partial(new, inf=fastnumbers.NUMBER_ONLY)),
@@ -942,7 +942,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
     ]
 
     @given(integers())
-    @example(int(10 * 300))
+    @example(10 * 300)
     @parametrize("func", get_funcs(funcs), ids=funcs)
     def test_given_int_returns_int(
         self, func: TryReal | TryInt | TryForceInt, x: int
@@ -2001,7 +2001,7 @@ class TestMappingFunctions:
             msg = "Fëanor"
             raise ValueError(msg)
 
-        with pytest.raises(ValueError, match="Fëanor"):  # noqa: PT012
+        with pytest.raises(ValueError, match="Fëanor"):
             for _ in func(broken()):
                 pass
 
@@ -2018,8 +2018,8 @@ class TestMappingFunctions:
         "iterable_gen",
         [
             list,
-            lambda: (),
-            lambda: set(),
+            tuple,
+            set,
             lambda: iter([]),
             lambda: (x for x in []),  # type: ignore [var-annotated]
         ],
@@ -2044,8 +2044,8 @@ class TestMappingFunctions:
         "iterable_gen",
         [
             list,
-            lambda: (),
-            lambda: set(),
+            tuple,
+            set,
             lambda: iter([]),
             lambda: (x for x in []),  # type: ignore [var-annotated]
         ],
@@ -2092,7 +2092,7 @@ class TestMappingFunctions:
     def test_invalid_types_behave_as_expected(
         self, func: ConversionFuncs, style: Callable[[Any], Any]
     ) -> None:
-        with pytest.raises(TypeError, match="not 'tuple'"):  # noqa: PT012
+        with pytest.raises(TypeError, match="not 'tuple'"):
             for _ in func(style([("Fëanor",)])):
                 pass
         expected = [5]

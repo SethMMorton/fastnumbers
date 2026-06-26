@@ -334,7 +334,7 @@ class TestReplacements:
         result = array.array(formats[data_type], [0])
         expected = "bad operand type for abs()"
         with pytest.raises(TypeError, match=expected):
-            fastnumbers.try_array(given, result, on_fail=lambda x: abs(x))
+            fastnumbers.try_array(given, result, on_fail=abs)
 
     @pytest.mark.parametrize("data_type", int_data_types)
     def test_replacements_trigger_new_values_for_int(self, data_type: str) -> None:
