@@ -49,7 +49,6 @@ version_file = "src/fastnumbers/_version.py"
 
 [tool.mypy]
 mypy_path = "mypy_stubs"
-plugins = "numpy.typing.mypy_plugin"
 
 [tool.pytest.ini_options]
 addopts = "--tb=short"
