@@ -11,6 +11,9 @@ Unreleased
   [@jzerfowski](https://github.com/jzerfowski), issues
   [#83](https://github.com/SethMMorton/fastnumbers/issues/83) and
   [#84](https://github.com/SethMMorton/fastnumbers/pull/84))
+- Explicitly set `language="c++"` and add `-lstdc++` to solve linker
+  problem on OpenSUSE ([@mcepl](https://github.com/mcepl), issue
+  [#85](https://github.com/SethMMorton/fastnumbers/pull/85))
 - Fix bug where compilation warnings for MSVC were not turned into
   errors for CI testing
 - Eliminate various static analysis warnings
