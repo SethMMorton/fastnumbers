@@ -28,14 +28,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel==4.1.0
 
+      - name: Build Wheel
+        run: python -m cibuildwheel --output-dir dist
+
       - name: Build Source Distribution
         if: matrix.os == 'ubuntu-latest'
         run: |
           python -m pip install build
           python -m build --sdist
-
-      - name: Build Wheel
-        run: python -m cibuildwheel --output-dir dist
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
