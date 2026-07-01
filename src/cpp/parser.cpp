@@ -355,7 +355,12 @@ RawPayload<PyObject*> CharacterParser::as_pyint() const noexcept(false)
         if (base == 0) {
             base = detect_base(buffer.start(), buffer.end());
         }
-        buffer.remove_base_prefix();
+        // A "0b"/"0o"/"0x" prefix is only valid for a non-decimal base; at base 10
+        // it is invalid input, so leave it in place to let the re-parse reject it
+        // (otherwise e.g. "0b1_0" would be silently miscomputed as 10).
+        if (base != 10) {
+            buffer.remove_base_prefix();
+        }
         result = parse_int<int64_t>(buffer.start(), buffer.end(), base, error, overflow);
     }
     if (error) {

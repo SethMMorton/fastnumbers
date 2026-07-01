@@ -242,6 +242,24 @@ class IntTestCases(unittest.TestCase):
         self.assertRaises(ValueError, int, "1__00")
         self.assertRaises(ValueError, int, "100_")
 
+    def test_base_prefix_with_underscore_is_invalid_at_base_10(self) -> None:
+        # A "0b"/"0o"/"0x" prefix is invalid at the default base 10, exactly as
+        # for builtins.int. Combined with an underscore it used to be silently
+        # accepted and miscomputed, e.g. int("0b1_0") -> 10 instead of an error.
+        for prefix in ("0b", "0o", "0x"):
+            for sign in ("", "+", "-"):
+                for body in ("1_0", "9_5", "1_2_3"):
+                    lit = f"{sign}{prefix}{body}"
+                    self.assertRaises(ValueError, builtins.int, lit)
+                    self.assertRaises(ValueError, int, lit)
+                    self.assertRaises(ValueError, int, f"  {lit}  ")
+        # the same literals remain valid (and match builtins.int) when the base
+        # actually permits the prefix, so the fix does not over-reject
+        assert int("0b1_0", 0) == builtins.int("0b1_0", 0) == 2
+        assert int("0b1_0", 2) == 2
+        assert int("0o1_7", 8) == builtins.int("0o1_7", 8) == 15
+        assert int("0x1_f", 16) == builtins.int("0x1_f", 16) == 31
+
     @support.cpython_only
     def test_small_ints(self) -> None:
         # Bug #3236: Return small longs from PyLong_FromString
