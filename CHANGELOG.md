@@ -1,6 +1,14 @@
 Unreleased
 ---
 
+### Fixed
+
+- Fixed `int`, `real`, `try_int` and `try_array` silently accepting and
+  miscomputing a `0b`/`0o`/`0x` prefix combined with an underscore at the
+  default base 10, e.g. `int("0b1_0")` returning `10` instead of raising
+  `ValueError` ([@gaoflow](https://github.com/gaoflow), issue
+  [#91](https://github.com/SethMMorton/fastnumbers/pull/91))
+
 [5.2.0] - 2026-06-27
 ---
 
