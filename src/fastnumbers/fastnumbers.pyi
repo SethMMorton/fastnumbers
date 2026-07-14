@@ -37,6 +37,10 @@ InputType: TypeAlias = (
 )
 AnyInputType = TypeVar("AnyInputType")
 QueryInputType = TypeVar("QueryInputType")
+OutType1 = TypeVar("OutType1")
+OutType2 = TypeVar("OutType2")
+OutType3 = TypeVar("OutType3")
+OutType4 = TypeVar("OutType4")
 
 NumInputType = TypeVar("NumInputType", pyint, pyfloat, ItWillFloat, HasIndex, HasInt)
 StrInputType = TypeVar("StrInputType", str, bytes, bytearray | memoryview[pyint])
@@ -102,7 +106,7 @@ def try_real(
     | FloatInt
     | StrInputType
     | Callable[[StrInputType], FloatInt | StrInputType] = ...,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     denoise: bool = ...,
@@ -126,88 +130,21 @@ def try_real(
 ) -> FloatInt: ...
 @overload
 def try_real(
-    x: NumInputType,
-    *,
-    inf: Any | Callable[[NumInputType], Any] = ...,
-    nan: Any | Callable[[NumInputType], Any] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_real(
-    x: StrInputType,
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_real(
     x: AnyInputType,
     *,
-    inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
-    nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
-    on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
-    on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
+    inf: TrySelectorsType | OutType1 | Callable[[AnyInputType], OutType1] = ...,
+    nan: TrySelectorsType | OutType2 | Callable[[AnyInputType], OutType2] = ...,
+    on_fail: INPUT_T | RAISE_T | OutType3 | Callable[[AnyInputType], OutType3] = ...,
+    on_type_error: INPUT_T
+    | RAISE_T
+    | OutType4
+    | Callable[[AnyInputType], OutType4] = ...,
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[False] = ...,
-) -> FloatInt: ...
-@overload
-def try_real(
-    x: Any,
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any = ...,
-    on_type_error: Any,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_real(
-    x: Iterable[pyint],
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[pyint]: ...
-@overload
-def try_real(
-    x: Iterable[pyfloat],
-    *,
-    inf: TrySelectorsType | pyfloat | Callable[[pyfloat], pyfloat] = ...,
-    nan: TrySelectorsType | pyfloat | Callable[[pyfloat], pyfloat] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    coerce: Literal[False],
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[pyfloat]: ...
+) -> FloatInt | AnyInputType | OutType1 | OutType2 | OutType3 | OutType4: ...
 @overload
 def try_real(
     x: Iterable[NumInputType],
@@ -234,7 +171,7 @@ def try_real(
     | FloatInt
     | StrInputType
     | Callable[[StrInputType], FloatInt | StrInputType] = ...,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     denoise: bool = ...,
@@ -258,40 +195,12 @@ def try_real(
 ) -> list[FloatInt]: ...
 @overload
 def try_real(
-    x: Iterable[NumInputType],
-    *,
-    inf: Any | Callable[[NumInputType], Any] = ...,
-    nan: Any | Callable[[NumInputType], Any] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[Any]: ...
-@overload
-def try_real(
-    x: Iterable[StrInputType],
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[Any]: ...
-@overload
-def try_real(
     x: Iterable[AnyInputType],
     *,
     inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
     nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
     on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
-    on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
+    on_type_error: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -305,7 +214,7 @@ def try_real(
     inf: Any = ...,
     nan: Any = ...,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -366,7 +275,7 @@ def try_real(
     | FloatInt
     | StrInputType
     | Callable[[StrInputType], FloatInt | StrInputType] = ...,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     coerce: bool = ...,
     denoise: bool = ...,
@@ -390,40 +299,12 @@ def try_real(
 ) -> Iterator[FloatInt]: ...
 @overload
 def try_real(
-    x: Iterable[NumInputType],
-    *,
-    inf: Any | Callable[[NumInputType], Any] = ...,
-    nan: Any | Callable[[NumInputType], Any] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[True],
-) -> Iterator[Any]: ...
-@overload
-def try_real(
-    x: Iterable[StrInputType],
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    coerce: bool = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[True],
-) -> Iterator[Any]: ...
-@overload
-def try_real(
     x: Iterable[AnyInputType],
     *,
     inf: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
     nan: ALLOWED_T | RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
     on_fail: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt],
-    on_type_error: FloatInt | Callable[[AnyInputType], FloatInt],
+    on_type_error: RAISE_T | FloatInt | Callable[[AnyInputType], FloatInt] = ...,
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -437,7 +318,7 @@ def try_real(
     inf: Any = ...,
     nan: Any = ...,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     coerce: bool = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -470,7 +351,7 @@ def try_float(
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -490,52 +371,31 @@ def try_float(
 ) -> pyfloat: ...
 @overload
 def try_float(
-    x: NumInputType,
-    *,
-    inf: Any | Callable[[NumInputType], Any] = ...,
-    nan: Any | Callable[[NumInputType], Any] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_float(
-    x: StrInputType,
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_float(
     x: AnyInputType,
     *,
     inf: ALLOWED_T | RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     nan: ALLOWED_T | RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     on_fail: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat],
-    on_type_error: pyfloat | Callable[[AnyInputType], pyfloat],
+    on_type_error: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[False] = ...,
 ) -> pyfloat: ...
 @overload
 def try_float(
-    x: Any,
+    x: AnyInputType,
     *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any = ...,
-    on_type_error: Any,
+    inf: TrySelectorsType | OutType1 | Callable[[AnyInputType], OutType1] = ...,
+    nan: TrySelectorsType | OutType2 | Callable[[AnyInputType], OutType2] = ...,
+    on_fail: INPUT_T | RAISE_T | OutType3 | Callable[[AnyInputType], OutType3] = ...,
+    on_type_error: INPUT_T
+    | RAISE_T
+    | OutType4
+    | Callable[[AnyInputType], OutType4] = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[False] = ...,
-) -> Any: ...
+) -> pyfloat | AnyInputType | OutType1 | OutType2 | OutType3 | OutType4: ...
 @overload
 def try_float(
     x: Iterable[NumInputType],
@@ -560,7 +420,7 @@ def try_float(
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -580,36 +440,12 @@ def try_float(
 ) -> list[pyfloat]: ...
 @overload
 def try_float(
-    x: Iterable[NumInputType],
-    *,
-    inf: Any | Callable[[NumInputType], Any] = ...,
-    nan: Any | Callable[[NumInputType], Any] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[Any]: ...
-@overload
-def try_float(
-    x: Iterable[StrInputType],
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[Any]: ...
-@overload
-def try_float(
     x: Iterable[AnyInputType],
     *,
     inf: ALLOWED_T | RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     nan: ALLOWED_T | RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     on_fail: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat],
-    on_type_error: pyfloat | Callable[[AnyInputType], pyfloat],
+    on_type_error: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: type[list],
@@ -621,7 +457,7 @@ def try_float(
     inf: Any = ...,
     nan: Any = ...,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: type[list],
@@ -650,7 +486,7 @@ def try_float(
     | pyfloat
     | StrInputType
     | Callable[[StrInputType], pyfloat | StrInputType] = ...,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -670,36 +506,12 @@ def try_float(
 ) -> Iterator[pyfloat]: ...
 @overload
 def try_float(
-    x: Iterable[NumInputType],
-    *,
-    inf: Any | Callable[[NumInputType], Any] = ...,
-    nan: Any | Callable[[NumInputType], Any] = ...,
-    on_fail: Any = ...,
-    on_type_error: Any = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[True],
-) -> Iterator[Any]: ...
-@overload
-def try_float(
-    x: Iterable[StrInputType],
-    *,
-    inf: Any = ...,
-    nan: Any = ...,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[True],
-) -> Iterator[Any]: ...
-@overload
-def try_float(
     x: Iterable[AnyInputType],
     *,
     inf: ALLOWED_T | RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     nan: ALLOWED_T | RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     on_fail: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat],
-    on_type_error: pyfloat | Callable[[AnyInputType], pyfloat],
+    on_type_error: RAISE_T | pyfloat | Callable[[AnyInputType], pyfloat] = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[True],
@@ -711,7 +523,7 @@ def try_float(
     inf: Any = ...,
     nan: Any = ...,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[True],
@@ -732,7 +544,7 @@ def try_int(
 def try_int(
     x: StrInputType,
     *,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
@@ -752,21 +564,10 @@ def try_int(
 ) -> pyint: ...
 @overload
 def try_int(
-    x: StrInputType,
-    *,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    base: IntBaseType = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_int(
     x: AnyInputType,
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
-    on_type_error: pyint | Callable[[AnyInputType], pyint],
+    on_type_error: RAISE_T | pyint | Callable[[AnyInputType], pyint] = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -774,15 +575,18 @@ def try_int(
 ) -> pyint: ...
 @overload
 def try_int(
-    x: Any,
+    x: AnyInputType,
     *,
-    on_fail: Any = ...,
-    on_type_error: Any,
+    on_fail: INPUT_T | RAISE_T | OutType1 | Callable[[AnyInputType], OutType1] = ...,
+    on_type_error: INPUT_T
+    | RAISE_T
+    | OutType2
+    | Callable[[AnyInputType], OutType2] = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[False] = ...,
-) -> Any: ...
+) -> pyint | AnyInputType | OutType1 | OutType2: ...
 @overload
 def try_int(
     x: Iterable[NumInputType],
@@ -797,7 +601,7 @@ def try_int(
 def try_int(
     x: Iterable[StrInputType],
     *,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
@@ -817,21 +621,10 @@ def try_int(
 ) -> list[pyint]: ...
 @overload
 def try_int(
-    x: Iterable[StrInputType],
-    *,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    base: IntBaseType = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[Any]: ...
-@overload
-def try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
-    on_type_error: pyint | Callable[[AnyInputType], pyint],
+    on_type_error: RAISE_T | pyint | Callable[[AnyInputType], pyint] = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -842,7 +635,7 @@ def try_int(
     x: Iterable[Any],
     *,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -862,7 +655,7 @@ def try_int(
 def try_int(
     x: Iterable[StrInputType],
     *,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
@@ -882,21 +675,10 @@ def try_int(
 ) -> Iterator[pyint]: ...
 @overload
 def try_int(
-    x: Iterable[StrInputType],
-    *,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    base: IntBaseType = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[True],
-) -> Iterator[Any]: ...
-@overload
-def try_int(
     x: Iterable[AnyInputType],
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
-    on_type_error: pyint | Callable[[AnyInputType], pyint],
+    on_type_error: RAISE_T | pyint | Callable[[AnyInputType], pyint] = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -907,7 +689,7 @@ def try_int(
     x: Iterable[Any],
     *,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     base: IntBaseType = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -930,7 +712,7 @@ def try_forceint(
 def try_forceint(
     x: StrInputType,
     *,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -950,21 +732,10 @@ def try_forceint(
 ) -> pyint: ...
 @overload
 def try_forceint(
-    x: StrInputType,
-    *,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[False] = ...,
-) -> Any: ...
-@overload
-def try_forceint(
     x: AnyInputType,
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
-    on_type_error: pyint | Callable[[AnyInputType], pyint],
+    on_type_error: RAISE_T | pyint | Callable[[AnyInputType], pyint] = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -972,15 +743,18 @@ def try_forceint(
 ) -> pyint: ...
 @overload
 def try_forceint(
-    x: Any,
+    x: AnyInputType,
     *,
-    on_fail: Any = ...,
-    on_type_error: Any,
+    on_fail: INPUT_T | RAISE_T | OutType1 | Callable[[AnyInputType], OutType1] = ...,
+    on_type_error: INPUT_T
+    | RAISE_T
+    | OutType2
+    | Callable[[AnyInputType], OutType2] = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
     map: Literal[False] = ...,
-) -> Any: ...
+) -> pyint | AnyInputType | OutType1 | OutType2: ...
 @overload
 def try_forceint(
     x: Iterable[NumInputType],
@@ -996,7 +770,7 @@ def try_forceint(
 def try_forceint(
     x: Iterable[StrInputType],
     *,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -1016,21 +790,10 @@ def try_forceint(
 ) -> list[pyint]: ...
 @overload
 def try_forceint(
-    x: Iterable[StrInputType],
-    *,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: type[list],
-) -> list[Any]: ...
-@overload
-def try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
-    on_type_error: pyint | Callable[[AnyInputType], pyint],
+    on_type_error: RAISE_T | pyint | Callable[[AnyInputType], pyint] = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -1062,7 +825,7 @@ def try_forceint(
 def try_forceint(
     x: Iterable[StrInputType],
     *,
-    on_fail: INPUT_T = ...,
+    on_fail: INPUT_T | StrInputType | Callable[[StrInputType], StrInputType] = ...,
     on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
@@ -1082,21 +845,10 @@ def try_forceint(
 ) -> Iterator[pyint]: ...
 @overload
 def try_forceint(
-    x: Iterable[StrInputType],
-    *,
-    on_fail: Any,
-    on_type_error: Any = ...,
-    denoise: bool = ...,
-    allow_underscores: bool = ...,
-    allow_unicode_chars: bool = ...,
-    map: Literal[True],
-) -> Iterator[Any]: ...
-@overload
-def try_forceint(
     x: Iterable[AnyInputType],
     *,
     on_fail: RAISE_T | pyint | Callable[[AnyInputType], pyint],
-    on_type_error: pyint | Callable[[AnyInputType], pyint],
+    on_type_error: RAISE_T | pyint | Callable[[AnyInputType], pyint] = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
@@ -1107,7 +859,7 @@ def try_forceint(
     x: Iterable[Any],
     *,
     on_fail: Any = ...,
-    on_type_error: Any,
+    on_type_error: Any = ...,
     denoise: bool = ...,
     allow_underscores: bool = ...,
     allow_unicode_chars: bool = ...,
