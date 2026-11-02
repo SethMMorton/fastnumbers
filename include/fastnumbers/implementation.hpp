@@ -143,6 +143,12 @@ public:
         set_unicode_allowed(m_options.is_default_base());
     }
 
+    /// Set whether we support all dunder methods for numbers
+    void set_extend_custom_conversion(const bool extend) noexcept
+    {
+        m_options.set_extend_custom_conversion(extend);
+    }
+
     /// Set the types of input we consider for checking
     void set_consider(const PyObject* val) noexcept(false);
 

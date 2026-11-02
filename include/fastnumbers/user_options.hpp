@@ -32,6 +32,7 @@ public:
         , m_inf_allowed_str(false)
         , m_inf_allowed_num(false)
         , m_unicode_allowed(true)
+        , m_extend_custom_conversion(true)
     { }
     UserOptions(const UserOptions&) = default;
     UserOptions(UserOptions&&) = default;
@@ -148,6 +149,15 @@ public:
     /// Indicate if we allow non-ASCII unicode characters as input
     bool allow_unicode() const noexcept { return m_unicode_allowed; }
 
+    /// Tell the analyzer if we support all dunder methods for numbers
+    void set_extend_custom_conversion(const bool extend) noexcept
+    {
+        m_extend_custom_conversion = extend;
+    }
+
+    /// Indicate if we support all dunder methods for numbers
+    bool extend_custom_conversion() const noexcept { return m_extend_custom_conversion; }
+
 private:
     /// The desired base of integers when parsing
     int m_base;
@@ -179,4 +189,7 @@ private:
 
     /// Whether or not a unicode character is allowed
     bool m_unicode_allowed;
+
+    /// Whether or not to support all dunder methods for numbers
+    bool m_extend_custom_conversion;
 };
