@@ -1,15 +1,15 @@
 from builtins import float as pyfloat
 from builtins import int as pyint
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import (
     Any,
-    Callable,
     Literal,
+    TypeAlias,
     TypeVar,
     overload,
 )
 
-from typing_extensions import Protocol, TypeAlias
+from typing_extensions import Protocol
 
 from . import ALLOWED_T, DISALLOWED_T, INPUT_T, NUMBER_ONLY_T, RAISE_T, STRING_ONLY_T
 

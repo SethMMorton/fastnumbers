@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import array
 import ctypes
-from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypedDict
+from typing import TYPE_CHECKING, Any, NoReturn, TypedDict
 
 import numpy as np
 import pytest
@@ -19,7 +19,7 @@ from hypothesis.strategies import (
 import fastnumbers
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
 # Map supported data types to the Python array internal format designator
 formats = {

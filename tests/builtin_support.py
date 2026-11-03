@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import platform
 import unittest
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 __all__ = [
     "cpython_only",

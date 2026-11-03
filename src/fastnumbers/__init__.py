@@ -64,8 +64,8 @@ else:
 # Hide all type checking code at runtime behind this gate
 if TYPE_CHECKING:
     import array
-    from collections.abc import Iterable
-    from typing import Any, Callable, NewType, TypeVar, overload
+    from collections.abc import Callable, Iterable
+    from typing import Any, NewType, TypeVar, overload
 
     IntT = TypeVar("IntT", np.int_)
     FloatT = TypeVar("FloatT", np.float64)

@@ -61,9 +61,6 @@ see the `Timing`_ section for the raw data if you want details.
       (with the ``map`` option or ``try_array`` function) is 2x faster
       than the equivalent list comprehension.
 
-**NOTICE**: As of ``fastnumbers`` version 4.0.0, only Python >= 3.7 is
-supported.
-
 **NOTICE**: As of ``fastnumbers`` version 4.0.0, the functions ``fast_real``,
 ``fast_float``, ``fast_int``, ``fast_forceint``, ``isreal``, ``isfloat``,
 ``isint``, and ``isintlike`` have been deprecated and are replaced with

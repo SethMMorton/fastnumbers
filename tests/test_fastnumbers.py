@@ -10,10 +10,8 @@ from itertools import combinations
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     NoReturn,
     Protocol,
-    Union,
     cast,
 )
 
@@ -36,12 +34,12 @@ from hypothesis.strategies import (
 import fastnumbers
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Callable, Iterable, Iterator
 
 parametrize = pytest.mark.parametrize
 
 
-FloatOrInt = Union[float, int]
+FloatOrInt = float | int
 
 
 class TryReal(Protocol):
@@ -255,10 +253,10 @@ class IsIntLike(Protocol):
     ) -> bool: ...
 
 
-ConversionFuncs = Union[TryReal, TryFloat, TryInt, TryForceInt]
-OldConversionFuncs = Union[FastReal, FastFloat, FastInt, FastForceInt]
-IdentificationFuncs = Union[CheckReal, CheckFloat, CheckInt, CheckIntLike]
-OldIdentificationFuncs = Union[IsReal, IsFloat, IsInt, IsIntLike]
+ConversionFuncs = TryReal | TryFloat | TryInt | TryForceInt
+OldConversionFuncs = FastReal | FastFloat | FastInt | FastForceInt
+IdentificationFuncs = CheckReal | CheckFloat | CheckInt | CheckIntLike
+OldIdentificationFuncs = IsReal | IsFloat | IsInt | IsIntLike
 
 # Predefine Unicode digits, numbers, and not those.
 decimals = set()

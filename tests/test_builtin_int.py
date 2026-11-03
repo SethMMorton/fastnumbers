@@ -5,7 +5,7 @@ import builtins
 import contextlib
 import sys
 import unittest
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -16,6 +16,9 @@ from builtin_grammar import (
     INVALID_UNDERSCORE_LITERALS,
     VALID_UNDERSCORE_LITERALS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 L = [
     ("0", 0),

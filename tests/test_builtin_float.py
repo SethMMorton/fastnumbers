@@ -6,7 +6,7 @@ import sys
 import time
 import unittest
 from math import copysign, isinf, isnan
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import pytest
 from typing_extensions import Self
@@ -18,6 +18,9 @@ from builtin_grammar import (
     INVALID_UNDERSCORE_LITERALS,
     VALID_UNDERSCORE_LITERALS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 INF = float("inf")
 NAN = float("nan")
