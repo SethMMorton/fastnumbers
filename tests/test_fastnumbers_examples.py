@@ -90,7 +90,7 @@ def test_try_real() -> None:
     assert isinstance(fastnumbers.try_real(IndexCard()), int)
     # 13. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_real(["hey"])  # type: ignore[call-overload]
+        fastnumbers.try_real(["hey"])
     # 14. Invalid input string
     assert fastnumbers.try_real("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
@@ -172,7 +172,7 @@ def test_try_float() -> None:
     assert isinstance(fastnumbers.try_float(PerformInt()), float)
     # 13. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_float(["hey"])  # type: ignore[call-overload]
+        fastnumbers.try_float(["hey"])
     # 14. Invalid input string
     assert fastnumbers.try_float("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
@@ -246,7 +246,7 @@ def test_try_int() -> None:
     assert isinstance(fastnumbers.try_int(PerformInt()), int)
     # 13. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_int(["hey"])  # type: ignore[call-overload]
+        fastnumbers.try_int(["hey"])
     # 14. Invalid input string
     assert fastnumbers.try_int("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):
@@ -317,7 +317,7 @@ def test_try_forceint() -> None:
     assert isinstance(fastnumbers.try_forceint(PerformInt()), int)
     # 13. TypeError for invalid input
     with pytest.raises(TypeError):
-        fastnumbers.try_forceint(["hey"])  # type: ignore[call-overload]
+        fastnumbers.try_forceint(["hey"])
     # 14. Invalid input string
     assert fastnumbers.try_forceint("not_a_number") == "not_a_number"
     with pytest.raises(ValueError):

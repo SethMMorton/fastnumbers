@@ -396,7 +396,7 @@ class PerformInt:
 class FloatationDevice:
     x: float | None
 
-    def __init__(self, x: float | None = None):
+    def __init__(self, x: float | None = None) -> None:
         self.x = x
 
     def __float__(self) -> float:
@@ -1847,7 +1847,7 @@ class TestUserNumericProtocols:
         ],
     )
     def test_real_conversion_uses_numeric_protocol(
-        self, func: Callable[[Any], Any], x: object, expected: int | float
+        self, func: Callable[[Any], Any], x: object, expected: float
     ) -> None:
         assert func(x) == expected
 
@@ -1892,7 +1892,7 @@ class TestUserNumericProtocols:
         assert int(PerformInt()) == 13
 
         with pytest.raises(TypeError):
-            int(FloatationDevice())
+            int(FloatationDevice())  # type: ignore[call-overload]
 
     @parametrize(
         "func, expected",
@@ -1904,7 +1904,9 @@ class TestUserNumericProtocols:
         ],
     )
     def test_float_protocol_identification(
-        self, func: Callable[[Any], Any], expected: bool
+        self,
+        func: Callable[[Any], Any],
+        expected: bool,  # noqa: FBT001
     ) -> None:
         assert func(FloatationDevice()) is expected
 

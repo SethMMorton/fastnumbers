@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 try:
-    # The redundant "as" tells mypy to treat as explict import
     from fastnumbers._version import __version__, __version_tuple__
 except ImportError:
     __version__ = "unknown version"
@@ -17,6 +16,7 @@ from .fastnumbers import (
     NUMBER_ONLY,
     RAISE,
     STRING_ONLY,
+    array as _array,  # type: ignore[reportAttributeAccessIssue]
     check_float,
     check_int,
     check_intlike,
@@ -38,9 +38,6 @@ from .fastnumbers import (
     try_int,
     try_real,
 )
-from .fastnumbers import (
-    array as _array,
-)
 
 try:
     import numpy as np
@@ -61,128 +58,24 @@ else:
         np.float64,
     }
 
-# Hide all type checking code at runtime behind this gate
 if TYPE_CHECKING:
     import array
-    from collections.abc import Callable, Iterable
-    from typing import Any, NewType, TypeVar, overload
+    import builtins
+    from collections.abc import Iterable
+    from typing import Any
 
-    IntT = TypeVar("IntT", np.int_)
-    FloatT = TypeVar("FloatT", np.float64)
-    CallToInt = Callable[[Any], int]
-    CallToFloat = Callable[[Any], float]
-    ALLOWED_T = NewType("ALLOWED_T", object)
-    RAISE_T = NewType("RAISE_T", object)
-
-    ALLOWED_T = NewType("ALLOWED_T", object)
-    DISALLOWED_T = NewType("DISALLOWED_T", object)
-    INPUT_T = NewType("INPUT_T", object)
-    RAISE_T = NewType("RAISE_T", object)
-    STRING_ONLY_T = NewType("STRING_ONLY_T", object)
-    NUMBER_ONLY_T = NewType("NUMBER_ONLY_T", object)
-
-    # Selectors
-    ALLOWED: ALLOWED_T
-    DISALLOWED: DISALLOWED_T
-    INPUT: INPUT_T
-    RAISE: RAISE_T
-    STRING_ONLY: STRING_ONLY_T
-    NUMBER_ONLY: NUMBER_ONLY_T
-
-    @overload
-    def try_array(
-        input: Iterable[Any],
-        output: None = None,
-        *,
-        dtype: IntT,
-        inf: ALLOWED_T | int | CallToInt = ALLOWED,
-        nan: ALLOWED_T | int | CallToInt = ALLOWED,
-        on_fail: RAISE_T | int | CallToInt = RAISE,
-        on_overflow: RAISE_T | int | CallToInt = RAISE,
-        on_type_error: RAISE_T | int | CallToInt = RAISE,
-        base: int = 10,
-        allow_underscores: bool = False,
-        allow_unicode_chars: bool = True,
-    ) -> np.ndarray[IntT]: ...
-
-    @overload
-    def try_array(
-        input: Iterable[Any],
-        output: None = None,
-        *,
-        dtype: FloatT = np.float64,
-        inf: ALLOWED_T | int | float | CallToInt | CallToFloat = ALLOWED,
-        nan: ALLOWED_T | int | float | CallToInt | CallToFloat = ALLOWED,
-        on_fail: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        on_overflow: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        base: int = 10,
-        allow_underscores: bool = False,
-        allow_unicode_chars: bool = True,
-    ) -> np.ndarray[FloatT]: ...
-
-    @overload
-    def try_array(
-        input: Iterable[Any],
-        output: np.ndarray[IntT],
-        *,
-        inf: ALLOWED_T | int | CallToInt = ALLOWED,
-        nan: ALLOWED_T | int | CallToInt = ALLOWED,
-        on_fail: RAISE_T | int | CallToInt = RAISE,
-        on_overflow: RAISE_T | int | CallToInt = RAISE,
-        on_type_error: RAISE_T | int | CallToInt = RAISE,
-        base: int = 10,
-        allow_underscores: bool = False,
-        allow_unicode_chars: bool = True,
-    ) -> None: ...
-
-    @overload
-    def try_array(
-        input: Iterable[Any],
-        output: np.ndarray[FloatT],
-        *,
-        inf: ALLOWED_T | int | float | CallToInt | CallToFloat = ALLOWED,
-        nan: ALLOWED_T | int | float | CallToInt | CallToFloat = ALLOWED,
-        on_fail: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        on_overflow: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        base: int = 10,
-        allow_underscores: bool = False,
-        allow_unicode_chars: bool = True,
-    ) -> None: ...
-
-    @overload
-    def try_array(
-        input: Iterable[Any],
-        output: array.array[int],
-        *,
-        inf: ALLOWED_T | int | CallToInt = ALLOWED,
-        nan: ALLOWED_T | int | CallToInt = ALLOWED,
-        on_fail: RAISE_T | int | CallToInt = RAISE,
-        on_overflow: RAISE_T | int | CallToInt = RAISE,
-        on_type_error: RAISE_T | int | CallToInt = RAISE,
-        base: int = 10,
-        allow_underscores: bool = False,
-        allow_unicode_chars: bool = True,
-    ) -> None: ...
-
-    @overload
-    def try_array(
-        input: Iterable[Any],
-        output: array.array[float],
-        *,
-        inf: ALLOWED_T | int | float | CallToInt | CallToFloat = ALLOWED,
-        nan: ALLOWED_T | int | float | CallToInt | CallToFloat = ALLOWED,
-        on_fail: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        on_overflow: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        on_type_error: RAISE_T | int | float | CallToInt | CallToFloat = RAISE,
-        base: int = 10,
-        allow_underscores: bool = False,
-        allow_unicode_chars: bool = True,
-    ) -> None: ...
+    import numpy.typing as npt
 
 
-def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002, D417
+def try_array(  # noqa: D417
+    input: Iterable[Any],  # noqa: A002
+    output: npt.NDArray[np.integer | np.floating]
+    | array.array[builtins.int | builtins.float]
+    | None = None,
+    *,
+    dtype: npt.DTypeLike | None = None,
+    **kwargs,  # noqa: ANN003
+) -> npt.NDArray[np.integer | np.floating] | None:
     r"""
     Quickly convert an iterable's contents into an array.
 
@@ -313,21 +206,21 @@ def try_array(input, output=None, *, dtype=None, **kwargs):  # noqa: A002, D417
     else:
         return_output = False
 
-        # Let's be conservative about what we feed to the C++ code.
-        try:
-            if output.dtype.type not in _allowed_dtypes:
-                raise TypeError(
-                    "The only supported numpy dtypes for output are: "
-                    + ", ".join(sorted([x.__name__ for x in _allowed_dtypes]))
-                    + f" not {output.dtype.name}"
-                )
-        except AttributeError:
-            if not hasattr(output, "typecode"):
-                msg = (
-                    "Only numpy ndarray and array.array types for output are "
-                    f"supported, not {type(output)}"
-                )
-                raise TypeError(msg) from None
+    # Let's be conservative about what we feed to the C++ code.
+    try:
+        if output.dtype.type not in _allowed_dtypes:
+            raise TypeError(
+                "The only supported numpy dtypes for output are: "
+                + ", ".join(sorted([x.__name__ for x in _allowed_dtypes]))
+                + f" not {output.dtype.name}"
+            )
+    except AttributeError:
+        if not hasattr(output, "typecode"):
+            msg = (
+                "Only numpy ndarray and array.array types for output are "
+                f"supported, not {type(output)}"
+            )
+            raise TypeError(msg) from None
 
     # Call the C++ extension
     _array(input, output, **kwargs)
