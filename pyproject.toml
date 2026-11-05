@@ -117,6 +117,9 @@ ignore = [
 "tests/test_fastnumbers_examples.py" = [
     "PLR0915",  # too many statements
 ]
+"tests/test_typing.py" = [
+    "PLR0915",  # too many statements
+]
 "dev/**.py" = [
     "S603",  # subprocess call of untrusted input
     "S606",  # start process without a shell

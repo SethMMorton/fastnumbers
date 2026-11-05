@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import decimal
+import fractions
 import math
 import random
 import re
@@ -1844,6 +1845,8 @@ class TestUserNumericProtocols:
             (FloatationDevice(), 3.14159),
             (IndexCard(), 42),
             (PerformInt(), 13),
+            (decimal.Decimal("3.14159"), 3.14159),
+            (fractions.Fraction(22, 11), 2),
         ],
     )
     def test_real_conversion_uses_numeric_protocol(
@@ -1864,12 +1867,16 @@ class TestUserNumericProtocols:
         assert func(FloatationDevice()) == 3.14159
         assert func(IndexCard()) == 42.0
         assert func(PerformInt()) == 13.0
+        assert func(decimal.Decimal("13.0")) == 13.0
+        assert func(fractions.Fraction(13, 1)) == 13.0
 
     def test_builtin_float_uses_only_float_protocol(self) -> None:
         assert fastnumbers.float(FloatationDevice()) == 3.14159
         assert fastnumbers.float(IndexCard()) == 42.0
+        assert fastnumbers.float(decimal.Decimal("13.0")) == 13.0
+        assert fastnumbers.float(fractions.Fraction(13, 1)) == 13.0
         with pytest.raises(TypeError):
-            fastnumbers.float(PerformInt())
+            fastnumbers.float(PerformInt())  # type: ignore[arg-type]
 
     @parametrize(
         "func",
@@ -1886,11 +1893,14 @@ class TestUserNumericProtocols:
         assert func(FloatationDevice()) == 3
         assert func(IndexCard()) == 42
         assert func(PerformInt()) == 13
+        assert func(decimal.Decimal("13.0")) == 13
+        assert func(fractions.Fraction(13, 1)) == 13
 
     def test_builtin_int_uses_int_and_index_protocols(self) -> None:
         assert int(IndexCard()) == 42
         assert int(PerformInt()) == 13
-
+        assert int(decimal.Decimal("13.0")) == 13
+        assert int(fractions.Fraction(13, 1)) == 13
         with pytest.raises(TypeError):
             int(FloatationDevice())  # type: ignore[call-overload]
 
@@ -1909,6 +1919,8 @@ class TestUserNumericProtocols:
         expected: bool,  # noqa: FBT001
     ) -> None:
         assert func(FloatationDevice()) is expected
+        assert func(decimal.Decimal("3.14159")) is expected
+        assert func(fractions.Fraction(22, 7)) is expected
 
     @parametrize(
         "func",
@@ -1923,6 +1935,10 @@ class TestUserNumericProtocols:
         self, func: Callable[[Any], Any], x: object
     ) -> None:
         assert func(x)
+
+    def test_intlike_protocol_identification(self) -> None:
+        assert fastnumbers.check_intlike(decimal.Decimal("13.0"))
+        assert fastnumbers.check_intlike(fractions.Fraction(13, 1))
 
     @parametrize("x", [IndexCard(), PerformInt()])
     def test_index_and_int_protocols_are_not_floats(self, x: object) -> None:
@@ -1969,6 +1985,8 @@ class TestUserNumericProtocols:
             )
             == 3453000000000000000000
         )
+        assert fastnumbers.try_real(decimal.Decimal("42.0"), coerce=True) == 42
+        assert fastnumbers.try_real(fractions.Fraction(42, 1), coerce=True) == 42
 
 
 class TestQueryType:
