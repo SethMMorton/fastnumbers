@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import decimal
+import fractions
 import math
 import random
 import re
@@ -383,6 +384,28 @@ class DumbIntClass:
         raise ValueError(msg)
 
 
+class IndexCard:
+    def __index__(self) -> int:
+        return 42
+
+
+class PerformInt:
+    def __int__(self) -> int:
+        return 13
+
+
+class FloatationDevice:
+    x: float | None
+
+    def __init__(self, x: float | None = None) -> None:
+        self.x = x
+
+    def __float__(self) -> float:
+        if self.x is not None:
+            return self.x
+        return 3.14159
+
+
 # Map function names to the actual functions,
 # for dymamic declaration of which functions test below.
 func_mapping: dict[str, Callable[..., Any]] = {
@@ -423,13 +446,13 @@ conversion_funcs = ["try_real", "try_float", "try_int", "try_forceint"]
 identification_funcs = ["check_real", "check_float", "check_int", "check_intlike"]
 non_builtin_funcs = conversion_funcs + identification_funcs
 
-# All ways to spell NaN, and most ways to spell infinity and negative infinity
+# All ways to spell NaN, and many ways to spell infinity and negative infinity
 all_nan = ["nan", "Nan", "nAn", "naN", "NAn", "NaN", "nAN", "NAN"]
 all_nan += ["+" + x for x in all_nan] + ["-" + x for x in all_nan]
-most_inf = ["inf", "Inf", "iNf", "inF", "INf", "InF", "iNF", "INF"]
-most_inf += ["infinity", "INFINITY", "iNfInItY", "InFiNiTy", "inFINIty"]
-neg_inf = ["-" + x for x in most_inf]
-most_inf += ["+" + x for x in most_inf]
+many_inf = ["inf", "Inf", "iNf", "inF", "INf", "InF", "iNF", "INF"]
+many_inf += ["infinity", "INFINITY", "iNfInItY", "InFiNiTy", "inFINIty"]
+neg_inf = ["-" + x for x in many_inf]
+many_inf += ["+" + x for x in many_inf]
 
 #################
 # Sanity Checks #
@@ -879,7 +902,7 @@ class TestErrorHandlingConversionFunctionsSuccessful:
         assert math.isinf(func(float("inf"), inf=fastnumbers.ALLOWED))  # default
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", [*most_inf, pad("inf"), pad("+INFINITY")])
+    @parametrize("x", [*many_inf, pad("inf"), pad("+INFINITY")])
     def test_given_inf_string_returns_inf(
         self, func: TryReal | TryFloat, x: str
     ) -> None:
@@ -1502,7 +1525,7 @@ class TestCheckingFunctions:
         assert func(x, nan=fastnumbers.STRING_ONLY)
 
     @parametrize("func", get_funcs(funcs), ids=funcs)
-    @parametrize("x", most_inf + neg_inf + [pad("-inf"), pad("+INFINITY")])
+    @parametrize("x", many_inf + neg_inf + [pad("-inf"), pad("+INFINITY")])
     def test_returns_false_for_inf_string_unless_allow_infinity_is_true(
         self, func: CheckReal | CheckFloat, x: str
     ) -> None:
@@ -1805,6 +1828,167 @@ class TestCheckIntLike:
         assert not fastnumbers.check_intlike(x, allow_unicode_chars=False)
 
 
+class TestUserNumericProtocols:
+    """Tests for objects implementing numeric protocols."""
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.try_real,
+            fastnumbers.fast_real,
+            fastnumbers.real,
+        ],
+    )
+    @parametrize(
+        "x, expected",
+        [
+            (FloatationDevice(), 3.14159),
+            (IndexCard(), 42),
+            (PerformInt(), 13),
+            (decimal.Decimal("3.14159"), 3.14159),
+            (fractions.Fraction(22, 11), 2),
+        ],
+    )
+    def test_real_conversion_uses_numeric_protocol(
+        self, func: Callable[[Any], Any], x: object, expected: float
+    ) -> None:
+        assert func(x) == expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.try_float,
+            fastnumbers.fast_float,
+        ],
+    )
+    def test_float_conversion_uses_all_protocols(
+        self, func: Callable[[Any], Any]
+    ) -> None:
+        assert func(FloatationDevice()) == 3.14159
+        assert func(IndexCard()) == 42.0
+        assert func(PerformInt()) == 13.0
+        assert func(decimal.Decimal("13.0")) == 13.0
+        assert func(fractions.Fraction(13, 1)) == 13.0
+
+    def test_builtin_float_uses_only_float_protocol(self) -> None:
+        assert fastnumbers.float(FloatationDevice()) == 3.14159
+        assert fastnumbers.float(IndexCard()) == 42.0
+        assert fastnumbers.float(decimal.Decimal("13.0")) == 13.0
+        assert fastnumbers.float(fractions.Fraction(13, 1)) == 13.0
+        with pytest.raises(TypeError):
+            fastnumbers.float(PerformInt())  # type: ignore[arg-type]
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.try_int,
+            fastnumbers.try_forceint,
+            fastnumbers.fast_int,
+            fastnumbers.fast_forceint,
+        ],
+    )
+    def test_int_conversion_uses_int_and_index_protocols(
+        self, func: Callable[[Any], Any]
+    ) -> None:
+        assert func(FloatationDevice()) == 3
+        assert func(IndexCard()) == 42
+        assert func(PerformInt()) == 13
+        assert func(decimal.Decimal("13.0")) == 13
+        assert func(fractions.Fraction(13, 1)) == 13
+
+    def test_builtin_int_uses_int_and_index_protocols(self) -> None:
+        assert int(IndexCard()) == 42
+        assert int(PerformInt()) == 13
+        assert int(decimal.Decimal("13.0")) == 13
+        assert int(fractions.Fraction(13, 1)) == 13
+        with pytest.raises(TypeError):
+            int(FloatationDevice())  # type: ignore[call-overload]
+
+    @parametrize(
+        "func, expected",
+        [
+            (fastnumbers.check_real, True),
+            (fastnumbers.check_float, True),
+            (fastnumbers.check_int, False),
+            (fastnumbers.check_intlike, False),
+        ],
+    )
+    def test_float_protocol_identification(
+        self,
+        func: Callable[[Any], Any],
+        expected: bool,  # noqa: FBT001
+    ) -> None:
+        assert func(FloatationDevice()) is expected
+        assert func(decimal.Decimal("3.14159")) is expected
+        assert func(fractions.Fraction(22, 7)) is expected
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.check_real,
+            fastnumbers.check_int,
+            fastnumbers.check_intlike,
+        ],
+    )
+    @parametrize("x", [IndexCard(), PerformInt()])
+    def test_int_protocol_identification(
+        self, func: Callable[[Any], Any], x: object
+    ) -> None:
+        assert func(x)
+
+    def test_intlike_protocol_identification(self) -> None:
+        assert fastnumbers.check_intlike(decimal.Decimal("13.0"))
+        assert fastnumbers.check_intlike(fractions.Fraction(13, 1))
+
+    @parametrize("x", [IndexCard(), PerformInt()])
+    def test_index_and_int_protocols_are_not_floats(self, x: object) -> None:
+        assert not fastnumbers.check_float(x)
+        assert not fastnumbers.isfloat(x)
+
+    @parametrize(
+        "func",
+        [
+            fastnumbers.isreal,
+            fastnumbers.isint,
+            fastnumbers.isintlike,
+        ],
+    )
+    @parametrize("x", [IndexCard(), PerformInt()])
+    def test_old_int_protocol_identification(
+        self, func: Callable[[Any], Any], x: object
+    ) -> None:
+        assert func(x)
+
+    def test_old_float_protocol_identification(self) -> None:
+        x = FloatationDevice()
+        assert fastnumbers.isreal(x)
+        assert fastnumbers.isfloat(x)
+
+    @parametrize(
+        "x, expected",
+        [
+            (FloatationDevice(), float),
+            (IndexCard(), int),
+            (PerformInt(), int),
+        ],
+    )
+    def test_query_type_uses_numeric_protocols(
+        self, x: object, expected: type[object]
+    ) -> None:
+        assert fastnumbers.query_type(x) is expected
+
+    def test_real_coerce_and_denoise_apply_to_float_protocol(self) -> None:
+        assert fastnumbers.try_real(FloatationDevice(42.0), coerce=True) == 42
+        assert (
+            fastnumbers.try_real(
+                FloatationDevice(3453000000000000000000.0), denoise=True
+            )
+            == 3453000000000000000000
+        )
+        assert fastnumbers.try_real(decimal.Decimal("42.0"), coerce=True) == 42
+        assert fastnumbers.try_real(fractions.Fraction(42, 1), coerce=True) == 42
+
+
 class TestQueryType:
     """Tests for the query_type function."""
 
@@ -1912,7 +2096,7 @@ class TestQueryType:
         assert fastnumbers.query_type(x) is str
         assert fastnumbers.query_type(x, allow_nan=True) is float
 
-    @parametrize("x", most_inf + neg_inf + [pad("+inf"), pad("-INFINITY")])
+    @parametrize("x", many_inf + neg_inf + [pad("+inf"), pad("-INFINITY")])
     def test_returns_str_for_inf_string_unless_allow_infinity_is_true(
         self, x: str
     ) -> None:

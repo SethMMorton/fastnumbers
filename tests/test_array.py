@@ -110,9 +110,9 @@ def test_invalid_argument_raises_type_error() -> None:
 )
 def test_selectors_are_rejected_when_invalid_for_inf_and_nan(selector: object) -> None:
     with pytest.raises(ValueError, match="values for 'inf' and 'nan'"):
-        fastnumbers.try_array(["5"], inf=selector)
+        fastnumbers.try_array(["5"], inf=selector)  # type: ignore[call-overload]
     with pytest.raises(ValueError, match="values for 'inf' and 'nan'"):
-        fastnumbers.try_array(["5"], nan=selector)
+        fastnumbers.try_array(["5"], nan=selector)  # type: ignore[call-overload]
 
 
 @pytest.mark.parametrize(
@@ -130,11 +130,11 @@ def test_selectors_are_rejected_when_invalid_for_on_fail_and_friends(
 ) -> None:
     msg = "values for 'on_fail', 'on_overflow', and 'on_type_error'"
     with pytest.raises(ValueError, match=msg):
-        fastnumbers.try_array(["5"], on_fail=selector)
+        fastnumbers.try_array(["5"], on_fail=selector)  # type: ignore[call-overload]
     with pytest.raises(ValueError, match=msg):
-        fastnumbers.try_array(["5"], on_overflow=selector)
+        fastnumbers.try_array(["5"], on_overflow=selector)  # type: ignore[call-overload]
     with pytest.raises(ValueError, match=msg):
-        fastnumbers.try_array(["5"], on_type_error=selector)
+        fastnumbers.try_array(["5"], on_type_error=selector)  # type: ignore[call-overload]
 
 
 def test_invalid_input_type_gives_type_error() -> None:
@@ -303,7 +303,7 @@ class TestReplacements:
         expected += "the value '3' that has type 'str' which cannot be converted "
         expected += "to a numeric value"
         with pytest.raises(TypeError, match=expected):
-            fastnumbers.try_array(given, result, on_fail=lambda _: "3")
+            fastnumbers.try_array(given, result, on_fail=lambda _: "3")  # type: ignore[arg-type, return-value]
 
     @pytest.mark.parametrize("data_type", int_data_types)
     def test_replacement_callables_with_bad_number_gives_value_error(
@@ -314,7 +314,7 @@ class TestReplacements:
         expected = "Callable passed to 'on_fail' with input 'invalid' returned "
         expected += f"the value 3.4 that cannot be converted to C type '{data_type}'"
         with pytest.raises(ValueError, match=expected):
-            fastnumbers.try_array(given, result, on_fail=lambda _: 3.4)
+            fastnumbers.try_array(given, result, on_fail=lambda _: 3.4)  # type: ignore[arg-type, return-value]
 
     @pytest.mark.parametrize("data_type", int_data_types)
     def test_replacement_callables_with_extreme_gives_overflow_error(
@@ -698,9 +698,7 @@ class TestNumpy:
         assert np.array_equal(result, expected, equal_nan=True)
 
     @pytest.mark.parametrize("dtype", dtypes)
-    def test_supported_dtypes(
-        self, dtype: np.dtype[np.int_] | np.dtype[np.float64]
-    ) -> None:
+    def test_supported_integer_dtypes(self, dtype: np.integer | np.floating) -> None:
         given = [4, "5", "⑦"]
         expected = np.array([4, 5, 7], dtype=dtype)
         result = fastnumbers.try_array(given, dtype=dtype)
@@ -708,7 +706,7 @@ class TestNumpy:
         assert np.array_equal(result, expected)
 
     @pytest.mark.parametrize("dtype", int_dtypes)
-    def test_integer_extremes(self, dtype: np.dtype[np.int_]) -> None:
+    def test_integer_extremes(self, dtype: np.integer) -> None:
         given = [
             dtype_extremes[dtype][0],
             str(dtype_extremes[dtype][0]),
@@ -736,7 +734,7 @@ class TestNumpy:
         assert np.array_equal(result, expected)
 
     @pytest.mark.parametrize("dtype", float_dtypes)
-    def test_float_extremes(self, dtype: np.dtype[np.float64]) -> None:
+    def test_float_extremes(self, dtype: np.floating) -> None:
         given = [
             dtype_float_extremes[dtype][0],
             str(dtype_float_extremes[dtype][0]),
@@ -763,10 +761,16 @@ class TestNumpy:
         result = fastnumbers.try_array(given, dtype=dtype)
         assert np.array_equal(result, expected)
 
-    @pytest.mark.parametrize("dtype", dtypes)
-    def test_accepts_output_array(
-        self, dtype: np.dtype[np.int_] | np.dtype[np.float64]
-    ) -> None:
+    @pytest.mark.parametrize("dtype", int_dtypes)
+    def test_accepts_output_array_integer(self, dtype: np.integer) -> None:
+        given = [4, "5", "⑦"]
+        result = np.array([0, 0, 0], dtype=dtype)
+        expected = np.array([4, 5, 7], dtype=dtype)
+        fastnumbers.try_array(given, result)
+        assert np.array_equal(result, expected)
+
+    @pytest.mark.parametrize("dtype", float_dtypes)
+    def test_accepts_output_array_float(self, dtype: np.floating) -> None:
         given = [4, "5", "⑦"]
         result = np.array([0, 0, 0], dtype=dtype)
         expected = np.array([4, 5, 7], dtype=dtype)
@@ -843,7 +847,7 @@ class TestNumpy:
     )
 )
 @pytest.mark.parametrize("dtype", int_dtypes)
-def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: list[Any]) -> None:
+def test_all_the_things_for_ints(dtype: np.integer, x: list[Any]) -> None:
     # Using try_array should give the same results
     # as try_int with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -875,7 +879,7 @@ def test_all_the_things_for_ints(dtype: np.dtype[np.int_], x: list[Any]) -> None
 )
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
-def test_all_the_things_for_floats(dtype: np.dtype[np.float64], x: list[Any]) -> None:
+def test_all_the_things_for_floats(dtype: np.floating, x: list[Any]) -> None:
     # Using try_array should give the same results
     # as try_float with map=list then converted to an array.
     # Under-the-hood, the on_fail, etc. replacements use a different code path
@@ -905,7 +909,7 @@ def test_all_the_things_for_floats(dtype: np.dtype[np.float64], x: list[Any]) ->
 @pytest.mark.parametrize("dtype", float_dtypes)
 @pytest.mark.filterwarnings("ignore:overflow encountered in cast")
 def test_all_the_things_for_floats_with_nan_inf_replacement(
-    dtype: np.dtype[np.float64], x: list[Any]
+    dtype: np.floating, x: list[Any]
 ) -> None:
     # Using try_array should give the same results
     # as try_float with map=list then converted to an array.
@@ -929,17 +933,3 @@ def test_all_the_things_for_floats_with_nan_inf_replacement(
         on_type_error=7.0,
     )
     np.array_equal(result, expected)
-
-
-def test_sanity() -> None:
-    """Make sure explictly passing dtypes makes mypy happy"""
-    fastnumbers.try_array([0, 1], dtype=np.int8)
-    fastnumbers.try_array([0, 1], dtype=np.int16)
-    fastnumbers.try_array([0, 1], dtype=np.int32)
-    fastnumbers.try_array([0, 1], dtype=np.int64)
-    fastnumbers.try_array([0, 1], dtype=np.uint8)
-    fastnumbers.try_array([0, 1], dtype=np.uint16)
-    fastnumbers.try_array([0, 1], dtype=np.uint32)
-    fastnumbers.try_array([0, 1], dtype=np.uint64)
-    fastnumbers.try_array([0, 1], dtype=np.float32)
-    fastnumbers.try_array([0, 1], dtype=np.float64)

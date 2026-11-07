@@ -67,6 +67,7 @@ select = ["ALL"]
 ignore = [
     "RUF001",  # ambiguous-unicode-character-string
     "RUF012",  # mutable class variables need annotation
+    "CPY",     # lake8-copyright
     "COM812",  # missing trailing comma
     "ISC001",  # single line implicit string concatenation
     "PT011",   # pytest.raises without match
@@ -117,6 +118,9 @@ ignore = [
 "tests/test_fastnumbers_examples.py" = [
     "PLR0915",  # too many statements
 ]
+"tests/test_typing.py" = [
+    "PLR0915",  # too many statements
+]
 "dev/**.py" = [
     "S603",  # subprocess call of untrusted input
     "S606",  # start process without a shell
@@ -136,3 +140,4 @@ max-complexity = 10
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
 known-local-folder = ["builtin_grammar", "builtin_support"]
+combine-as-imports = true

@@ -69,18 +69,18 @@ public:
             if (options().do_denoise() && (get_number_type() & NumberType::IntLike)) {
                 return Parser::float_as_int_without_noise(m_obj);
             } else {
-                return PyNumber_Long(m_obj);
+                return python_as_int(m_obj);
             }
         } else if (coerce) {
             if (options().do_denoise() && (get_number_type() & NumberType::IntLike)) {
                 return Parser::float_as_int_without_noise(m_obj);
             } else if (get_number_type() & (NumberType::IntLike | NumberType::Integer)) {
-                return PyNumber_Long(m_obj);
+                return python_as_int(m_obj);
             } else {
-                return PyNumber_Float(m_obj);
+                return python_as_float(m_obj);
             }
         } else {
-            return PyNumber_Float(m_obj);
+            return python_as_float(m_obj);
         }
     }
 
@@ -212,6 +212,48 @@ private:
 private:
     /// Return the object as a double. No error checking is performed.
     double get_double() const noexcept { return PyFloat_AS_DOUBLE(m_obj); }
+
+    /// Convert the numeric object to a Python int.
+    PyObject* python_as_int(PyObject* obj) const noexcept
+    {
+        // PyNumber_Long does not consider __float__ so in that case
+        // we have to extract the float explicitly and then convert to an int.
+        const bool is_float = bool(get_number_type() & NumberType::Float);
+        const bool is_user = bool(get_number_type() & NumberType::User);
+        if (is_float && is_user && options().extend_custom_conversion()) {
+            const double val = PyFloat_AsDouble(obj);
+            if (val == -1.0 && PyErr_Occurred()) {
+                return nullptr;
+            }
+            return PyLong_FromDouble(val);
+        }
+        return PyNumber_Long(obj);
+    }
+
+    /// Convert the numeric object to a Python float.
+    PyObject* python_as_float(PyObject* obj) const noexcept
+    {
+        // PyNumber_Float does not consider __int__ so in that case
+        // we have to extract the int explicitly and then convert to a float.
+        const bool has_nmeth = Py_TYPE(m_obj)->tp_as_number != nullptr;
+        const bool is_int = bool(get_number_type() & NumberType::Integer);
+        const bool is_user = bool(get_number_type() & NumberType::User);
+        const bool has_index
+            = has_nmeth && Py_TYPE(m_obj)->tp_as_number->nb_index != nullptr;
+        const bool has_int
+            = has_nmeth && Py_TYPE(m_obj)->tp_as_number->nb_int != nullptr;
+        const bool allow = options().extend_custom_conversion();
+        if (is_int && is_user && !has_index && has_int && allow) {
+            PyObject* int_obj = PyNumber_Long(obj);
+            if (int_obj != nullptr) {
+                PyObject* float_obj = PyNumber_Float(int_obj);
+                Py_DECREF(int_obj);
+                return float_obj;
+            }
+            return int_obj; // raise the exception
+        }
+        return PyNumber_Float(obj);
+    }
 
     /// Use the value of the float to add qualifiers
     /// if the float is infinite, NaN, or intlike.

@@ -286,9 +286,9 @@ class IntTestCases(unittest.TestCase):
     def test_int_base_bad_types(self) -> None:
         """Not integer types are not valid bases; issue16772."""
         with pytest.raises(TypeError):
-            int("0", 5.5)  # type: ignore[call-overload]
+            int("0", 5.5)
         with pytest.raises(TypeError):
-            int("0", 5.0)  # type: ignore[call-overload]
+            int("0", 5.0)
 
     def test_int_base_indexable(self) -> None:
         class MyIndexable:

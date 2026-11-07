@@ -48,7 +48,7 @@ def run_with_locale(catstr: str, *locales: str) -> Callable[..., Any]:
                 return func(*args, **kwds)
             finally:
                 if locale and orig_locale:
-                    locale.setlocale(category, orig_locale)
+                    locale.setlocale(category, orig_locale)  # type: ignore[reportPossiblyUnboundVariable,unused-ignore]
 
         inner.__name__ = func.__name__
         inner.__doc__ = func.__doc__

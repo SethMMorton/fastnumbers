@@ -630,6 +630,7 @@ fastnumbers_float(PyObject* self, PyObject* const* args, Py_ssize_t len_args) no
         Implementation impl(UserType::FLOAT);
         impl.set_unicode_allowed(false);
         impl.set_underscores_allowed(true);
+        impl.set_extend_custom_conversion(false);
         return impl.convert(input);
     });
 }
@@ -668,6 +669,7 @@ static PyObject* fastnumbers_int(
         Implementation impl(UserType::INT, assess_integer_base_input(pybase));
         impl.set_unicode_allowed(false);
         impl.set_underscores_allowed(true);
+        impl.set_extend_custom_conversion(false);
         return impl.convert(input);
     });
 }
